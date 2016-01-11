@@ -1,0 +1,30 @@
+procedure run(n: int) {
+  var x: int;
+  var y: int;
+  var i: int;
+  var m: int;
+
+  x := 0;
+  y := 0;
+  i := 0;
+  m := 10;
+
+  while (i < n)
+    invariant i >= 0 && x >= 0 && x == i && y == int(x/2) && m == 10;
+  {
+    i := i + 1;
+    x := x + 1;
+
+    // x % y == x − x/y * y
+    // if (i%2 == 0)
+    if ((i - int(i/2) * 2) == 0)
+    {
+      y := y + 1;
+    }
+  }
+
+  if (i == m)
+  {
+    assert x == 2*y;
+  }
+}
