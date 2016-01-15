@@ -1,0 +1,64 @@
+procedure run(flag0, u10, u20: int)
+{
+	var t, s, a, b, x, y, u1, u2, flag: int;
+
+	t := 0;
+	s := 0;
+	a := 0;
+	b := 0;
+	u1 := u10;
+	u2 := u20;
+	flag := flag0;
+
+	while(u1 != 0)
+	{
+		a := a + 1;
+		b := b + 1;
+		s := s + a;
+		t := t + b;
+
+		if(flag != 0)
+		{
+			t := t + a;
+		}
+
+		u1 := u1 - 1;
+	}
+
+	x := 1;
+	if(flag != 0)
+	{
+    	x := t - 2 * s + 2;
+  	}
+  	y := 0;
+  
+  	while(y <= x)
+  	{
+    	if(u2 != 0)
+    	{
+    		y := y + 1;
+    	}
+    	else
+    	{ 
+			y := y + 2;
+		}
+  	}
+  
+	assert(y<=4);	//Error BP5001: This assertion might not hold.
+}
+
+/*
+			Description						Line	Column
+Error	1	This assertion might not hold.	47		2
+
+input(47,2): Error BP5001: This assertion might not hold.
+Execution trace:
+    input(5,4): anon0
+    input(13,2): anon11_LoopHead
+    input(13,2): anon11_LoopDone
+    input(31,8): anon13_Then
+    input(35,4): anon14_LoopHead
+    input(35,4): anon14_LoopDone
+
+Boogie program verifier finished with 0 verified, 1 error
+*/
