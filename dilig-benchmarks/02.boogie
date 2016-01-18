@@ -1,0 +1,31 @@
+procedure run(k0: int)
+{
+  var i, j, z, x, y, w, k: int;
+  
+  i := 1;
+  j := 0;
+  z := i - j;
+  x := 0;
+  y := 0;
+  w := 0;
+  
+  k := k0;
+
+  while(k > 0) 
+  invariant i == 1 && j == 0 && i == j + 1 && x >= 0 && y >= 0 && w >= 0 && (w - int(w/2) * 2 == 0) && w == 2*y && z >= i && z >= j && z >= x && z >= y && (w >= 4 ==> z >= w) && z >= i+j && z >= i-j && z >= x+j && z >= y+j && x == y && w == 2*x && (z - int(z/2) * 2 == 1);// && (w <= 2 ==> z < w)
+  //invariant z - int(z/2)*2 == 1 && w - int(w/2)*2 == 0 && x == y;
+  {
+    z := z + x + y + w;
+    y := y + 1;
+    
+    if(z - int(z/2) * 2 == 1) 
+    {
+      x := x + 1;
+    }
+    w := w + 2;
+    k := k - 1;
+  }
+
+  assert(x==y);
+}
+
