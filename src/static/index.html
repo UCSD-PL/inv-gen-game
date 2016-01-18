@@ -1,0 +1,15 @@
+<html>
+<head>
+  <script src="//code.jquery.com/jquery-1.12.0.min.js"></script>
+  <script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+  <script src="https://raw.githubusercontent.com/Textalk/jquery.jsonrpcclient.js/master/jquery.jsonrpcclient.js"></script>
+  <script>
+    alrt = function(arg) { alert(arg); }
+    rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
+
+    rpc.call('App.test', [], alrt, alrt)
+  </script>
+</head>
+<body>
+</body>
+</html>
