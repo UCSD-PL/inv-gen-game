@@ -1,14 +1,25 @@
 <html>
 <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <script src="//code.jquery.com/jquery-1.12.0.min.js"></script>
-  <script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
   <script src="https://raw.githubusercontent.com/Textalk/jquery.jsonrpcclient.js/master/jquery.jsonrpcclient.js"></script> 
+
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+  <!-- Optional theme -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
+  <!-- Latest compiled and minified JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
 
   <!-- for developing without internet, download the above files in static/
        and uncomment the below lines -->
   <!--
   <script src="jquery-1.12.0.min.js"></script>
-  <script src="jquery-migrate-1.2.1.min.js"></script>
   <script src="jquery.jsonrpcclient.js"></script>
   -->
   <link rel="stylesheet" href="inv.css">
@@ -35,6 +46,9 @@
           s = s.replace(new RegExp(vars[v][0], 'g'), data.data[row][vars[v][1]])
         }
         holds = eval(s)
+        if (typeof(holds) != 'boolean') {
+          throw "The invariant should evaluate to a boolean, not a " + typeof(holds)
+        }
         holds_arr.push(holds)
       }
       return holds_arr
@@ -45,7 +59,7 @@
 
       res = rpc.call('App.getData', [], function(res) {
         data = res;
-        hstr = '<table><tr>';
+        hstr = '<table class="table table-stripped"><tr>';
         for (i in res.variables) {
           hstr += '<th>' + res.variables[i] + '</th>';
         }
@@ -57,7 +71,7 @@
           }
         }
         hstr += '</table>'
-        $('.data-display').html(hstr)
+        $('#data-display').html(hstr)
       }, log)
 
       $('#formula-entry').keypress(function (e) {
@@ -79,9 +93,19 @@
 </head>
 <body>
 </body>
-  <div class='container'>
-    <div class='data-display'>
+  <div class='container-fluid'>
+    <div class='row'>
+      <div class='col-lg-6 col-lg-offset-3'>
+        <div class='row'>
+          <div id='data-display' class='col-lg-12'>
+          </div>
+        </div>
+        <div class='row'>
+            <div class='col-lg-3' > Enter Invariant: </div>
+            <input id='formula-entry' type='text' class='col-lg-4'>
+        </div>
+      </div>
+      <div class='col-lg-3'> </div>
     </div>
-    <input id='formula-entry' type='text'>
   </div>
 </html>
