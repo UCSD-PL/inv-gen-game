@@ -1,0 +1,15 @@
+{
+  text-align: center;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  padding-right: 20px;
+  padding-left: 20px;
+}
+
+tr.true {
+  background-color: rgba(0, 128, 0, 0.5);
+}
+
+tr.false {
+  background-color: rgba(255, 0, 0, 0.5);
+}
