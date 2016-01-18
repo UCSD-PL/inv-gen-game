@@ -25,6 +25,7 @@ void run(int n, int m)
     x++;
     if(x>m) y++;
   }
+  printf("n = %d m = %d x = %d y = %d\n", n, m, x, y);
   static_assert(y==n);
 }
 
