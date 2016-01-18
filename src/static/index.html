@@ -54,10 +54,8 @@
       return holds_arr
     }
 
-    $(document).ready(function() {
-      rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
-
-      res = rpc.call('App.getData', [], function(res) {
+    function loadTrace(traceId) {
+      res = rpc.call('App.getData', [ traceId ], function(res) {
         data = res;
         hstr = '<table class="table table-stripped"><tr>';
         for (i in res.variables) {
@@ -72,6 +70,24 @@
         }
         hstr += '</table>'
         $('#data-display').html(hstr)
+        $('#invariant-row').show()
+      }, log)
+    }
+
+    $(document).ready(function() {
+      rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
+
+      res = rpc.call('App.listData', [], function(res) {
+        hstr = '<ul>';
+        for (var i in res) {
+          hstr += '<li><a id="' + res[i] + '" class="loadTrace">' + res[i] + '</a></li>'
+        }
+        hstr += '</ul>'
+        $('#traces-menu').html(hstr)
+
+        $('.loadTrace').each(function(i) {
+          $(this).click(function() { loadTrace(this.id); })
+        })
       }, log)
 
       $('#formula-entry').keypress(function (e) {
@@ -93,19 +109,32 @@
 </head>
 <body>
 </body>
-  <div class='container-fluid'>
+  <div class='container'>
     <div class='row'>
-      <div class='col-lg-6 col-lg-offset-3'>
+      <div class='col-md-3'>
+        Choose a trace:
+        <div  id='traces-menu'> </div>
+      </div>
+      <div class='col-md-6'>
         <div class='row'>
-          <div id='data-display' class='col-lg-12'>
+          <div id='data-display' class='col-md-12'>
           </div>
         </div>
-        <div class='row'>
-            <div class='col-lg-3' > Enter Invariant: </div>
-            <input id='formula-entry' type='text' class='col-lg-4'>
+        <div class='row' id='invariant-row' style='display: none;'>
+            <div class='col-md-3' > Enter Invariant: </div>
+            <input id='formula-entry' type='text' class='col-md-4'>
         </div>
       </div>
-      <div class='col-lg-3'> </div>
+      <div class='col-md-3'> 
+        Instructions:
+          <ol>
+            <li>Select a set of traces from the list on the left-hand side</li> 
+            <li>A table of values will appear in the middle. Each column corresponds to one variable.</li>            <li>In the text box at the bottom of the middle column, try entering an "invariant" and pressing Enter.</li>
+            <li>An invariant is any valid expression involving the variables that appear in the middle, numbers, arithmetic operations and operators and parenthesis. An invariant MUST evaluate to true or false.</li>
+            <li>If you enter an invalid expression, an expression invovling variables that are not present, or an expression that does not evaluate to true or false, you will get an error message.</li>
+            <li>Any row, for which the entered invariant holds, will be highlighted green after you press Enter. Any row for which the invariant does not hold will be highlighted red.</li>
+          </ol>
+      </div>
     </div>
   </div>
 </html>
