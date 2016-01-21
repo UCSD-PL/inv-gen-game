@@ -26,6 +26,27 @@
   
   <script>
     log = function(arg) { console.log(arg); }
+    var notDefRe = /(.*) is not defined/;
+
+    function InvException(name, msg) {
+      this.name = name;
+      this.message = msg;
+    }
+
+    function interpretError(err) {
+      if (err.name == 'ReferenceError') {
+        if (err.message.match(notDefRe))
+          return err.message.match(notDefRe)[1] + " is not defined."
+        else
+          return "Not a valid expression."
+      } else if (err.name == 'SyntaxError') {
+        return "Not a valid expression."
+      } else if (err.name == 'NOT_BOOL') {
+        return "Expression should evaluate to true or false, not " + err.message + " for example."
+      }
+
+      return err
+    }
 
     function invEval(inv, data) {
       // Sort variable names in order of decreasing length
@@ -47,11 +68,50 @@
         }
         holds = eval(s)
         if (typeof(holds) != 'boolean') {
-          throw "The invariant should evaluate to a boolean, not a " + typeof(holds)
+          throw new InvException("NOT_BOOL", holds)
         }
         holds_arr.push(holds)
       }
       return holds_arr
+    }
+
+    function clearRows() {
+      $('#data-display tr').each(function() {
+        $(this).removeClass('true')
+        $(this).removeClass('false')
+      });
+    }
+
+    function updateUI() {
+        var inv = $('#formula-entry').val().trim();
+        if (inv.length == 0) {
+          clearRows()
+          return;
+        }
+      
+        $('#errormsg').html("Working...")
+        try {
+          res = invEval(inv, data)
+          all = res.length
+          hold = res.filter(function (x) { return x; }).length
+          
+          for (i in res) {
+            $('#' + i).removeClass('true')
+            $('#' + i).removeClass('false')
+            $('#' + i).addClass(res[i] ? 'true' : 'false')
+          }
+
+          if (hold < all)
+            $('#errormsg').html("<div class='valid'>Holds for " + hold + "/" + all + " cases.</div>")
+          else {
+            $('#good-invariants').append("<div class='row'>" + inv + "</div>")
+            $('#errormsg').html("")
+            $('#formula-entry').val('')
+          }
+        } catch (err) {
+          clearRows()
+          $('#errormsg').html("<div class='error'> " + interpretError(err) + "</div>")
+        }
     }
 
     function loadTrace(traceId) {
@@ -71,6 +131,7 @@
         hstr += '</table>'
         $('#data-display').html(hstr)
         $('#invariant-row').show()
+        updateUI()
       }, log)
     }
 
@@ -90,21 +151,9 @@
         })
       }, log)
 
-      $('#formula-entry').keypress(function (e) {
-        if (e.which == 13) {
-          try  {
-            res = invEval($('#formula-entry').val(), data)
-          } catch (err) {
-            alert("Error : " + err)
-          }
-          for (i in res) {
-            $('#' + i).removeClass('true')
-            $('#' + i).removeClass('false')
-            $('#' + i).addClass(res[i] ? 'true' : 'false')
-          }
-        }
-      })
+      $('#formula-entry').keyup(updateUI)
     })
+
   </script>
 </head>
 <body>
@@ -120,20 +169,18 @@
           <div id='data-display' class='col-md-12'>
           </div>
         </div>
+        <div class='row'>
+          <div class='col-md-3' ></div>
+          <div id='good-invariants' class='col-md-9'>
+          </div>
+        </div>
         <div class='row' id='invariant-row' style='display: none;'>
             <div class='col-md-3' > Enter Invariant: </div>
             <input id='formula-entry' type='text' class='col-md-4'>
+            <div class='col-md-5' id='errormsg'> </div>
         </div>
       </div>
       <div class='col-md-3'> 
-        Instructions:
-          <ol>
-            <li>Select a set of traces from the list on the left-hand side</li> 
-            <li>A table of values will appear in the middle. Each column corresponds to one variable.</li>            <li>In the text box at the bottom of the middle column, try entering an "invariant" and pressing Enter.</li>
-            <li>An invariant is any valid expression involving the variables that appear in the middle, numbers, arithmetic operations and operators and parenthesis. An invariant MUST evaluate to true or false.</li>
-            <li>If you enter an invalid expression, an expression invovling variables that are not present, or an expression that does not evaluate to true or false, you will get an error message.</li>
-            <li>Any row, for which the entered invariant holds, will be highlighted green after you press Enter. Any row for which the invariant does not hold will be highlighted red.</li>
-          </ol>
       </div>
     </div>
   </div>

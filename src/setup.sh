@@ -2,6 +2,7 @@
 
 if [[ $# -ne 1 ]] ; then
   echo "Usage $0 <target-directory>"
+  exit -1
 fi
 
 DIR=$1
