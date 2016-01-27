@@ -1,5 +1,5 @@
 LD_FLAGS=
-DEPS=-L../src/harness/dilig -l:binding_stdout.so
+DEPS=-L../src/harness/dilig -Wl,-rpath=../src/harness/dilig -l:binding_stdout.so
 
 all: progs traces
 
