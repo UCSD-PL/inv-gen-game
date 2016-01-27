@@ -1,5 +1,31 @@
 from flask import Flask
 from flask_jsonrpc import JSONRPC as rpc
+from os.path import *
+from os import listdir
+
+MYDIR=dirname(abspath(realpath(__file__)))
+
+def readTrace(fname):
+    vs = set()
+    rows = []
+    for l in open(fname):
+        l = l.strip();
+        if (l == ''):   continue
+        row = {}
+        for (n,v) in [x.split('=') for x in l.split(' ')]:
+            row[n] = v
+            vs.add(n)
+        rows.append(row)
+
+    vs = list(vs)
+    return { 'variables': vs,
+             'data': [[ row.get(n, None) for n in vs  ]  for row in rows ] }
+
+def loadTraces(dirN):
+    return { name : readTrace(dirN + '/' + name) for name in listdir(dirN)
+                if name.endswith('.out') }
+
+introTraces = loadTraces(MYDIR + '/../intro-benchmarks')
 
 traces = {
     '15-c': {
@@ -74,14 +100,16 @@ api = rpc(app, '/api')
 
 @api.method("App.listData")
 def listData():
-    return traces.keys()
+    res = introTraces.keys();
+    res.sort()
+    return res
 
 @api.method("App.getData")
 def getData(traceId):
-    if (traceId not in traces):
+    if (traceId not in introTraces):
         raise Exception("Unkonwn trace " + traceId)
 
-    return traces[traceId]
+    return introTraces[traceId]
 
 if __name__ == "__main__":
     app.run()

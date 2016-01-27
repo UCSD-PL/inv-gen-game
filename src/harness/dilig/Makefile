@@ -1,7 +1,9 @@
-all: binding.so
+LD_FLAGS=-shared -fPIC
 
-binding.so:	binding.c
-	gcc -shared -fPIC -o binding.so binding.c
+all: binding.so binding_stdout.so
 
+%.so: %.c
+	$(CC) $(LD_FLAGS) $(CFLAGS) -o $@ $<
+	
 clean:
 	rm -rf *.o *.so
