@@ -28,4 +28,12 @@ pushd $MYDIR/../intro-benchmarks
 make
 popd
 
+pushd $MYDIR/static
+
+wget http://code.jquery.com/jquery-1.12.0.min.js
+wget https://raw.githubusercontent.com/Textalk/jquery.jsonrpcclient.js/master/jquery.jsonrpcclient.js
+wget https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css
+wget https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css
+wget https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js
+
 echo "To begin developing run source $DIR/bin/activate"
