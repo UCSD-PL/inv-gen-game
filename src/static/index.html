@@ -136,6 +136,9 @@
         hstr += '</table>'
         $('#data-display').html(hstr)
         $('#invariant-row').show()
+        $('#hint').html(data.hint)
+        if (data.hint) {
+        }
         updateUI()
       }, log)
     }
@@ -188,7 +191,7 @@
             <div class='col-md-5' id='errormsg'> </div>
         </div>
       </div>
-      <div class='col-md-3'> 
+      <div class='col-md-3' id='hint'> 
       </div>
     </div>
   </div>

@@ -17,9 +17,19 @@ def readTrace(fname):
             vs.add(n)
         rows.append(row)
 
+    hint = None
+    goal = None
+    try:
+        hint = open(fname[:-4] + '.hint').read()
+        goal = open(fname[:-4] + '.goal').read()
+    except: pass
+
     vs = list(vs)
     return { 'variables': vs,
-             'data': [[ row.get(n, None) for n in vs  ]  for row in rows ] }
+             'data': [[ row.get(n, None) for n in vs  ]  for row in rows ],
+             'hint': hint,
+             'goal' : goal
+    }
 
 def loadTraces(dirN):
     return { name : readTrace(dirN + '/' + name) for name in listdir(dirN)
