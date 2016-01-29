@@ -2,13 +2,14 @@
 #include <stdint.h>
 void trace(int loopID, char *fmt, ...);
 
-void main()
+int main()
 {
  int n = 5;
- int i,j;
- for (i = 0, j=0; i < n; i++,j+=2) {
-   trace(0, "i=%dj=%d", (int32_t)i, (int32_t)j);
+ int i;
+ for (i = 0; i < n; i++) {
+   trace(0, "k=%d", 9);
  }
- trace(0, "i=%dj=%d", (int32_t)i, (int32_t)j);
+ //trace(0, "i=%d", 1);
+ return 0;
 }
 

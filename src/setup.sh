@@ -5,6 +5,7 @@ if [[ $# -ne 1 ]] ; then
   exit -1
 fi
 
+MYDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 DIR=$1
 
 virtualenv $DIR
@@ -19,5 +20,12 @@ pip install flask-jsonrpc
 #wget https://github.com/Textalk/jquery.jsonrpcclient.js/archive/master.zip static/jquery.jsonrpc.js
 
 deactivate
+
+pushd $MYDIR/harness/dilig
+make
+popd
+pushd $MYDIR/../intro-benchmarks
+make
+popd
 
 echo "To begin developing run source $DIR/bin/activate"

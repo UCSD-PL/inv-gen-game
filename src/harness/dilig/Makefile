@@ -1,5 +1,7 @@
 LD_FLAGS=-shared -fPIC
 
+CFLAGS=-std=c99
+
 all: binding.so binding_stdout.so
 
 %.so: %.c

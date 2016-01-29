@@ -1,10 +1,14 @@
 LD_FLAGS=
-DEPS=-L../src/harness/dilig -l:binding_stdout.so
+DEPS=-L../src/harness/dilig -Wl,-rpath=../src/harness/dilig -l:binding_stdout.so
 
 all: progs traces
 
-progs:	01.run 02.run 03.run 04.run 05.run 06.run 07.run 08.run
-traces:	01.out 02.out 03.out 04.out 05.out 06.out 07.out 08.out
+FILES=01.c 02.c 03.c 04.c 05.c 06.c 07.c 08.c
+PROGS=$(FILES:.c=.run)
+TRACES=$(FILES:.c=.out)
+
+progs:	$(PROGS)
+traces:	$(TRACES)
 
 %.run: %.c
 	$(CC) $(LD_FLAGS) $(CFLAGS) -o $@ $< $(DEPS)
