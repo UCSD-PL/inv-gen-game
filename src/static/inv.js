@@ -21,11 +21,11 @@ function interpretError(err) {
 }
 
 function invPP(inv) {
-  return inv.replace('===', '=').replace('==', '=')
+  return inv.replace(/===/g, '=').replace(/==/g, '=')
 }
 
 function invToJS(inv) {
-  return inv.replace(/=/, '==')
+  return inv.replace(/[^<>]=[^>]/g, function (v) { return v[0] + '==' + v[2]; })
 }
 
 function invEval(inv, data) {

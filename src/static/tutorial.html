@@ -30,6 +30,15 @@
   <script>
     var curLvl = 0; 
     var lvls = null;
+    var userTyped = false;
+    var heartBeatInterval = 500;
+
+    function heartBeat() {
+      if (!userTyped) {
+        updateUI()
+      }
+      userTyped = false;
+    }
 
     function clearRows() {
       $('#data-display tr').each(function() {
@@ -86,12 +95,19 @@
           }
         }
         hstr += '</table>'
+        setInterval(heartBeat, heartBeatInterval);
         $('#data-display').html(hstr)
         $('#invariant-row').show()
         $('#done-row').show()
         $('#hint').html(data.hint)
         updateUI()
       }, log)
+    }
+
+    function nextLvl() {
+      $('#' + lvls[curLvl]).removeClass('bold');
+      $('#good-invariants').html('');
+      curLvl ++; loadTrace(lvls[curLvl]);
     }
 
     $(document).ready(function() {
@@ -110,14 +126,12 @@
       }, log)
 
       $('#formula-entry').keyup(function (keyEv) {
+        userTyped = true;
         if (keyEv.keyCode != 13)  return;
         updateUI();
       })
 
-      $('#next-lvl').click(function () {
-        $('#' + lvls[curLvl]).removeClass('bold');
-        curLvl ++; loadTrace(lvls[curLvl]);
-      })
+      $('#next-lvl').click(nextLvl)
     })
 
   </script>
