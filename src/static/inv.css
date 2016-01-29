@@ -13,3 +13,7 @@ tr.true {
 tr.false {
   background-color: rgba(255, 0, 0, 0.5);
 }
+
+.bold {
+  font-weight: bold;
+}
