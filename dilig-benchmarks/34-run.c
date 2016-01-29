@@ -26,6 +26,5 @@ void run(int n)
 
 int main() {
     run(10);
-    /* i >= 0, i <= n, x >= 0, x == i, y == x/2, m == 10 */
     return 0;
 }

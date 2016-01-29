@@ -46,19 +46,3 @@ procedure run(flag0, u10, u20: int)
   
 	assert(y<=4);	//Error BP5001: This assertion might not hold.
 }
-
-/*
-			Description						Line	Column
-Error	1	This assertion might not hold.	47		2
-
-input(47,2): Error BP5001: This assertion might not hold.
-Execution trace:
-    input(5,4): anon0
-    input(13,2): anon11_LoopHead
-    input(13,2): anon11_LoopDone
-    input(31,8): anon13_Then
-    input(35,4): anon14_LoopHead
-    input(35,4): anon14_LoopDone
-
-Boogie program verifier finished with 0 verified, 1 error
-*/
