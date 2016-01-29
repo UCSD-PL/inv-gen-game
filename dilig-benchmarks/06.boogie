@@ -10,11 +10,10 @@ procedure run(u1, u2: int)
   u20 := u2;
 
   while(u10 > 0)
-  invariant w >= 1 && z >= 0 && x >= 0 && y >= 0 && w == z+1 && z <= x+y && ((z > 0) ==> (z == x + y));// && ((u2 == 0) ==> ((w != 1) && (z != 0))) && (w - int(w/2) * 2 == 1) && (z - int(z/2) * 2 == 0)
+  invariant w == z+1 && z <= x+y && ((z > 0) ==> (z == x + y));
   {
     while(u20 > 0)
     {
-      //i%2 == 0 ----> (i - int(i/2) * 2) == 0
       if(w - int(w/2) * 2 == 1)
       {
         x := x + 1;
@@ -32,18 +31,5 @@ procedure run(u1, u2: int)
     u10 := u10 - 1;
   }
   
-  assert(x==y); //Error BP5001: This assertion might not hold.
+  assert(x==y);
 }
-
-/*
-        Description                     Line  Column
-Error 1 This assertion might not hold.  34    3
-
-input(34,3): Error BP5001: This assertion might not hold.
-Execution trace:
-    input(5,5): anon0
-    input(12,3): anon9_LoopHead
-    input(12,3): anon9_LoopDone
-
-Boogie program verifier finished with 0 verified, 1 error
-*/
