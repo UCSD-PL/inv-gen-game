@@ -30,15 +30,8 @@
   <script>
     var curLvl = 0; 
     var lvls = null;
-    var userTyped = false;
-    var heartBeatInterval = 500;
-
-    function heartBeat() {
-      if (!userTyped) {
-        updateUI()
-      }
-      userTyped = false;
-    }
+    var errorTimer = null;
+    var errorDelay = 1000;
 
     function clearRows() {
       $('#data-display tr').each(function() {
@@ -55,7 +48,6 @@
           return;
         }
       
-        $('#errormsg').html("Working...")
         try {
           res = invEval(invToJS(inv), data)
           all = res.length
@@ -75,8 +67,10 @@
             $('#formula-entry').val('')
           }
         } catch (err) {
-          clearRows()
-          $('#errormsg').html("<div class='error'> " + interpretError(err) + "</div>")
+          errorTimer = setTimeout(function() {
+            clearRows()
+            $('#errormsg').html("<div class='error'> " + interpretError(err) + "</div>")
+          }, errorDelay)
         }
     }
 
@@ -95,7 +89,6 @@
           }
         }
         hstr += '</table>'
-        setInterval(heartBeat, heartBeatInterval);
         $('#data-display').html(hstr)
         $('#invariant-row').show()
         $('#done-row').show()
@@ -126,8 +119,10 @@
       }, log)
 
       $('#formula-entry').keyup(function (keyEv) {
-        userTyped = true;
-        if (keyEv.keyCode != 13)  return;
+        if (errorTimer) {
+          window.clearTimeout(errorTimer);
+          errorTimer = null;
+        }
         updateUI();
       })
 
