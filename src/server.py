@@ -2,6 +2,7 @@ from flask import Flask
 from flask_jsonrpc import JSONRPC as rpc
 from os.path import *
 from os import listdir
+from json import load
 
 MYDIR=dirname(abspath(realpath(__file__)))
 
@@ -21,7 +22,7 @@ def readTrace(fname):
     goal = None
     try:
         hint = open(fname[:-4] + '.hint').read()
-        goal = open(fname[:-4] + '.goal').read()
+        goal = load(open(fname[:-4] + '.goal'))
     except: pass
 
     vs = list(vs)

@@ -28,10 +28,13 @@
   <script src="util.js"></script>
   
   <script>
-    var curLvl = 0; 
-    var lvls = null;
-    var errorTimer = null;
     var errorDelay = 1000;
+    var curLvl; 
+    var lvls = null;
+    var errorTimer;
+    var found = [];
+    var curGoal;
+    var data;
 
     function clearRows() {
       $('#data-display tr').each(function() {
@@ -62,6 +65,10 @@
           if (hold < all)
             $('#errormsg').html("<div class='valid'>Holds for " + hold + "/" + all + " cases.</div>")
           else {
+            found.push(invPP(inv))
+            if (goalSatisfied(curGoal, found)) {
+              $('#next-lvl').show();
+            }
             $('#good-invariants').append("<div class='row'>" + inv + "</div>")
             $('#errormsg').html("")
             $('#formula-entry').val('')
@@ -77,6 +84,8 @@
     function loadTrace(traceId) {
       res = rpc.call('App.getData', [ traceId ], function(res) {
         data = res;
+        curGoal = data.goal;
+
         hstr = '<table class="table table-stripped"><tr>';
         for (i in res.variables) {
           hstr += '<th>' + res.variables[i] + '</th>';
@@ -91,6 +100,10 @@
         hstr += '</table>'
         $('#data-display').html(hstr)
         $('#invariant-row').show()
+
+        if (curGoal)
+          $('#next-lvl').hide();
+
         $('#done-row').show()
         $('#hint').html(data.hint)
         updateUI()
@@ -98,9 +111,12 @@
     }
 
     function nextLvl() {
+      found = []
       $('#' + lvls[curLvl]).removeClass('bold');
       $('#good-invariants').html('');
-      curLvl ++; loadTrace(lvls[curLvl]);
+      errorTimer = null;
+      curLvl ++;
+      loadTrace(lvls[curLvl]);
     }
 
     $(document).ready(function() {
@@ -114,8 +130,8 @@
         }
         hstr += '</ul>'
         $('#traces-menu').html(hstr)
-        curLvl = 0;
-        loadTrace(lvls[curLvl])
+        curLvl = -1;
+        nextLvl();
       }, log)
 
       $('#formula-entry').keyup(function (keyEv) {

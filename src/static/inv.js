@@ -21,7 +21,7 @@ function interpretError(err) {
 }
 
 function invPP(inv) {
-  return inv.replace(/===/g, '=').replace(/==/g, '=')
+  return inv.replace(/===/g, '=').replace(/==/g, '=').replace(/\s/g, '')
 }
 
 function invToJS(inv) {
@@ -55,3 +55,18 @@ function invEval(inv, data) {
   return holds_arr
 }
 
+function goalSatisfied(goal, invs) {
+  if (goal == null) {
+    return true;
+  } else  if (goal.find) {
+    for (var i=0; i < goal.find.length; i++) {
+      if ($.inArray(goal.find[i], invs) == -1) {
+        return false;
+      }
+    }
+
+    return true;
+  } else {
+    error("Unknown goal " + goal.toSource());
+  }
+}
