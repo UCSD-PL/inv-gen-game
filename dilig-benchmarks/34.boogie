@@ -10,7 +10,7 @@ procedure run(n: int) {
   m := 10;
 
   while (i < n)
-    invariant x == i && y == int(x/2) && m == 10;
+    invariant x == i && y == int-(x/2);
   {
     i := i + 1;
     x := x + 1;

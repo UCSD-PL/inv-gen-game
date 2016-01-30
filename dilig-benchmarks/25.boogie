@@ -12,10 +12,10 @@ procedure main()
   j := 0;
 
   while(unknown1())
-    invariant x == y && i >= j && j == 0;
+    invariant x == y && i >= j;
   {
     while(unknown2())
-    invariant x == y && i >= j && j == 0;
+    invariant x == y && i >= j;
     {
       if(x==y) {
         i := i+1;
@@ -32,5 +32,5 @@ procedure main()
       y := y+1;
     }
   }
-  assert(x>=j);
+  assert(i>=j);
 }

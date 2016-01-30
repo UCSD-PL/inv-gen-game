@@ -1,14 +1,13 @@
-procedure run(k0: int) {
-  var j, n, k: int;
+procedure run(n: int) {
+  var j, k: int;
   
   assume n > 0;
-  assume k0 > n;
+  assume k > n;
   
-  k := k0;
   j := 0;
 
   while( j < n )
-  invariant j + k == k0 && j <= n;
+  invariant j + k > n  && j <= n;
   {
     j := j + 1;
     k := k - 1;
