@@ -28,6 +28,11 @@
   <script src="util.js"></script>
   
   <script>
+    var curLvl = 0; 
+    var lvls = null;
+    var errorTimer = null;
+    var errorDelay = 1000;
+
     function clearRows() {
       $('#data-display tr').each(function() {
         $(this).removeClass('true')
@@ -36,13 +41,13 @@
     }
 
     function updateUI() {
+        $('#' + lvls[curLvl]).addClass('bold');
         var inv = invPP($('#formula-entry').val().trim());
         if (inv.length == 0) {
           clearRows()
           return;
         }
       
-        $('#errormsg').html("Working...")
         try {
           res = invEval(invToJS(inv), data)
           all = res.length
@@ -62,8 +67,10 @@
             $('#formula-entry').val('')
           }
         } catch (err) {
-          clearRows()
-          $('#errormsg').html("<div class='error'> " + interpretError(err) + "</div>")
+          errorTimer = setTimeout(function() {
+            clearRows()
+            $('#errormsg').html("<div class='error'> " + interpretError(err) + "</div>")
+          }, errorDelay)
         }
     }
 
@@ -84,33 +91,42 @@
         hstr += '</table>'
         $('#data-display').html(hstr)
         $('#invariant-row').show()
+        $('#done-row').show()
         $('#hint').html(data.hint)
-        if (data.hint) {
-        }
         updateUI()
       }, log)
+    }
+
+    function nextLvl() {
+      $('#' + lvls[curLvl]).removeClass('bold');
+      $('#good-invariants').html('');
+      curLvl ++; loadTrace(lvls[curLvl]);
     }
 
     $(document).ready(function() {
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
 
       res = rpc.call('App.listData', [], function(res) {
+        lvls = res;
         hstr = '<ul>';
         for (var i in res) {
-          hstr += '<li><a id="' + res[i] + '" class="loadTrace">' + res[i] + '</a></li>'
+          hstr += '<li id="' + res[i] + '">' + res[i] + '</li>'
         }
         hstr += '</ul>'
         $('#traces-menu').html(hstr)
-
-        $('.loadTrace').each(function(i) {
-          $(this).click(function() { loadTrace(this.id); })
-        })
+        curLvl = 0;
+        loadTrace(lvls[curLvl])
       }, log)
 
       $('#formula-entry').keyup(function (keyEv) {
-        if (keyEv.keyCode != 13)  return;
+        if (errorTimer) {
+          window.clearTimeout(errorTimer);
+          errorTimer = null;
+        }
         updateUI();
       })
+
+      $('#next-lvl').click(nextLvl)
     })
 
   </script>
@@ -120,7 +136,7 @@
   <div class='container'>
     <div class='row'>
       <div class='col-md-3'>
-        Choose a trace:
+        Level:
         <div  id='traces-menu'> </div>
       </div>
       <div class='col-md-6'>
@@ -137,6 +153,9 @@
             <div class='col-md-3' > Enter Invariant: </div>
             <input id='formula-entry' type='text' class='col-md-4'>
             <div class='col-md-5' id='errormsg'> </div>
+        </div>
+        <div class='row' id='done-row' style='display: none;'>
+            <div class='col-md-3 col-md-offset-8' > <button id='next-lvl'> Next </a> </div>
         </div>
       </div>
       <div class='col-md-3' id='hint'> 

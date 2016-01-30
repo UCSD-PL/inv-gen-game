@@ -1,0 +1,13 @@
+*.out
+*.run
+*.swp
+*.swn
+*.swo
+
+src/harness/dilig/binding.so
+src/harness/dilig/binding_stdout.so
+src/static/bootstrap-theme.min.css
+src/static/bootstrap.min.css
+src/static/bootstrap.min.js
+src/static/jquery-1.12.0.min.js
+src/static/jquery.jsonrpcclient.js

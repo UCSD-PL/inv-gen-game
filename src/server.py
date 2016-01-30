@@ -32,7 +32,7 @@ def readTrace(fname):
     }
 
 def loadTraces(dirN):
-    return { name : readTrace(dirN + '/' + name) for name in listdir(dirN)
+    return { name[:-4] : readTrace(dirN + '/' + name) for name in listdir(dirN)
                 if name.endswith('.out') }
 
 introTraces = loadTraces(MYDIR + '/../intro-benchmarks')
