@@ -125,12 +125,23 @@
     }
 
     function loadLvl(lvl) {
+      if (lvl == lvls.length) {
+        return doneScreen();
+      }
+
       found = []
       $('#' + lvls[curLvl]).removeClass('bold');
       $('#good-invariants').html('');
       errorTimer = null;
       curLvl = lvl;
       loadTrace(lvls[curLvl]);
+    }
+
+    function doneScreen() {
+      errorTimer = null;
+      $('#left').html('');
+      $('#hint').html('');
+      $('#middle').html('<h1 class="good centered"> Congratulations! You completed the tutorial. </h1>')
     }
 
     $(document).ready(function() {
@@ -168,11 +179,11 @@
 </body>
   <div class='container'>
     <div class='row'>
-      <div class='col-md-3'>
+      <div class='col-md-3' id='left'>
         Level:
         <div  id='traces-menu'> </div>
       </div>
-      <div class='col-md-6'>
+      <div class='col-md-6' id='middle'>
         <div class='row'>
           <div id='data-display' class='col-md-12'>
           </div>
@@ -191,7 +202,7 @@
             <div class='col-md-3 col-md-offset-8' > <button id='next-lvl'> Next </a> </div>
         </div>
       </div>
-      <div class='col-md-3' id='hint'> 
+      <div class='col-md-3 good centered' id='hint'> 
       </div>
     </div>
   </div>

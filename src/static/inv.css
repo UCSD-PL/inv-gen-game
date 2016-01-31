@@ -20,7 +20,13 @@ tr.false {
 
 #hint {
   font-size: large;
+}
+
+.good {
   color: green;
+}
+
+.centered {
   vertical-align: middle;
   text-align: center;
 }
