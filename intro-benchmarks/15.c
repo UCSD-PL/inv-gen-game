@@ -4,12 +4,10 @@ void trace(int loopID, char *fmt, ...);
 
 int main()
 {
- int n = 5;
- int i;
- for (i = 0; i < n; i++) {
-   trace(0, "n=%di=%d", (int32_t)n, (int32_t)i);
- }
- trace(0, "n=%di=%d", (int32_t)n, (int32_t)i);
+ trace(0, "k=%dl=%dm=%d", (int32_t)1, (int32_t)10, (int32_t)6);
+ trace(0, "k=%dl=%dm=%d", (int32_t)5, (int32_t)5, (int32_t) 5);
+ trace(0, "k=%dl=%dm=%d", (int32_t)0, (int32_t)8, (int32_t) 1);
+ trace(0, "k=%dl=%dm=%d", (int32_t)4, (int32_t)15, (int32_t) 11);
  return 0;
 }
 
