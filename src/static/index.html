@@ -84,7 +84,7 @@
         hstr += '</table>'
         $('#data-display').html(hstr)
         $('#invariant-row').show()
-        $('#hint').html(data.hint)
+        $('#hint').html(invToHTML(data.hint))
         if (data.hint) {
         }
         updateUI()

@@ -17,3 +17,10 @@ tr.false {
 .bold {
   font-weight: bold;
 }
+
+#hint {
+  font-size: large;
+  color: green;
+  vertical-align: middle;
+  text-align: center;
+}
