@@ -21,8 +21,8 @@ def readTrace(fname):
     hint = None
     goal = None
     try:
-        hint = open(fname[:-4] + '.hint').read()
         goal = load(open(fname[:-4] + '.goal'))
+        hint = open(fname[:-4] + '.hint').read()
     except: pass
 
     vs = list(vs)

@@ -28,6 +28,15 @@ function invToJS(inv) {
   return inv.replace(/[^<>]=[^>]/g, function (v) { return v[0] + '==' + v[2]; })
 }
 
+function invToHTML(inv) {
+  return inv
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/<=/g, "&lt=;")
+    .replace(/>=/g, "&gt=;")
+    .replace(/&&/g, "&amp;&amp;")
+}
+
 function invEval(inv, data) {
   // Sort variable names in order of decreasing length
   vars = data.variables.map(function(val, ind, _) { return [val, ind]; })
@@ -59,13 +68,21 @@ function goalSatisfied(goal, invs) {
   if (goal == null) {
     return true;
   } else  if (goal.find) {
+    var numFound = 0;
     for (var i=0; i < goal.find.length; i++) {
-      if ($.inArray(goal.find[i], invs) == -1) {
-        return false;
+      var found = false;
+      for (var j=0; j < goal.find[i].length; j++) {
+        if ($.inArray(goal.find[i][j], invs) != -1) {
+          found = true;
+          break;
+        }
       }
+
+      if (found)
+        numFound ++;
     }
 
-    return true;
+    return numFound == goal.find.length;
   } else {
     error("Unknown goal " + goal.toSource());
   }

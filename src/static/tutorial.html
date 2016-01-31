@@ -69,7 +69,7 @@
             if (goalSatisfied(curGoal, found)) {
               $('#next-lvl').show();
             }
-            $('#good-invariants').append("<div class='row'>" + inv + "</div>")
+            $('#good-invariants').append("<div class='row'>" + invToHTML(inv) + "</div>")
             $('#errormsg').html("")
             $('#formula-entry').val('')
           }
@@ -111,11 +111,15 @@
     }
 
     function nextLvl() {
+      loadLvl(curLvl + 1);
+    }
+
+    function loadLvl(lvl) {
       found = []
       $('#' + lvls[curLvl]).removeClass('bold');
       $('#good-invariants').html('');
       errorTimer = null;
-      curLvl ++;
+      curLvl = lvl;
       loadTrace(lvls[curLvl]);
     }
 
@@ -126,10 +130,13 @@
         lvls = res;
         hstr = '<ul>';
         for (var i in res) {
-          hstr += '<li id="' + res[i] + '">' + res[i] + '</li>'
+          hstr += '<li>' + '<a class="loadLvl" id="' + res[i] + '" >' + res[i] + '</a>' + '</li>'
         }
         hstr += '</ul>'
         $('#traces-menu').html(hstr)
+        $('.loadLvl').click(function (evt) {
+          loadLvl(lvls.indexOf(this.id));
+        })
         curLvl = -1;
         nextLvl();
       }, log)
