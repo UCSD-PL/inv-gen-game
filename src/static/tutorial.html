@@ -43,6 +43,15 @@
       });
     }
 
+    function pick(arr) {
+      return arr[Math.floor(Math.random() * arr.length)]
+    }
+
+    function goodJob() {
+      return pick([ "Good Job!", "Nice!", "Great!", "Excellent!" ]) + "<br>" +
+             pick([ "Onto the next level!", "Moving on...", "Press next."])
+    }
+
     function updateUI() {
         $('#' + lvls[curLvl]).addClass('bold');
         var inv = invPP($('#formula-entry').val().trim());
@@ -67,6 +76,7 @@
           else {
             found.push(invPP(inv))
             if (goalSatisfied(curGoal, found)) {
+              $('#hint').append("<br><hr>" + goodJob())
               $('#next-lvl').show();
             }
             $('#good-invariants').append("<div class='row'>" + invToHTML(inv) + "</div>")
