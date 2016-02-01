@@ -6,8 +6,7 @@ int main()
 {
  int n = 5;
  int i,j,k;
- for (i = 0, j=0; i < n; i++, j++) {
-   k = i + j;
+ for (i = 0, j = 0, k = 0; i < n; i++, j+=2, k += 4) {
    trace(0, "i=%dj=%dk=%d", (int32_t)i, (int32_t)j, (int32_t)k);
  }
  trace(0, "i=%dj=%dk=%d", (int32_t)i, (int32_t)j, (int32_t)k);
