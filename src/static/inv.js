@@ -85,6 +85,8 @@ function goalSatisfied(goal, invs) {
 
     return { "satisfied": numFound == goal.find.length,
              "find": { "found": numFound, "total": goal.find.length } }
+  } else if (goal.max_score) {
+    return { "satisfied" : true, "max_score" : { "found" : invs.length } }
   } else {
     error("Unknown goal " + goal.toSource());
   }

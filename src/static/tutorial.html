@@ -49,9 +49,13 @@
       return arr[Math.floor(Math.random() * arr.length)]
     }
 
-    function goodJob() {
-      return pick([ "Good Job!", "Nice!", "Great!", "Excellent!" ]) + "<br>" +
-             pick([ "Onto the next level!", "Moving on...", "Press next."])
+    function goodJob(progress) {
+      if (progress.max_score) {
+        return pick([ "Good Job!", "Nice!", "Great!", "Excellent!", "You're rocking it!"]) + "<br>" +
+                      "<emph> " + progress.max_score.found + " invariants!</emph>"
+      } else 
+        return pick([ "Good Job!", "Nice!", "Great!", "Excellent!" ]) + "<br>" +
+               pick([ "Onto the next level!", "Moving on...", "Press next."])
     }
 
     function keepItUp(res) {
@@ -85,7 +89,7 @@
             var newProgress = goalSatisfied(curGoal, found)
             if (!progressEq(newProgress, progress)) {
               progress = newProgress
-              msg = (progress.satisfied ? goodJob() : keepItUp(progress) )
+              msg = (progress.satisfied ? goodJob(progress) : keepItUp(progress) )
 
               if ($('#found-some').length == 0) {
                 $('#hint').append("<br><hr> <span id='found-some'>" + msg + "</span>")
