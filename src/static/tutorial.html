@@ -37,6 +37,8 @@
     var curGoal;
     var data;
     var progress;
+    var foundMap;
+    var ctr = 0;
 
     function clearRows() {
       $('#data-display tr').each(function() {
@@ -70,7 +72,14 @@
           clearRows()
           return;
         }
-      
+
+        var redundant = foundMap.hasOwnProperty(inv);
+
+        $('.good-invariant').removeClass('error')
+        if (redundant) {
+          $('#good_' + foundMap[inv]).addClass('error')
+        }
+
         try {
           res = invEval(invToJS(inv), data)
           all = res.length
@@ -81,6 +90,9 @@
             $('#' + i).removeClass('false')
             $('#' + i).addClass(res[i] ? 'true' : 'false')
           }
+
+          if (redundant)
+            return;
 
           if (hold < all)
             $('#errormsg').html("<div class='valid'>Holds for " + hold + "/" + all + " cases.</div>")
@@ -108,7 +120,9 @@
                 })
               }
             }
-            $('#good-invariants').append("<div class='row'>" + invToHTML(inv) + "</div>")
+            ctr ++;
+            foundMap[inv] = ctr;
+            $('#good-invariants').append("<div class='row good-invariant' id='good_" + ctr + "'>" + invToHTML(inv) + "</div>")
             $('#errormsg').html("")
             $('#formula-entry').val('')
           }
@@ -160,6 +174,7 @@
       }
 
       found = []
+      foundMap = new Object()
       $('#' + lvls[curLvl]).removeClass('bold');
       $('#good-invariants').html('');
       errorTimer = null;
