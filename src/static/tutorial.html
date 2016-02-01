@@ -36,6 +36,7 @@
     var found = [];
     var curGoal;
     var data;
+    var progress;
 
     function clearRows() {
       $('#data-display tr').each(function() {
@@ -51,6 +52,11 @@
     function goodJob() {
       return pick([ "Good Job!", "Nice!", "Great!", "Excellent!" ]) + "<br>" +
              pick([ "Onto the next level!", "Moving on...", "Press next."])
+    }
+
+    function keepItUp(res) {
+      prog = res.find
+      return "You found " + prog.found + " invariant(s)!<br>Just " + (prog.total - prog.found) + " left!."
     }
 
     function updateUI() {
@@ -76,9 +82,19 @@
             $('#errormsg').html("<div class='valid'>Holds for " + hold + "/" + all + " cases.</div>")
           else {
             found.push(invPP(inv))
-            if (goalSatisfied(curGoal, found)) {
-              $('#hint').append("<br><hr>" + goodJob())
-              $('#next-lvl').show();
+            var newProgress = goalSatisfied(curGoal, found)
+            if (!progressEq(newProgress, progress)) {
+              progress = newProgress
+              msg = (progress.satisfied ? goodJob() : keepItUp(progress) )
+
+              if ($('#found-some').length == 0) {
+                $('#hint').append("<br><hr> <span id='found-some'>" + msg + "</span>")
+              } else {
+                $('#found-some').html(msg)
+              }
+
+              if (progress.satisfied)
+                $('#next-lvl').show();
             } else {
               if ($('#found-other').length == 0) {
                 $('#hint').append("<br><hr><span id='found-other'> Nice going, but not the invariant we re looking for :) </span>")
@@ -104,6 +120,7 @@
       res = rpc.call('App.getData', [ traceId ], function(res) {
         data = res;
         curGoal = data.goal;
+        progress = goalSatisfied(curGoal, found);
 
         hstr = '<table class="table table-stripped"><tr>';
         for (i in res.variables) {

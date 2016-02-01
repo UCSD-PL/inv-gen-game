@@ -66,7 +66,7 @@ function invEval(inv, data) {
 
 function goalSatisfied(goal, invs) {
   if (goal == null) {
-    return true;
+    return { "satisfied" : true }
   } else  if (goal.find) {
     var numFound = 0;
     for (var i=0; i < goal.find.length; i++) {
@@ -80,10 +80,16 @@ function goalSatisfied(goal, invs) {
 
       if (found)
         numFound ++;
+
     }
 
-    return numFound == goal.find.length;
+    return { "satisfied": numFound == goal.find.length,
+             "find": { "found": numFound, "total": goal.find.length } }
   } else {
     error("Unknown goal " + goal.toSource());
   }
+}
+
+function progressEq(p1,p2) {
+  return JSON.stringify(p1) === JSON.stringify(p2)
 }
