@@ -2,7 +2,8 @@ THIRD_PARTY_DEPS=bootstrap.min.css \
 								 bootstrap.min.js \
 								 bootstrap-theme.min.css \
 								 jquery-1.12.0.min.js \
-								 jquery.jsonrpcclient.js
+								 jquery.jsonrpcclient.js\
+								 jquery.color-2.1.2.min.js
 
 all: $(THIRD_PARTY_DEPS)
 
@@ -20,6 +21,10 @@ jquery-1.12.0.min.js:
 
 jquery.jsonrpcclient.js:
 	wget https://raw.githubusercontent.com/Textalk/jquery.jsonrpcclient.js/master/jquery.jsonrpcclient.js
+
+jquery.color-2.1.2.min.js:
+	wget http://code.jquery.com/color/jquery.color-2.1.2.min.js
+
 
 clean:
 	rm $(THIRD_PARTY_DEPS)
