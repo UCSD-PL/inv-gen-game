@@ -25,7 +25,8 @@ def readTrace(fname):
         hint = open(fname[:-4] + '.hint').read()
     except: pass
 
-    vs = list(vs)
+    #vs = list(vs)
+    vs = sorted(vs)
     return { 'variables': vs,
              'data': [[ row.get(n, None) for n in vs  ]  for row in rows ],
              'hint': hint,

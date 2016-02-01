@@ -1,1 +1,2 @@
-{ "find" : [["i+j=k", "j+i=k", "k=i+j", "k=j+i"]] }
+{ "find" : [["i+j=k", "(i+j)=k", "j+i=k", "(j+i)=k", "k=i+j", "k=(i+j)",
+"k=j+i", "k=(j+i)"]] }
