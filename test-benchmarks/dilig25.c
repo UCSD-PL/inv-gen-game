@@ -11,8 +11,6 @@ int unknown2() { return ((++count2) % 7) != 0; }
 int unknown3() { return ((++count3) % 7) != 0; }
 int unknown4() { return ((++count4) % 7) != 0; }
 
-void static_assert(int x) {}
-
 int main()
 {
   int x = 0;
@@ -23,10 +21,8 @@ int main()
   while(unknown1())
   {
     trace(0, "x=%dy=%di=%dj=%d", (int32_t)x, (int32_t)y, (int32_t)i, (int32_t)j);
-    //printf("1 x = %d y = %d i = %d j = %d\n", x, y, i, j);
     while(unknown2())
     {
-      //printf("2 x = %d y = %d i = %d j = %d\n", x, y, i, j);
       trace(1, "x=%dy=%di=%dj=%d", (int32_t)x, (int32_t)y, (int32_t)i, (int32_t)j);
 
        if(x==y)
@@ -35,7 +31,6 @@ int main()
           j++;
     }
     trace(1, "x=%dy=%di=%dj=%d", (int32_t)x, (int32_t)y, (int32_t)i, (int32_t)j);
-    //printf("2 x = %d y = %d i = %d j = %d\n", x, y, i, j);
     if(i>=j)
     {
        x++;
@@ -45,8 +40,5 @@ int main()
        y++;
   }
   trace(0, "x=%dy=%di=%dj=%d", (int32_t)x, (int32_t)y, (int32_t)i, (int32_t)j);
-  //printf("1 x = %d y = %d i = %d j = %d\n", x, y, i, j);
-
-  static_assert(i>=j);
   return 0;
 }
