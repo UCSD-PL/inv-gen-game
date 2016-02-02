@@ -23,7 +23,7 @@ int __VERIFIER_nondet_int(int n)
 
 int main()
 {
-  srand(time(NULL));
+  //srand(time(NULL));
   //unsigned int x = rand() % 10;//__VERIFIER_nondet_int(10);
   //unsigned int y = rand() % 20;//__VERIFIER_nondet_int(20);
   unsigned int x = 5; 
@@ -39,10 +39,10 @@ int main()
     //printf("%d\t%d\t%d\n", x, y, s);
     // invariant: s == y*j and j <= x
     s = s + y;
-    trace(0, "x=%dy=%ds=%d", (int32_t)x, (int32_t)y, (int32_t)s);
+    trace(0, "x=%dy=%ds=%dj=%d", (int32_t)x, (int32_t)y, (int32_t)s, (int32_t)j);
   }
   //printf("%d\t%d\t%d\n", x, y, s);
-  trace(0, "x=%dy=%ds=%d", (int32_t)x, (int32_t)y, (int32_t)s);
+  trace(0, "x=%dy=%ds=%dj=%d", (int32_t)x, (int32_t)y, (int32_t)s, (int32_t)j);
   //__VERIFIER_assert(s == x*y);    
   return 0;
 }
