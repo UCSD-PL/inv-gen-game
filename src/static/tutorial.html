@@ -157,17 +157,8 @@
       }
     }
 
-    function doneScreen() {
-      errorTimer = null;
-      $('#left').html('');
-      $('#hint').html('');
-      $('#middle').html('<h1 class="good centered"> Congratulations! You completed the tutorial. </h1>')
-    }
-
-    $(document).ready(function() {
-      rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
-
-      res = rpc.call('App.listData', [], function(res) {
+    function loadLvlSet(lvlset) {
+      res = rpc.call('App.listData', [lvlset], function(res) {
         lvls = res;
         hstr = '<ul>';
         for (var i in res) {
@@ -189,11 +180,24 @@
         }
         updateUI();
       })
+    }
+
+    function doneScreen() {
+      errorTimer = null;
+      $('#left').html('');
+      $('#hint').html('');
+      $('#middle').html('<h1 class="good centered"> Congratulations! You completed the tutorial. </h1>')
+    }
+
+    $(document).ready(function() {
+      rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
 
       $('#next-lvl').click(nextLvl)
       $('#nextLvlModal').on('shown.bs.modal', function () {
         $('#next-lvl').focus()
       })
+
+      loadLvlSet("intro-benchmarks")
     })
 
   </script>
