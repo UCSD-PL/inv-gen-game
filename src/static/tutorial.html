@@ -153,17 +153,18 @@
     }
 
     function loadLvl(lvl) {
-      if (lvl == lvls.length) {
-        return doneScreen();
-      }
-
       found = []
       foundMap = new Object()
       $('#' + lvls[curLvl]).removeClass('bold');
       $('#good-invariants').html('');
       errorTimer = null;
       curLvl = lvl;
-      loadTrace(lvls[curLvl]);
+
+      if (lvl == lvls.length) {
+        return doneScreen();
+      } else {
+        loadTrace(lvls[curLvl]);
+      }
     }
 
     function doneScreen() {
