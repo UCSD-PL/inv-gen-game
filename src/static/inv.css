@@ -20,7 +20,7 @@ tr.false {
 }
 
 #hint {
-  font-size: large;
+ /* font-size: large; */
 }
 
 .good {
@@ -30,4 +30,9 @@ tr.false {
 .centered {
   vertical-align: middle;
   text-align: center;
+}
+
+.spaced {
+  margin-top: 20px;
+  margin-bottom: 20px;
 }

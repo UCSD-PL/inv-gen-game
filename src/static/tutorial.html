@@ -101,29 +101,17 @@
             var newProgress = goalSatisfied(curGoal, found)
             if (!progressEq(newProgress, progress)) {
               progress = newProgress
-              msg = (progress.satisfied ? goodJob(progress) : keepItUp(progress) )
 
-              if ($('#found-some').length == 0) {
-                $('#hint').append("<br><hr> <span id='found-some'>" + msg + "</span>")
-              } else {
-                $('#found-some').html(msg)
-              }
-
+              $('#errormsg').html("")
               if (progress.satisfied)
-                $('#next-lvl').show();
+                $('#nextLvlModal').modal({keyboard: false, backdrop: "static"});
             } else {
-              if ($('#found-other').length == 0) {
-                $('#hint').append("<br><hr><span id='found-other'> Nice going, but not the invariant we re looking for :) </span>")
-              } else {
-                $('#found-other').animate({ "backgroundColor" : "rgba(179, 179, 179, 0.8)" }, 200, function () {
-                  $('#found-other').animate({ "backgroundColor" : "white"  }, 200);
-                })
-              }
+                $('#errormsg').html("Nice going, but not the invariant we re looking for :)")
             }
             ctr ++;
             foundMap[inv] = ctr;
-            $('#good-invariants').append("<div class='row good-invariant' id='good_" + ctr + "'>" + invToHTML(inv) + "</div>")
-            $('#errormsg').html("")
+            $('#good-invariants').append("<div class='row good-invariant' id='good_" +
+              ctr + "'>" + invToHTML(inv) + "</div>")
             $('#formula-entry').val('')
           }
         } catch (err) {
@@ -154,12 +142,8 @@
         hstr += '</table>'
         $('#data-display').html(hstr)
         $('#invariant-row').show()
-
-        if (curGoal)
-          $('#next-lvl').hide();
-
-        $('#done-row').show()
         $('#hint').html(data.hint)
+        $('#formula-entry').focus();
         updateUI()
       }, log)
     }
@@ -216,6 +200,9 @@
       })
 
       $('#next-lvl').click(nextLvl)
+      $('#nextLvlModal').on('shown.bs.modal', function () {
+        $('#next-lvl').focus()
+      })
     })
 
   </script>
@@ -230,25 +217,41 @@
       </div>
       <div class='col-md-6' id='middle'>
         <div class='row'>
-          <div id='data-display' class='col-md-12'>
+          <div id='data-display' class='col-md-12 spaced'>
           </div>
         </div>
-        <div class='row'>
-          <div class='col-md-3' ></div>
-          <div id='good-invariants' class='col-md-9'>
-          </div>
+        <div class='row-md-6 spaced'>
+          Hint: <span id='hint'> </span>
         </div>
-        <div class='row' id='invariant-row' style='display: none;'>
-            <div class='col-md-3' > Enter Invariant: </div>
-            <input id='formula-entry' type='text' class='col-md-4'>
-            <div class='col-md-5' id='errormsg'> </div>
+        <div class='row-md-6 spaced' id='invariant-row' style='display: none;'>
+            Enter Invariant: 
+            <input id='formula-entry' type='text'>
         </div>
-        <div class='row' id='done-row' style='display: none;'>
+        <div class='row-md-6 spaced' id='errormsg'> </div>
+        <!--
+        <div class='row-md-6' id='done-row' style='display: none;'>
             <div class='col-md-3 col-md-offset-8' > <button id='next-lvl'> Next </a> </div>
         </div>
+        -->
       </div>
-      <div class='col-md-3 good centered' id='hint'> 
+      <div id='good-invariants' class='col-md-3 good centered'>
       </div>
     </div>
   </div>
+
+  <div class="modal fade bs-example-modal-sm" id="nextLvlModal" tabindex="-1" role="dialog" aria-labelledby="nextLvl">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Good job!</h4>
+        </div>
+        <div class="modal-body">
+          You passed the level!
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal" id='next-lvl'>Next Level</button>
+        </div>
+      </div>
+    </div>
+</div> 
 </html>
