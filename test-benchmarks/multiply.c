@@ -38,8 +38,8 @@ int main()
   {
     //printf("%d\t%d\t%d\n", x, y, s);
     // invariant: s == y*j and j <= x
-    s = s + y;
     trace(0, "x=%dy=%ds=%dj=%d", (int32_t)x, (int32_t)y, (int32_t)s, (int32_t)j);
+    s = s + y;
   }
   //printf("%d\t%d\t%d\n", x, y, s);
   trace(0, "x=%dy=%ds=%dj=%d", (int32_t)x, (int32_t)y, (int32_t)s, (int32_t)j);
