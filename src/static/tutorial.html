@@ -62,7 +62,7 @@
 
     function keepItUp(res) {
       prog = res.find
-      return "You found " + prog.found + " invariant(s)!<br>Just " + (prog.total - prog.found) + " left!."
+      return "You found " + prog.found + " invariant(s)!Just " + (prog.total - prog.found) + " left!."
     }
 
     function updateUI() {
@@ -105,6 +105,9 @@
               $('#errormsg').html("")
               if (progress.satisfied)
                 $('#nextLvlModal').modal({keyboard: false, backdrop: "static"});
+              else
+                $('#errormsg').html("<div class='good'>" + keepItUp(progress) +  "</div>");
+                
             } else {
                 $('#errormsg').html("Nice going, but not the invariant we re looking for :)")
             }
