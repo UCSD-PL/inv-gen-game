@@ -18,7 +18,7 @@ void cegar1(int x, int y) {
 	if (!(y <= 2))
 		return;
 
-	input = 10;
+	input = 3;
 
 	//printf("x\ty\n");
 
@@ -38,6 +38,8 @@ void cegar1(int x, int y) {
 int main()
 {
   int x=1,y=2;
-  cegar1(x, y);
+  cegar1(1, 2);
+  cegar1(2, 2);
+  cegar1(2, 0);
   return 0;
 }
