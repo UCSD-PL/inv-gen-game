@@ -7,15 +7,18 @@ from json import load
 MYDIR=dirname(abspath(realpath(__file__)))
 
 def readTrace(fname):
-    vs = set()
     rows = []
+    first = True
     for l in open(fname):
         l = l.strip();
         if (l == ''):   continue
         row = {}
         for (n,v) in [x.split('=') for x in l.split(' ')]:
             row[n] = v
-            vs.add(n)
+
+        if (first):
+          vs = [x.split('=')[0] for x in l.split(' ')]
+          first = False;
         rows.append(row)
 
     hint = None
@@ -25,8 +28,6 @@ def readTrace(fname):
         hint = open(fname[:-4] + '.hint').read()
     except: pass
 
-    #vs = list(vs)
-    vs = sorted(vs)
     return { 'variables': vs,
              'data': [[ row.get(n, None) for n in vs  ]  for row in rows ],
              'hint': hint,

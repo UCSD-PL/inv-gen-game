@@ -47,19 +47,6 @@
       });
     }
 
-    function pick(arr) {
-      return arr[Math.floor(Math.random() * arr.length)]
-    }
-
-    function goodJob(progress) {
-      if (progress.max_score) {
-        return pick([ "Good Job!", "Nice!", "Great!", "Excellent!", "You're rocking it!"]) + "<br>" +
-                      "<emph> " + progress.max_score.found + " invariants!</emph>"
-      } else 
-        return pick([ "Good Job!", "Nice!", "Great!", "Excellent!" ]) + "<br>" +
-               pick([ "Onto the next level!", "Moving on...", "Press next."])
-    }
-
     function keepItUp(res) {
       prog = res.find
       return "You found " + prog.found + " invariant(s)!Just " + (prog.total - prog.found) + " left!."
