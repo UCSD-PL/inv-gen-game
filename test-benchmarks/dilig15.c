@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdint.h>
-void trace(int loopID, char *fmt);
+void trace(int loopID, char *fmt, ...);
 
 void static_assert(int x) {}
 void assume(int x) {}
