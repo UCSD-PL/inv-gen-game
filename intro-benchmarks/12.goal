@@ -1,1 +1,3 @@
-{ "find" : [["i*j=k", "j*i=k", "k=i*j", "k=j*i" ]] }
+{ "find" : [["i*j=k", "j*i=k", "k=i*j", "k=j*i", "i=k/j", "j=k/i", "k/i=j",
+"k/j=i", "(i*j)=k", "(j*i)=k", "k=(i*j)", "k=(j*i)", "i=(k/j)", "j=(k/i)",
+"(k/i)=j", "(k/j)=i" ]] }
