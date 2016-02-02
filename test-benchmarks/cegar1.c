@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <stdio.h>
+#include <stdint.h>
 void trace(int loopID, char *fmt, ...);
 
 //int __VERIFIER_assert(int a) {}
@@ -38,4 +39,5 @@ int main()
 {
   int x=1,y=2;
   cegar1(x, y);
+  return 0;
 }

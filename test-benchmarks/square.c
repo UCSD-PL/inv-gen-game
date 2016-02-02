@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
+#include <stdint.h>
 void trace(int loopID, char *fmt, ...);
 
 void __VERIFIER_assert(int cond) {
@@ -23,7 +24,8 @@ int main(int argc, char* argv[])
   n = 0;
   x = 0;
   srand(time(NULL));
-  r = rand % 10;//__VERIFIER_nondet_int();
+  //r = rand() % 10;//__VERIFIER_nondet_int();
+  r = 5;
 
   //printf("n\tx\tr\n");
   while (r != 0)
@@ -39,5 +41,6 @@ int main(int argc, char* argv[])
   //printf("%d\t%d\t%d\n", n, x, r);
 
   __VERIFIER_assert(x == n*n);    
+  return 0;
 }
 

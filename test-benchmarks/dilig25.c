@@ -1,6 +1,6 @@
 #include <assert.h>
 #include <stdio.h>
-#include <stdio.h>
+#include <stdint.h>
 
 int count1 = 0;
 int count2 = 0;
@@ -13,7 +13,7 @@ int unknown4() { return ((++count4) % 7) != 0; }
 
 void static_assert(int x) {}
 
-void main()
+int main()
 {
   int x = 0;
   int y = 0;
@@ -48,4 +48,5 @@ void main()
   //printf("1 x = %d y = %d i = %d j = %d\n", x, y, i, j);
 
   static_assert(i>=j);
+  return 0;
 }

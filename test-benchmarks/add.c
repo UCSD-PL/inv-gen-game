@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <stdio.h>
+#include <stdint.h>
 void trace(int loopID, char *fmt, ...);
 
 int ADD(int i, int j)
@@ -23,6 +24,7 @@ int main(int argc, char* argv[])
   x = 5;
   y = 5;
   result = ADD(x, y);
+  return 0;
 }
 
 /* Sample output:
