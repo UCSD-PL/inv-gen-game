@@ -39,10 +39,11 @@ def loadTraces(dirN):
                 if name.endswith('.out') }
 
 introTraces = loadTraces(MYDIR + '/../intro-benchmarks')
+testTraces = loadTraces(MYDIR + '/../test-benchmarks')
 
 traces = {
     "intro-benchmarks": introTraces,
-    "challenge-benchmarks": introTraces,
+    "test-benchmarks": testTraces,
     "old-dilig-traces": {
       '15-c': {
           'variables': ['n', 'k', 'j'],
@@ -122,11 +123,14 @@ def listData(levelSet):
     return res
 
 @api.method("App.getData")
-def getData(traceId):
-    if (traceId not in introTraces):
-        raise Exception("Unkonwn trace " + traceId)
+def getData(levelSet, traceId):
+    if (levelSet not in traces):
+        raise Exception("Unkonwn level set " + levelSet)
 
-    return introTraces[traceId]
+    if (traceId not in traces[levelSet]):
+        raise Exception("Unkonwn trace " + traceId + " in levels " + levelSet)
+
+    return traces[levelSet][traceId]
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')

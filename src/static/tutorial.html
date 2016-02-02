@@ -31,6 +31,7 @@
   <script>
     var errorDelay = 2000;
     var curLvl; 
+    var curLvlSet; 
     var lvls = null;
     var errorTimer;
     var found = [];
@@ -113,7 +114,7 @@
     }
 
     function loadTrace(traceId) {
-      res = rpc.call('App.getData', [ traceId ], function(res) {
+      res = rpc.call('App.getData', [ curLvlSet, traceId ], function(res) {
         data = res;
         curGoal = data.goal;
         progress = goalSatisfied(curGoal, found);
@@ -158,6 +159,7 @@
     }
 
     function loadLvlSet(lvlset) {
+      curLvlSet = lvlset;
       res = rpc.call('App.listData', [lvlset], function(res) {
         lvls = res;
         hstr = '<ul>';
@@ -183,10 +185,7 @@
     }
 
     function doneScreen() {
-      errorTimer = null;
-      $('#left').html('');
-      $('#hint').html('');
-      $('#middle').html('<h1 class="good centered"> Congratulations! You completed the tutorial. </h1>')
+      loadLvlSet("test-benchmarks")
     }
 
     $(document).ready(function() {
@@ -238,8 +237,7 @@
         <div class="modal-header">
           <h4 class="modal-title">Good job!</h4>
         </div>
-        <div class="modal-body">
-          You passed the level!
+        <div class="modal-body" id="next-lvl-msg">
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-default" data-dismiss="modal" id='next-lvl'>Next Level</button>
