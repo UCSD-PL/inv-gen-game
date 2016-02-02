@@ -1,0 +1,2 @@
+{ "find" : [["i+j=ret", "j+i=ret", "ret=i+j", "ret=j+i", "i=ret-j", "j=ret-i",
+"ret-j=i", "ret-i=j"]] }
