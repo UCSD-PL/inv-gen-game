@@ -132,7 +132,7 @@
         for (i in res.variables) {
           hstr += '<th>' + res.variables[i] + '</th>';
         }
-        hstr += '<th></th></tr>';
+        hstr += '</tr>';
         for (i in res.data) {
           hstr += '<tr id= "' + i + '">';
           for (j in res.data[i]) {
@@ -216,9 +216,7 @@
         <div  id='traces-menu'> </div>
       </div>
       <div class='col-md-6' id='middle'>
-        <div class='row'>
-          <div id='data-display' class='col-md-12 spaced'>
-          </div>
+        <div class='row' id='data-display'>
         </div>
         <div class='row-md-6 spaced'>
           Hint: <span id='hint'> </span>
