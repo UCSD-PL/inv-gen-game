@@ -50,9 +50,9 @@ function invEval(inv, data) {
   holds_arr = []
 
   // Do substitutions and eval
-  for (row in data.data) {
+  for (var row in data.data) {
     s = inv
-    for (v in vars) {
+    for (var v in vars) {
       s = s.replace(new RegExp(vars[v][0], 'g'), data.data[row][vars[v][1]])
     }
     holds = eval(s)

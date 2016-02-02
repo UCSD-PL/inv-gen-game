@@ -72,7 +72,7 @@
           all = res.length
           hold = res.filter(function (x) { return x; }).length
           
-          for (i in res) {
+          for (var i in res) {
             $('#' + i).removeClass('true')
             $('#' + i).removeClass('false')
             $('#' + i).addClass(res[i] ? 'true' : 'false')
@@ -119,13 +119,13 @@
         progress = goalSatisfied(curGoal, found);
 
         hstr = '<table class="table table-stripped"><tr>';
-        for (i in res.variables) {
+        for (var i in res.variables) {
           hstr += '<th>' + res.variables[i] + '</th>';
         }
         hstr += '</tr>';
-        for (i in res.data) {
+        for (var i in res.data) {
           hstr += '<tr id= "' + i + '">';
-          for (j in res.data[i]) {
+          for (var j in res.data[i]) {
             hstr += '<td>' + res.data[i][j] + '</td>';
           }
         }
