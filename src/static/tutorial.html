@@ -79,11 +79,13 @@
             $('#' + i).addClass(res[i] ? 'true' : 'false')
           }
 
-          if (redundant)
+          if (redundant) {
+            $('#errormsg').html("<div class='error'>Duplicate Invariant!</error>")
             return;
+          }
 
           if (hold < all)
-            $('#errormsg').html("<div class='valid'>Holds for " + hold + "/" + all + " cases.</div>")
+            $('#errormsg').html("<div class='error'>Holds for " + hold + "/" + all + " cases.</div>")
           else {
             found.push(invPP(inv))
             var newProgress = goalSatisfied(curGoal, found)
@@ -91,18 +93,22 @@
               progress = newProgress
 
               $('#errormsg').html("")
-              if (progress.satisfied)
+              if (progress.satisfied) {
+                if (curLvl < lvls.length - 1)
+                  $('#next-lvl-msg').html("Go on to the next level!")
+                else
+                  $('#next-lvl-msg').html("You finished all the tutorial levels! <br> Time for the real deal!")
                 $('#nextLvlModal').modal({keyboard: false, backdrop: "static"});
-              else
+              } else
                 $('#errormsg').html("<div class='good'>" + keepItUp(progress) +  "</div>");
                 
             } else {
-                $('#errormsg').html("Nice going, but not the invariant we re looking for :)")
+                $('#errormsg').html("<div class='warn'>Correct invariant, but not what we re looking for :)</div>")
             }
             ctr ++;
             foundMap[inv] = ctr;
-            $('#good-invariants').append("<div class='row good-invariant' id='good_" +
-              ctr + "'>" + invToHTML(inv) + "</div>")
+            $('#good-invariants').append("<li class='good-invariant' id='good_" +
+              ctr + "'>" + invToHTML(inv) + "</li>")
             $('#formula-entry').val('')
           }
         } catch (err) {
@@ -148,6 +154,8 @@
       foundMap = new Object()
       $('#' + lvls[curLvl]).removeClass('bold');
       $('#good-invariants').html('');
+      $('#errormsg').html('');
+      $('#formula-entry').val('');
       errorTimer = null;
       curLvl = lvl;
 
@@ -226,7 +234,10 @@
         </div>
         -->
       </div>
-      <div id='good-invariants' class='col-md-3 good centered'>
+      <div class='col-md-3 good centered'>
+        Discovered invariants:
+        <ul id='good-invariants'>
+        </ul>
       </div>
     </div>
   </div>

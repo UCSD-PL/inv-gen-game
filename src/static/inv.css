@@ -7,6 +7,11 @@
   /*color: rgb(255, 255, 0);*/
 }
 
+.warn {
+  color: rgb(204, 102, 0);
+  /*color: rgb(255, 255, 0);*/
+}
+
 tr.true {
   background-color: rgba(0, 128, 0, 0.5);
 }
