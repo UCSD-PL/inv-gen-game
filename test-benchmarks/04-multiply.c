@@ -14,7 +14,7 @@ int main()
 
   int s = 0, j;
 
-  if (x < 0) return;
+  if (x < 0) return -1;
 
   for(j = 0; j < x; j++)
   {

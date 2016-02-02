@@ -2,6 +2,9 @@
 
 MYDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" 
 
+pushd $MYDIR/test-benchmarks
+make clean
+popd
 pushd $MYDIR/intro-benchmarks
 make clean
 popd

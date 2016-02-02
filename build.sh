@@ -8,6 +8,9 @@ popd
 pushd $MYDIR/intro-benchmarks
 make
 popd
+pushd $MYDIR/test-benchmarks
+make
+popd
 pushd $MYDIR/src/static
 make
 popd

@@ -3,7 +3,7 @@ DEPS=-L../src/harness/dilig -Wl,-rpath=../src/harness/dilig -l:binding_stdout.so
 
 all: progs traces
 
-FILES=dilig01.c add.c multiply.c square.c dilig15.c cegar1.c #dilig25.c
+FILES=01-dilig01.c 02-square.c 03-add.c 04-multiply.c 05-dilig15.c 06-cegar1.c #dilig25.c
 PROGS=$(FILES:.c=.run)
 TRACES=$(FILES:.c=.out)
 
