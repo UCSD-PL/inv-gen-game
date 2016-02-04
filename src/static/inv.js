@@ -56,9 +56,11 @@ function invEval(inv, data) {
       s = s.replace(new RegExp(vars[v][0], 'g'), data.data[row][vars[v][1]])
     }
     holds = eval(s)
+    /*
     if (typeof(holds) != 'boolean') {
       throw new InvException("NOT_BOOL", holds)
     }
+    */
     holds_arr.push(holds)
   }
   return holds_arr

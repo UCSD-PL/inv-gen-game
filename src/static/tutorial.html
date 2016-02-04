@@ -70,6 +70,18 @@
 
         try {
           res = invEval(invToJS(inv), data)
+
+          $('th.temp_expr_eval').html(inv)
+
+          for (var i in res) {
+            $('#' + i + ' .temp_expr_eval').html(JSON.stringify(res[i]))
+            log(res[i])
+          }
+
+          for (var i in res) {
+            if (typeof(res[i]) != "boolean")
+              throw new InvException("NOT_BOOL", holds)
+          }
           all = res.length
           hold = res.filter(function (x) { return x; }).length
           
@@ -129,12 +141,14 @@
         for (var i in res.variables) {
           hstr += '<th>' + res.variables[i] + '</th>';
         }
+        hstr += '<th class="temp_expr_eval">&nbsp</th>';
         hstr += '</tr>';
         for (var i in res.data) {
           hstr += '<tr id= "' + i + '">';
           for (var j in res.data[i]) {
             hstr += '<td>' + res.data[i][j] + '</td>';
           }
+          hstr += '<td class="temp_expr_eval">&nbsp</td></tr>';
         }
         hstr += '</table>'
         $('#data-display').html(hstr)
