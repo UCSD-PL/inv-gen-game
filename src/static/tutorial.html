@@ -46,6 +46,7 @@
         $(this).removeClass('true')
         $(this).removeClass('false')
       });
+      $('.temp_expr_eval').html('');
     }
 
     function keepItUp(res) {
@@ -55,6 +56,7 @@
 
     function updateUI() {
         $('#' + lvls[curLvl]).addClass('bold');
+        $('#errormsg').html("")
         var inv = invPP($('#formula-entry').val().trim());
         if (inv.length == 0) {
           clearRows()
@@ -71,16 +73,13 @@
         try {
           res = invEval(invToJS(inv), data)
 
-          $('th.temp_expr_eval').html(inv)
-
           for (var i in res) {
             $('#' + i + ' .temp_expr_eval').html(JSON.stringify(res[i]))
-            log(res[i])
           }
 
           for (var i in res) {
             if (typeof(res[i]) != "boolean")
-              throw new InvException("NOT_BOOL", holds)
+              return;
           }
           all = res.length
           hold = res.filter(function (x) { return x; }).length
@@ -103,14 +102,15 @@
             var newProgress = goalSatisfied(curGoal, found)
             if (!progressEq(newProgress, progress)) {
               progress = newProgress
-
-              $('#errormsg').html("")
               if (progress.satisfied) {
                 if (curLvl < lvls.length - 1)
                   $('#next-lvl-msg').html("Go on to the next level!")
                 else
                   $('#next-lvl-msg').html("You finished all the tutorial levels! <br> Time for the real deal!")
-                $('#nextLvlModal').modal({keyboard: false, backdrop: "static"});
+                //$('#nextLvlModal').modal({keyboard: false, backdrop: "static"});
+                $('#errormsg').html("<div class='good'>Nice! You found the invariant! Click the 'Next' button below. </div>");
+                $('#done-row').show()
+                $('#next-lvl').focus()
               } else
                 $('#errormsg').html("<div class='good'>" + keepItUp(progress) +  "</div>");
                 
@@ -141,7 +141,8 @@
         for (var i in res.variables) {
           hstr += '<th>' + res.variables[i] + '</th>';
         }
-        hstr += '<th class="temp_expr_eval">&nbsp</th>';
+        hstr += '<th><input id="formula-entry" type="text"></th>';
+            
         hstr += '</tr>';
         for (var i in res.data) {
           hstr += '<tr id= "' + i + '">';
@@ -152,7 +153,15 @@
         }
         hstr += '</table>'
         $('#data-display').html(hstr)
-        $('#invariant-row').show()
+
+        $('#formula-entry').keyup(function (keyEv) {
+          if (errorTimer) {
+            window.clearTimeout(errorTimer);
+            errorTimer = null;
+          }
+          updateUI();
+        })
+
         $('#hint').html(data.hint)
         $('#formula-entry').focus();
         updateUI()
@@ -170,6 +179,7 @@
       $('#good-invariants').html('');
       $('#errormsg').html('');
       $('#formula-entry').val('');
+      $('#done-row').hide()
       errorTimer = null;
       curLvl = lvl;
 
@@ -196,14 +206,6 @@
         curLvl = -1;
         nextLvl();
       }, log)
-
-      $('#formula-entry').keyup(function (keyEv) {
-        if (errorTimer) {
-          window.clearTimeout(errorTimer);
-          errorTimer = null;
-        }
-        updateUI();
-      })
     }
 
     function doneScreen() {
@@ -214,9 +216,11 @@
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
 
       $('#next-lvl').click(nextLvl)
+      /*
       $('#nextLvlModal').on('shown.bs.modal', function () {
         $('#next-lvl').focus()
       })
+      */
 
       loadLvlSet("intro-benchmarks")
     })
@@ -237,16 +241,10 @@
         <div class='row-md-6 spaced'>
           Hint: <span id='hint'> </span>
         </div>
-        <div class='row-md-6 spaced' id='invariant-row' style='display: none;'>
-            Enter Invariant: 
-            <input id='formula-entry' type='text'>
-        </div>
         <div class='row-md-6 spaced' id='errormsg'> </div>
-        <!--
         <div class='row-md-6' id='done-row' style='display: none;'>
             <div class='col-md-3 col-md-offset-8' > <button id='next-lvl'> Next </a> </div>
         </div>
-        -->
       </div>
       <div class='col-md-3 good centered'>
         Discovered invariants:
@@ -256,6 +254,7 @@
     </div>
   </div>
 
+  <!--
   <div class="modal fade bs-example-modal-sm" id="nextLvlModal" tabindex="-1" role="dialog" aria-labelledby="nextLvl">
     <div class="modal-dialog modal-sm">
       <div class="modal-content">
@@ -269,5 +268,6 @@
         </div>
       </div>
     </div>
+  -->
 </div> 
 </html>
