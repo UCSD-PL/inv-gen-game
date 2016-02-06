@@ -1,7 +1,4 @@
-//#include <assert.h>
 #include <stdio.h>
-
-int static_assert(int x) {}
 
 void run(int flag, int u1, int u2)
 {
@@ -9,9 +6,11 @@ void run(int flag, int u1, int u2)
   int s = 0;
   int a = 0;
   int b = 0;
+
+  printf("[Loop]\ta\tb\ts\tt\tu1\tu2\tflag\n");
   
   while(u1 != 0){
-    printf("INSIDE FIRST: t = %d\ts = %d\ta = %d\tb = %d\tu1 = %d\tu2 = %d\tflag = %d\n", t, s, a, b, u1, u2, flag);
+    printf("[1]\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", a, b, s, t, u1, u2, flag);
     a++;
     b++;
     s+=a;
@@ -21,7 +20,7 @@ void run(int flag, int u1, int u2)
     }
     u1--;
   }
-  printf("OUTSIDE FIRST: t = %d\ts = %d\ta = %d\tb = %d\tu1 = %d\tu2 = %d\tflag = %d\n", t, s, a, b, u1, u2, flag);
+  printf("[1]\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", a, b, s, t, u1, u2, flag);
   
   //2s >= t
   
@@ -33,15 +32,15 @@ void run(int flag, int u1, int u2)
   int y = 0;
   
   while(y<=x){
-      printf("INSIDE SECOND: t = %d\ts = %d\ta = %d\tb = %d\tx = %d\ty = %d\tu1 = %d\tu2 = %d\tflag = %d\n", t, s, a, b, x, y, u1, u2, flag);
+    printf("[2]\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", a, b, s, t, u1, u2, flag);
     if(u2) 
        y++;
     else 
        y+=2;
   }
-  printf("OUTSIDE SECOND: t = %d\ts = %d\ta = %d\tb = %d\tx = %d\ty = %d\tu1 = %d\tu2 = %d\tflag = %d\n", t, s, a, b, x, y, u1, u2, flag);
+  printf("[2]\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", a, b, s, t, u1, u2, flag);
   
-  static_assert(y<=4);
+  //static_assert(y<=4);
 }
 
 int main()
