@@ -109,31 +109,38 @@
           if (hold < all)
             $('#errormsg').html("<div class='error'>Holds for " + hold + "/" + all + " cases.</div>")
           else {
-            found.push(invPP(inv))
-            jsfound.push(invToJS(inv))
-            $('#errormsg').html("Checking...")
-            goalSatisfied(curGoal, jsfound, function (newProgress) {
-              if (!progressEq(newProgress, progress)) {
-                progress = newProgress
-                if (progress.satisfied) {
-                  if (curLvl < lvls.length - 1)
-                    $('#next-lvl-msg').html("Go on to the next level!")
-                  else
-                    $('#next-lvl-msg').html("You finished all the tutorial levels! <br> Time for the real deal!")
-                  //$('#nextLvlModal').modal({keyboard: false, backdrop: "static"});
-                  $('#errormsg').html("<div class='good'>Nice! You found all the invariant(s)! Click the 'Next' button below. </div>");
-                  $('#done-row').show()
-                  $('#next-lvl').focus()
-                } else
-                  $('#errormsg').html("<div class='good'>" + keepItUp(progress) +  "</div>");
-                  
-              } else {
-                  $('#errormsg').html("<div class='warn'>Correct invariant, but not what we re looking for :)</div>")
+            $('#errormsg').html("Is tautology?")
+            isTautology(invToJS(inv), function(res) {
+              if (res) {
+                $('#errormsg').html("<div class='error'>This is a tautology...</div>")
+                return
               }
-              ctr ++;
-              foundMap[inv] = ctr;
-              $('#good-invariants').append("<li class='good-invariant' id='good_" +
-                ctr + "'>" + invToHTML(inv) + "</li>")
+              found.push(invPP(inv))
+              jsfound.push(invToJS(inv))
+              $('#errormsg').html("Checking...")
+              goalSatisfied(curGoal, jsfound, function (newProgress) {
+                if (!progressEq(newProgress, progress)) {
+                  progress = newProgress
+                  if (progress.satisfied) {
+                    if (curLvl < lvls.length - 1)
+                      $('#next-lvl-msg').html("Go on to the next level!")
+                    else
+                      $('#next-lvl-msg').html("You finished all the tutorial levels! <br> Time for the real deal!")
+                    //$('#nextLvlModal').modal({keyboard: false, backdrop: "static"});
+                    $('#errormsg').html("<div class='good'>Nice! You found all the invariant(s)! Click the 'Next' button below. </div>");
+                    $('#done-row').show()
+                    $('#next-lvl').focus()
+                  } else
+                    $('#errormsg').html("<div class='good'>" + keepItUp(progress) +  "</div>");
+                    
+                } else {
+                    $('#errormsg').html("<div class='warn'>Correct invariant, but not what we re looking for :)</div>")
+                }
+                ctr ++;
+                foundMap[inv] = ctr;
+                $('#good-invariants').append("<li class='good-invariant' id='good_" +
+                  ctr + "'>" + invToHTML(inv) + "</li>")
+              })
             })
             $('#formula-entry').val('')
           }
