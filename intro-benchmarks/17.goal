@@ -1,1 +1,1 @@
-{ "find" : [["k<=l", "l>=k"]] }
+{ "equivalent" : ["k<=l"] }

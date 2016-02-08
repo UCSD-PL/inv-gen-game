@@ -20,16 +20,21 @@ source $DIR/bin/activate
 
 pip install flask
 pip install flask-jsonrpc
+pip install slimit
 
-#mkdir $DIR/third_party
-#pushd $DIR/third_party
-#git clone https://github.com/Z3Prover/z3.git z3
-#cd z3
-#python scripts/mk_make.py --prefix=$DIR --python
-#cd build
-#make -j 8
-#make install
-#popd
+mkdir $DIR/third_party
+
+Z3=`which z3`
+if [[ $? --ne 0 ]] ; then
+  pushd $DIR/third_party
+  git clone https://github.com/Z3Prover/z3.git z3
+  cd z3
+  python scripts/mk_make.py --prefix=$DIR --python
+  cd build
+  make -j 8
+  make install
+  popd
+fi
 
 deactivate
 

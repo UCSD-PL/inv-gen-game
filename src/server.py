@@ -3,8 +3,11 @@ from flask_jsonrpc import JSONRPC as rpc
 from os.path import *
 from os import listdir
 from json import load
+from z3 import *
+from js import invJSToZ3, addAllIntEnv, esprimaToZ3
 
 MYDIR=dirname(abspath(realpath(__file__)))
+z3s = Solver()
 
 def readTrace(fname):
     rows = []
@@ -131,6 +134,38 @@ def getData(levelSet, traceId):
         raise Exception("Unkonwn trace " + traceId + " in levels " + levelSet)
 
     return traces[levelSet][traceId]
+
+def equivalent(inv1, inv2):
+    print "Are equivalent: ", inv1, inv2
+    s = Solver();
+    s.push();
+    s.add(inv1)
+    s.add(Not(inv2))
+    impl = s.check();
+    s.pop();
+
+    if (impl != unsat):
+      return False;
+
+    s.push();
+    s.add(Not(inv1))
+    s.add(inv2)
+    impl = s.check();
+    s.pop();
+
+    if (impl != unsat):
+      return False;
+
+    return True
+
+@api.method("App.equivalentPairs")
+def equivalentPairs(invL1, invL2):
+    z3InvL1 = enumerate([esprimaToZ3(x, {}) for x in invL1['body']])
+    z3InvL2 = enumerate([esprimaToZ3(x, {}) for x in invL2['body']])
+
+    res = [(x,y) for x in z3InvL1 for y in z3InvL2 if equivalent(x[1], y[1])]
+    res = [(invL1['body'][x[0]], invL2['body'][y[0]]) for x,y in res]
+    return res
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')

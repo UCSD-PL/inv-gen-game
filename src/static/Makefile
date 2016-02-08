@@ -3,7 +3,8 @@ THIRD_PARTY_DEPS=bootstrap.min.css \
 								 bootstrap-theme.min.css \
 								 jquery-1.12.0.min.js \
 								 jquery.jsonrpcclient.js\
-								 jquery.color-2.1.2.min.js
+								 jquery.color-2.1.2.min.js\
+								 esprima.js
 
 all: $(THIRD_PARTY_DEPS)
 
@@ -25,6 +26,8 @@ jquery.jsonrpcclient.js:
 jquery.color-2.1.2.min.js:
 	wget http://code.jquery.com/color/jquery.color-2.1.2.min.js
 
+esprima.js:
+	wget https://cdn.rawgit.com/jquery/esprima/2.7.1/esprima.js
 
 clean:
 	rm $(THIRD_PARTY_DEPS)

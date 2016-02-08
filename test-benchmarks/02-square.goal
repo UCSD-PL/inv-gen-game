@@ -1,1 +1,1 @@
-{"find" : [["n*n=x", "x=n*n", "x/n=n", "n=x/n", "(n*n)/x=1", "x/(n*n)=1"]] }
+{"equivalent" : ["n*n==x"] }

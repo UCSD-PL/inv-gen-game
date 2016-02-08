@@ -37,6 +37,10 @@ function invToHTML(inv) {
     .replace(/&&/g, "&amp;&amp;")
 }
 
+function equivalentPairs(invL1, invL2, cb) {
+  return rpc.call("App.equivalentPairs", [ esprima.parse(invL1), esprima.parse(invL2) ], cb, log)
+}
+
 function invEval(inv, data) {
   // Sort variable names in order of decreasing length
   vars = data.variables.map(function(val, ind, _) { return [val, ind]; })
@@ -66,9 +70,9 @@ function invEval(inv, data) {
   return holds_arr
 }
 
-function goalSatisfied(goal, invs) {
+function goalSatisfied(goal, invs, cb) {
   if (goal == null) {
-    return { "satisfied" : true }
+    cb({ "satisfied" : true })
   } else  if (goal.find) {
     var numFound = 0;
     for (var i=0; i < goal.find.length; i++) {
@@ -85,8 +89,20 @@ function goalSatisfied(goal, invs) {
 
     }
 
-    return { "satisfied": numFound == goal.find.length,
-             "find": { "found": numFound, "total": goal.find.length } }
+    cb({ "satisfied": numFound == goal.find.length,
+             "find": { "found": numFound, "total": goal.find.length } })
+  } else  if (goal.equivalent) {
+    equivalentPairs(goal.equivalent, invs, function(pairs) {
+      var numFound = 0;
+      var equiv = []
+      for (var i=0; i < pairs.length; i++) {
+        if (-1 == $.inArray(pairs[i][0], equiv))
+          equiv.push(pairs[i][0])
+      }
+
+      cb({ "satisfied": equiv.length == goal.equivalent.length,
+               "equivalent": { "found": equiv.length , "total": goal.equivalent.length } })
+    })
   } else if (goal.max_score) {
     return { "satisfied" : true, "max_score" : { "found" : invs.length } }
   } else {

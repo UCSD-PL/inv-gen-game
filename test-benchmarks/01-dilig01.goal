@@ -1,1 +1,1 @@
-{"find" : [["x=y", "y=x"]]}
+{"equivalent" : ["x==y"]}
