@@ -22,10 +22,10 @@ pip install flask
 pip install flask-jsonrpc
 pip install slimit
 
-mkdir $DIR/third_party
+if [ ! -d $DIR/third_party ] ; then
+  mkdir $DIR/third_party
+fi
 
-Z3=`which z3`
-if [[ $? --ne 0 ]] ; then
   pushd $DIR/third_party
   git clone https://github.com/Z3Prover/z3.git z3
   cd z3
@@ -34,7 +34,6 @@ if [[ $? --ne 0 ]] ; then
   make -j 8
   make install
   popd
-fi
 
 deactivate
 
