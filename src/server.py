@@ -178,7 +178,7 @@ def equivalentPairs(invL1, invL2):
       z3InvL2 = list(enumerate([esprimaToZ3(x, {}) for x in invL2]))
 
       res = [(x,y) for x in z3InvL1 for y in z3InvL2 if equivalent(x[1], y[1])]
-      res = [(invL1[x[0]], invL2[y[0]]) for x,y in res]
+      res = [(x[0], y[0]) for x,y in res]
       return res
     except:
       traceback.print_exc();
@@ -192,7 +192,7 @@ def impliedPairs(invL1, invL2):
       z3InvL2 = list(enumerate([esprimaToZ3(x, {}) for x in invL2]))
 
       res = [(x,y) for x in z3InvL1 for y in z3InvL2 if implies(x[1], y[1])]
-      res = [(invL1[x[0]], invL2[y[0]]) for x,y in res]
+      res = [(x[0], y[0]) for x,y in res]
       print res
       return res
     except:
