@@ -5,6 +5,7 @@ from os import listdir
 from json import load
 from z3 import *
 from js import invJSToZ3, addAllIntEnv, esprimaToZ3
+import traceback
 
 MYDIR=dirname(abspath(realpath(__file__)))
 z3s = Solver()
@@ -160,12 +161,17 @@ def equivalent(inv1, inv2):
 
 @api.method("App.equivalentPairs")
 def equivalentPairs(invL1, invL2):
-    z3InvL1 = enumerate([esprimaToZ3(x, {}) for x in invL1['body']])
-    z3InvL2 = enumerate([esprimaToZ3(x, {}) for x in invL2['body']])
+    try:
+      z3InvL1 = list(enumerate([esprimaToZ3(x, {}) for x in invL1]))
+      z3InvL2 = list(enumerate([esprimaToZ3(x, {}) for x in invL2]))
 
-    res = [(x,y) for x in z3InvL1 for y in z3InvL2 if equivalent(x[1], y[1])]
-    res = [(invL1['body'][x[0]], invL2['body'][y[0]]) for x,y in res]
-    return res
+      res = [(x,y) for x in z3InvL1 for y in z3InvL2 if equivalent(x[1], y[1])]
+      res = [(invL1[x[0]], invL2[y[0]]) for x,y in res]
+      return res
+    except:
+      traceback.print_exc();
+      traceback.print_tb(e);
+      raise Exception(":(")
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')

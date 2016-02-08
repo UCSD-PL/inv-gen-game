@@ -60,7 +60,16 @@ def jsToZ3Expr(astn, typeEnv):
     raise Exception("Don't know how to parse " + astn.to_ecma())
 
 def esprimaToZ3Expr(astn, typeEnv):
-  if (astn["type"] == "BinaryExpression"):
+  if (astn["type"] == "UnaryExpression"):
+    arg = esprimaToZ3Expr(astn["argument"], typeEnv)
+    try:
+      return {
+        '-': lambda x:  -x,
+        '!': lambda x:  Not(x)
+      }[astn["operator"]](arg)
+    except:
+      raise Exception("Unknown unary expression " + str(astn))
+  elif (astn["type"] == "BinaryExpression"):
     ln,rn = esprimaToZ3Expr(astn["left"], typeEnv), esprimaToZ3Expr(astn["right"], typeEnv)
 
     try:
@@ -79,18 +88,21 @@ def esprimaToZ3Expr(astn, typeEnv):
         '/': lambda x,y: x / y,
       }[astn["operator"]](ln, rn)
     except:
-      raise Exception("Don't know how to parse " + astn)
+      raise Exception("Unkown binary expression " + str(astn))
   elif (astn["type"] == "Identifier"):
     return Int(astn["name"]);
   if (astn["type"] == "Literal"):
     return jsNumToZ3(astn["raw"])
   else:
-    raise Exception("Don't know how to parse " + astn)
+    raise Exception("Don't know how to parse " + str(astn))
 
 def esprimaToZ3(inv, typeEnv):
-  if (inv["type"] != "ExpressionStatement"):
+  if (inv["type"] != "Program" or "body" not in inv or \
+    len(inv["body"]) != 1 or
+    inv["body"][0]["type"] != "ExpressionStatement" or \
+    "expression" not in inv["body"][0]):
     raise Exception("Bad struct")
-  return esprimaToZ3Expr(inv["expression"], typeEnv)
+  return esprimaToZ3Expr(inv["body"][0]["expression"], typeEnv)
 
 if __name__ == "__main__":
   p = Parser()

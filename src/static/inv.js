@@ -38,7 +38,7 @@ function invToHTML(inv) {
 }
 
 function equivalentPairs(invL1, invL2, cb) {
-  return rpc.call("App.equivalentPairs", [ esprima.parse(invL1), esprima.parse(invL2) ], cb, log)
+  return rpc.call("App.equivalentPairs", [ $.map(invL1, esprima.parse), $.map(invL2, esprima.parse) ], cb, log)
 }
 
 function invEval(inv, data) {
