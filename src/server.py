@@ -136,6 +136,13 @@ def getData(levelSet, traceId):
 
     return traces[levelSet][traceId]
 
+def implies(inv1, inv2):
+    print "Are implies ", inv1, inv2
+    s = Solver();
+    s.add(inv1)
+    s.add(Not(inv2))
+    return unsat == s.check();
+
 def equivalent(inv1, inv2):
     print "Are equivalent: ", inv1, inv2
     s = Solver();
@@ -159,6 +166,11 @@ def equivalent(inv1, inv2):
 
     return True
 
+def tautology(inv):
+    s = Solver();
+    s.add(Not(inv))
+    return (unsat == s.check())
+
 @api.method("App.equivalentPairs")
 def equivalentPairs(invL1, invL2):
     try:
@@ -172,6 +184,25 @@ def equivalentPairs(invL1, invL2):
       traceback.print_exc();
       traceback.print_tb(e);
       raise Exception(":(")
+
+@api.method("App.impliedPairs")
+def impliedPairs(invL1, invL2):
+    try:
+      z3InvL1 = list(enumerate([esprimaToZ3(x, {}) for x in invL1]))
+      z3InvL2 = list(enumerate([esprimaToZ3(x, {}) for x in invL2]))
+
+      res = [(x,y) for x in z3InvL1 for y in z3InvL2 if implies(x[1], y[1])]
+      res = [(invL1[x[0]], invL2[y[0]]) for x,y in res]
+      print res
+      return res
+    except:
+      traceback.print_exc();
+      traceback.print_tb(e);
+      raise Exception(":(")
+
+@api.method("App.isTautology")
+def isTautology(inv):
+    return (tautology(esprimaToZ3(inv, {})))
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
