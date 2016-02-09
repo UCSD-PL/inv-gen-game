@@ -136,7 +136,10 @@
                     $('#errormsg').html("<div class='good'>" + keepItUp(progress) +  "</div>");
                     
                 } else {
-                    $('#errormsg').html("<div class='warn'>Correct invariant, but not what we re looking for :)</div>")
+                    if (curGoal.manual)
+                      $('#errormsg').html("<div class='good'>Nice! You found another invariant!</div>")
+                    else
+                      $('#errormsg').html("<div class='warn'>Correct invariant, but not what we re looking for :)</div>")
                 }
                 ctr ++;
                 foundMap[inv] = ctr;
@@ -224,11 +227,9 @@
         }
         hstr += '</ul>'
         $('#traces-menu').html(hstr)
-        /*
         $('.loadLvl').click(function (evt) {
           loadLvl(lvls.indexOf(this.id));
         })
-        */
         curLvl = -1;
         nextLvl();
         setInterval(function () {

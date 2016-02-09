@@ -85,6 +85,8 @@ function invEval(inv, data) {
 function goalSatisfied(goal, invs, cb) {
   if (goal == null) {
     cb({ "satisfied" : true })
+  } else if (goal.manual) {
+    cb({ "satisfied" : false })
   } else  if (goal.find) {
     var numFound = 0;
     for (var i=0; i < goal.find.length; i++) {
