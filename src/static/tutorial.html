@@ -109,6 +109,8 @@
           if (hold < all)
             $('#errormsg').html("<div class='error'>Holds for " + hold + "/" + all + " cases.</div>")
           else {
+            if (progress.satisfied)
+              return
             $('#errormsg').html("Is tautology?")
             isTautology(invToJS(inv), function(res) {
               if (res) {
