@@ -1,3 +1,5 @@
+/* dilig-01 */
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdint.h>

@@ -1,3 +1,5 @@
+/* 04-multiply */
+
 #include <assert.h>
 #include <stdio.h>
 #include <time.h>

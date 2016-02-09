@@ -1,3 +1,5 @@
+/* 02-square */
+
 #include <assert.h>
 #include <stdio.h>
 #include <time.h>
