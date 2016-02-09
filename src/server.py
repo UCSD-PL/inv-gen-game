@@ -204,5 +204,18 @@ def impliedPairs(invL1, invL2):
 def isTautology(inv):
     return (tautology(esprimaToZ3(inv, {})))
 
+advance = False;
+@api.method("App.shouldAdvance")
+def shouldAdvance():
+    global advance
+    res = advance;
+    advance = False
+    return res 
+
+@api.method("App.setAdvance")
+def setAdvance():
+    global advance
+    advance = True;
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0')

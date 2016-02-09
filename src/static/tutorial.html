@@ -224,11 +224,18 @@
         }
         hstr += '</ul>'
         $('#traces-menu').html(hstr)
+        /*
         $('.loadLvl').click(function (evt) {
           loadLvl(lvls.indexOf(this.id));
         })
+        */
         curLvl = -1;
         nextLvl();
+        setInterval(function () {
+          rpc.call('App.shouldAdvance', [], function (res) {
+            if (res)  nextLvl();
+          }, log);
+        }, 1000)
       }, log)
     }
 
@@ -240,12 +247,6 @@
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
 
       $('#next-lvl').click(nextLvl)
-      /*
-      $('#nextLvlModal').on('shown.bs.modal', function () {
-        $('#next-lvl').focus()
-      })
-      */
-
       loadLvlSet("intro-benchmarks")
     })
 
