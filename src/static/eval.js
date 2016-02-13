@@ -20,37 +20,8 @@ function interpretError(err) {
   return err
 }
 
-function invPP(inv) {
-  return inv.replace(/===/g, '=').replace(/==/g, '=').replace(/\s/g, '')
-}
-
 function invToJS(inv) {
   return inv.replace(/[^<>]=[^>]/g, function (v) { return v[0] + '==' + v[2]; })
-}
-
-function invToHTML(inv) {
-  return inv
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/<=/g, "&lt=;")
-    .replace(/>=/g, "&gt=;")
-    .replace(/&&/g, "&amp;&amp;")
-}
-
-function equivalentPairs(invL1, invL2, cb) {
-  return rpc.call("App.equivalentPairs", [ $.map(invL1, esprima.parse), $.map(invL2, esprima.parse) ], cb, log)
-}
-
-function impliedPairs(invL1, invL2, cb) {
-  return rpc.call("App.impliedPairs", [ $.map(invL1, esprima.parse), $.map(invL2, esprima.parse) ], cb, log)
-}
-
-function implied(invL1, inv, cb) {
-  return impliedPairs(invL1, [inv], function (res) { cb(res.length > 0) });
-}
-
-function isTautology(inv, cb) {
-  return rpc.call("App.isTautology", [ esprima.parse(inv) ], cb, log)
 }
 
 function invEval(inv, data) {
