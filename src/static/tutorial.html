@@ -25,6 +25,7 @@
   <link rel="stylesheet" href="bootstrap-theme.min.css">
   <script src="bootstrap.min.js"></script>
   <link rel="stylesheet" href="inv.css">
+  <script src="traceWindow.js"></script>
   <script src="logic.js"></script>
   <script src="eval.js"></script>
   <script src="goal.js"></script>
@@ -44,14 +45,7 @@
     var progress;
     var foundMap;
     var ctr = 0;
-
-    function clearRows() {
-      $('#data-display tr').each(function() {
-        $(this).removeClass('true')
-        $(this).removeClass('false')
-      });
-      $('.temp_expr_eval').html('');
-    }
+    var tracesW = null;
 
     function keepItUp(res) {
       if (res.find) {
@@ -66,14 +60,15 @@
     function updateUI() {
         $('#' + lvls[curLvl]).addClass('bold');
         $('#errormsg').html("")
-        var inv = invPP($('#formula-entry').val().trim());
+        var inv = invPP(tracesW.curExp().trim());
         try {
           var parsedInv = esprima.parse();
         } catch (err) {
           log("Error parsing: " + err)
         }
+
         if (inv.length == 0) {
-          clearRows()
+          tracesW.evalResult({ clear: true })
           return;
         }
 
@@ -86,10 +81,7 @@
 
         try {
           res = invEval(invToJS(inv), data)
-
-          for (var i in res) {
-            $('#' + i + ' .temp_expr_eval').html(JSON.stringify(res[i]))
-          }
+          tracesW.evalResult({ data: res })
 
           for (var i in res) {
             if (typeof(res[i]) != "boolean")
@@ -98,12 +90,6 @@
           all = res.length
           hold = res.filter(function (x) { return x; }).length
           
-          for (var i in res) {
-            $('#' + i).removeClass('true')
-            $('#' + i).removeClass('false')
-            $('#' + i).addClass(res[i] ? 'true' : 'false')
-          }
-
           if (redundant) {
             $('#errormsg').html("<div class='error'>Duplicate Invariant!</error>")
             return;
@@ -150,11 +136,11 @@
                   ctr + "'>" + invToHTML(inv) + "</li>")
               })
             })
-            $('#formula-entry').val('')
+            tracesW.setExp('');
           }
         } catch (err) {
           errorTimer = setTimeout(function() {
-            clearRows()
+            tracesW.evalResult({ clear: true })
             $('#errormsg').html("<div class='error'> " + interpretError(err) + "</div>")
           }, errorDelay)
         }
@@ -166,24 +152,8 @@
         curGoal = data.goal;
         goalSatisfied(curGoal, jsfound, function(newProgress) {progress = newProgress});
 
-        hstr = '<table class="table table-stripped"><tr>';
-        for (var i in res.variables) {
-          hstr += '<th>' + res.variables[i] + '</th>';
-        }
-        hstr += '<th><input id="formula-entry" type="text"></th>';
-            
-        hstr += '</tr>';
-        for (var i in res.data) {
-          hstr += '<tr id= "' + i + '">';
-          for (var j in res.data[i]) {
-            hstr += '<td>' + res.data[i][j] + '</td>';
-          }
-          hstr += '<td class="temp_expr_eval">&nbsp</td></tr>';
-        }
-        hstr += '</table>'
-        $('#data-display').html(hstr)
-
-        $('#formula-entry').keyup(function (keyEv) {
+        tracesW = new TraceWindow($('#data-display'), data);
+        tracesW.changed(function() {
           if (errorTimer) {
             window.clearTimeout(errorTimer);
             errorTimer = null;
@@ -192,7 +162,6 @@
         })
 
         $('#hint').html(data.hint)
-        $('#formula-entry').focus();
         updateUI()
       }, log)
     }
