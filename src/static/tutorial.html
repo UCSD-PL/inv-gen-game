@@ -26,6 +26,7 @@
   <script src="bootstrap.min.js"></script>
   <link rel="stylesheet" href="inv.css">
   <script src="traceWindow.js"></script>
+  <script src="progressWindow.js"></script>
   <script src="logic.js"></script>
   <script src="eval.js"></script>
   <script src="goal.js"></script>
@@ -43,9 +44,8 @@
     var curGoal;
     var data;
     var progress;
-    var foundMap;
     var ctr = 0;
-    var tracesW = null;
+    var tracesW = null, progW = null;
 
     function keepItUp(res) {
       if (res.find) {
@@ -72,11 +72,9 @@
           return;
         }
 
-        var redundant = foundMap.hasOwnProperty(inv);
-
-        $('.good-invariant').removeClass('error')
+        var redundant = progW.contains(inv)
         if (redundant) {
-          $('#good_' + foundMap[inv]).addClass('error')
+          progW.markInvariant(inv, "duplicate")
         }
 
         try {
@@ -130,10 +128,8 @@
                     else
                       $('#errormsg').html("<div class='warn'>Correct invariant, but not what we re looking for :)</div>")
                 }
-                ctr ++;
-                foundMap[inv] = ctr;
-                $('#good-invariants').append("<li class='good-invariant' id='good_" +
-                  ctr + "'>" + invToHTML(inv) + "</li>")
+
+                progW.addInvariant(inv);
               })
             })
             tracesW.setExp('');
@@ -173,9 +169,8 @@
     function loadLvl(lvl) {
       found = []
       jsfound = []
-      foundMap = new Object()
       $('#' + lvls[curLvl]).removeClass('bold');
-      $('#good-invariants').html('');
+      progW.clear();
       $('#errormsg').html('');
       $('#formula-entry').val('');
       $('#done-row').hide()
@@ -218,6 +213,7 @@
 
     $(document).ready(function() {
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
+      progW = new ProgressWindow($('#discovered-invariants-div'));
 
       $('#next-lvl').click(nextLvl)
       loadLvlSet("intro-benchmarks")
@@ -244,10 +240,7 @@
             <div class='col-md-3 col-md-offset-8' > <button id='next-lvl'> Next </a> </div>
         </div>
       </div>
-      <div class='col-md-3 good centered'>
-        Discovered invariants:
-        <ul id='good-invariants' style="font-family:monospace;">
-        </ul>
+      <div class='col-md-3 good centered' id='discovered-invariants-div'>
       </div>
     </div>
   </div>
