@@ -24,6 +24,7 @@
   <link rel="stylesheet" href="bootstrap.min.css">
   <link rel="stylesheet" href="bootstrap-theme.min.css">
   <script src="bootstrap.min.js"></script>
+  <script src="crafty-min.js"></script>
   <link rel="stylesheet" href="inv.css">
   <script src="traceWindow.js"></script>
   <script src="progressWindow.js"></script>
@@ -147,6 +148,7 @@
         goalSatisfied(curGoal, jsfound, function(newProgress) {progress = newProgress});
 
         tracesW = new TraceWindow($('#data-display'), data);
+        label($('#formula-entry'), "We enter the formula here!")
         tracesW.changed(function() {
           if (errorTimer) {
             window.clearTimeout(errorTimer);
@@ -208,7 +210,18 @@
       loadLvlSet("test-benchmarks")
     }
 
+    function label(elem, txt) {
+      p = $(elem).offset();
+      var x = p.left, y = p.top;
+      var w = $(elem).outerWidth(), h = $(elem).outerHeight();
+
+      return Crafty.e("2D, DOM, Text").attr({ x: x, y: (y + h + 5)}).text(txt);
+    }
+
     $(document).ready(function() {
+      Crafty.init()
+      Crafty.background("none")
+
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
       progW = new ProgressWindow($('#discovered-invariants-div'));
 
@@ -242,4 +255,8 @@
     </div>
   </div>
 </div> 
+<div id='stage-container'>
+<div id='cr-stage'>
+</div>
+</div>
 </html>

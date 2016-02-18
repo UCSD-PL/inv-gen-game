@@ -4,7 +4,8 @@ THIRD_PARTY_DEPS=bootstrap.min.css \
 								 jquery-1.12.0.min.js \
 								 jquery.jsonrpcclient.js\
 								 jquery.color-2.1.2.min.js\
-								 esprima.js
+								 esprima.js\
+								 crafty-min.js
 
 all: $(THIRD_PARTY_DEPS)
 
@@ -28,6 +29,9 @@ jquery.color-2.1.2.min.js:
 
 esprima.js:
 	wget https://cdn.rawgit.com/jquery/esprima/2.7.1/esprima.js
+
+crafty-min.js:
+	wget https://github.com/craftyjs/Crafty/releases/download/0.7.0/crafty-min.js
 
 clean:
 	rm $(THIRD_PARTY_DEPS)
