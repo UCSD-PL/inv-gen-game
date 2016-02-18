@@ -4,20 +4,6 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!--
-  <script src="//code.jquery.com/jquery-1.12.0.min.js"></script>
-  <script src="https://raw.githubusercontent.com/Textalk/jquery.jsonrpcclient.js/master/jquery.jsonrpcclient.js"></script> 
-
-
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
-
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
-
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
-
-  -->
-  <!-- for developing without internet, download the above files in static/
-       and uncomment the below lines -->
   <script src="jquery-1.12.0.min.js"></script>
   <script src="jquery.jsonrpcclient.js"></script>
   <script src="jquery.color-2.1.2.min.js"></script>
@@ -26,6 +12,7 @@
   <script src="bootstrap.min.js"></script>
   <script src="crafty-min.js"></script>
   <link rel="stylesheet" href="inv.css">
+  <link rel="stylesheet" href="arrow.css">
   <script src="traceWindow.js"></script>
   <script src="progressWindow.js"></script>
   <script src="logic.js"></script>
@@ -47,6 +34,8 @@
     var progress;
     var ctr = 0;
     var tracesW = null, progW = null;
+    var curL;
+    var tempCb = null;
 
     function keepItUp(res) {
       if (res.find) {
@@ -59,7 +48,7 @@
     }
 
     function updateUI() {
-        $('#' + lvls[curLvl]).addClass('bold');
+        //$('#' + lvls[curLvl]).addClass('bold');
         $('#errormsg').html("")
         var inv = invPP(tracesW.curExp().trim());
         try {
@@ -72,6 +61,9 @@
           tracesW.evalResult({ clear: true })
           return;
         }
+
+        if (tempCb != null)
+          tempCb(inv)
 
         var redundant = progW.contains(inv)
         if (redundant) {
@@ -141,6 +133,99 @@
         }
     }
 
+    var curScript = null;
+    var step = null;
+
+
+    function nextStep() {
+      step++;
+      curScript[step].setup();
+    }
+
+    function runScript(scr) {
+      curScript = scr;
+      step = -1;
+      nextStep();
+    }
+
+    var tutorialScript = [
+      { setup: function () {
+                  data = {
+                    data: [ [ 0 ], [ 1 ], [ 2 ] ],
+                    goal: { },
+                    hint: "",
+                    variables: [ "i" ]
+                  }
+
+                  tracesW = new TraceWindow($('#data-display'), data);
+                  tracesW.changed(function() {
+                    if (errorTimer) {
+                      window.clearTimeout(errorTimer);
+                      errorTimer = null;
+                    }
+                    updateUI();
+                  })
+
+                  $('#hint').html(data.hint)
+                  updateUI()
+                  nextStep();
+               }
+      },
+      { setup: function () {
+                 curL = label($('#formula-entry'), "Type '3+4' here!", "up")
+                 tempCb = function(inv) {
+                   if (inv == "3+4") {
+                     removeLabel(curL);
+                     tempCb = null;
+                     nextStep();
+                   }
+                 }
+               }
+      },
+      { setup: function () {
+                 curL = label(".temp_expr_eval", "WOAH! 3+4=7!", "left")
+                 setTimeout(function() { removeLabel(curL); nextStep();}, 2000);
+               }
+      },
+      { setup: function () {
+                 curL = label($('#formula-entry'), "Now try i.", "up")
+                 tempCb = function(inv) {
+                   if (inv == "i") {
+                     removeLabel(curL);
+                     tempCb = null;
+                     nextStep();
+                   }
+                 }
+               }
+      },
+      { setup: function () {
+                 curL = label(".temp_expr_eval", "Column contains values of i!", "left")
+                 setTimeout(function() { removeLabel(curL); nextStep()}, 2000);
+               }
+      },
+      { setup: function () {
+                 curL = label($('#formula-entry'), "Type i+1", "up")
+                 tempCb = function(inv) {
+                   if (inv == "i+1") {
+                     removeLabel(curL);
+                     tempCb = null;
+                     nextStep();
+                   }
+                 }
+               }
+      },
+      { setup: function () {
+                 curL = label(".temp_expr_eval", "Now you get i+1!", "left")
+                 setTimeout(function() { removeLabel(curL); nextStep() }, 2000);
+               }
+      },
+      { setup: function () {
+                 curL = label(".temp_expr_eval", "Now you get i+1!", "left")
+                 setTimeout(function() { removeLabel(curL); nextStep() }, 2000);
+               }
+      },
+    ]
+
     function loadTrace(traceId) {
       res = rpc.call('App.getData', [ curLvlSet, traceId ], function(res) {
         data = res;
@@ -148,7 +233,6 @@
         goalSatisfied(curGoal, jsfound, function(newProgress) {progress = newProgress});
 
         tracesW = new TraceWindow($('#data-display'), data);
-        label($('#formula-entry'), "We enter the formula here!")
         tracesW.changed(function() {
           if (errorTimer) {
             window.clearTimeout(errorTimer);
@@ -210,23 +294,77 @@
       loadLvlSet("test-benchmarks")
     }
 
-    function label(elem, txt) {
+    function removeLabel(l) {
+      $(l.elem).remove();
+      clearInterval(l.timer);
+    }
+
+    function label(elem, txt, direction) {
       p = $(elem).offset();
       var x = p.left, y = p.top;
       var w = $(elem).outerWidth(), h = $(elem).outerHeight();
+      var pulseWidth = 5;
+      var pulse = 500;
 
-      return Crafty.e("2D, DOM, Text").attr({ x: x, y: (y + h + 5)}).text(txt);
+      if (direction == "up") {
+        clazz = "arrow_up"
+        animate_prop = "top"
+        text_pos = "top:  30px;"
+        arrow_pos = "left:  20px; top:  20px;"
+        var ox = x;
+        var oy = y + h + 5;
+        var v1 = oy, v2 = v1 + pulseWidth;
+      } else if (direction == "down") {
+        clazz = "arrow_down"
+        animate_prop = "top"
+        text_pos = "top:  0px;"
+        arrow_pos = "left:  20px; top:  40px;"
+        var ox = x;
+        var oy = y - 60;
+        var v1 = oy, v2 = v1 - pulseWidth;
+      } else if (direction == "left") {
+        clazz = "arrow_left"
+        animate_prop = "left"
+        text_pos = "left:  30px;"
+        arrow_pos = "left:  0px; top:  0px;"
+        var ox = x + w + 5;
+        var oy = y;
+        var v1 = ox, v2 = ox + pulseWidth;
+      } else if (direction == "right") {
+        clazz = "arrow_right"
+        animate_prop = "left"
+        text_pos = "float:  left;"
+        arrow_pos = "float: right;"
+        var ox = x - 100;
+        var oy = y;
+        var v1 = ox, v2 = ox - pulseWidth;
+      }
+
+      var div = $("<div class='overlay'><div class=" + clazz + 
+        " style='" + arrow_pos + "'></div><div style='" + text_pos +
+        "position: relative;'>" + txt + "</div></div>")
+
+      div.offset({ left:  ox, top: oy})
+      $('body').append(div);
+      var ctr = 0;
+      var interval = setInterval(function () {
+        v = (ctr % 2 == 0 ? v1 : v2) + "px"
+        p = {}
+        p[animate_prop] = v;
+        $(div).animate(p, pulse / 2)
+        ctr ++;
+      }, pulse / 2)
+      return { elem:  div, timer: interval };
     }
 
-    $(document).ready(function() {
-      Crafty.init()
-      Crafty.background("none")
 
+    $(document).ready(function() {
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
       progW = new ProgressWindow($('#discovered-invariants-div'));
 
-      $('#next-lvl').click(nextLvl)
-      loadLvlSet("intro-benchmarks")
+      runScript(tutorialScript);
+      //$('#next-lvl').click(nextLvl)
+      //loadLvlSet("intro-benchmarks")
     })
 
   </script>
