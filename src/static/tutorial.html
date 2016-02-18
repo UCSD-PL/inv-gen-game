@@ -40,7 +40,7 @@
     var curLvlSet; 
     var lvls = null;
     var errorTimer;
-    var found = [], jsfound = [];
+    var jsfound = [];
     var curGoal;
     var data;
     var progress;
@@ -81,10 +81,9 @@
           res = invEval(invToJS(inv), data)
           tracesW.evalResult({ data: res })
 
-          for (var i in res) {
-            if (typeof(res[i]) != "boolean")
-              return;
-          }
+          if (!evalResultBool(res))
+            return;
+
           all = res.length
           hold = res.filter(function (x) { return x; }).length
           
@@ -104,7 +103,6 @@
                 $('#errormsg').html("<div class='error'>This is a tautology...</div>")
                 return
               }
-              found.push(invPP(inv))
               jsfound.push(invToJS(inv))
               $('#errormsg').html("Checking...")
               goalSatisfied(curGoal, jsfound, function (newProgress) {
@@ -167,7 +165,6 @@
     }
 
     function loadLvl(lvl) {
-      found = []
       jsfound = []
       $('#' + lvls[curLvl]).removeClass('bold');
       progW.clear();
@@ -244,21 +241,5 @@
       </div>
     </div>
   </div>
-
-  <!--
-  <div class="modal fade bs-example-modal-sm" id="nextLvlModal" tabindex="-1" role="dialog" aria-labelledby="nextLvl">
-    <div class="modal-dialog modal-sm">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h4 class="modal-title">Good job!</h4>
-        </div>
-        <div class="modal-body" id="next-lvl-msg">
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal" id='next-lvl'>Next Level</button>
-        </div>
-      </div>
-    </div>
-  -->
 </div> 
 </html>

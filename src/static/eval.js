@@ -52,3 +52,11 @@ function invEval(inv, data) {
   }
   return holds_arr
 }
+
+function evalResultBool(evalResult) {
+  for (var i in res) {
+    if (typeof(res[i]) != "boolean")
+      return false;
+  }
+  return true;
+}
