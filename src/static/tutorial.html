@@ -148,6 +148,41 @@
       nextStep();
     }
 
+    function nextStepOnKeyOrTimeout(timeout, destructor, key = null) {
+       if (timeout > 0) {
+         var timeoutId = setTimeout(function() {
+           destructor();
+           $('body').off('keypress');
+           nextStep();
+         }, timeout);
+       }
+       $('body').keypress(function (ev) {
+         if (key == null || ev.key == key) {
+           $('body').off('keypress');
+           destructor();
+           if (timeout > 0)
+             clearTimeout(timeoutId);
+           nextStep();
+           ev.stopPropagation();
+         }
+       });
+    }
+
+    function nextStepOnInvariant(invariant, destructor) {
+       tempCb = function(inv) {
+         if (inv == invariant) {
+           removeLabel(curL);
+           tempCb = null;
+           destructor();
+           nextStep();
+         }
+       }
+    }
+
+    function labelRemover(lbl) {
+      return function () { removeLabel(lbl) }
+    }
+
     var tutorialScript = [
       { setup: function () {
                   data = {
@@ -173,55 +208,70 @@
       },
       { setup: function () {
                  curL = label($('#formula-entry'), "Type '3+4' here!", "up")
-                 tempCb = function(inv) {
-                   if (inv == "3+4") {
-                     removeLabel(curL);
-                     tempCb = null;
-                     nextStep();
-                   }
-                 }
+                 nextStepOnInvariant("3+4", labelRemover(curL));
                }
       },
       { setup: function () {
                  curL = label(".temp_expr_eval", "WOAH! 3+4=7!", "left")
-                 setTimeout(function() { removeLabel(curL); nextStep();}, 2000);
+                 nextStepOnKeyOrTimeout(10000, labelRemover(curL), ' ')
                }
       },
       { setup: function () {
                  curL = label($('#formula-entry'), "Now try i.", "up")
-                 tempCb = function(inv) {
-                   if (inv == "i") {
-                     removeLabel(curL);
-                     tempCb = null;
-                     nextStep();
-                   }
-                 }
+                 nextStepOnInvariant("i", labelRemover(curL));
                }
       },
       { setup: function () {
                  curL = label(".temp_expr_eval", "Column contains values of i!", "left")
-                 setTimeout(function() { removeLabel(curL); nextStep()}, 2000);
+                 nextStepOnKeyOrTimeout(10000, labelRemover(curL), ' ')
                }
       },
       { setup: function () {
                  curL = label($('#formula-entry'), "Type i+1", "up")
-                 tempCb = function(inv) {
-                   if (inv == "i+1") {
-                     removeLabel(curL);
-                     tempCb = null;
-                     nextStep();
-                   }
-                 }
+                 nextStepOnInvariant("i+1", labelRemover(curL));
                }
       },
       { setup: function () {
                  curL = label(".temp_expr_eval", "Now you get i+1!", "left")
-                 setTimeout(function() { removeLabel(curL); nextStep() }, 2000);
+                 nextStepOnKeyOrTimeout(10000, labelRemover(curL), ' ')
                }
       },
       { setup: function () {
-                 curL = label(".temp_expr_eval", "Now you get i+1!", "left")
-                 setTimeout(function() { removeLabel(curL); nextStep() }, 2000);
+                 curL = label($("#formula-entry"), "This box works like a calculator!", "up")
+                 nextStepOnKeyOrTimeout(10000, labelRemover(curL), ' ')
+               }
+      },
+      { setup: function () {
+                 curL = label($("#formula-entry"),
+                  "Now try i>0", "up")
+                 nextStepOnInvariant("i>0", labelRemover(curL));
+               }
+      },
+      { setup: function () {
+                 curL = label($("#0 .temp_expr_eval"), "Row is red becase its not true that 0<0", "up")
+                 nextStepOnKeyOrTimeout(10000, labelRemover(curL), ' ')
+               }
+      },
+      { setup: function () {
+                 curL = label($("#2 .temp_expr_eval"), "Last two rows are green since 1>0 and 2>0", "up")
+                 nextStepOnKeyOrTimeout(10000, labelRemover(curL), ' ')
+               }
+      },
+      { setup: function () {
+                 curL = label($("#formula-entry"),
+                  "Now try i>=0", "up")
+                 nextStepOnInvariant("i>=0", labelRemover(curL));
+               }
+      },
+      { setup: function () {
+                 curL = label($("#2 .temp_expr_eval"), "Hurray! All rows are green!", "up")
+                 nextStepOnKeyOrTimeout(10000, labelRemover(curL), ' ')
+               }
+      },
+      { setup: function () {
+                 curL = label($("#2 .temp_expr_eval"), 
+                 "You found an invariant!<br>(Something true for all rows)", "up")
+                 nextStepOnKeyOrTimeout(10000, labelRemover(curL), ' ')
                }
       },
     ]
@@ -340,7 +390,7 @@
         var v1 = ox, v2 = ox - pulseWidth;
       }
 
-      var div = $("<div class='overlay'><div class=" + clazz + 
+      var div = $("<div class='absolute'><div class=" + clazz + 
         " style='" + arrow_pos + "'></div><div style='" + text_pos +
         "position: relative;'>" + txt + "</div></div>")
 

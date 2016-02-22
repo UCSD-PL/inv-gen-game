@@ -48,6 +48,13 @@ tr.false {
   left: 0px;
 }
 
+.absolute {
+  position: absolute;
+  font-size:  20px;
+  font-weight:  bold;
+  color: blue;
+}
+
 .overlay  {
   position: absolute;
   background-color: rgba(255,255,255,.5);
