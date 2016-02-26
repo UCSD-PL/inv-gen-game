@@ -34,8 +34,10 @@
     var progress;
     var ctr = 0;
     var tracesW = null, progW = null;
+    var progWCover = null;
     var curL;
     var tempCb = null;
+    var stepTimeout = 5000;
 
     function keepItUp(res) {
       if (res.find) {
@@ -47,8 +49,13 @@
       }
     }
 
+    function addSuccessfulInvariant(inv) {
+      jsfound.push(invToJS(inv))
+      progW.addInvariant(inv);
+      tracesW.setExp('');
+    }
+
     function updateUI() {
-        //$('#' + lvls[curLvl]).addClass('bold');
         $('#errormsg').html("")
         var inv = invPP(tracesW.curExp().trim());
         try {
@@ -74,6 +81,7 @@
           res = invEval(invToJS(inv), data)
           tracesW.evalResult({ data: res })
 
+          /*
           if (!evalResultBool(res))
             return;
 
@@ -88,43 +96,15 @@
           if (hold < all)
             $('#errormsg').html("<div class='error'>Holds for " + hold + "/" + all + " cases.</div>")
           else {
-            if (progress.satisfied)
-              return
             $('#errormsg').html("Is tautology?")
             isTautology(invToJS(inv), function(res) {
               if (res) {
                 $('#errormsg').html("<div class='error'>This is a tautology...</div>")
                 return
               }
-              jsfound.push(invToJS(inv))
-              $('#errormsg').html("Checking...")
-              goalSatisfied(curGoal, jsfound, function (newProgress) {
-                if (!progressEq(newProgress, progress)) {
-                  progress = newProgress
-                  if (progress.satisfied) {
-                    if (curLvl < lvls.length - 1)
-                      $('#next-lvl-msg').html("Go on to the next level!")
-                    else
-                      $('#next-lvl-msg').html("You finished all the tutorial levels! <br> Time for the real deal!")
-                    //$('#nextLvlModal').modal({keyboard: false, backdrop: "static"});
-                    $('#errormsg').html("<div class='good'>Nice! You found all the invariant(s)! Click the 'Next' button below. </div>");
-                    $('#done-row').show()
-                    $('#next-lvl').focus()
-                  } else
-                    $('#errormsg').html("<div class='good'>" + keepItUp(progress) +  "</div>");
-                    
-                } else {
-                    if (curGoal.manual)
-                      $('#errormsg').html("<div class='good'>Nice! You found another invariant!</div>")
-                    else
-                      $('#errormsg').html("<div class='warn'>Correct invariant, but not what we re looking for :)</div>")
-                }
-
-                progW.addInvariant(inv);
-              })
             })
-            tracesW.setExp('');
           }
+          */
         } catch (err) {
           errorTimer = setTimeout(function() {
             tracesW.evalResult({ clear: true })
@@ -133,48 +113,13 @@
         }
     }
 
-    var curScript = null;
-    var step = null;
-
-
-    function nextStep() {
-      step++;
-      curScript[step].setup();
-    }
-
-    function runScript(scr) {
-      curScript = scr;
-      step = -1;
-      nextStep();
-    }
-
-    function nextStepOnKeyOrTimeout(timeout, destructor, key = null) {
-       if (timeout > 0) {
-         var timeoutId = setTimeout(function() {
-           destructor();
-           $('body').off('keypress');
-           nextStep();
-         }, timeout);
-       }
-       $('body').keypress(function (ev) {
-         if (key == null || ev.key == key) {
-           $('body').off('keypress');
-           destructor();
-           if (timeout > 0)
-             clearTimeout(timeoutId);
-           nextStep();
-           ev.stopPropagation();
-         }
-       });
-    }
-
-    function nextStepOnInvariant(invariant, destructor) {
+    function nextStepOnInvariant(curScript, invariant, destructor) {
        tempCb = function(inv) {
          if (inv == invariant) {
            removeLabel(curL);
            tempCb = null;
            destructor();
-           nextStep();
+           curScript.nextStep();
          }
        }
     }
@@ -184,7 +129,7 @@
     }
 
     var tutorialScript = [
-      { setup: function () {
+      { setup: function (cs) {
                   data = {
                     data: [ [ 0 ], [ 1 ], [ 2 ] ],
                     goal: { },
@@ -203,75 +148,91 @@
 
                   $('#hint').html(data.hint)
                   updateUI()
-                  nextStep();
+                  cs.nextStep();
                }
       },
-      { setup: function () {
+      { setup: function (cs) {
                  curL = label($('#formula-entry'), "Type '3+4' here!", "up")
-                 nextStepOnInvariant("3+4", labelRemover(curL));
+                 $('#formula-entry').focus();
+                 nextStepOnInvariant(cs, "3+4", labelRemover(curL));
                }
       },
-      { setup: function () {
+      { setup: function (cs) {
                  curL = label(".temp_expr_eval", "WOAH! 3+4=7!", "left")
-                 nextStepOnKeyOrTimeout(10000, labelRemover(curL), ' ')
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
                }
       },
-      { setup: function () {
+      { setup: function (cs) {
                  curL = label($('#formula-entry'), "Now try i.", "up")
-                 nextStepOnInvariant("i", labelRemover(curL));
+                 nextStepOnInvariant(cs, "i", labelRemover(curL));
                }
       },
-      { setup: function () {
-                 curL = label(".temp_expr_eval", "Column contains values of i!", "left")
-                 nextStepOnKeyOrTimeout(10000, labelRemover(curL), ' ')
+      { setup: function (cs) {
+                 curL = label("#2 .temp_expr_eval", "Column contains values of i!", "up")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
                }
       },
-      { setup: function () {
+      { setup: function (cs) {
                  curL = label($('#formula-entry'), "Type i+1", "up")
-                 nextStepOnInvariant("i+1", labelRemover(curL));
+                 nextStepOnInvariant(cs, "i+1", labelRemover(curL));
                }
       },
-      { setup: function () {
-                 curL = label(".temp_expr_eval", "Now you get i+1!", "left")
-                 nextStepOnKeyOrTimeout(10000, labelRemover(curL), ' ')
+      { setup: function (cs) {
+                 curL = label("#2 .temp_expr_eval", "Now you get i+1!", "up")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
                }
       },
-      { setup: function () {
+      { setup: function (cs) {
                  curL = label($("#formula-entry"), "This box works like a calculator!", "up")
-                 nextStepOnKeyOrTimeout(10000, labelRemover(curL), ' ')
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
                }
       },
-      { setup: function () {
+      { setup: function (cs) {
                  curL = label($("#formula-entry"),
                   "Now try i>0", "up")
-                 nextStepOnInvariant("i>0", labelRemover(curL));
+                 nextStepOnInvariant(cs, "i>0", labelRemover(curL));
                }
       },
-      { setup: function () {
-                 curL = label($("#0 .temp_expr_eval"), "Row is red becase its not true that 0<0", "up")
-                 nextStepOnKeyOrTimeout(10000, labelRemover(curL), ' ')
+      { setup: function (cs) {
+                 curL = label($("#0 .temp_expr_eval"), "Its not true that 0>0", "left")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
                }
       },
-      { setup: function () {
-                 curL = label($("#2 .temp_expr_eval"), "Last two rows are green since 1>0 and 2>0", "up")
-                 nextStepOnKeyOrTimeout(10000, labelRemover(curL), ' ')
+      { setup: function (cs) {
+                 curL = label($("#1 .temp_expr_eval"), "But its true that 1>0 and 2>0", "left")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
                }
       },
-      { setup: function () {
+      { setup: function (cs) {
+                 curL = label($("#formula-entry"), "It also tells if something's <br>" + 
+                                                   "<emph>true</emph> or <emph>false</emph>  for each row!", "up")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
+               }
+      },
+      { setup: function (cs) {
                  curL = label($("#formula-entry"),
                   "Now try i>=0", "up")
-                 nextStepOnInvariant("i>=0", labelRemover(curL));
+                 nextStepOnInvariant(cs, "i>=0", labelRemover(curL));
                }
       },
-      { setup: function () {
-                 curL = label($("#2 .temp_expr_eval"), "Hurray! All rows are green!", "up")
-                 nextStepOnKeyOrTimeout(10000, labelRemover(curL), ' ')
+      { setup: function (cs) {
+                 curL = label($(".temp_expr_eval"), "Hurray! All rows are green!", "left")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
                }
       },
-      { setup: function () {
+      { setup: function (cs) {
                  curL = label($("#2 .temp_expr_eval"), 
                  "You found an invariant!<br>(Something true for all rows)", "up")
-                 nextStepOnKeyOrTimeout(10000, labelRemover(curL), ' ')
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
+               }
+      },
+      { setup: function (cs) {
+                 uncover(progWCover, function() {
+                   var inv = invPP(tracesW.curExp().trim());
+                   addSuccessfulInvariant(inv);
+                   curL = label($("#good_0"), "The invariants you find<br>appear here", "up");
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
+                 })
                }
       },
     ]
@@ -344,75 +305,12 @@
       loadLvlSet("test-benchmarks")
     }
 
-    function removeLabel(l) {
-      $(l.elem).remove();
-      clearInterval(l.timer);
-    }
-
-    function label(elem, txt, direction) {
-      p = $(elem).offset();
-      var x = p.left, y = p.top;
-      var w = $(elem).outerWidth(), h = $(elem).outerHeight();
-      var pulseWidth = 5;
-      var pulse = 500;
-
-      if (direction == "up") {
-        clazz = "arrow_up"
-        animate_prop = "top"
-        text_pos = "top:  30px;"
-        arrow_pos = "left:  20px; top:  20px;"
-        var ox = x;
-        var oy = y + h + 5;
-        var v1 = oy, v2 = v1 + pulseWidth;
-      } else if (direction == "down") {
-        clazz = "arrow_down"
-        animate_prop = "top"
-        text_pos = "top:  0px;"
-        arrow_pos = "left:  20px; top:  40px;"
-        var ox = x;
-        var oy = y - 60;
-        var v1 = oy, v2 = v1 - pulseWidth;
-      } else if (direction == "left") {
-        clazz = "arrow_left"
-        animate_prop = "left"
-        text_pos = "left:  30px;"
-        arrow_pos = "left:  0px; top:  0px;"
-        var ox = x + w + 5;
-        var oy = y;
-        var v1 = ox, v2 = ox + pulseWidth;
-      } else if (direction == "right") {
-        clazz = "arrow_right"
-        animate_prop = "left"
-        text_pos = "float:  left;"
-        arrow_pos = "float: right;"
-        var ox = x - 100;
-        var oy = y;
-        var v1 = ox, v2 = ox - pulseWidth;
-      }
-
-      var div = $("<div class='absolute'><div class=" + clazz + 
-        " style='" + arrow_pos + "'></div><div style='" + text_pos +
-        "position: relative;'>" + txt + "</div></div>")
-
-      div.offset({ left:  ox, top: oy})
-      $('body').append(div);
-      var ctr = 0;
-      var interval = setInterval(function () {
-        v = (ctr % 2 == 0 ? v1 : v2) + "px"
-        p = {}
-        p[animate_prop] = v;
-        $(div).animate(p, pulse / 2)
-        ctr ++;
-      }, pulse / 2)
-      return { elem:  div, timer: interval };
-    }
-
-
     $(document).ready(function() {
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
       progW = new ProgressWindow($('#discovered-invariants-div'));
+      progWCover = cover(progW.element);
 
-      runScript(tutorialScript);
+      curScript = Script(tutorialScript);
       //$('#next-lvl').click(nextLvl)
       //loadLvlSet("intro-benchmarks")
     })

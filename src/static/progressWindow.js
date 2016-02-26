@@ -3,6 +3,8 @@ function ProgressWindow(div) {
   var ctr = 0;
   var invMap = {}
 
+  progW.element = div;
+
   $(div).html("Discovered invariants:<br>" +
     "<ul id='good-invariants' style='font-family:monospace;'></ul>")
 
