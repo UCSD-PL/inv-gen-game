@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="arrow.css">
   <script src="traceWindow.js"></script>
   <script src="progressWindow.js"></script>
+  <script src="scoreWindow.js"></script>
   <script src="logic.js"></script>
   <script src="eval.js"></script>
   <script src="goal.js"></script>
@@ -33,8 +34,9 @@
     var data;
     var progress;
     var ctr = 0;
-    var tracesW = null, progW = null;
+    var tracesW = null, progW = null, scoreW = null;
     var progWCover = null;
+    var scoreWCover = null;
     var curL;
     var tempCb = null;
     var stepTimeout = 5000;
@@ -227,12 +229,23 @@
                }
       },
       { setup: function (cs) {
-                 uncover(progWCover, function() {
+                 uncover(progWCover, 1000, function() {
                    var inv = invPP(tracesW.curExp().trim());
                    addSuccessfulInvariant(inv);
                    curL = label($("#good_0"), "The invariants you find<br>appear here", "up");
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
                  })
+               }
+      },
+      { setup: function (cs) {
+                 uncover(scoreWCover, 1000, function() {
+                   curL = label($("#score-div"), "And you get points!WHOA!", "up");
+                   scoreW.add(1);
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
+                 })
+               }
+      },
+      { setup: function (cs) {
                }
       },
     ]
@@ -309,6 +322,8 @@
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
       progW = new ProgressWindow($('#discovered-invariants-div'));
       progWCover = cover(progW.element);
+      scoreW = new ScoreWindow($('#score-div'));
+      scoreWCover = cover($('#score-div-row'));
 
       curScript = Script(tutorialScript);
       //$('#next-lvl').click(nextLvl)
@@ -336,7 +351,13 @@
             <div class='col-md-3 col-md-offset-8' > <button id='next-lvl'> Next </a> </div>
         </div>
       </div>
-      <div class='col-md-3 good centered' id='discovered-invariants-div'>
+      <div class='col-md-3' >
+        <div class='row good centered positioned' id='discovered-invariants-div'>
+        </div>
+        <div id='score-div-row' class='row positioned'>
+          <div id='score-div' class='col-md-3 col-md-offset-5'>
+          </div>
+        </div>
       </div>
     </div>
   </div>

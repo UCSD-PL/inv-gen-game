@@ -65,20 +65,25 @@ function label(elem, txt, direction) {
   return { elem:  div, timer: interval };
 }
 
-function cover(elem) {
+function cover(elem, col='white', duration=0, cb = null) {
   p = $(elem).offset();
-  //var x = p.left, y = p.top;
-  //var w = $(elem).outerWidth(), h = $(elem).outerHeight();
   var div = $("<div class='overlay_cover'></div>")
   div.offset({ left: 0, top: 0})
-  //div.outerWidth(w);
-  //div.outerHeight(h);
   $(elem).append(div);
+  if (duration=0) {
+    $(div).css({ 'background-color': col });
+  } else {
+    $(div).animate( { 'background-color': col }, duration, cb);
+  }
   return div;
 }
 
 function uncover(cover, delay=1000, complete_cb) {
-  $(cover).animate({ 'background-color': "rgba(255,255,255,0)" }, delay, complete_cb);
+  $(cover).animate({ 'background-color': "rgba(255,255,255,0)" }, delay, 
+    function () {
+      $(cover).remove();
+      complete_cb();
+    });
 }
 
 function Script(steps) {
