@@ -34,7 +34,8 @@ function ProgressWindow(div) {
       } else if (state == "duplicate") {
         div.addClass('error')
       } else if (state == "tautology") {
-      } else if (state == "implied") {
+      } else if (state == "implies") {
+        div.addClass('error')
       } else if (state == "ok") {
       }
   }

@@ -22,6 +22,15 @@ function implied(invL1, inv, cb) {
   return impliedPairs(invL1, [inv], function (res) { cb(res.length > 0) });
 }
 
+function impliedBy(invL1, inv, cb) {
+  return impliedPairs(invL1, [inv], function (res) {
+    if (res.length > 0)
+      cb(res[0][0]);
+    else
+      cb(null);
+  });
+}
+
 function isTautology(inv, cb) {
   return rpc.call("App.isTautology", [ esprima.parse(inv) ], cb, log)
 }

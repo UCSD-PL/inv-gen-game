@@ -1,11 +1,17 @@
 function GameLogic(tracesW, progressW, scoreW, msgW) {
   var gl = this;
-  var erorrTimer = null;
+  var foundInv = [];
+  var foundJSInv = [];
 
   gl.tracesW = tracesW;
   gl.progressW = progressW;
   gl.scoreW = scoreW;
   gl.msgW = msgW;
+
+  gl.clear = function () {
+    foundInv = [];
+    foundJSInv = [];
+  }
 
   gl.userInput = function () {
     msgW.onInput();
@@ -27,7 +33,8 @@ function GameLogic(tracesW, progressW, scoreW, msgW) {
     }
 
     try {
-      res = invEval(invToJS(inv), data)
+      var jsInv = invToJS(inv)
+      res = invEval(jsInv, data)
       tracesW.evalResult({ data: res })
 
       if (!evalResultBool(res))
@@ -51,8 +58,17 @@ function GameLogic(tracesW, progressW, scoreW, msgW) {
             msgW.error("This is a tautology...")
             return
           }
-          progW.addInvariant(inv);
-          scoreW.add(1);
+          impliedBy(foundJSInv, jsInv, function (x) {
+            if (x !== null) {
+              progW.markInvariant(foundInv[x], "implies")
+              msgW.immediateError("Implied by existing invariant!")
+            } else {
+              foundInv.push(inv)
+              foundJSInv.push(jsInv)
+              progW.addInvariant(inv);
+              scoreW.add(1);
+            }
+          })
         })
       }
 
@@ -62,6 +78,7 @@ function GameLogic(tracesW, progressW, scoreW, msgW) {
   }
 
   gl.loadLvl = function(lvl) {
+    gl.clear();
     progW.clear();
     msgW.clear();
     scoreW.clear();
