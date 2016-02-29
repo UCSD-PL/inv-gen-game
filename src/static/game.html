@@ -52,6 +52,7 @@
       $('#' + lvls[curLvl]).removeClass('bold');
       $('#done-row').hide()
       curLvl = lvl;
+      $('#' + lvls[curLvl]).addClass('bold');
 
       if (lvl == lvls.length) {
         return doneScreen();
@@ -89,6 +90,7 @@
       msgW = new MsgWindow($('#errormsg'));
       traceW = new TraceWindow($('#data-display'));
       gameLogic = new GameLogic(traceW, progW, scoreW, msgW);
+      gameLogic.onLvlPassed(nextLvl);
 
       $('#next-lvl').click(nextLvl)
       loadLvlSet("intro-benchmarks")

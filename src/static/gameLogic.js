@@ -1,16 +1,21 @@
 function GameLogic(tracesW, progressW, scoreW, msgW) {
   var gl = this;
-  var foundInv = [];
-  var foundJSInv = [];
+
+  var foundInv;
+  var foundJSInv;
+  var progress;
 
   gl.tracesW = tracesW;
   gl.progressW = progressW;
   gl.scoreW = scoreW;
   gl.msgW = msgW;
+  gl.curGoal = null;
 
   gl.clear = function () {
     foundInv = [];
     foundJSInv = [];
+    gl.curGoal = null;
+    progress = {}
   }
 
   gl.userInput = function () {
@@ -67,6 +72,16 @@ function GameLogic(tracesW, progressW, scoreW, msgW) {
               foundJSInv.push(jsInv)
               progW.addInvariant(inv);
               scoreW.add(1);
+
+              if (!progress.satisfied) {
+                goalSatisfied(gl.curGoal, foundJSInv,
+                  function(newProgress) {
+                    progress = newProgress
+                    if (progress.satisfied) {
+                      gl.lvlPassed();
+                    }
+                });
+              }
             }
           })
         })
@@ -79,6 +94,7 @@ function GameLogic(tracesW, progressW, scoreW, msgW) {
 
   gl.loadLvl = function(lvl) {
     gl.clear();
+    gl.curGoal = lvl.goal;
     progW.clear();
     msgW.clear();
     scoreW.clear();
@@ -91,4 +107,11 @@ function GameLogic(tracesW, progressW, scoreW, msgW) {
     gl.userInput();
   })
 
+  gl.lvlPassed = function () {}
+
+  gl.onLvlPassed = function (cb) {
+    gl.lvlPassed = cb;
+  }
+
+  gl.clear();
 }
