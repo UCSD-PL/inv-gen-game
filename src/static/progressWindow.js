@@ -23,12 +23,26 @@ function ProgressWindow(div) {
   }
 
   progW.markInvariant = function (inv, state) {
+      var div = invMap[inv]
+
+      if (div === undefined) {
+        console.log("Unknown invariant " + inv);
+        return
+      }
+
       if (state == "checking") {
       } else if (state == "duplicate") {
+        div.addClass('error')
       } else if (state == "tautology") {
       } else if (state == "implied") {
       } else if (state == "ok") {
       }
+  }
+
+  progW.clearMarks = function () {
+    for (var i in invMap) {
+      invMap[i].removeClass("error")
+    }
   }
 
   progW.clear = function () {

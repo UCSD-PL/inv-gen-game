@@ -1,0 +1,129 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <script src="jquery-1.12.0.min.js"></script>
+  <script src="jquery.jsonrpcclient.js"></script>
+  <script src="jquery.color-2.1.2.min.js"></script>
+  <link rel="stylesheet" href="bootstrap.min.css">
+  <link rel="stylesheet" href="bootstrap-theme.min.css">
+  <script src="bootstrap.min.js"></script>
+  <script src="crafty-min.js"></script>
+  <link rel="stylesheet" href="inv.css">
+  <link rel="stylesheet" href="arrow.css">
+  <script src="traceWindow.js"></script>
+  <script src="msgWindow.js"></script>
+  <script src="progressWindow.js"></script>
+  <script src="scoreWindow.js"></script>
+  <script src="logic.js"></script>
+  <script src="gameLogic.js"></script>
+  <script src="eval.js"></script>
+  <script src="goal.js"></script>
+  <script src="pp.js"></script>
+  <script src="util.js"></script>
+  <script src="esprima.js"></script>
+  
+  <script>
+    var curLvl; 
+    var curLvlSet; 
+    var lvls = null;
+    var tracesW = null, progW = null, scoreW = null;
+    var gameLogic = null;
+
+    function loadTrace(traceId) {
+      res = rpc.call('App.getData', [ curLvlSet, traceId ], function(res) {
+        data = res;
+        curGoal = data.goal;
+        goalSatisfied(curGoal, jsfound, function(newProgress) {progress = newProgress});
+
+        gameLogic.loadLvl(data)
+        $('#hint').html(data.hint)
+      }, log)
+    }
+
+    function nextLvl() {
+      loadLvl(curLvl + 1);
+    }
+
+    function loadLvl(lvl) {
+      jsfound = []
+      $('#' + lvls[curLvl]).removeClass('bold');
+      $('#done-row').hide()
+      curLvl = lvl;
+
+      if (lvl == lvls.length) {
+        return doneScreen();
+      } else {
+        loadTrace(lvls[curLvl]);
+      }
+    }
+
+    function loadLvlSet(lvlset) {
+      curLvlSet = lvlset;
+      res = rpc.call('App.listData', [lvlset], function(res) {
+        lvls = res;
+        hstr = '<ul>';
+        for (var i in res) {
+          hstr += '<li>' + '<a class="loadLvl" id="' + res[i] + '" >' + res[i] + '</a>' + '</li>'
+        }
+        hstr += '</ul>'
+        $('#traces-menu').html(hstr)
+        $('.loadLvl').click(function (evt) {
+          loadLvl(lvls.indexOf(this.id));
+        })
+        curLvl = -1;
+        nextLvl();
+      }, log)
+    }
+
+    function doneScreen() {
+      loadLvlSet("test-benchmarks")
+    }
+
+    $(document).ready(function() {
+      rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
+      progW = new ProgressWindow($('#discovered-invariants-div'));
+      scoreW = new ScoreWindow($('#score-div'));
+      msgW = new MsgWindow($('#errormsg'));
+      traceW = new TraceWindow($('#data-display'));
+      gameLogic = new GameLogic(traceW, progW, scoreW, msgW);
+
+      $('#next-lvl').click(nextLvl)
+      loadLvlSet("intro-benchmarks")
+    })
+
+  </script>
+</head>
+<body>
+</body>
+  <div class='container'>
+    <div class='row'>
+      <div class='col-md-3' id='left'>
+        Level:
+        <div  id='traces-menu'> </div>
+      </div>
+      <div class='col-md-6' id='middle'>
+        <div class='row' id='data-display' style="font-family:monospace;">
+        </div>
+        <div class='row-md-6 spaced'>
+          Hint: <span id='hint'> </span>
+        </div>
+        <div class='row-md-6 spaced' id='errormsg'> </div>
+        <div class='row-md-6' id='done-row' style='display: none;'>
+            <div class='col-md-3 col-md-offset-8' > <button id='next-lvl'> Next </a> </div>
+        </div>
+      </div>
+      <div class='col-md-3' >
+        <div class='row good centered positioned' id='discovered-invariants-div'>
+        </div>
+        <div id='score-div-row' class='row positioned'>
+          <div id='score-div' class='col-md-3 col-md-offset-5'>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 
+</html>

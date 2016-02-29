@@ -1,28 +1,31 @@
 function TraceWindow(div, data) {
   var traceW = this;
 
-  hstr = '<table class="table table-stripped"><tr>';
-  for (var i in data.variables) {
-    hstr += '<th>' + data.variables[i] + '</th>';
-  }
-  hstr += '<th><input id="formula-entry" type="text"></th>';
-      
-  hstr += '</tr>';
-  for (var i in data.data) {
-    hstr += '<tr id= "' + i + '" class="traces-row">';
-    for (var j in data.data[i]) {
-      hstr += '<td>' + data.data[i][j] + '</td>';
+  this.loadData = function(data) {
+    hstr = '<table class="table table-stripped"><tr>';
+    for (var i in data.variables) {
+      hstr += '<th>' + data.variables[i] + '</th>';
     }
-    hstr += '<td class="temp_expr_eval">&nbsp</td></tr>';
+    hstr += '<th><input id="formula-entry" type="text"></th>';
+        
+    hstr += '</tr>';
+    for (var i in data.data) {
+      hstr += '<tr id= "' + i + '" class="traces-row">';
+      for (var j in data.data[i]) {
+        hstr += '<td>' + data.data[i][j] + '</td>';
+      }
+      hstr += '<td class="temp_expr_eval">&nbsp</td></tr>';
+    }
+    hstr += '</table>'
+    $(div).html(hstr)
+
+    $('#formula-entry').keyup(function (keyEv) {
+      traceW.changedCb();
+    })
+
+    $('#formula-entry').focus();
+
   }
-  hstr += '</table>'
-  $(div).html(hstr)
-
-  $('#formula-entry').keyup(function (keyEv) {
-    traceW.changedCb();
-  })
-
-  $('#formula-entry').focus();
 
   this.curExp = function () { var v = $('#formula-entry').val(); return (v === undefined ? "" : v); }
   this.setExp = function (exp) { $('#formula-entry').val(exp); traceW.changedCb(); }
@@ -47,4 +50,7 @@ function TraceWindow(div, data) {
       $('.traces-row').removeClass('false')
     }
   }
+
+  if (data  !== undefined)
+    this.loadData(data)
 }
