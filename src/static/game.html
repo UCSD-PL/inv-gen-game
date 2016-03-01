@@ -90,9 +90,14 @@
       msgW = new MsgWindow($('#msg-box'));
       traceW = new TraceWindow($('#data-display'));
       gameLogic = new GameLogic(traceW, progW, scoreW, msgW);
-      gameLogic.onLvlPassed(nextLvl);
+      gameLogic.onLvlPassed(function() {
+        $('#done-row').show();
+      });
 
-      $('#next-lvl').click(nextLvl)
+      $('#next-lvl').click(function() {
+        $('#done-row').hide();
+        nextLvl();
+      })
       loadLvlSet("intro-benchmarks")
     })
 
@@ -114,9 +119,6 @@
         <div class='row-md-6 spaced'>
           Hint: <span id='hint'> </span>
         </div>
-        <div class='row-md-6' id='done-row' style='display: none;'>
-            <div class='col-md-3 col-md-offset-8' > <button id='next-lvl'> Next </a> </div>
-        </div>
       </div>
       <div class='col-md-3' >
         <div class='row good centered positioned' id='discovered-invariants-div'>
@@ -125,6 +127,9 @@
           <div class='col-md-2'> Score: </div>
           <div id='score-div' class='col-md-3 col-md-offset-3'>
           </div>
+        </div>
+        <div class='row box progressWindow' id='done-row' style='display: none;'>
+            <button id='next-lvl'> Next </button>
         </div>
       </div>
     </div>
