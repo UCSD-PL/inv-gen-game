@@ -1,12 +1,34 @@
 function TraceWindow(div, data) {
   var traceW = this;
+  var errorTimer;
+
+  traceW.immediateError = function (msg) {
+    $("th #errormsg").html("<div class='error'> " + msg + "</div>");
+  }
+
+  traceW.error = traceW.immediateError;
+
+  traceW.delayedError = function (msg, errorDelay = 2000) {
+    errorTimer = setTimeout(function() {
+      traceW.immediateError(msg);
+    }, errorDelay)
+  }
+
+  traceW.clearError = function () {
+    if (errorTimer) {
+      window.clearTimeout(errorTimer);
+      errorTimer = null;
+    }
+    traceW.immediateError("&nbsp");
+  }
+
 
   this.loadData = function(data) {
     hstr = '<table class="table table-stripped"><tr>';
     for (var i in data.variables) {
       hstr += '<th>' + data.variables[i] + '</th>';
     }
-    hstr += '<th><input id="formula-entry" type="text"></th>';
+    hstr += '<th><input id="formula-entry" type="text"><span id="errormsg">&nbsp</span></th>';
         
     hstr += '</tr>';
     for (var i in data.data) {
@@ -53,4 +75,7 @@ function TraceWindow(div, data) {
 
   if (data  !== undefined)
     this.loadData(data)
+
+  $(div).addClass('box')
+  $(div).addClass('tracesWindow')
 }

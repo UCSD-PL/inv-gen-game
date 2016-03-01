@@ -19,8 +19,7 @@ function GameLogic(tracesW, progressW, scoreW, msgW) {
   }
 
   gl.userInput = function () {
-    msgW.onInput();
-    msgW.clear();
+    tracesW.clearError();
     progressW.clearMarks();
 
     var inv = invPP(tracesW.curExp().trim());
@@ -28,7 +27,7 @@ function GameLogic(tracesW, progressW, scoreW, msgW) {
       var parsedInv = esprima.parse();
     } catch (err) {
       log("Error parsing: " + err)
-      msgW.delayedError(inv + " is not a valid expression.");
+      tracesW.delayedError(inv + " is not a valid expression.");
       return;
     }
 
@@ -48,7 +47,7 @@ function GameLogic(tracesW, progressW, scoreW, msgW) {
       var redundant = progW.contains(inv)
       if (redundant) {
         progW.markInvariant(inv, "duplicate")
-        msgW.immediateError("Duplicate Invariant!")
+        tracesW.immediateError("Duplicate Invariant!")
         return
       }
 
@@ -56,17 +55,17 @@ function GameLogic(tracesW, progressW, scoreW, msgW) {
       hold = res.filter(function (x) { return x; }).length
       
       if (hold < all)
-        msgW.error("Holds for " + hold + "/" + all + " cases.")
+        tracesW.error("Holds for " + hold + "/" + all + " cases.")
       else {
         isTautology(invToJS(inv), function(res) {
           if (res) {
-            msgW.error("This is a tautology...")
+            tracesW.error("This is a tautology...")
             return
           }
           impliedBy(foundJSInv, jsInv, function (x) {
             if (x !== null) {
               progW.markInvariant(foundInv[x], "implies")
-              msgW.immediateError("Implied by existing invariant!")
+              tracesW.immediateError("Implied by existing invariant!")
             } else {
               foundInv.push(inv)
               foundJSInv.push(jsInv)
@@ -88,7 +87,7 @@ function GameLogic(tracesW, progressW, scoreW, msgW) {
       }
 
     } catch (err) {
-      msgW.delayedError(interpretError(err))
+      tracesW.delayedError(interpretError(err))
     }
   }
 
@@ -96,7 +95,7 @@ function GameLogic(tracesW, progressW, scoreW, msgW) {
     gl.clear();
     gl.curGoal = lvl.goal;
     progW.clear();
-    msgW.clear();
+    tracesW.clearError();
     scoreW.clear();
     tracesW.loadData(lvl);
     tracesW.setExp("");

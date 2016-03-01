@@ -87,7 +87,7 @@
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
       progW = new ProgressWindow($('#discovered-invariants-div'));
       scoreW = new ScoreWindow($('#score-div'));
-      msgW = new MsgWindow($('#errormsg'));
+      msgW = new MsgWindow($('#msg-box'));
       traceW = new TraceWindow($('#data-display'));
       gameLogic = new GameLogic(traceW, progW, scoreW, msgW);
       gameLogic.onLvlPassed(nextLvl);
@@ -102,9 +102,11 @@
 </body>
   <div class='container'>
     <div class='row'>
-      <div class='col-md-3' id='left'>
+      <div class='col-md-1' id='left'>
         Level:
         <div  id='traces-menu'> </div>
+      </div>
+      <div class='col-md-1 box stickyWindow' id='sticky'>
       </div>
       <div class='col-md-6' id='middle'>
         <div class='row' id='data-display' style="font-family:monospace;">
@@ -112,7 +114,6 @@
         <div class='row-md-6 spaced'>
           Hint: <span id='hint'> </span>
         </div>
-        <div class='row-md-6 spaced' id='errormsg'> </div>
         <div class='row-md-6' id='done-row' style='display: none;'>
             <div class='col-md-3 col-md-offset-8' > <button id='next-lvl'> Next </a> </div>
         </div>
@@ -120,8 +121,9 @@
       <div class='col-md-3' >
         <div class='row good centered positioned' id='discovered-invariants-div'>
         </div>
-        <div id='score-div-row' class='row positioned'>
-          <div id='score-div' class='col-md-3 col-md-offset-5'>
+        <div id='score-div-row' class='row positioned box progressWindow'>
+          <div class='col-md-2'> Score: </div>
+          <div id='score-div' class='col-md-3 col-md-offset-3'>
           </div>
         </div>
       </div>

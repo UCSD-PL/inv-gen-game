@@ -87,4 +87,25 @@ tr.false {
 
 .progressWindow {
   font-size: 25px;
+  border-color: #157d00;
+}
+
+.tracesWindow {
+  border-color: #f29408;
+}
+
+.msgWindow {
+  border-color: #f29408;
+}
+
+.stickyWindow {
+  border-color: #f29408;
+}
+
+.box {
+  border-width: 4px;
+  border-style: solid;
+  text-align: center;
+  vertical-align: middle;
+  margin: 4px;
 }

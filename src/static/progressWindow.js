@@ -55,4 +55,7 @@ function ProgressWindow(div) {
   progW.contains = function (inv) {
     return invMap.hasOwnProperty(inv);
   }
+
+  $(div).addClass('box')
+  $(div).addClass('progressWindow')
 }
