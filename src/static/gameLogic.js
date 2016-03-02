@@ -1,14 +1,27 @@
-function GameLogic(tracesW, progressW, scoreW, msgW) {
+function GameLogic(tracesW, progressW, scoreW, stickyW) {
+  var all_powerups = {
+    var_only:
+      { 
+        html :  "Var Only - 2x",
+        apply : function (inv, score) {
+                  if (setlen(literals(inv)) == 0) {
+                    return 2*score;
+                  } else
+                    return score;
+                },
+      },
+  }
   var gl = this;
 
   var foundInv;
   var foundJSInv;
   var progress;
+  var pwups;
 
   gl.tracesW = tracesW;
   gl.progressW = progressW;
   gl.scoreW = scoreW;
-  gl.msgW = msgW;
+  gl.stickyW = stickyW;
   gl.curGoal = null;
 
   gl.clear = function () {
@@ -16,6 +29,15 @@ function GameLogic(tracesW, progressW, scoreW, msgW) {
     foundJSInv = [];
     gl.curGoal = null;
     progress = {}
+    pwups = {};
+  }
+
+  var computeScore = function(inv, s) {
+    for (var i in pwups) {
+      if (pwups.hasOwnProperty(i))
+        s = all_powerups[i].apply(inv, s)
+    }
+    return s;
   }
 
   gl.userInput = function () {
@@ -24,7 +46,7 @@ function GameLogic(tracesW, progressW, scoreW, msgW) {
 
     var inv = invPP(tracesW.curExp().trim());
     try {
-      var parsedInv = esprima.parse();
+      var parsedInv = esprima.parse(inv);
     } catch (err) {
       log("Error parsing: " + err)
       tracesW.delayedError(inv + " is not a valid expression.");
@@ -70,7 +92,7 @@ function GameLogic(tracesW, progressW, scoreW, msgW) {
               foundInv.push(inv)
               foundJSInv.push(jsInv)
               progW.addInvariant(inv);
-              scoreW.add(1);
+              scoreW.add(computeScore(jsInv, 1));
 
               if (!progress.satisfied) {
                 goalSatisfied(gl.curGoal, foundJSInv,
@@ -94,12 +116,33 @@ function GameLogic(tracesW, progressW, scoreW, msgW) {
   gl.loadLvl = function(lvl) {
     gl.clear();
     gl.curGoal = lvl.goal;
+    stickyW.clear();
     progW.clear();
     tracesW.clearError();
     scoreW.clear();
     tracesW.loadData(lvl);
     tracesW.setExp("");
     gl.userInput();
+    gl.addPowerup("var_only");
+  }
+
+  gl.addPowerup = function(pwup) {
+    if (!(pwup in all_powerups))
+      throw "Powerup " + pwup + " not found";
+    if (pwup in pwups) {
+      return;
+    }
+
+    pwups[pwup] = stickyW.add(all_powerups[pwup].html);
+  }
+
+  gl.removePowerup = function(pwup) {
+    if (!(pwup.name in pwups)) {
+      return;
+    }
+
+    stickyW.remove(pwups[pwup.name]);
+    delete pwups[pwup.name]
   }
 
   tracesW.changed(function () {

@@ -118,3 +118,20 @@ function Script(steps) {
 
   s.nextStep();
 }
+
+/* In-place union - modifies s1 */
+function union(s1, s2) {
+  for (var e in s2) {
+    s1[e] = true;
+  }
+
+  return s1;
+}
+
+function setlen(s) {
+  var l = 0;
+  for (var i in s) {
+    if (s.hasOwnProperty(i))  l++;
+  }
+  return l;
+}

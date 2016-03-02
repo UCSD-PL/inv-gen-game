@@ -60,3 +60,47 @@ function evalResultBool(evalResult) {
   }
   return true;
 }
+
+function identifiers(inv) {
+  if (typeof(inv) == "string")
+    return identifiers(esprima.parse(inv))
+
+  if (inv.type == "Program")
+    return identifiers(inv.body[0].expression)
+
+  if (inv.type == "BinaryExpression")
+    return union(identifiers(inv.left), identifiers(inv.right))
+
+  if (inv.type == "UnaryExpression")
+    return identifiers(inv.argument)
+
+  if (inv.type == "Identifier") {
+    var r = {}
+    r[inv.name] = true;
+    return r
+  }
+
+  return {}
+}
+
+function literals(inv) {
+  if (typeof(inv) == "string")
+    return literals(esprima.parse(inv))
+
+  if (inv.type == "Program")
+    return literals(inv.body[0].expression)
+
+  if (inv.type == "BinaryExpression")
+    return union(literals(inv.left), literals(inv.right))
+
+  if (inv.type == "UnaryExpression")
+    return literals(inv.argument)
+
+  if (inv.type == "Literal") {
+    var r = {}
+    r[inv.raw] = true;
+    return r
+  }
+
+  return {}
+}
