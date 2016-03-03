@@ -11,7 +11,7 @@ function StickyWindow(div) {
   }
 
   stickyW.clear = function () {
-    $(div).html("&nbsp");
+    $(div).html("Powerups:<br><hr>");
   }
 
   stickyW.clear();

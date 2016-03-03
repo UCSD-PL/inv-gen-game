@@ -114,6 +114,8 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
     tracesW.setExp("");
     gl.userInput();
     gl.addPowerup(mkVarOnlyPwup());
+    gl.addPowerup(mkXVarPwup(2));
+    gl.addPowerup(mkUseOpPwup(">"));
   }
 
   gl.addPowerup = function(pwup) {

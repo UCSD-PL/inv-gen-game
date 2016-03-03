@@ -18,25 +18,29 @@ function Powerup(id, html, applies, transform) {
 }
 
 function mkMultiplierPwup(id, html, applies, mult) {
-  return new Powerup(id + "x" + mult, html, applies, function (s) { return s * mult; });
+  return new Powerup(id + "x" + mult, 
+                      "<div class='pwup box'>" + html + "<div class='pwup-mul'>" +
+                      "x" + mult + "</div></div>",
+                      applies,
+                     function (s) { return s * mult; });
 }
 
 function mkVarOnlyPwup(mult = 2) {
-  return mkMultiplierPwup("var only", "<span>Var Only</span>", 
+  return mkMultiplierPwup("var only", "V", 
     function (inv) {
       return setlen(literals(inv)) == 0;
     }, mult)
 }
 
 function mkXVarPwup(nvars, mult = 2) {
-  return mkMultiplierPwup("NVars=" + nvars, "NVars=" + nvars, 
+  return mkMultiplierPwup("NVars=" + nvars, nvars + "V", 
     function (inv) {
       return setlen(identifiers(inv)) == nvars;
     }, mult)
 }
 
 function mkUseOpPwup(op, mult = 2) {
-  return mkMultiplierPwup("Use Op: " + op, "Use Op: " + op, 
+  return mkMultiplierPwup("Use Op: " + op, op, 
     function (inv) {
       return op in operators(inv);
     }, mult)
