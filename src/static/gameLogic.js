@@ -22,7 +22,7 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
 
   var computeScore = function(inv, s) {
     for (var i in pwups) {
-      if (pwups.hasOwnProperty(i) && pwups[i].applies(inv)) {
+      if (pwups.hasOwnProperty(i) && pwups[i].holds(inv)) {
         s = pwups[i].transform(s)
         pwups[i].highlight();
       }
@@ -114,8 +114,10 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
     tracesW.setExp("");
     gl.userInput();
     gl.addPowerup(mkVarOnlyPwup());
-    gl.addPowerup(mkXVarPwup(2));
     gl.addPowerup(mkUseOpPwup(">"));
+    var p = mkXVarPwup(2)
+    if (p.applies(lvl))
+      gl.addPowerup(p);
   }
 
   gl.addPowerup = function(pwup) {
