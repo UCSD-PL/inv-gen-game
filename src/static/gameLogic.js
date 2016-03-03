@@ -1,16 +1,4 @@
 function GameLogic(tracesW, progressW, scoreW, stickyW) {
-  var all_powerups = {
-    var_only:
-      { 
-        html :  "Var Only - 2x",
-        apply : function (inv, score) {
-                  if (setlen(literals(inv)) == 0) {
-                    return 2*score;
-                  } else
-                    return score;
-                },
-      },
-  }
   var gl = this;
 
   var foundInv;
@@ -34,8 +22,10 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
 
   var computeScore = function(inv, s) {
     for (var i in pwups) {
-      if (pwups.hasOwnProperty(i))
-        s = all_powerups[i].apply(inv, s)
+      if (pwups.hasOwnProperty(i) && pwups[i].applies(inv)) {
+        s = pwups[i].transform(s)
+        pwups[i].highlight();
+      }
     }
     return s;
   }
@@ -45,10 +35,11 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
     progressW.clearMarks();
 
     var inv = invPP(tracesW.curExp().trim());
+    var jsInv = invToJS(inv)
     try {
-      var parsedInv = esprima.parse(inv);
+      var parsedInv = esprima.parse(jsInv);
     } catch (err) {
-      log("Error parsing: " + err)
+      //log("Error parsing: " + err)
       tracesW.delayedError(inv + " is not a valid expression.");
       return;
     }
@@ -59,7 +50,6 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
     }
 
     try {
-      var jsInv = invToJS(inv)
       res = invEval(jsInv, data)
       tracesW.evalResult({ data: res })
 
@@ -123,26 +113,25 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
     tracesW.loadData(lvl);
     tracesW.setExp("");
     gl.userInput();
-    gl.addPowerup("var_only");
+    gl.addPowerup(mkVarOnlyPwup());
   }
 
   gl.addPowerup = function(pwup) {
-    if (!(pwup in all_powerups))
-      throw "Powerup " + pwup + " not found";
-    if (pwup in pwups) {
+    if (pwup.id in pwups) {
       return;
     }
 
-    pwups[pwup] = stickyW.add(all_powerups[pwup].html);
+    gl.stickyW.add(pwup)
+    pwups[pwup.id] = pwup;
   }
 
   gl.removePowerup = function(pwup) {
-    if (!(pwup.name in pwups)) {
+    if (!(pwup.id in pwups)) {
       return;
     }
 
-    stickyW.remove(pwups[pwup.name]);
-    delete pwups[pwup.name]
+    $(pwup.element).remove();
+    delete pwups[pwup.id]
   }
 
   tracesW.changed(function () {

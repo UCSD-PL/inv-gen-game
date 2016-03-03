@@ -104,3 +104,26 @@ function literals(inv) {
 
   return {}
 }
+
+function operators(inv) {
+  if (typeof(inv) == "string")
+    return operators(esprima.parse(inv))
+
+  if (inv.type == "Program")
+    return operators(inv.body[0].expression)
+
+  if (inv.type == "BinaryExpression") {
+    var p = {}
+    p[inv.operator] = true;
+    return union(union(p, operators(inv.left)),
+                 operators(inv.right))
+  }
+
+  if (inv.type == "UnaryExpression") {
+    var p = {}
+    p[inv.operator] = true;
+    return union(p, operators(inv.argument))
+  }
+
+  return {}
+}
