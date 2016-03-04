@@ -11,6 +11,7 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
   gl.scoreW = scoreW;
   gl.stickyW = stickyW;
   gl.curGoal = null;
+  gl.pwupSuggestion = new PowerupSuggestion(gl)
 
   gl.clear = function () {
     foundInv = [];
@@ -65,6 +66,8 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
 
       all = res.length
       hold = res.filter(function (x) { return x; }).length
+
+      gl.pwupSuggestion.invariantTried(jsInv);
       
       if (hold < all)
         tracesW.error("Holds for " + hold + "/" + all + " cases.")
@@ -113,11 +116,7 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
     tracesW.loadData(lvl);
     tracesW.setExp("");
     gl.userInput();
-    gl.addPowerup(mkVarOnlyPwup());
-    gl.addPowerup(mkUseOpPwup(">"));
-    var p = mkXVarPwup(2)
-    if (p.applies(lvl))
-      gl.addPowerup(p);
+    gl.pwupSuggestion.clear(lvl);
   }
 
   gl.addPowerup = function(pwup) {

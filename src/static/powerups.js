@@ -50,7 +50,7 @@ function mkXVarPwup(nvars, mult = 2) {
     },
     function (data) { return data.variables.length >= nvars; },
     mult,
-    mult + "x the points if you use " + nvars +  " variables!")
+    mult + "x the points if you use " + nvars +  " variable(s)!")
 }
 
 function mkUseOpPwup(op, mult = 2) {
@@ -61,4 +61,48 @@ function mkUseOpPwup(op, mult = 2) {
     function (data) { return true; },
     mult,
     mult + "x the points if you use the " + op + " operator!")
+}
+
+function PowerupSuggestion(gl) {
+  var pwupS = this;
+  pwupS.gameLogic = gl;
+  var all_pwups = [
+    mkVarOnlyPwup(),
+    mkXVarPwup(1,2),
+    mkXVarPwup(2,2),
+    mkXVarPwup(3,2),
+    mkXVarPwup(4,2),
+    mkUseOpPwup("<"),
+    mkUseOpPwup("=="),
+    mkUseOpPwup("*"),
+    mkUseOpPwup("+"),
+  ]
+  pwupS.actual = []
+  pwupS.age = {}
+
+  // Called whenever a new level is loaded
+  this.clear = function (lvl) {
+    pwupS.actual = [];
+    pwupS.age = {};
+
+    for (var i in all_pwups) {
+      if (all_pwups[i].applies(lvl)) {
+        pwupS.actual.push(all_pwups[i])
+        pwupS.age[all_pwups[i].id] = 0;
+      }
+    }
+  }
+
+  this.invariantTried = function (inv) {
+    for (var i in pwupS.actual) {
+      if (!pwupS.actual[i].holds(inv))
+        pwupS.age[pwupS.actual[i].id] ++;
+      else
+        pwupS.age[pwupS.actual[i].id] = 0;
+
+      if (pwupS.age[pwupS.actual[i].id] > 3) {
+        pwupS.gameLogic.addPowerup(pwupS.actual[i]);
+      }
+    }    
+  }
 }
