@@ -25,7 +25,10 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
     for (var i in pwups) {
       if (pwups.hasOwnProperty(i) && pwups[i].holds(inv)) {
         s = pwups[i].transform(s)
-        pwups[i].highlight();
+        function mkRemover(ind) {
+          return function () { gl.removePowerup(pwups[ind]); }
+        }
+        pwups[i].highlight(mkRemover(i));
       }
     }
     return s;
@@ -112,7 +115,7 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
     stickyW.clear();
     progW.clear();
     tracesW.clearError();
-    scoreW.clear();
+    //scoreW.clear();
     tracesW.loadData(lvl);
     tracesW.setExp("");
     gl.userInput();

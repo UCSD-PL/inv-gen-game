@@ -20,8 +20,8 @@ function Powerup(id, html, holds, applies, transform, tip) {
   this.applies = applies;
   this.transform = transform;
 
-  this.highlight = function() {
-    pwup.element.effect("highlight");
+  this.highlight = function(cb) {
+    pwup.element.effect("highlight", { color: "#008000" }, 500, cb);
   }
 }
 
@@ -35,12 +35,12 @@ function mkMultiplierPwup(id, html, holds, applies, mult, tip) {
 }
 
 function mkVarOnlyPwup(mult = 2) {
-  return mkMultiplierPwup("var only", "V", 
+  return mkMultiplierPwup("var only", "<span style='text-decoration:line-through;'>1</span>", 
     function (inv) {
       return setlen(literals(inv)) == 0;
     }, 
     function (data) { return true; }, mult,
-    mult + "x the points if expression contains only variables!")
+    "x" + mult + " if you don't use constants!")
 }
 
 function mkXVarPwup(nvars, mult = 2) {
@@ -50,17 +50,44 @@ function mkXVarPwup(nvars, mult = 2) {
     },
     function (data) { return data.variables.length >= nvars; },
     mult,
-    mult + "x the points if you use " + nvars +  " variable(s)!")
+    "x " + mult + " if you use " + nvars +  " variable(s)!")
 }
 
 function mkUseOpPwup(op, mult = 2) {
+  var ppOp = op;
+
+  if (op == "<" || op == ">")
+    ppOp = "an inequality"
+  else if (op == "==" || op == "=")
+    ppOp = "an equality"
+  else if (op == "*")
+    ppOp = "multiplication"
+  else if (op == "+")
+    ppOp = "addition"
+    
   return mkMultiplierPwup("Use Op: " + op, op, 
     function (inv) {
       return op in operators(inv);
     },
     function (data) { return true; },
     mult,
-    mult + "x the points if you use the " + op + " operator!")
+    "x" + mult + " if you use " + ppOp)
+}
+
+function mkUseOpsPwup(ops, html, name, mult = 2) {
+  return mkMultiplierPwup("Use Ops: " + ops, html, 
+    function (inv) {
+      var inv_ops = operators(inv);
+      for (var i in ops) {
+        if (ops[i] in inv_ops)
+          return true;
+      }
+
+      return false;
+    },
+    function (data) { return true; },
+    mult,
+    "x" + mult + " if you use " + name)
 }
 
 function PowerupSuggestion(gl) {
@@ -72,8 +99,9 @@ function PowerupSuggestion(gl) {
     mkXVarPwup(2,2),
     mkXVarPwup(3,2),
     mkXVarPwup(4,2),
-    mkUseOpPwup("<"),
-    mkUseOpPwup("=="),
+    mkUseOpsPwup(["<", ">"], "<", "strict inequality"),
+    mkUseOpsPwup(["<=", "=>"], "&#8804;", "inequality"),
+    mkUseOpsPwup(["=="], "=", "equality"),
     mkUseOpPwup("*"),
     mkUseOpPwup("+"),
   ]
@@ -97,8 +125,9 @@ function PowerupSuggestion(gl) {
     for (var i in pwupS.actual) {
       if (!pwupS.actual[i].holds(inv))
         pwupS.age[pwupS.actual[i].id] ++;
-      else
+      else {
         pwupS.age[pwupS.actual[i].id] = 0;
+      }
 
       if (pwupS.age[pwupS.actual[i].id] > 3) {
         pwupS.gameLogic.addPowerup(pwupS.actual[i]);
