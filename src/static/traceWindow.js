@@ -2,11 +2,18 @@ function TraceWindow(div, data) {
   var traceW = this;
   var errorTimer;
 
+  traceW.okToSubmit = false;
+
   traceW.immediateError = function (msg) {
     $("th #errormsg").html("<div class='error'> " + msg + "</div>");
   }
 
+  traceW.immediateMsg = function (msg) {
+    $("th #errormsg").html("<div class='msg'> " + msg + "</div>");
+  }
+
   traceW.error = traceW.immediateError;
+  traceW.msg = traceW.immediateMsg;
 
   traceW.delayedError = function (msg, errorDelay = 2000) {
     errorTimer = setTimeout(function() {
@@ -42,7 +49,10 @@ function TraceWindow(div, data) {
     $(div).html(hstr)
 
     $('#formula-entry').keyup(function (keyEv) {
-      traceW.changedCb();
+      if (keyEv.key == "Enter" && traceW.okToSubmit) {
+        traceW.commitCb();
+      } else
+        traceW.changedCb();
     })
 
     $('#formula-entry').focus();
@@ -54,6 +64,11 @@ function TraceWindow(div, data) {
   this.changed = function (cb) {
     traceW.changedCb = cb;
   }
+
+  this.commit = function (cb) {
+    traceW.commitCb = cb;
+  }
+
   this.evalResult = function (res) {
     if (res.data) {
       for (var i in res.data) {
@@ -72,6 +87,11 @@ function TraceWindow(div, data) {
       $('.traces-row').removeClass('false')
     }
   }
+
+  this.enableSubmit = function () { traceW.okToSubmit = true; }
+  this.disableSubmit = function () { traceW.okToSubmit = false; }
+  this.disable = function () { $('#formula-entry').attr('disabled', 'disabled'); }
+  this.enable = function () { $('#formula-entry').removeAttr('disabled'); }
 
   if (data  !== undefined)
     this.loadData(data)

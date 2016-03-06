@@ -34,7 +34,8 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
     return s;
   }
 
-  gl.userInput = function () {
+  gl.userInput = function (commit) {
+    tracesW.disableSubmit();
     tracesW.clearError();
     progressW.clearMarks();
 
@@ -70,16 +71,24 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
       all = res.length
       hold = res.filter(function (x) { return x; }).length
 
-      gl.pwupSuggestion.invariantTried(jsInv);
-      
       if (hold < all)
         tracesW.error("Holds for " + hold + "/" + all + " cases.")
       else {
+        tracesW.enableSubmit();
+        if (!commit) {
+          tracesW.msg("Press Enter...");
+          return;
+        }
+
         isTautology(invToJS(inv), function(res) {
           if (res) {
             tracesW.error("This is a tautology...")
             return
           }
+
+          gl.pwupSuggestion.invariantTried(jsInv);
+
+      
           impliedBy(foundJSInv, jsInv, function (x) {
             if (x !== null) {
               progW.markInvariant(foundInv[x], "implies")
@@ -118,7 +127,7 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
     //scoreW.clear();
     tracesW.loadData(lvl);
     tracesW.setExp("");
-    gl.userInput();
+    gl.userInput(false);
     gl.pwupSuggestion.clear(lvl);
   }
 
@@ -141,7 +150,15 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
   }
 
   tracesW.changed(function () {
-    gl.userInput();
+    gl.userInput(false);
+  })
+
+  tracesW.commit(function () {
+    tracesW.msg("Trying out...");
+    tracesW.disable();
+    gl.userInput(true);
+    tracesW.enable();
+    tracesW.setExp("");
   })
 
   gl.lvlPassed = function () {}
@@ -150,5 +167,6 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
     gl.lvlPassed = cb;
   }
 
+  gl.score = function () { return scoreW.score; }
   gl.clear();
 }

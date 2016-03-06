@@ -45,7 +45,7 @@
         goalSatisfied(curGoal, jsfound, function(newProgress) {progress = newProgress});
 
         gameLogic.loadLvl(data)
-        $('#hint').html(data.hint)
+        //$('#hint').html(data.hint)
       }, log)
     }
 
@@ -56,7 +56,7 @@
     function loadLvl(lvl) {
       jsfound = []
       $('#' + lvls[curLvl]).removeClass('bold');
-      $('#done-row').hide()
+      //$('#done-row').hide()
       curLvl = lvl;
       $('#' + lvls[curLvl]).addClass('bold');
 
@@ -73,7 +73,7 @@
         lvls = res;
         hstr = '<ul>';
         for (var i in res) {
-          hstr += '<li>' + '<a class="loadLvl" id="' + res[i] + '" >' + res[i] + '</a>' + '</li>'
+          hstr += '<li>' + '<a class="loadLvl" id="' + res[i] + '" >' + i + '</a>' + '</li>'
         }
         hstr += '</ul>'
         $('#traces-menu').html(hstr)
@@ -86,7 +86,9 @@
     }
 
     function doneScreen() {
-      loadLvlSet("test-benchmarks")
+      //loadLvlSet("test-benchmarks")
+      $("#final-score").html("WOW! Much Points! You got " + gameLogic.score()  + " pts!");
+      $("#doge").fadeIn()
     }
 
     $(document).ready(function() {
@@ -98,14 +100,14 @@
       stickyW = new StickyWindow($('#sticky'))
       gameLogic = new GameLogic(traceW, progW, scoreW, stickyW);
       gameLogic.onLvlPassed(function() {
-        $('#done-row').show();
+        //$('#done-row').show();
       });
 
       $('#next-lvl').click(function() {
-        $('#done-row').hide();
+        //$('#done-row').hide();
         nextLvl();
       })
-      loadLvlSet("intro-benchmarks")
+      loadLvlSet("pruned-intro-benchmarks")
     })
 
   </script>
@@ -124,7 +126,7 @@
         <div class='row' id='data-display' style="font-family:monospace;">
         </div>
         <div class='row-md-6 spaced'>
-          Hint: <span id='hint'> </span>
+          <!--Hint: <span id='hint'> </span> -->
         </div>
       </div>
       <div class='col-md-3' >
@@ -135,11 +137,12 @@
           <div id='score-div' class='col-md-3 col-md-offset-3'>
           </div>
         </div>
-        <div class='row box progressWindow' id='done-row' style='display: none;'>
+        <div class='row box progressWindow' id='done-row' style='display: block;'>
             <button id='next-lvl'> Next </button>
         </div>
       </div>
     </div>
   </div>
 </div> 
+<div id="doge" style="display: none"> <img src="doge.jpg"/> <div id="final-score"> </div></div>
 </html>
