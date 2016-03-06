@@ -28,14 +28,15 @@ function Powerup(id, html, holds, applies, transform, tip) {
 function mkMultiplierPwup(id, html, holds, applies, mult, tip) {
   return new Powerup(id + "x" + mult, 
                       "<div class='pwup box'>" + html + "<div class='pwup-mul'>" +
-                      "x" + mult + "</div></div>",
+                      mult + "X</div></div>",
                       holds,
                       applies,
                       function (s) { return s * mult; }, tip);
 }
 
 function mkVarOnlyPwup(mult = 2) {
-  return mkMultiplierPwup("var only", "<span style='text-decoration:line-through;'>1</span>", 
+  return mkMultiplierPwup("var only", "<span style='position: absolute; left:13px'>1</span>" +
+                                      "<span style='position: absolute;color:red; left:10px'>&#10799;</span>", 
     function (inv) {
       return setlen(literals(inv)) == 0;
     }, 
@@ -129,9 +130,7 @@ function PowerupSuggestion(gl) {
         pwupS.age[pwupS.actual[i].id] = 0;
       }
 
-      if (pwupS.age[pwupS.actual[i].id] > 3) {
-        pwupS.gameLogic.addPowerup(pwupS.actual[i]);
-      }
+      pwupS.gameLogic.addPowerup(pwupS.actual[i]);
     }    
   }
 }

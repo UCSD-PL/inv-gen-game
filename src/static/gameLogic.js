@@ -129,6 +129,7 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
     tracesW.setExp("");
     gl.userInput(false);
     gl.pwupSuggestion.clear(lvl);
+    gl.pwupSuggestion.invariantTried("0==0");
   }
 
   gl.addPowerup = function(pwup) {
