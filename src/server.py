@@ -44,10 +44,12 @@ def loadTraces(dirN):
 
 introTraces = loadTraces(MYDIR + '/../intro-benchmarks')
 testTraces = loadTraces(MYDIR + '/../test-benchmarks')
+prunedIntroTraces = loadTraces(MYDIR + '/../intro-benchmarks-pruned')
 
 traces = {
     "intro-benchmarks": introTraces,
     "test-benchmarks": testTraces,
+    "pruned-intro-benchmarks": prunedIntroTraces,
     "old-dilig-traces": {
       '15-c': {
           'variables': ['n', 'k', 'j'],
