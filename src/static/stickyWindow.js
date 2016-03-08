@@ -10,6 +10,14 @@ function StickyWindow(div) {
     $(div).append(pwup.element);
   }
 
+  stickyW.set = function (pwups) {
+    var d = $("<div>Powerups:<br><hr></div>")
+    for (var i in pwups)
+      $(d).append(pwups[i].element)
+
+    $(div).html(d);
+  }
+
   stickyW.clear = function () {
     $(div).html("Powerups:<br><hr>");
   }

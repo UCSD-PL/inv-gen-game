@@ -2,10 +2,28 @@ log = function(arg) { console.log(arg); }
 
 error = function(arg) { log (arg); }
 
+assert = function (b, msg) {
+  if (!b)
+    error(msg);
+}
+
+function fst(x) { return x[0]; }
+function snd(x) { return x[1]; }
+
 function removeLabel(l) {
   $(l.elem).remove();
   clearInterval(l.timer);
 }
+
+function shuffle(arr) {
+    var j;
+    for (var i = 0; i < arr.length; i++) {
+        j = Math.floor(Math.random() * arr.length);
+        var x = arr[i];
+        arr[i] = arr[j];
+        arr[j] = x;
+    }
+};
 
 function label(elem, txt, direction) {
   p = $(elem).offset();

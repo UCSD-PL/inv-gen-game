@@ -11,7 +11,8 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
   gl.scoreW = scoreW;
   gl.stickyW = stickyW;
   gl.curGoal = null;
-  gl.pwupSuggestion = new PowerupSuggestion(gl)
+  //gl.pwupSuggestion = new PowerupSuggestionAll(gl,2)
+  gl.pwupSuggestion = new PowerupSuggestionFullHistory(gl, 5, "lfu")
 
   gl.clear = function () {
     foundInv = [];
@@ -22,13 +23,16 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
   }
 
   var computeScore = function(inv, s) {
+    var update = true;
     for (var i in pwups) {
       if (pwups.hasOwnProperty(i) && pwups[i].holds(inv)) {
         s = pwups[i].transform(s)
-        function mkRemover(ind) {
-          return function () { gl.removePowerup(pwups[ind]); }
-        }
-        pwups[i].highlight(mkRemover(i));
+        pwups[i].highlight(function () {
+          if (update) { // We have multiple callbacks. Want only one to update.
+            update = false;
+            gl.setPowerups(gl.pwupSuggestion.getPwups())
+          }
+        });
       }
     }
     return s;
@@ -86,18 +90,22 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
             return
           }
 
-          gl.pwupSuggestion.invariantTried(jsInv);
-
-      
           impliedBy(foundJSInv, jsInv, function (x) {
             if (x !== null) {
               progW.markInvariant(foundInv[x], "implies")
               tracesW.immediateError("Implied by existing invariant!")
             } else {
+              gl.pwupSuggestion.invariantTried(jsInv);
+              
               foundInv.push(inv)
               foundJSInv.push(jsInv)
               progW.addInvariant(inv);
-              scoreW.add(computeScore(jsInv, 1));
+              var addScore = computeScore(jsInv, 1)
+
+              if (addScore == 1) { // No powerups applied
+                gl.setPowerups(gl.pwupSuggestion.getPwups());
+              }
+              scoreW.add(addScore);
 
               if (!progress.satisfied) {
                 goalSatisfied(gl.curGoal, foundJSInv,
@@ -129,7 +137,7 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
     tracesW.setExp("");
     gl.userInput(false);
     gl.pwupSuggestion.clear(lvl);
-    gl.pwupSuggestion.invariantTried("0==0");
+    gl.setPowerups(gl.pwupSuggestion.getPwups())
   }
 
   gl.addPowerup = function(pwup) {
@@ -139,6 +147,15 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
 
     gl.stickyW.add(pwup)
     pwups[pwup.id] = pwup;
+  }
+
+  gl.setPowerups = function (new_pwups) {
+    pwups = {}
+    for (var i in new_pwups) {
+      pwups[new_pwups[i].id] = new_pwups[i]
+    }
+
+    stickyW.set(new_pwups);
   }
 
   gl.removePowerup = function(pwup) {
