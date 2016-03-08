@@ -106,8 +106,7 @@ function PowerupSuggestionAll(gl, threshold) {
     mkXVarPwup(2,2),
     mkXVarPwup(3,2),
     mkXVarPwup(4,2),
-    mkUseOpsPwup(["<", ">"], "<", "strict inequality"),
-    mkUseOpsPwup(["<=", "=>"], "&#8804;", "inequality"),
+    mkUseOpsPwup(["<=", "=>", "<", ">"], "<>", "inequality"),
     mkUseOpsPwup(["=="], "=", "equality"),
     mkUseOpPwup("*"),
     mkUseOpPwup("+"),
@@ -166,8 +165,7 @@ function PowerupSuggestionFullHistory(gl, n, type) {
     mkXVarPwup(2,2),
     mkXVarPwup(3,2),
     mkXVarPwup(4,2),
-    mkUseOpsPwup(["<", ">"], "<", "strict inequality"),
-    mkUseOpsPwup(["<=", "=>"], "&#8804;", "inequality"),
+    mkUseOpsPwup(["<=", "=>", "<", ">"], "<>", "inequality"),
     mkUseOpsPwup(["=="], "=", "equality"),
     mkUseOpPwup("*"),
     mkUseOpPwup("+"),
@@ -189,8 +187,8 @@ function PowerupSuggestionFullHistory(gl, n, type) {
 
     pwupS.sortLast = pwupS.actual.map(function (x, ind)  { return [ pwupS.lastUse[x.id] , x ] })
 
-    pwupS.sortFreq.sort(function (a,b) { return b[0] - a[0] })
-    pwupS.sortLast.sort(function (a,b) { return b[0] - a[0] })
+    pwupS.sortFreq.sort(function (a,b) { return a[0] - b[0] })
+    pwupS.sortLast.sort(function (a,b) { return a[0] - b[0] })
   }
 
   // Called whenever a new level is loaded
@@ -209,7 +207,7 @@ function PowerupSuggestionFullHistory(gl, n, type) {
 
   this.invariantTried = function (inv) {
     for (var i in pwupS.actual) {
-      if (!pwupS.actual[i].holds(inv)) {
+      if (pwupS.actual[i].holds(inv)) {
         pwupS.nUses[pwupS.actual[i].id] ++;
         pwupS.lastUse[pwupS.actual[i].id] = pwupS.gen; 
       }
