@@ -121,19 +121,25 @@ BitVector = R("[0-9][0-9]*bv[0-9][0-9]*")
 TrigAttr = Trigger | Attribute
 FuncApplication = LPARN + csl(Expr) + RPARN
 
-E9 = FALSE | TRUE | Number | BitVector \
-    | Id + O(FuncApplication)\
-    | OLD + LPARN + Expr + RPARN \
-    | LPARN + QOp + O(TypeArgs) + csl(IdsType) + QSep + ZoM(TrigAttr) + Expr  +  RPARN \
-    | LPARN + Expr + RPARN
+E9_Fun_App = Id + O(FuncApplication)
+E9_Old = OLD + LPARN + Expr + RPARN
+E9_Parns = LPARN + Expr + RPARN
+E9_Primitive = FALSE | TRUE | Number | BitVector 
+E9_Quantified = LPARN + QOp + O(TypeArgs) + csl(IdsType) + QSep + ZoM(TrigAttr) + Expr  +  RPARN 
+
+E9 =  E9_Primitive \
+    | E9_Fun_App \
+    | E9_Old \
+    | E9_Quantified \
+    | E9_Parns
 MapUpdate = ASSGN + Expr
 MapOp = LSQBR + csl(Expr) + O(MapUpdate) + RSQBR | \
         LSQBR + Number + COLN + Number + RSQBR
 E8 = E9 + ZoM(MapOp)
 E7 = ZoM(UnOp) + E8
-E6 << G(E7 + ZoM(MulOp + E6))
-E5 << G(E6 + ZoM(AddOp + E5))
-E4 << G(E5 + ZoM(ConcatOp + E4))
+E6 << (E7 + ZoM(MulOp + E6))
+E5 << (E6 + ZoM(AddOp + E5))
+E4 << E5 + ZoM(ConcatOp + E4)
 E3 = (E4 + RelOp + E4| E4 )
 EOr = OrOp + E3
 EAnd = AndOp + E3
@@ -191,41 +197,44 @@ CallLhs = csl(Id) + ASSGN
 MapSelect = LSQBR + csl(Expr) + RSQBR
 Lhs = Id + ZoM(MapSelect)
 Label = Id | Number
-Stmt =  ASSERT + Expr + SEMI \
-      | ASSUME + O(S("{:partition}")) + Expr + SEMI \
+
+AssertStmt = ASSERT + Expr + SEMI
+AssumeStmt = ASSUME + O(S("{:partition}")) + Expr + SEMI 
+ReturnStmt = RETURN + SEMI 
+GotoStmt = GOTO + csl(Label) + SEMI
+AssignmentStmt = G(csl(Lhs)) + ASSGN + G(csl(Expr)) + SEMI 
+Stmt =  AssertStmt \
+      | AssumeStmt \
       | HAVOC + csl(Id) + SEMI \
-      | csl(Lhs) + ASSGN + csl(Expr) + SEMI \
+      | AssignmentStmt \
       | CALL + CallLhs + Id + LPARN + csl(Expr) + RPARN + SEMI \
       | CALL + FORALL + Id + LPARN + csl(WildcardExpr) + RPARN + SEMI \
       | IfStmt \
       | WHILE + LPARN + WildcardExpr + RPARN + ZoM(LoopInv) + BlockStmt\
       | BREAK + O(Id) + SEMI \
-      | RETURN + SEMI \
-      | GOTO + csl(Label) + SEMI
+      | ReturnStmt \
+      | GotoStmt
 
 LStmt = F();
-LStmt << (Stmt | Label + COLN + LStmt)
+LabeledStatement = Label + COLN + LStmt
+LStmt << (Stmt | LabeledStatement)
 LEmpty = F();
 LEmpty <<(Id + COLN + O(LEmpty))
 StmtList << (ZoM(LStmt) + O(LEmpty))
 
 
-Body = LBRAC + ZoM(LocalVarDecl) + StmtList  + RBRAC
+Body = LBRAC + G(ZoM(G(LocalVarDecl))) + G(StmtList) + RBRAC
 ProcedureDecl = PROCEDURE + ZoM(Attribute) + Id + PSig + SEMI + ZoM(Spec) |\
                 PROCEDURE + ZoM(Attribute) + Id + PSig + ZoM(Spec) + Body
 
 IOutParameters = RETURNS + LPARN + csl(IdsType) + RPARN
-ISig = O(TypeArgs) + LPARN + csl(IdsType) + RPARN + O(IOutParameters)
-ImplementationDecl = IMPLEMENTATION + ZoM(Attribute) + Id + ISig + ZoM(Body)
+ISig = G(O(TypeArgs)) + LPARN + G(csl(IdsType)) + RPARN + G(O(IOutParameters))
+ImplementationDecl = IMPLEMENTATION + G(ZoM(Attribute)) + Id + G(ISig) + G(ZoM(Body))
 
 Decl = TypeDecl | ConstantDecl | FunctionDecl | AxiomDecl | VarDecl | \
     ProcedureDecl | ImplementationDecl
 
 Program = ZoM(Decl);
-
-def parseString(s):
-    return Program.parseString(s)
-
 
 if __name__ == "__main__":
     print Expr.parseString("z#AT#0 == 1 - 0")
