@@ -3,131 +3,177 @@ import boogie_grammar;
 import pyparsing
 
 class AstNode:
-    def __init__(s, st, loc, children):
-        s._children = children;
+    def __init__(s, *args):
+        s._children = args;
+        real_init = s.__init__.__code__
+        assert (real_init.co_argcount - 1 == len(args) and\
+                real_init.co_argcount == len(real_init.co_varnames))
+
+        # Attribute names are based on the formal argument names of the
+        # most specific class constructor.
+        s._dict = {}
+        for (n,v) in zip(real_init.co_varnames[1:], args):
+            s._dict[n] = v;
+
+    def __getattr__(s, n):
+        return s._dict[n];
+            
     def __repr__(s):
         try:
             return s.__str__();
         except:
             return s.__class__.__name__ + "[" + str(s._children) + "]"
 
-class AstProgram(AstNode): pass
-class AstImplementation(AstNode):    
-    def __init__(s, st, loc, children):
-        # Don't handle attributes yet
-        assert len(children[1]) == 0
-        s._name = children[2]
-        sig = children[3]
+    # Structural equality
+    def __eq__(s, other):
+        return isinstance(other, AstNode) and \
+               s.__class__ == other.__class__ and \
+               s._children == other._children
+
+class AstProgram(AstNode):
+    def __init__(s, decls): AstNode.__init__(s, decls)
+    @staticmethod
+    def __parse__(toks):    return AstProgram(toks)
+    def __str__(s): return "\n".join(map(str, s.decls))
+
+class AstImplementation(AstNode):
+    def __init__(s, name, signature, body): AstNode.__init__(s, name, signature, body)
+    def __str__(s): return "implementation " + s.name + str(s.signature) + str(s.body)
+    @staticmethod
+    def __parse__(toks):
+        name = str(toks[2])
+        sig = toks[3]
         # For now ignore anything other than the argument list
         assert len(sig) == 3 and len(sig[0]) == 0 and len(sig[2]) == 0
-        s._signature = sig[1]
-        s._body = children[4][0]
-        AstNode.__init__(s, st, loc, [])
-    def __str__(s): return "implementation " + s._name + str(s._signature) + str(s._body)
+        signature = None; #sig[1]
+        body = toks[4][0]
+        return AstImplementation(name, signature, body)
 
 class AstBinding(AstNode):
-    def __init__(s, st, loc, children):
-        s._names = children[:-1]
-        s._type = children[-1]
-        AstNode.__init__(s,st,loc,[])
-
-    def __str__(s):
-        return ",".join([str(x) for x in s._names]) + " : " + str(s._type)
+    def __init__(s, names, typ):  AstNode.__init__(s, names, typ)
+    def __str__(s): return ",".join(s.names) + " : " + str(s.typ)
+    @staticmethod
+    def __parse__(toks):    return AstBinding(map(str, toks[:-1]), toks[-1])
 
 class AstLabel(AstNode):
-    def __init__(s, st, loc, children):
-        s._label = children[0]
-        s._stmt  = children[1]
-        AstNode.__init__(s,st,loc,[])
-
-    def __str__(s):
-        return str(s._label) + " : " + str(s._stmt)
+    def __init__(s, label, stmt):  AstNode.__init__(s, label, stmt)
+    def __str__(s): return s.label + " : " + str(s.stmt)
+    @staticmethod
+    def __parse__(toks):    return AstLabel(str(toks[0]), toks[1])
 
 class AstAssignment(AstNode):
-    def __init__(s, st, loc, children):
-        assert (len(children) == 2)
-        s._var = children[0]
-        s._expr = children[1]
-        AstNode.__init__(s,st,loc,[])
+    def __init__(s, lhs, rhs):  AstNode.__init__(s, lhs, rhs)
+    def __str__(s): return s.lhs + " : " + str(s.rhs)
+    @staticmethod
+    def __parse__(toks):    return AstAssignment(s, str(toks[0]), toks[1])
 
-    def __str__(s):
-        return s._var + " := " + str(s._expr)
+class AstIntType(AstNode):
+    def __init__(s):  AstNode.__init__(s)
+    def __str__(s): return "int"
+    @staticmethod
+    def __parse__(toks):    return AstIntType()
 
-class AstIntType(AstNode):  pass;
 class AstBody(AstNode):
-    def __init__(s, st, loc, children):
-        assert len(children) == 2
-        s._bindings = [x[1] for x in children[0]]
-        s._stmts = children[1]
-        AstNode.__init__(s,st,loc,[])
-
+    def __init__(s, bindings, stmts):   AstNode.__init__(s, bindings, stmts)
     def __str__(s):
-        return "\n".join(["var " + str(x) + ";" for x in s._bindings]) + \
-                "\n".join([str(x) for x in s._stmts]) 
+        return "{\n" + "\n".join(["var " + str(x) + ";" for x in s.bindings]) + "\n" +\
+                "\n".join([str(x) for x in s.stmts]) + "\n}"
+    @staticmethod
+    def __parse__(toks):
+        assert len(toks) == 2
+        return AstBody([x[1] for x in toks[0]], toks[1])
+
 
 class AstStmt(AstNode): pass
 class AstOneExprStmt(AstStmt):
-    def __init__(s, st, loc, children):
-        assert (len(children) == 2)
-        s._expr = children[1]
-        AstNode.__init__(s,st,loc,[])
-
-class AstReturn(AstStmt):   pass
-class AstGoto(AstStmt):
-    def __init__(s, st, loc, children):
-        assert children[0] == "goto";
-        s._labels = children[1:]
-        AstNode.__init__(s,st,loc,[])
+    def __init__(s, expr):  AstNode.__init__(s, expr)
 
 class AstAssert(AstOneExprStmt):
-    def __str__(s): return "assert (" + str(s._expr) + ");";
+    def __str__(s): return "assert (" + str(s.expr) + ");";
+    @staticmethod
+    def __parse__(toks):
+        assert (len(toks) == 2)
+        return AstAssert(toks[1])
+
 class AstAssume(AstOneExprStmt):
-    def __str__(s): return "assume (" + str(s._expr) + ");";
+    def __str__(s): return "assume (" + str(s.expr) + ");";
+    @staticmethod
+    def __parse__(toks):
+        assert (len(toks) == 2)
+        return AstAssume(toks[1])
+
+# Returns is for now without argument
+class AstReturn(AstStmt):
+    def __init__(s):  AstNode.__init__(s)
+    def __str__(s): return "return"
+    @staticmethod
+    def __parse__(toks):    return AstReturn()
+
+class AstGoto(AstStmt):
+    def __init__(s, labels):  AstNode.__init__(s, labels)
+    def __str__(s): return "goto " + ",".join(s.labels) + ";"
+    @staticmethod
+    def __parse__(toks):
+        assert toks[0] == "goto";
+        return AstGoto(map(str, toks[1:]))
+
 class AstUnExpr(AstNode):
-    def __init__(s, st, loc, children):
-        s._op = children[0]
-        s._expr = children[1]
-        AstNode.__init__(s,st,loc,[])
-    def __str__(s): return "(" + str(s._op) + str(s._expr) + ")"
-class AstFalse(AstNode):   pass
-class AstTrue(AstNode):   pass
+    def __init__(s, op, expr):  AstNode.__init__(s, op, expr)
+    def __str__(s): return s.op + str(s.expr)
+    @staticmethod
+    def __parse__(toks):    return AstUnExpr(str(toks[0]), toks[1])
+
+class AstFalse(AstNode): 
+    def __init__(s):  AstNode.__init__(s)
+    def __str__(s): return "false"
+    @staticmethod
+    def __parse__(toks):    return AstFalse()
+
+class AstTrue(AstNode):
+    def __init__(s):  AstNode.__init__(s)
+    def __str__(s): return "true"
+    @staticmethod
+    def __parse__(toks):    return AstTrue()
+
 class AstNumber(AstNode): 
-    def __init__(s, st, loc, children):
-        assert(len(children) == 1)
-        s._num = int(children[0])
-        AstNode.__init__(s,st,loc,[])
-    def __str__(s): return str(s._num)
+    def __init__(s, num):   AstNode.__init__(s,num)
+    def __str__(s): return str(s.num)
+    @staticmethod
+    def __parse__(toks):
+        assert(len(toks) == 1)
+        return AstNumber(int(toks[0]))
+
 class AstId(AstNode): 
-    def __init__(s, st, loc, children):
-        assert(len(children) == 1)
-        s._name = children[0]
-        AstNode.__init__(s,st,loc,[])
-    def __str__(s): return s._name
+    def __init__(s, name):  AstNode.__init__(s, name)
+    def __str__(s): return s.name
+    @staticmethod
+    def __parse__(toks):
+        assert(len(toks) == 1)
+        return AstId(str(toks[0]))
+
 class AstBinExpr(AstNode):
-    def __init__(s, st, loc, children):
-        s._lhs = children[0]
-        s._rhs = children[2]
-        s._op = children[1]
-        AstNode.__init__(s,st,loc,[])
-    def __str__(s): return "(" + str(s._lhs) + s._op + str(s._rhs) + ")"
+    def __init__(s, lhs, op, rhs):  AstNode.__init__(s, lhs, op, rhs)
+    def __str__(s): return "(" + str(s.lhs) + s.op + str(s.rhs) + ")"
+    @staticmethod
+    def __parse__(toks):    return AstBinExpr(toks[0], str(toks[1]), toks[2])
 
 def parseAst(s):
     def act_wrap(cl):
         def act(s, loc, toks):
-            return [ cl(s, loc, toks) ]
+            return [ cl.__parse__(toks) ]
         return act;
 
     def expr_wrap(cl):
         def act(s, loc, toks):
             if (len(toks) > 1):
-                return [ cl(s, loc, toks) ]
+                return [ cl.__parse__(toks) ]
             else:
                 return toks
         return act
 
     def assign_act(s, loc, toks):
         assert (len(toks) == 2)
-        return [AstAssignment(s, loc, t) for t in zip(toks[0], toks[1])]
+        return [AstAssignment(lhs, rhs) for (lhs, rhs) in zip(toks[0], toks[1])]
 
     # A minimium set of rules neccessary for the "passive" desugared
     # boogie programs generated during verification  
