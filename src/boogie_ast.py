@@ -41,7 +41,7 @@ class AstLabel(AstNode):
         AstNode.__init__(s,st,loc,[])
 
     def __str__(s):
-        return s._label + " : " + str(s._stmt)
+        return str(s._label) + " : " + str(s._stmt)
 
 class AstAssignment(AstNode):
     def __init__(s, st, loc, children):
@@ -83,6 +83,26 @@ class AstAssert(AstOneExprStmt):
     def __str__(s): return "assert (" + str(s._expr) + ");";
 class AstAssume(AstOneExprStmt):
     def __str__(s): return "assume (" + str(s._expr) + ");";
+class AstUnExpr(AstNode):
+    def __init__(s, st, loc, children):
+        s._op = children[0]
+        s._expr = children[1]
+        AstNode.__init__(s,st,loc,[])
+    def __str__(s): return "(" + str(s._op) + str(s._expr) + ")"
+class AstFalse(AstNode):   pass
+class AstTrue(AstNode):   pass
+class AstNumber(AstNode): 
+    def __init__(s, st, loc, children):
+        assert(len(children) == 1)
+        s._num = int(children[0])
+        AstNode.__init__(s,st,loc,[])
+    def __str__(s): return str(s._num)
+class AstId(AstNode): 
+    def __init__(s, st, loc, children):
+        assert(len(children) == 1)
+        s._name = children[0]
+        AstNode.__init__(s,st,loc,[])
+    def __str__(s): return s._name
 class AstBinExpr(AstNode):
     def __init__(s, st, loc, children):
         s._lhs = children[0]
@@ -123,12 +143,17 @@ def parseAst(s):
     GotoStmt.setParseAction(act_wrap(AstGoto))
     AssignmentStmt.setParseAction(assign_act);
     # Expressions 
+    E7.setParseAction(expr_wrap(AstUnExpr))
     E6.setParseAction(expr_wrap(AstBinExpr))
     E5.setParseAction(expr_wrap(AstBinExpr))
     E3.setParseAction(expr_wrap(AstBinExpr))
     E2.setParseAction(expr_wrap(AstBinExpr))
     E1.setParseAction(expr_wrap(AstBinExpr))
     E0.setParseAction(expr_wrap(AstBinExpr))
+    Number.setParseAction(act_wrap(AstNumber))
+    Id.setParseAction(act_wrap(AstId))
+    TRUE.setParseAction(act_wrap(AstTrue))
+    FALSE.setParseAction(act_wrap(AstFalse))
     return Program.parseString(s)
 
 if __name__ == "__main__":
