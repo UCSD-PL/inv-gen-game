@@ -1,6 +1,12 @@
 from boogie_grammar import *
 import boogie_grammar;
-import pyparsing
+from pyparsing import ParseResults
+
+def _strip(arg):
+    if isinstance(arg, ParseResults):
+        return arg[0]
+    else:
+        return arg
 
 class AstNode:
     def __init__(s, *args):
@@ -29,6 +35,17 @@ class AstNode:
         return isinstance(other, AstNode) and \
                s.__class__ == other.__class__ and \
                s._children == other._children
+
+    def __hash__(s):
+        return hash((s.__class__,) + s._children)
+
+def replace(ast, m):
+    if (not isinstance(ast, AstNode)):
+        return ast;
+    elif ast in m:
+        return m[ast]
+    else:
+        return ast.__class__(*[replace(x,m) for x in ast._children])
 
 class AstProgram(AstNode):
     def __init__(s, decls): AstNode.__init__(s, decls)
@@ -155,7 +172,7 @@ class AstBinExpr(AstNode):
     def __init__(s, lhs, op, rhs):  AstNode.__init__(s, lhs, op, rhs)
     def __str__(s): return "(" + str(s.lhs) + s.op + str(s.rhs) + ")"
     @staticmethod
-    def __parse__(toks):    return AstBinExpr(toks[0], str(toks[1]), toks[2])
+    def __parse__(toks):    return AstBinExpr(_strip(toks[0]), str(toks[1]), _strip(toks[2]))
 
 def parseAst(s):
     def act_wrap(cl):
@@ -212,3 +229,7 @@ if __name__ == "__main__":
     print "Expr:", Expr.parseString("1+2")
     print "Expr:", Expr.parseString("1*2")
     print "Expr:", Expr.parseString("(1+2)*3>0 && 4<2*3 ==> false ==> false ==> false")
+
+    a = _strip(Expr.parseString("a == b  + (1*a)"))
+    print a
+    print replace(a, { AstId("a") : AstId("new_a") })
