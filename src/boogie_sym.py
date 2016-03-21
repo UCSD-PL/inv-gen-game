@@ -46,31 +46,35 @@ def exit(bbs):
     assert (len(e) == 0)
     return e[0]
 
-"""
-def path_to_ssa(bb_path, bbs):
+def bbpath_to_stmts(bb_path, bbs):
+    r = []
+    for b in bb_path:   
+        r.extend(bbs[b].stmts)
+    return r
+
+def path_to_ssa(p):
     path = []
     ssa_env = {}
     repl_map = {}
-    for curBB in bb_path:
-        for stmt in bbs[curBB].stmts:
-            if isinstance(stmt, AstAssignment):
-                stmt._expr = ast_replace(stmt._expr, repl_map)
-                var_old = stmt._var
-                var_new = ssa_env.get(var_old, -1) + 1
-                ssa_env[var_old] var_new;
-                rename_map[Id(var_old)] =  
-                stmt._var = var new;
-            else:
-    return z3_query
-"""
+    for stmt in p: 
+        if isinstance(stmt, AstAssignment):
+            lhs_name = stmt.lhs.name
+            new_expr = replace(stmt.rhs, repl_map)
+            ssa_env[lhs_name] = ssa_env.get(lhs_name, 0) + 1
+            new_name = lhs_name + str(ssa_env[lhs_name])
+            repl_map[AstId(lhs_name)] = AstId(new_name)
+            path.append(AstAssignment(AstId(new_name), new_expr))
+        else:
+            path.append(replace(stmt, repl_map))
+    return path
 
-def path_to_z3(bb_path, bbs):
-    z3_query = []
-    for curBB in bb_path:
-        for stmt in bbs[curBB].stmts:
-            z3_query.append(stmt_to_z3(stmt, AllIntTypeEnv()))
-    return z3_query
+def path_to_z3(path):
+    return [stmt_to_z3(stmt, AllIntTypeEnv()) for stmt in path]
 
 if __name__ == "__main__":
     bbs = get_bbs("desugared2.bpl")
-    print path_to_z3(['anon0'], bbs)
+    print bbpath_to_stmts(['anon0'], bbs)
+    print path_to_z3(bbpath_to_stmts(['anon0'], bbs))
+    print path_to_ssa(bbpath_to_stmts(['anon0'], bbs))
+    print path_to_ssa(bbpath_to_stmts(['anon0', 'anon5_LoopHead', 'anon5_LoopBody'], bbs))
+    print path_to_z3(path_to_ssa(bbpath_to_stmts(['anon0', 'anon5_LoopHead', 'anon5_LoopBody'], bbs)))
