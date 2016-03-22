@@ -80,7 +80,7 @@ class AstLabel(AstNode):
 
 class AstAssignment(AstNode):
     def __init__(s, lhs, rhs):  AstNode.__init__(s, lhs, rhs)
-    def __str__(s): return s.lhs + " : " + str(s.rhs)
+    def __str__(s): return str(s.lhs) + " := " + str(s.rhs)
     @staticmethod
     def __parse__(toks):    return AstAssignment(s, str(toks[0]), toks[1])
 
@@ -173,6 +173,35 @@ class AstBinExpr(AstNode):
     def __str__(s): return "(" + str(s.lhs) + s.op + str(s.rhs) + ")"
     @staticmethod
     def __parse__(toks):    return AstBinExpr(_strip(toks[0]), str(toks[1]), _strip(toks[2]))
+
+def expr_read(ast):
+    if isinstance(ast, AstId):
+        return set([ast.name])
+    elif isinstance(ast, AstNumber):
+        return set()
+    elif isinstance(ast, AstUnExpr):
+        return expr_read(ast.expr)
+    elif isinstance(ast, AstBinExpr):
+        return expr_read(ast.lhs).union(expr_read(ast.rhs))
+    else:
+        raise Exception("Unknown expression type " + str(ast))
+
+def stmt_read(ast):
+    if isinstance(ast, AstLabel):
+        ast = ast.stmt
+
+    if isinstance(ast, AstAssume) or isinstance(ast, AstAssert):
+        return expr_read(ast.expr)
+    elif isinstance(ast, AstAssignment):
+        return expr_read(ast.rhs)
+    else:
+        return set()
+
+def stmt_changed(ast):
+    if isinstance(ast, AstAssignment):
+        return expr_read(ast.lhs)
+    else:
+        return set([])
 
 def parseAst(s):
     def act_wrap(cl):
