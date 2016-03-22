@@ -6,7 +6,7 @@ class AllIntTypeEnv:
 
 def expr_to_z3(expr, typeEnv):
     if isinstance(expr, AstNumber):
-        return Int(expr.num)
+        return expr.num
     elif isinstance(expr, AstId):
         return typeEnv[expr.name](expr.name)
     elif isinstance(expr, AstTrue):
