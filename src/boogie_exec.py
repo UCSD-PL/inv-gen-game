@@ -162,13 +162,6 @@ def get_loop_header_values(loop, bbs):
 if __name__ == "__main__":
     bbs = get_bbs("desugared3.bpl")
 
-    print "LOOPS:"
-    for loop in loops(bbs):
-        print loop
-        print unroll_loop(loop, 2)
-        print unroll_loop(loop, 3)
-        print unroll_loop(loop, 5)
-
     unrolled_p = unroll_loop(loop, 3)
     m = get_path_vars(unrolled_p, bbs)
     print zip(m, bbpath_to_stmts(unrolled_p, bbs))
