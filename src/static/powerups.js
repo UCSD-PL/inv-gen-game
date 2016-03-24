@@ -1,9 +1,9 @@
 /*
  * A powerup is an object with 3 fields:
  *  html:str - the html to display
- *  holds(inv:str) -> bool  - function that determines if it holds to an invariant. 
+ *  holds(inv:str) -> bool  - function that determines if it holds to an invariant.
  *  transform(score:int) -> int - how it transforms the score
- */ 
+ */
 function Powerup(id, html, holds, applies, transform, tip) {
   var pwup = this;
   this.id = id;
@@ -26,7 +26,7 @@ function Powerup(id, html, holds, applies, transform, tip) {
 }
 
 function mkMultiplierPwup(id, html, holds, applies, mult, tip) {
-  return new Powerup(id + "x" + mult, 
+  return new Powerup(id + "x" + mult,
                       "<div class='pwup box'>" + html + "<div class='pwup-mul'>" +
                       mult + "X</div></div>",
                       holds,
@@ -36,16 +36,16 @@ function mkMultiplierPwup(id, html, holds, applies, mult, tip) {
 
 function mkVarOnlyPwup(mult = 2) {
   return mkMultiplierPwup("var only", "<span style='position: absolute; left:13px'>1</span>" +
-                                      "<span style='position: absolute;color:red; left:10px'>&#10799;</span>", 
+                                      "<span style='position: absolute;color:red; left:10px'>&#10799;</span>",
     function (inv) {
       return setlen(literals(inv)) == 0;
-    }, 
+    },
     function (data) { return true; }, mult,
     "x" + mult + " if you don't use constants!")
 }
 
 function mkXVarPwup(nvars, mult = 2) {
-  return mkMultiplierPwup("NVars=" + nvars, nvars + "V", 
+  return mkMultiplierPwup("NVars=" + nvars, nvars + "V",
     function (inv) {
       return setlen(identifiers(inv)) == nvars;
     },
@@ -57,7 +57,7 @@ function mkXVarPwup(nvars, mult = 2) {
 function mkUseOpPwup(op, mult = 2) {
   var ppOp = op;
 
-  if (op == "<" || op == ">")
+  if (op == "<" || op == ">" || op == "<=" || op == ">=")
     ppOp = "an inequality"
   else if (op == "==" || op == "=")
     ppOp = "an equality"
@@ -65,8 +65,8 @@ function mkUseOpPwup(op, mult = 2) {
     ppOp = "multiplication"
   else if (op == "+")
     ppOp = "addition"
-    
-  return mkMultiplierPwup("Use Op: " + op, op, 
+
+  return mkMultiplierPwup("Use Op: " + op, op,
     function (inv) {
       return op in operators(inv);
     },
@@ -76,7 +76,7 @@ function mkUseOpPwup(op, mult = 2) {
 }
 
 function mkUseOpsPwup(ops, html, name, mult = 2) {
-  return mkMultiplierPwup("Use Ops: " + ops, html, 
+  return mkMultiplierPwup("Use Ops: " + ops, html,
     function (inv) {
       var inv_ops = operators(inv);
       for (var i in ops) {
@@ -92,7 +92,7 @@ function mkUseOpsPwup(ops, html, name, mult = 2) {
 }
 
 /*
- * First iteration on powerup suggestion - 
+ * First iteration on powerup suggestion -
  * show all applicable powerups, that haven't
  * been used in threshold moves.
  */
@@ -135,7 +135,7 @@ function PowerupSuggestionAll(gl, threshold) {
       else {
         pwupS.age[pwupS.actual[i].id] = 0;
       }
-    }    
+    }
   }
 
   this.getPwups = function() {
@@ -146,7 +146,7 @@ function PowerupSuggestionAll(gl, threshold) {
 }
 
 /*
- * Second iteration on powerup suggestion - 
+ * Second iteration on powerup suggestion -
  * consider the full history so far. Disply the top N
  * powerups, ordered by LRU/LFU.
  */
@@ -209,7 +209,7 @@ function PowerupSuggestionFullHistory(gl, n, type) {
     for (var i in pwupS.actual) {
       if (pwupS.actual[i].holds(inv)) {
         pwupS.nUses[pwupS.actual[i].id] ++;
-        pwupS.lastUse[pwupS.actual[i].id] = pwupS.gen; 
+        pwupS.lastUse[pwupS.actual[i].id] = pwupS.gen;
       }
     }
     pwupS.gen ++

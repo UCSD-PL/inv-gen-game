@@ -30,10 +30,10 @@
   <script src="pp.js"></script>
   <script src="util.js"></script>
   <script src="powerups.js"></script>
-  
+
   <script>
-    var curLvl; 
-    var curLvlSet; 
+    var curLvl;
+    var curLvlSet;
     var lvls = null;
     var tracesW = null, progW = null, scoreW = null;
     var gameLogic = null;
@@ -48,6 +48,17 @@
         //$('#hint').html(data.hint)
       }, log)
     }
+
+    $( "#progressbar" ).progressbar({
+      value: 50
+    });
+
+    /*
+    function prevLvl() {
+      if(curLvl > 0)
+        loadLvl(curLvl - 1);
+    }
+    */
 
     function nextLvl() {
       loadLvl(curLvl + 1);
@@ -69,6 +80,7 @@
 
     function loadLvlSet(lvlset) {
       curLvlSet = lvlset;
+      /* progress bar here */
       res = rpc.call('App.listData', [lvlset], function(res) {
         lvls = res;
         hstr = '<ul>';
@@ -78,7 +90,7 @@
         hstr += '</ul>'
         $('#traces-menu').html(hstr)
         $('.loadLvl').click(function (evt) {
-          loadLvl(lvls.indexOf(this.id));
+          loadLvl(lloadLvlSetvls.indexOf(this.id));
         })
         curLvl = -1;
         nextLvl();
@@ -91,6 +103,7 @@
       $("#doge").fadeIn()
     }
 
+
     $(document).ready(function() {
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
       progW = new ProgressWindow($('#discovered-invariants-div'));
@@ -99,21 +112,35 @@
       traceW = new TraceWindow($('#data-display'));
       stickyW = new StickyWindow($('#sticky'))
       gameLogic = new GameLogic(traceW, progW, scoreW, stickyW);
+
+      //$('hints').hide();
+      $('next-lvl').show();
+
       gameLogic.onLvlPassed(function() {
-        //$('#done-row').show();
+        $('#done-row').show();
       });
+
+
+      /*
+      $('#prev-lvl').click(function() {
+        //$('#done-row').hide();
+        prevLvl();
+      })
+      */
 
       $('#next-lvl').click(function() {
         //$('#done-row').hide();
         nextLvl();
       })
+
       loadLvlSet("pruned-intro-benchmarks")
+
+      curScript = Script(tutorialScript);
     })
 
   </script>
 </head>
 <body>
-</body>
   <div class='container'>
     <div class='row'>
       <div class='col-md-1' id='left'>
@@ -125,24 +152,28 @@
       <div class='col-md-6' id='middle'>
         <div class='row' id='data-display' style="font-family:monospace;">
         </div>
-        <div class='row-md-6 spaced'>
-          <!--Hint: <span id='hint'> </span> -->
+        <div class='row-md-6 spaced' id='hints'>
+          Hint: <span id='hint'> </span>
         </div>
       </div>
       <div class='col-md-3' >
-        <div class='row good centered positioned' id='discovered-invariants-div'>
-        </div>
         <div id='score-div-row' class='row positioned box progressWindow'>
           <div class='col-md-2'> Score: </div>
           <div id='score-div' class='col-md-3 col-md-offset-3'>
           </div>
         </div>
+
         <div class='row box progressWindow' id='done-row' style='display: block;'>
-            <button id='next-lvl'> Next </button>
+            <!--<button id='prev-lvl'> Previous </button>-->
+            <button id='next-lvl'> Next Level </button>
+        </div>
+
+        <div class='row good centered positioned' id='discovered-invariants-div'>
         </div>
       </div>
     </div>
   </div>
-</div> 
+</div>
 <div id="doge" style="display: none"> <img src="doge.jpg"/> <div id="final-score"> </div></div>
+</body>
 </html>
