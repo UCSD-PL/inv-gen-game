@@ -144,3 +144,18 @@ tr.false {
   font-weight:  bold;
   font-family:  "comic sans";
 }
+
+#formula-entry {
+  position: relative;
+  top:  -4px;
+}
+
+th {
+  border-bottom-style: solid;
+  border-bottom-color: black;
+  border-bottom-width: 1px;
+}
+
+.temp_expr_eval {
+  font-weight: bold;
+}
