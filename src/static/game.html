@@ -37,6 +37,7 @@
     var lvls = null;
     var tracesW = null, progW = null, scoreW = null;
     var gameLogic = null;
+    var stepTimeout = 5000;
 
     function loadTrace(traceId) {
       res = rpc.call('App.getData', [ curLvlSet, traceId ], function(res) {
@@ -48,17 +49,6 @@
         //$('#hint').html(data.hint)
       }, log)
     }
-
-    $( "#progressbar" ).progressbar({
-      value: 50
-    });
-
-    /*
-    function prevLvl() {
-      if(curLvl > 0)
-        loadLvl(curLvl - 1);
-    }
-    */
 
     function nextLvl() {
       loadLvl(curLvl + 1);
@@ -104,6 +94,49 @@
     }
 
 
+    function nextStepOnInvariant(curScript, invariant, destructor) {
+       tempCb = function(inv) {
+         if (inv == invariant) {
+           removeLabel(curL);
+           tempCb = null;
+           destructor();
+           curScript.nextStep();
+         }
+       }
+    }
+
+    function labelRemover(lbl) {
+      return function () { removeLabel(lbl) }
+    }
+
+    var tutorialScript = [
+      {
+        setup: function (cs) {
+                   curL = label($('#sticky'), "You can now use Powerups!", "left")
+                   $('#sticky').focus();
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ');
+                 }
+      },
+      {
+        setup: function (cs) {
+                   curL = label($('#sticky'), "Hover over the icons below to find out more", "left")
+                   $('#sticky').focus();
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ');
+                 }
+      },
+      {
+        setup: function (cs) {
+                   curL = label($('#btn-hint'), "Click here to get hints", "left")
+                   $('#btn-hint').focus();
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ');
+                 }
+      },
+      { setup: function (cs) {
+               }
+      },
+    ]
+
+
     $(document).ready(function() {
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
       progW = new ProgressWindow($('#discovered-invariants-div'));
@@ -113,24 +146,33 @@
       stickyW = new StickyWindow($('#sticky'))
       gameLogic = new GameLogic(traceW, progW, scoreW, stickyW);
 
-      //$('hints').hide();
-      $('next-lvl').show();
+      $('#hints').hide();
+      $('#done-col').hide();
+      $('#hint-col').show();
+      $('#hint').html('');
+
+      if(curLvl == 0) {
+        //explain Powerups
+        //explain hints
+      }
+
 
       gameLogic.onLvlPassed(function() {
-        $('#done-row').show();
+        $('#done-col').show();
       });
 
-
-      /*
-      $('#prev-lvl').click(function() {
-        //$('#done-row').hide();
-        prevLvl();
-      })
-      */
-
       $('#next-lvl').click(function() {
-        //$('#done-row').hide();
+        $('#done-col').hide();
+        $('#hint').html('');
+        $('#hints').hide();
+        $('#btn-hint').show();
         nextLvl();
+      })
+
+      $('#btn-hint').click(function() {
+        $(this).hide();
+        $('#hints').show();
+        $('#hint').html(data.hint);
       })
 
       loadLvlSet("pruned-intro-benchmarks")
@@ -149,28 +191,33 @@
       </div>
       <div class='col-md-1 box stickyWindow' id='sticky'>
       </div>
+
       <div class='col-md-6' id='middle'>
         <div class='row' id='data-display' style="font-family:monospace;">
         </div>
-        <div class='row-md-6 spaced' id='hints'>
-          Hint: <span id='hint'> </span>
+        <div class='row-md-6'>
+          <div class='col-md-6' id='hint-col'>
+            <button id='btn-hint'>Show Hints</button>
+            <div class='col-md-6' id='hints'>
+              Hint:<br><span id='hint'> </span>
+            </div>
+          </div>
+          <div class='col-md-3 col-md-offset-8' id='done-col'>
+            <button id='next-lvl'> Next Level </button>
+          </div>
         </div>
       </div>
+
       <div class='col-md-3' >
         <div id='score-div-row' class='row positioned box progressWindow'>
           <div class='col-md-2'> Score: </div>
           <div id='score-div' class='col-md-3 col-md-offset-3'>
           </div>
         </div>
-
-        <div class='row box progressWindow' id='done-row' style='display: block;'>
-            <!--<button id='prev-lvl'> Previous </button>-->
-            <button id='next-lvl'> Next Level </button>
-        </div>
-
         <div class='row good centered positioned' id='discovered-invariants-div'>
         </div>
       </div>
+
     </div>
   </div>
 </div>
