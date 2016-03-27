@@ -223,14 +223,6 @@
                }
       },
       { setup: function (cs) {
-                 $('#left').html("Level:<div id='traces-menu'> </div>");
-                 uncover(scoreWCover, 1000, function() {
-                   curL = label($("#left"), "Levels will appear here later", "up");
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
-                 })
-               }
-      },
-      { setup: function (cs) {
                  $('#next-lvl').show();
                  uncover(scoreWCover, 1000, function() {
                    curL = label($("#next-lvl"), "Click here to start playing!", "up");
@@ -284,7 +276,7 @@
       <div class='col-md-3' >
         <div id='score-div-row' class='row positioned box progressWindow'>
           <div class='col-md-2'> Score: </div>
-          <div id='score-div' class='col-md-3 col-md-offset-3'>
+          <div id='score-div' class='col-md-7 col-md-offset-3'>
           </div>
         </div>
         <div class='row good centered positioned' id='discovered-invariants-div'>

@@ -57,7 +57,6 @@
     function loadLvl(lvl) {
       jsfound = []
       $('#' + lvls[curLvl]).removeClass('bold');
-      //$('#done-row').hide()
       curLvl = lvl;
       $('#' + lvls[curLvl]).addClass('bold');
 
@@ -70,7 +69,6 @@
 
     function loadLvlSet(lvlset) {
       curLvlSet = lvlset;
-      /* progress bar here */
       res = rpc.call('App.listData', [lvlset], function(res) {
         lvls = res;
         hstr = '<ul>';
@@ -110,6 +108,11 @@
     }
 
     var tutorialScript = [
+      { setup: function (cs) {
+                   curL = label($("#left"), "Levels appear here", "left");
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
+                 }
+      },
       {
         setup: function (cs) {
                    curL = label($('#sticky'), "You can now use Powerups!", "left")
@@ -147,22 +150,16 @@
       gameLogic = new GameLogic(traceW, progW, scoreW, stickyW);
 
       $('#hints').hide();
-      $('#done-col').hide();
+      $('#next-lvl').hide();
       $('#hint-col').show();
       $('#hint').html('');
 
-      if(curLvl == 0) {
-        //explain Powerups
-        //explain hints
-      }
-
-
       gameLogic.onLvlPassed(function() {
-        $('#done-col').show();
+        $('#next-lvl').show();
       });
 
       $('#next-lvl').click(function() {
-        $('#done-col').hide();
+        $('#next-lvl').hide();
         $('#hint').html('');
         $('#hints').hide();
         $('#btn-hint').show();
@@ -196,22 +193,22 @@
         <div class='row' id='data-display' style="font-family:monospace;">
         </div>
         <div class='row-md-6'>
-          <div class='col-md-6' id='hint-col'>
+
+          <div class='col-md-12' id='hint-col'>
             <button id='btn-hint'>Show Hints</button>
             <div class='col-md-6' id='hints'>
               Hint:<br><span id='hint'> </span>
             </div>
+              <button id='next-lvl'> Next Level </button>
           </div>
-          <div class='col-md-3 col-md-offset-8' id='done-col'>
-            <button id='next-lvl'> Next Level </button>
-          </div>
+
         </div>
       </div>
 
       <div class='col-md-3' >
         <div id='score-div-row' class='row positioned box progressWindow'>
-          <div class='col-md-2'> Score: </div>
-          <div id='score-div' class='col-md-3 col-md-offset-3'>
+          <div class='col-md-2'>Score: </div>
+          <div id='score-div' class='col-md-7 col-md-offset-3'>
           </div>
         </div>
         <div class='row good centered positioned' id='discovered-invariants-div'>

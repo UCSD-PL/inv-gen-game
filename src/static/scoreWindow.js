@@ -15,6 +15,6 @@ function ScoreWindow(div) {
     progW.score = 0;
     $(progW.element).html("<span>0</span>");
   }
-  
+
   progW.clear();
 }

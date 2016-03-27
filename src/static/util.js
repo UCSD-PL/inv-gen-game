@@ -66,7 +66,7 @@ function label(elem, txt, direction) {
     var v1 = ox, v2 = ox - pulseWidth;
   }
 
-  var div = $("<div class='absolute'><div class=" + clazz + 
+  var div = $("<div class='absolute'><div class=" + clazz +
     " style='" + arrow_pos + "'></div><div style='" + text_pos +
     "position: relative;'>" + txt + "</div></div>")
 
@@ -97,7 +97,7 @@ function cover(elem, col='white', duration=0, cb = null) {
 }
 
 function uncover(cover, delay=1000, complete_cb) {
-  $(cover).animate({ 'background-color': "rgba(255,255,255,0)" }, delay, 
+  $(cover).animate({ 'background-color': "rgba(255,255,255,0)" }, delay,
     function () {
       $(cover).remove();
       complete_cb();
