@@ -140,12 +140,12 @@
                }
       },
       { setup: function (cs) {
-                 curL = label(".temp_expr_eval", "WOAH! 3+4=7!", "left")
+                 curL = label(".temp_expr_eval", "3+4=7!", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
                }
       },
       { setup: function (cs) {
-                 curL = label($      ('#formula-entry'), "Now type i.", "left")
+                 curL = label($      ('#formula-entry'), "Now try i.", "left")
                  nextStepOnInvariant(cs, "i", labelRemover(curL));
                }
       },
@@ -155,12 +155,12 @@
                }
       },
       { setup: function (cs) {
-                 curL = label($('#formula-entry'), "Type i+1", "left")
+                 curL = label($('#formula-entry'), "Try i+1", "left")
                  nextStepOnInvariant(cs, "i+1", labelRemover(curL));
                }
       },
       { setup: function (cs) {
-                 curL = label("#2 .temp_expr_eval", "Now you get i+1!", "up")
+                 curL = label("#2 .temp_expr_eval", "Now you get i+1 in this column!", "up")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
                }
       },
@@ -176,23 +176,23 @@
                }
       },
       { setup: function (cs) {
-                 curL = label($("#0 .temp_expr_eval"), "It's not true that 0>0", "left")
+                 curL = label($("#0 .temp_expr_eval"), "Not true that 0>0", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
                }
       },
       { setup: function (cs) {
-                 curL = label($("#1 .temp_expr_eval"), "But it's true that 1>0", "left")
+                 curL = label($("#1 .temp_expr_eval"), "It is true that 1>0", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
                }
       },
       { setup: function (cs) {
-                 curL = label($("#2 .temp_expr_eval"), "And it's also true that 2>0", "left")
+                 curL = label($("#2 .temp_expr_eval"), "It is true that 2>0", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
                }
       },
       { setup: function (cs) {
-                 curL = label($("#2 .temp_expr_eval"), "It also tells if something's <br>" +
-                                                   "<emph>true</emph> or <emph>false</emph> for each row!", "up")
+                 curL = label($("#formula-entry"), "Box also evaluates<br>" +
+                                                   "<emph>true</emph> or <emph>false</emph> <br> for each row!", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
                }
       },
@@ -203,14 +203,9 @@
                }
       },
       { setup: function (cs) {
-                 curL = label($(".temp_expr_eval"), "Hurray! All rows are green!", "left")
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
-               }
-      },
-      { setup: function (cs) {
-                 curL = label($("#formula-entry"),
-                 "You found an invariant! (Its true for all rows)", "left")
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 'Enter')
+                 tracesW.msg("Press Enter...")
+                 curL = label($("#0 .temp_expr_eval"), "Hurray! All rows are green!<br>You found an invariant!", "left")
+                 cs.nextStepOnKeyOrTimeout(-1, labelRemover(curL), 'Enter')
                }
       },
       { setup: function (cs) {
@@ -227,7 +222,7 @@
                  uncover(progWCover, 1000, function() {
                    var inv = invPP(tracesW.curExp().trim());
                    addSuccessfulInvariant(inv);
-                   curL = label($("#good_0"), "And the invariants you find<br>appear here", "up");
+                   curL = label($("#good_0"), "Your invariants appear here", "up");
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
                  })
                }

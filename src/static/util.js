@@ -51,7 +51,7 @@ function label(elem, txt, direction) {
   } else if (direction == "left") {
     clazz = "arrow_left"
     animate_prop = "left"
-    text_pos = "left:  30px;"
+    text_pos = "left:  30px; top: -10px;"
     arrow_pos = "left:  0px; top:  0px;"
     var ox = x + w + 5;
     var oy = y;
@@ -68,7 +68,7 @@ function label(elem, txt, direction) {
 
   var div = $("<div class='absolute'><div class=" + clazz +
     " style='" + arrow_pos + "'></div><div style='" + text_pos +
-    "position: relative;'>" + txt + "</div></div>")
+    "position: relative; text-align: center;'>" + txt + "</div></div>")
 
   div.offset({ left:  ox, top: oy})
   $('body').append(div);

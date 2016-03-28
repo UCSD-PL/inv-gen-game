@@ -43,7 +43,8 @@
 }
 
 .arrow_up::after {
-  left: 14px;
+  top: -1px;
+  left: 13px;
   transform: rotate(45deg);
 }
 
@@ -66,7 +67,7 @@
 }
 
 .arrow_left::after {
-  top: 12px;
+  top: 11.5px;
   transform: rotate(45deg);
 }
 
