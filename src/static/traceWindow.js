@@ -36,7 +36,7 @@ function TraceWindow(div, data) {
       hstr += '<th>' + data.variables[i] + '</th>';
     }
     hstr += '<th><input id="formula-entry" type="text"><span id="errormsg">&nbsp</span></th>';
-        
+
     hstr += '</tr>';
     for (var i in data.data) {
       hstr += '<tr id= "' + i + '" class="traces-row">';
@@ -47,6 +47,8 @@ function TraceWindow(div, data) {
     }
     hstr += '</table>'
     $(div).html(hstr)
+
+    $('#formula-entry').focus();
 
     $('#formula-entry').keyup(function (keyEv) {
       if (keyEv.key == "Enter" && traceW.okToSubmit) {
@@ -94,7 +96,9 @@ function TraceWindow(div, data) {
   this.enable = function () { $('#formula-entry').removeAttr('disabled'); }
 
   if (data  !== undefined)
+  {
     this.loadData(data)
+  }
 
   $(div).addClass('box')
   $(div).addClass('tracesWindow')

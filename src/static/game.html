@@ -108,11 +108,11 @@
     }
 
     var tutorialScript = [
-      { setup: function (cs) {
+      /*{ setup: function (cs) {
                    curL = label($("#left"), "Levels appear here", "left");
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
                  }
-      },
+      },*/
       {
         setup: function (cs) {
                    curL = label($('#sticky'), "You can now use Powerups!", "left")
@@ -130,7 +130,6 @@
       {
         setup: function (cs) {
                    curL = label($('#btn-hint'), "Click here to get hints", "left")
-                   $('#btn-hint').focus();
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ');
                  }
       },

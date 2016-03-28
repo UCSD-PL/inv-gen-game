@@ -176,13 +176,18 @@
                }
       },
       { setup: function (cs) {
-                 curL = label($("#1 .temp_expr_eval"), "But it's true that 1>0 and 2>0", "left")
+                 curL = label($("#1 .temp_expr_eval"), "But it's true that 1>0", "left")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#2 .temp_expr_eval"), "And it's also true that 2>0", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
                }
       },
       { setup: function (cs) {
                  curL = label($("#2 .temp_expr_eval"), "It also tells if something's <br>" +
-                                                   "<emph>true</emph> or <emph>false</emph>  for each row!", "up")
+                                                   "<emph>true</emph> or <emph>false</emph> for each row!", "up")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
                }
       },
@@ -198,8 +203,8 @@
                }
       },
       { setup: function (cs) {
-                 curL = label($("#2 .temp_expr_eval"),
-                 "You found an invariant!<br>(Something true for all rows)", "up")
+                 curL = label($("#formula-entry"),
+                 "You found an invariant! (Something true for all rows)", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
                }
       },
