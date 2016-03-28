@@ -41,7 +41,7 @@ function mkVarOnlyPwup(mult = 2) {
       return setlen(literals(inv)) == 0;
     },
     function (data) { return true; }, mult,
-    "x" + mult + " if you don't use constants!")
+    mult + "X if you don't use constants")
 }
 
 function mkXVarPwup(nvars, mult = 2) {
@@ -49,9 +49,9 @@ function mkXVarPwup(nvars, mult = 2) {
     function (inv) {
       return setlen(identifiers(inv)) == nvars;
     },
-    function (data) { return data.variables.length >= nvars; },
+    function (data) { return data.variables.length >= nvars && data.variables.length != 1; },
     mult,
-    "x " + mult + " if you use " + nvars +  " variable(s)!")
+    mult + "X if you use " + nvars +  " variable(s)")
 }
 
 function mkUseOpPwup(op, mult = 2) {
@@ -72,7 +72,7 @@ function mkUseOpPwup(op, mult = 2) {
     },
     function (data) { return true; },
     mult,
-    "x" + mult + " if you use " + ppOp)
+    mult + "X if you use " + ppOp)
 }
 
 function mkUseOpsPwup(ops, html, name, mult = 2) {
@@ -88,7 +88,7 @@ function mkUseOpsPwup(ops, html, name, mult = 2) {
     },
     function (data) { return true; },
     mult,
-    "x" + mult + " if you use " + name)
+    mult + "X if you use " + name)
 }
 
 /*
