@@ -82,6 +82,11 @@
         try {
           res = invEval(invToJS(inv), data)
           tracesW.evalResult({ data: res })
+          bool = res.filter(function (x) { return typeof(x) == "boolean"; }).length
+          all = res.length;
+          hold = res.filter(function (x) { return x; }).length
+          if (bool == all && hold == all)
+            tracesW.msg("Press Enter...")
         } catch (err) {
           errorTimer = setTimeout(function() {
             tracesW.evalResult({ clear: true })
@@ -204,8 +209,8 @@
       },
       { setup: function (cs) {
                  curL = label($("#formula-entry"),
-                 "You found an invariant! (Something true for all rows)", "left")
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
+                 "You found an invariant! (Its true for all rows)", "left")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 'Enter')
                }
       },
       { setup: function (cs) {
