@@ -5,9 +5,9 @@ THIRD_PARTY_DEPS=bootstrap.min.css \
 								 jquery.jsonrpcclient.js\
 								 jquery.color-2.1.2.min.js\
 								 esprima.js\
-								 crafty-min.js\
 								 jquery-ui-1.11.4\
 								 doge.jpg
+#								 crafty-min.js\
 
 all: $(THIRD_PARTY_DEPS)
 
@@ -32,8 +32,8 @@ jquery.color-2.1.2.min.js:
 esprima.js:
 	wget https://cdn.rawgit.com/jquery/esprima/2.7.1/esprima.js
 
-crafty-min.js:
-	wget https://github.com/craftyjs/Crafty/releases/download/0.7.0/crafty-min.js
+#crafty-min.js:
+#	wget https://github.com/craftyjs/Crafty/releases/download/0.7.0/crafty-min.js
 
 jquery-ui-1.11.4:
 	wget http://jqueryui.com/resources/download/jquery-ui-1.11.4.zip
