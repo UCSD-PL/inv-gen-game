@@ -51,7 +51,7 @@ function TraceWindow(div, data) {
     $('#formula-entry').focus();
 
     $('#formula-entry').keyup(function (keyEv) {
-      if (keyEv.key == "Enter" && traceW.okToSubmit) {
+      if (keyEv.keyCode == 13 && traceW.okToSubmit) {
         traceW.commitCb();
       } else
         traceW.changedCb();

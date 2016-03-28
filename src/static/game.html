@@ -90,49 +90,26 @@
       $("#doge").fadeIn()
     }
 
-
-    function nextStepOnInvariant(curScript, invariant, destructor) {
-       tempCb = function(inv) {
-         if (inv == invariant) {
-           removeLabel(curL);
-           tempCb = null;
-           destructor();
-           curScript.nextStep();
-         }
-       }
-    }
-
     function labelRemover(lbl) {
       return function () { removeLabel(lbl) }
     }
 
     var tutorialScript = [
-      /*{ setup: function (cs) {
-                   curL = label($("#left"), "Levels appear here", "left");
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
-                 }
-      },*/
       {
         setup: function (cs) {
-                   curL = label($('#sticky'), "You can now use Powerups!", "left")
-                   $('#sticky').focus();
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ');
-                 }
-      },
-      {
-        setup: function (cs) {
-                   curL = label($('#sticky'), "Hover over the icons below to find out more", "left")
-                   $('#sticky').focus();
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ');
+                   curL = label($('div .pwup :last'), "You have powerups! <br> Hover over icons for more", "left")
+                   $('body').focus();
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
                  }
       },
       {
         setup: function (cs) {
                    curL = label($('#btn-hint'), "Click here to get hints", "left")
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ');
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
                  }
       },
       { setup: function (cs) {
+                   $('#formula-entry').focus();
                }
       },
     ]
@@ -142,7 +119,6 @@
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
       progW = new ProgressWindow($('#discovered-invariants-div'));
       scoreW = new ScoreWindow($('#score-div'));
-      //msgW = new MsgWindow($('#msg-box'));
       traceW = new TraceWindow($('#data-display'));
       stickyW = new StickyWindow($('#sticky'))
       gameLogic = new GameLogic(traceW, progW, scoreW, stickyW);
@@ -172,7 +148,10 @@
 
       loadLvlSet("pruned-intro-benchmarks")
 
-      curScript = Script(tutorialScript);
+      gameLogic.onLvlLoaded(function () {
+        curScript = Script(tutorialScript)
+        gameLogic.onLvlLoaded(function (){})
+      })
     })
 
   </script>

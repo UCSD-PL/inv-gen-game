@@ -138,6 +138,7 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
     gl.userInput(false);
     gl.pwupSuggestion.clear(lvl);
     gl.setPowerups(gl.pwupSuggestion.getPwups())
+    gl.lvlLoaded();
   }
 
   gl.addPowerup = function(pwup) {
@@ -180,9 +181,14 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
   })
 
   gl.lvlPassed = function () {}
+  gl.lvlLoaded = function () {}
 
   gl.onLvlPassed = function (cb) {
     gl.lvlPassed = cb;
+  }
+
+  gl.onLvlLoaded = function (cb) {
+    gl.lvlLoaded = cb;
   }
 
   gl.score = function () { return scoreW.score; }

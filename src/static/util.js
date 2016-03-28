@@ -113,7 +113,7 @@ function Script(steps) {
     s.steps[s.step].setup(s);
   }
 
-  s.nextStepOnKeyOrTimeout = function(timeout, destructor, key = null) {
+  s.nextStepOnKeyOrTimeout = function(timeout, destructor, keyCode = null) {
    if (timeout > 0) {
      s.timeoutId = setTimeout(function() {
        destructor();
@@ -122,7 +122,7 @@ function Script(steps) {
      }, timeout);
    }
    $('body').keypress(function (ev) {
-     if (key == null || ev.key == key) {
+     if (keyCode === null || ev.which == keyCode) {
        $('body').off('keypress');
        destructor();
        if (timeout > 0)

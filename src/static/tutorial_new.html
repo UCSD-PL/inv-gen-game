@@ -7,6 +7,7 @@
   <script src="jquery-1.12.0.min.js"></script>
   <script src="jquery.jsonrpcclient.js"></script>
   <script src="jquery.color-2.1.2.min.js"></script>
+  <script src="jquery-ui-1.11.4/jquery-ui.js"></script>
   <link rel="stylesheet" href="bootstrap.min.css">
   <link rel="stylesheet" href="bootstrap-theme.min.css">
   <script src="bootstrap.min.js"></script>
@@ -140,7 +141,7 @@
       },
       { setup: function (cs) {
                  curL = label(".temp_expr_eval", "3+4=7!", "left")
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
@@ -150,7 +151,7 @@
       },
       { setup: function (cs) {
                  curL = label("#2 .temp_expr_eval", "Column contains values of i!", "up")
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
@@ -160,12 +161,12 @@
       },
       { setup: function (cs) {
                  curL = label("#2 .temp_expr_eval", "Now you get i+1 in this column!", "up")
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
                  curL = label($("#formula-entry"), "This box works like a calculator!", "left")
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
@@ -176,23 +177,23 @@
       },
       { setup: function (cs) {
                  curL = label($("#0 .temp_expr_eval"), "Not true that 0>0", "left")
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
                  curL = label($("#1 .temp_expr_eval"), "It is true that 1>0", "left")
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
                  curL = label($("#2 .temp_expr_eval"), "It is true that 2>0", "left")
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
                  curL = label($("#formula-entry"), "Box also evaluates<br>" +
                                                    "<emph>true</emph> or <emph>false</emph> <br> for each row!", "left")
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
@@ -204,7 +205,7 @@
       { setup: function (cs) {
                  tracesW.msg("Press Enter...")
                  curL = label($("#0 .temp_expr_eval"), "Hurray! All rows are green!<br>You found an invariant!", "left")
-                 cs.nextStepOnKeyOrTimeout(-1, labelRemover(curL), 'Enter')
+                 cs.nextStepOnKeyOrTimeout(-1, labelRemover(curL), 13)
                }
       },
       { setup: function (cs) {
@@ -212,7 +213,7 @@
                  uncover(scoreWCover, 1000, function() {
                    curL = label($("#score-div"), "You get points! Sweet!", "up");
                    scoreW.add(1);
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                  })
                }
       },
@@ -222,7 +223,7 @@
                    var inv = invPP(tracesW.curExp().trim());
                    addSuccessfulInvariant(inv);
                    curL = label($("#good_0"), "Your invariants appear here", "up");
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                  })
                }
       },
@@ -230,7 +231,7 @@
                  $('#next-lvl').show();
                  uncover(scoreWCover, 1000, function() {
                    curL = label($("#next-lvl"), "Click here to start playing!", "up");
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), ' ')
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                  })
                }
       },

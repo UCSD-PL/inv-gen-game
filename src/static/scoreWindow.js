@@ -9,10 +9,12 @@ function ScoreWindow(div) {
 
   progW.add = function (num) {
     progW.score += num;
-    var addSpan = $("<span class='scoreText scoreFloat'>+" + num + "</span>")
     $(progW.element).html("<span>" + progW.score + "</span>");
+    var addSpan = $("<span class='scoreText scoreFloat'>+" + num + "</span>")
     $(div).append(addSpan)
-    addSpan.hide("puff", {}, 1000, function() { $(addSpan).remove(); })
+    addSpan.hide({ effect: "puff", easing:"swing", duration:1000, complete: function() { 
+      $(addSpan).remove();
+    }})
   }
 
   progW.clear = function () {
