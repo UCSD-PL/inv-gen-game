@@ -46,6 +46,13 @@
 
         gameLogic.loadLvl(data)
         //$('#hint').html(data.hint)
+
+        if (showNext(curGoal)) {
+          $('#next-lvl').show();
+        }
+        else {
+          $('#next-lvl').hide();
+        }
       }, log)
     }
 
@@ -61,7 +68,11 @@
 
       if (lvl == lvls.length) {
         return doneScreen();
-      } else {
+      }
+      else {
+        if (lvl == lvls.length - 1) {
+          $('#next-lvl').html('Finish');
+        }
         loadTrace(lvls[curLvl]);
       }
     }
@@ -86,8 +97,8 @@
 
     function doneScreen() {
       //loadLvlSet("test-benchmarks")
-      $("#final-score").html("WOW! Much Points! You got " + gameLogic.score()  + " pts!");
-      $("#doge").fadeIn()
+      $("#final-score").html("<p style='color: white; vertical-align: bottom'>WOW! Much Points! You got " + gameLogic.score()  + " points!</p>");
+      $("#doge").fadeIn();
     }
 
     function labelRemover(lbl) {
@@ -194,7 +205,11 @@
 
     </div>
   </div>
-</div>
-<div id="doge" style="display: none"> <img src="doge.jpg"/> <div id="final-score"> </div></div>
+
+  <div id="doge" style="display: none;">
+    <img src="doge.jpg"/>
+    <div id="final-score" style="vertical-align: center; text-align: center; display: inline-block;"> </div>
+  </div>
+
 </body>
 </html>
