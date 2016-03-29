@@ -108,7 +108,14 @@
     var tutorialScript = [
       {
         setup: function (cs) {
-                   curL = label($('div .pwup :last'), "You have powerups! <br> Hover over icons for more", "left")
+                   curL = label($('#score-div-row'), "Try and get as many points as you can!", "left")
+                   $('body').focus();
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+                 }
+      },
+      {
+        setup: function (cs) {
+                   curL = label($('#next_lvl_span'), "When a 'Next Level' button appears here,<br> you can advance.", "up")
                    $('body').focus();
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
                  }
@@ -116,6 +123,13 @@
       {
         setup: function (cs) {
                    curL = label($('#btn-hint'), "Click here to get hints", "left")
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+                 }
+      },
+      {
+        setup: function (cs) {
+                   curL = label($('div .pwup :last'), "And you have powerups! <br> Hover over icons for more", "left")
+                   $('body').focus();
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
                  }
       },
@@ -187,7 +201,9 @@
             <div class='col-md-6' id='hints'>
               Hint:<br><span id='hint'> </span>
             </div>
+            <span id='next_lvl_span'>
               <button id='next-lvl'> Next Level </button>
+            </span>
           </div>
 
         </div>

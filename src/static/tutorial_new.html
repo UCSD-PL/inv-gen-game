@@ -211,7 +211,7 @@
       { setup: function (cs) {
                  $('#score-div-row').show();
                  uncover(scoreWCover, 1000, function() {
-                   curL = label($("#score-div"), "You get points! Sweet!", "up");
+                   curL = label($("#score-div"), "You get points for each discovered invariant!<br> Sweet!", "up");
                    scoreW.add(1);
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                  })
