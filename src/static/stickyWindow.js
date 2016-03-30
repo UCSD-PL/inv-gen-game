@@ -5,13 +5,13 @@ function StickyWindow(div) {
   $(div).addClass("box");
   $(div).addClass("stickyWindow");
   $(div).addClass("col-md-1");
-  
+
   stickyW.add = function (pwup) {
     $(div).append(pwup.element);
   }
 
   stickyW.set = function (pwups) {
-    var d = $("<div>Powerups:<br><hr></div>")
+    var d = $("<div><p style='text-align: center; font-weight: bold;'>Powerups</p><hr></div>")
     for (var i in pwups)
       $(d).append(pwups[i].element)
 

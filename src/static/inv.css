@@ -168,3 +168,64 @@ th {
 .temp_expr_eval {
   font-weight: bold;
 }
+
+.levels {
+  list-style-type:none;
+  padding: 0px;
+  text-align: center;
+  border-color: green;
+}
+
+.level {
+  background-color: rgb(255,255,255);
+  border-color: green;
+  border: 2px;
+  border-style: solid;
+  border-bottom: 0px;
+  font-size: 16px;
+  height: 30px;
+  padding: 3px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.level:last-child {
+  border-bottom: solid;
+  border-bottom-color: green;
+  border-bottom-width: 2px;
+}
+
+.pending {
+  background-color: rgb(255,255,255);
+  border-color: green;
+}
+
+.btn-show-hint {
+  color: #ffffff;
+  font-size: 20px;
+  background: #f29408;
+  padding: 10px 20px 10px 20px;
+  text-decoration: none;
+}
+
+.btn-show-hint:hover {
+  background: #ffbf66;
+  text-decoration: none;
+}
+
+.btn-next {
+  color: #ffffff;
+  font-size: 20px;
+  background: #157d00;
+  padding: 10px 20px 10px 20px;
+  text-decoration: none;
+}
+
+.btn-next:hover {
+  background: #55c23c;
+  text-decoration: none;
+}
+
+.loadLvl {
+  color: black;
+}
