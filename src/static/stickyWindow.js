@@ -11,7 +11,7 @@ function StickyWindow(div) {
   }
 
   stickyW.set = function (pwups) {
-    var d = $("<div><p style='text-align: center; font-weight: bold;'>Powerups</p><hr></div>")
+    var d = $("<div><p style='text-align: center; font-weight: bold; margin-top: 8px'>Powerups</p><br></div>")
     for (var i in pwups)
       $(d).append(pwups[i].element)
 
