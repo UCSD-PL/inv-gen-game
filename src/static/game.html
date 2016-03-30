@@ -92,7 +92,7 @@
 
         $('.loadLvl').click(function (evt) {
           loadLvl(loadLvlSet.indexOf(this.id));
-        })
+        });
         curLvl = -1;
         nextLvl();
       }, log)
@@ -118,7 +118,7 @@
       },
       {
         setup: function (cs) {
-                   curL = label($('#next_lvl_span'), "When a 'Next Level' button appears here,<br> you can advance.", "up");
+                   curL = label($('#hint-col'), "When a 'Next Level' button appears here,<br> you can advance.", "left");
                    $('body').focus();
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
                  }
@@ -199,11 +199,12 @@
         </div>
         <div class='row-md-6'>
 
-          <div class='col-md-12' id='hint-col'>
-            <button id='btn-hint' class='btn-show-hint'>Show Hints</button>
+          <div class='col-md-8' id='hint-col'>
+            <button id='btn-hint' class='btn-show-hint'>Show Hint</button>
             <div class='col-md-6' id='hints'>
-              Hint:<br><span id='hint'> </span>
+              Hint:<br><span id='hint'></span>
             </div>
+
             <span id='next_lvl_span'>
               <button id='next-lvl' class='btn-next'>Next Level</button>
             </span>
@@ -225,9 +226,9 @@
     </div>
   </div>
 
-  <div id="doge" style="display: none;">
+  <div id="doge" style="display: none;" class="wow">
     <img src="doge.jpg"/>
-    <div id="final-score" style="vertical-align: center; text-align: center; display: inline-block;"> </div>
+    <div id="final-score" class="wow"> </div>
   </div>
 
 </body>

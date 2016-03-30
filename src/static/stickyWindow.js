@@ -19,7 +19,7 @@ function StickyWindow(div) {
   }
 
   stickyW.clear = function () {
-    $(div).html("Powerups:<br><hr>");
+    $(div).html("<p style='text-align: center; font-weight: bold; margin-top: 8px'>Powerups</p><br>");
   }
 
   stickyW.clear();
