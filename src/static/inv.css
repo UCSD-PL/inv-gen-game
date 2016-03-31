@@ -248,3 +248,13 @@ th {
   max-height:100%;
   overflow:auto;
 }
+
+.help-icon {
+  width: 32px;
+  height: 32px;
+}
+
+.gap {
+  margin-top: 15px;
+  margin-left: 10px;
+}
