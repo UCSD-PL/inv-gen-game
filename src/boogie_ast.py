@@ -203,6 +203,36 @@ def stmt_changed(ast):
     else:
         return set([])
 
+def parseExprAst(s):
+    def act_wrap(cl):
+        def act(s, loc, toks):
+            return [ cl.__parse__(toks) ]
+        return act;
+
+    def expr_wrap(cl):
+        def act(s, loc, toks):
+            if (len(toks) > 1):
+                return [ cl.__parse__(toks) ]
+            else:
+                return toks
+        return act
+
+    # A minimium set of rules neccessary for the "passive" desugared
+    # boogie programs generated during verification  
+    # Expressions 
+    E7.setParseAction(expr_wrap(AstUnExpr))
+    E6.setParseAction(expr_wrap(AstBinExpr))
+    E5.setParseAction(expr_wrap(AstBinExpr))
+    E3.setParseAction(expr_wrap(AstBinExpr))
+    E2.setParseAction(expr_wrap(AstBinExpr))
+    E1.setParseAction(expr_wrap(AstBinExpr))
+    E0.setParseAction(expr_wrap(AstBinExpr))
+    Number.setParseAction(act_wrap(AstNumber))
+    Id.setParseAction(act_wrap(AstId))
+    TRUE.setParseAction(act_wrap(AstTrue))
+    FALSE.setParseAction(act_wrap(AstFalse))
+    return Expr.parseString(s)
+
 def parseAst(s):
     def act_wrap(cl):
         def act(s, loc, toks):
