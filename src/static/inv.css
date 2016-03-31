@@ -255,8 +255,10 @@ th {
 }
 
 .gap {
-  margin-top: 90px;
-  margin-left: 10px;
+  float: right;
+  text-align: right;
+  /*margin-top: 90px;
+  margin-left: 10px;*/
 }
 
 .helpContentWindow {

@@ -187,8 +187,7 @@
       })
 
       $('#help').click(function() {
-        $('#help-content').toggle();
-        $('#op').toggle();
+        $('#help-content').slideToggle(200);
       })
 
       $('#replay').click(function() {
@@ -198,11 +197,6 @@
 
       $('#arrows').click(function() {
         Script(tutorialScript);
-      })
-
-      $('#operator').click(function() {
-        $('#help-content').toggle();
-        $('#op').toggle();
       })
 
       loadLvlSet("pruned-intro-benchmarks")

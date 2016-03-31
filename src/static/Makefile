@@ -45,7 +45,7 @@ doge.jpg:
 	wget -O doge.jpg https://pbs.twimg.com/profile_images/378800000822867536/3f5a00acf72df93528b6bb7cd0a4fd0c.jpeg
 
 help-icon.png:
-	wget -O help-icon.png https://www.iconfinder.com/icons/211674/download/png/128
+	wget http://cseweb.ucsd.edu/~r1jha/images/help-icon.png
 
 clean:
 	rm -r $(THIRD_PARTY_DEPS)
