@@ -72,3 +72,17 @@ def stmt_to_z3(stmt, typeEnv):
         return (expr_to_z3(stmt.expr, typeEnv))
     else:
         raise Exception("Can't convert " + str(stmt))
+
+def isnum(s):
+    try:
+        x = int(s)
+        return True
+    except:
+        return False
+
+def ids(z3expr):
+    if len(z3expr.children()) == 0:
+        return [z3expr] if not isnum(str(z3expr)) else []
+    else:
+        tmp = { str(x): x for x in reduce(lambda x,y: x+y, map(ids, z3expr.children()), []) }
+        return list(tmp.keys())
