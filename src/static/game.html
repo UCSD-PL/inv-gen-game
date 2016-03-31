@@ -143,7 +143,7 @@
       },
       {
         setup: function (cs) {
-                  curL = label($('#help'), "Click here if you need any help later", "up")
+                  curL = label($('#help'), "Click here if you need any help later", "left")
                   $('body').focus();
                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
         }
@@ -236,16 +236,14 @@
           </div>
 
           <div class='row'>
-            <div class='col-md-5 gap' id='help'>
+            <div class='col-md-6 gap' id='help'>
               <img src="help-icon.png" class='help-icon' data-toggle="tooltip" title="Click for help options"/>
               <div id='help-content' class='helpContentWindow box'>
                 <span id='replay' class='helpContent'>Replay tutorial</span>
                 <br>
                 <span id='arrows' class='helpContent'>Understand screen layout</span>
-                <!--
                 <br>
                 <span id='operator' class='helpContent'>Available operators</span>
-                -->
               </div>
             </div>
           </div>

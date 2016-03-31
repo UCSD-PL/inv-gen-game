@@ -194,6 +194,10 @@ th {
   border-bottom-width: 2px;
 }
 
+.level:hover {
+  font-weight: bold;
+}
+
 .pending {
   background-color: rgb(255,255,255);
   border-color: green;
@@ -257,8 +261,6 @@ th {
 .gap {
   float: right;
   text-align: right;
-  /*margin-top: 90px;
-  margin-left: 10px;*/
 }
 
 .helpContentWindow {
@@ -266,6 +268,8 @@ th {
   border-style: solid;
   border-color: #f29408;
   vertical-align: middle;
+  font-size: 16px;
+  padding: 3px;
   display: none;
 }
 
@@ -275,12 +279,4 @@ th {
 
 .helpContent:hover {
   font-weight: bold;
-}
-
-.examples {
-  border-width: 2px;
-  border-style: solid;
-  border-color: #f29408;
-  vertical-align: middle;
-  width: 100%;
 }
