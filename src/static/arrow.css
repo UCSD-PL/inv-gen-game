@@ -35,7 +35,7 @@
   display: block;
   width: 20px;
   height: 2px;
-  background: var(--arrow-col); 
+  background: var(--arrow-col);
 }
 
 .arrow_up::before {
@@ -93,4 +93,3 @@
   top: 12px;
   transform: rotate(-45deg);
 }
-

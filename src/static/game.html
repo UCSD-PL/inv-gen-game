@@ -125,7 +125,12 @@
       },
       {
         setup: function (cs) {
-                   curL = label($('#btn-hint'), "Click here to get hints", "left")
+                   if($('#btn-hint').is(':hidden')) {
+                     curL = label($('#hint'), "These are hints you can use to win this level", "left");
+                   }
+                   else {
+                     curL = label($('#btn-hint'), "Click here to get hints", "left");
+                   }
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
                  }
       },
@@ -183,6 +188,21 @@
 
       $('#help').click(function() {
         $('#help-content').toggle();
+        $('#op').toggle();
+      })
+
+      $('#replay').click(function() {
+        var win = window.open('tutorial_new.html', '_blank');
+        win.focus();
+      })
+
+      $('#arrows').click(function() {
+        Script(tutorialScript);
+      })
+
+      $('#operator').click(function() {
+        $('#help-content').toggle();
+        $('#op').toggle();
       })
 
       loadLvlSet("pruned-intro-benchmarks")
@@ -222,10 +242,16 @@
           </div>
 
           <div class='row'>
-            <div class='col-md-12 gap' id='help'>
+            <div class='col-md-5 gap' id='help'>
               <img src="help-icon.png" class='help-icon' data-toggle="tooltip" title="Click for help options"/>
-              <div id='help-content' style='display: none'>
-                Help!
+              <div id='help-content' class='helpContentWindow box'>
+                <span id='replay' class='helpContent'>Replay tutorial</span>
+                <br>
+                <span id='arrows' class='helpContent'>Understand page layout</span>
+                <!--
+                <br>
+                <span id='operator' class='helpContent'>Available operators</span>
+                -->
               </div>
             </div>
           </div>

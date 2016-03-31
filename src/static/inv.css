@@ -255,6 +255,30 @@ th {
 }
 
 .gap {
-  margin-top: 15px;
+  margin-top: 90px;
   margin-left: 10px;
+}
+
+.helpContentWindow {
+  border-width: 2px;
+  border-style: solid;
+  border-color: #f29408;
+  vertical-align: middle;
+  display: none;
+}
+
+.helpContent {
+  font-weight: normal;
+}
+
+.helpContent:hover {
+  font-weight: bold;
+}
+
+.examples {
+  border-width: 2px;
+  border-style: solid;
+  border-color: #f29408;
+  vertical-align: middle;
+  width: 100%;
 }
