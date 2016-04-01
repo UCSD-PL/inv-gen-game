@@ -237,6 +237,8 @@ th {
   padding: 10px 20px 10px 20px;
   text-decoration: none;
   border-radius: 25px;
+  width: 250px;
+  margin-bottom: 50px;
 }
 
 .btn-next:hover {
@@ -320,4 +322,12 @@ th {
 .completedLevel {
   font-weight: normal;
   background-color: rgb(125,242,127);
+}
+
+.title {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  font-size: 32px;
+  font-family: sans-serif;
+  font-weight: bold;
 }
