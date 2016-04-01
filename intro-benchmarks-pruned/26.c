@@ -17,7 +17,7 @@ void cegar1(int x, int y) {
 	if (!(y <= 2))
 		return;
 
-	input = 2;
+	input = 3;
  	while(input > 0) {
  		trace(0, "x=%dy=%d", (int32_t)x, (int32_t)y);
 		x = x + 2;

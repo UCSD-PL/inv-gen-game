@@ -85,13 +85,13 @@
         lvls = res;
         hstr = '<ul class="levels">';
         for (var i in res) {
-          hstr += '<li class="level pending">' + '<a class="loadLvl" id="' + res[i] + '" >' + i + '</a>' + '</li>';
+          hstr += '<li class="level pending">' + '<a class="loadLvl" id="lvl_' + res[i] + '" >' + i + '</a>' + '</li>';
         }
         hstr += '</ul>';
         $('#traces-menu').html(hstr);
 
         $('.loadLvl').click(function (evt) {
-          loadLvl(loadLvlSet.indexOf(this.id));
+          loadLvl(lvls.indexOf(this.id.substring(4)));
         });
         curLvl = -1;
         nextLvl();
@@ -121,22 +121,22 @@
                    curL = label($('#hint-col'), "When a 'Next Level' button appears here,<br> you can advance.", "left");
                    $('body').focus();
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-                 }
+               }
       },
       {
         setup: function (cs) {
                    if($('#btn-hint').is(':hidden')) {
-                     curL = label($('#hint'), "These are hints you can use to win this level", "left");
+                     curL = label($('#hint'), "These are hints you can use to win this level", "up");
                    }
                    else {
-                     curL = label($('#btn-hint'), "Click here to get hints", "left");
+                     curL = label($('#btn-hint'), "Click here to get hints", "up");
                    }
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
                  }
       },
       {
         setup: function (cs) {
-                   curL = label($('div .pwup :last'), "And you have powerups! <br> Hover over icons for more", "left")
+                   curL = label($('div .pwup :last'), "And you have powerups! <br> Hover over icons for more", "up")
                    $('body').focus();
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
                  }
