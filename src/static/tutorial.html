@@ -246,7 +246,7 @@
       { setup: function (cs) {
                  $('#multi').show();
                  uncover(scoreWCover, 1000, function() {
-                   curL = label($("#multi"), "Click here to start a multiplayer game", "up");
+                   curL = label($("#multi"), "Click here to join or host a multiplayer game", "up");
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                  })
                }
