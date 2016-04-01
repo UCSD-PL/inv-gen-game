@@ -14,6 +14,9 @@ class SSAEnv:
         else:
             return v
 
+    def contains(s, v):
+        return v in s._cnt
+
     def update(s, v):
         s._cnt[v] = s._cnt.get(v, 0) + 1
 
@@ -33,7 +36,14 @@ def path_to_ssa(p):
             path.append(replace(stmt, repl_map))
     return (path, repl_map)
 
-def unssa_z3_pred(p):
-    return substitute(p, *[(x, Const(str(x)[:str(x).rfind("_ssa_")], x.sort()))
-        for x in ids(p) if str(x).rfind("_ssa_") > 0])
+def is_ssa_str(s):
+    return "_ssa_" in s
 
+def unssa_str(s):
+    return s[:s.rfind("_ssa_")]
+
+def unssa_z3_model(m, repl_m):
+    updated = map(str, repl_m.keys())
+    original = [ x for x in map(str, m.decls()) if not is_ssa_str(x) and x not in updated ] 
+    return { (unssa_str(x) if is_ssa_str(x) else x) : m[Int(x)] for x in
+        original + map(str, repl_m.values()) }

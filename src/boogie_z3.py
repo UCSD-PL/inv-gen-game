@@ -86,3 +86,9 @@ def ids(z3expr):
     else:
         tmp = { str(x): x for x in reduce(lambda x,y: x+y, map(ids, z3expr.children()), []) }
         return list(tmp.keys())
+
+def counterex(pred):
+    s = Solver()
+    s.add(pred)
+    res = s.check()
+    return None if unsat == res else s.model()
