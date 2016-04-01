@@ -79,6 +79,7 @@ tr.false {
   border-color: #157d00;
   vertical-align: middle;
   background-color: rgb(125,242,127);
+  border-radius: 25px;
 }
 
 .scoreText {
@@ -101,6 +102,7 @@ tr.false {
 
 .tracesWindow {
   border-color: #f29408;
+  border-radius: 25px;
 }
 
 .msgWindow {
@@ -117,6 +119,7 @@ tr.false {
   text-align: center;
   vertical-align: middle;
   margin: 4px;
+  border-radius: 25px;
 }
 
 .pwup {
@@ -131,12 +134,12 @@ tr.false {
 
 .pwup-mul {
   position: absolute;
-  top:  22px;
-  left: 22px;
-  font-size: 22px;
-  font-weight:  bold;
-  font-family:  "courier";
-  color:  black;
+  top:  20px;
+  left: 20px;
+  font-size: 20px;
+  font-weight: bold;
+  font-family: "courier";
+  color: black;
 }
 
 #doge {
@@ -188,10 +191,20 @@ th {
   vertical-align: middle;
 }
 
+.level:first-child {
+  border-bottom: solid;
+  border-bottom-color: green;
+  border-bottom-width: 0px;
+  border-top-right-radius: 15px;
+  border-top-left-radius: 15px;
+}
+
 .level:last-child {
   border-bottom: solid;
   border-bottom-color: green;
   border-bottom-width: 2px;
+  border-bottom-right-radius: 15px;
+  border-bottom-left-radius: 15px;
 }
 
 .level:hover {
@@ -209,6 +222,7 @@ th {
   background: #f29408;
   padding: 10px 20px 10px 20px;
   text-decoration: none;
+  border-radius: 25px;
 }
 
 .btn-show-hint:hover {
@@ -222,6 +236,7 @@ th {
   background: #157d00;
   padding: 10px 20px 10px 20px;
   text-decoration: none;
+  border-radius: 25px;
 }
 
 .btn-next:hover {
@@ -241,6 +256,7 @@ th {
 
 .table {
   font-size: 16px;
+  border-radius: 25px;
 }
 
 .wow {
@@ -281,13 +297,27 @@ th {
   font-weight: bold;
 }
 
-.op {
+.opTable {
+  width: 100%;
+}
+
+.opTable td {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.opTable tr {
   font-family: monospace;
   font-size: 16px;
   text-align: center;
 }
 
-.opTable {
-  border: 1px solid #f29408;
-  width: 100%;
+.currentLevel {
+  font-weight: bold;
+  background-color: #f29408;
+}
+
+.completedLevel {
+  font-weight: normal;
+  background-color: rgb(125,242,127);
 }

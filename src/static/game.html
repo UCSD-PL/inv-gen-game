@@ -62,11 +62,21 @@
 
     function loadLvl(lvl) {
       jsfound = []
+      /*
       $('#' + lvls[curLvl]).removeClass('bold');
-      $('#' + lvls[curLvl]).parent().css("background-color", "rgb(125,242,127)");//addClass('completed');
+      $('#' + lvls[curLvl]).parent().css("background-color", "rgb(125,242,127)");
+      */
+      $('#lvl_' + lvls[curLvl]).removeClass('bold');
+      $('#lvl_' + lvls[curLvl]).removeClass('currentLevel');
+      $('#lvl_' + lvls[curLvl]).parent().addClass('completedLevel');
+
       curLvl = lvl;
+      /*
       $('#' + lvls[curLvl]).addClass('bold');
       $('#' + lvls[curLvl]).parent().css("background-color", "#f29408");//addClass('current');
+      */
+      $('#lvl_' + lvls[curLvl]).addClass('bold');
+      $('#lvl_' + lvls[curLvl]).parent().addClass('currentLevel');
 
       if (lvl == lvls.length) {
         return doneScreen();
@@ -242,7 +252,7 @@
 
           <div class='row'>
             <div class='col-md-6 gap'>
-              <img id='help' src="help-icon.png" class='help-icon' data-toggle="tooltip" title="Click for help options"/>
+              <img id='help' src="help-icon.png" class='help-icon' data-toggle="tooltip" title="Click to toggle help options"/>
               <div id='help-content' class='helpContentWindow box'>
                 <span id='replay' class='helpContent'>Replay tutorial</span>
                 <br>
@@ -251,29 +261,29 @@
                 <span id='operator' class='helpContent'>Available operators</span>
                 <div id='ops' style="display: none;">
                   <table class='opTable'>
-                    <tr class='op'>
-                      <td data-toggle="tooltip" title="The addition operator. Example: i + j returns the sum of i and j">+</td>
-                      <td data-toggle="tooltip" title="The subtraction operator. Example: i - j subtracts j from i">-</td>
-                      <td data-toggle="tooltip" title="The multiplication operator. Example: 3 * x multiplies x by 3">*</td>
-                      <td data-toggle="tooltip" title="The division operator. Example: j / x divides j by x">/</td>
+                    <tr>
+                      <td class="centered" data-toggle="tooltip" title="The addition operator. Example: i + j returns the sum of i and j">+</td>
+                      <td class="centered" data-toggle="tooltip" title="The subtraction operator. Example: i - j subtracts j from i">-</td>
+                      <td class="centered" data-toggle="tooltip" title="The multiplication operator. Example: 3 * x multiplies x by 3">*</td>
+                      <td class="centered" data-toggle="tooltip" title="The division operator. Example: j / x divides j by x">/</td>
                     </tr>
-                    <tr class='op'>
-                      <td data-toggle="tooltip" title="The modulo operator. Example: i % 2 returns the remainder of divisin i by 2">%</td>
-                      <td data-toggle="tooltip" title="The negation operator. Example: !(i = 3) returns the negation of the condition that i is 3">!</td>
-                      <td data-toggle="tooltip" title="The conjunction operator. Example: (i=2) &amp;&amp; (j>0) will return true only if both i=2 and j>0">&amp;&amp;</td>
-                      <td data-toggle="tooltip" title="The disjunction operator. Example: (i=2) || (j>0) will return true if even one of the two conditions is true">||</td>
+                    <tr>
+                      <td class="centered" data-toggle="tooltip" title="The modulo operator. Example: i % 2 returns the remainder of divisin i by 2">%</td>
+                      <td class="centered" data-toggle="tooltip" title="The equality operator. Example: i = 2 checks if i is equal to 2">=</td>
+                      <td class="centered" data-toggle="tooltip" title="The non-equality operator. Example: i != 2 checks if i is not equal to 2">!=</td>
+                      <td class="centered" data-toggle="tooltip" title="The less than operator. Example: i < j checks if i is less than j"><</td>
                     </tr>
-                    <tr class='op'>
-                      <td data-toggle="tooltip" title="The equality operator. Example: i = 2 checks if i is equal to 2">=</td>
-                      <td data-toggle="tooltip" title="The non-equality operator. Example: i != 2 checks if i is not equal to 2">!=</td>
-                      <td data-toggle="tooltip" title="The implication operator. Example: i => j checks if i implies j">=></td>
-                      <td data-toggle="tooltip" title="The equivalence operator. Example: i <=> j checks if i is logically equivalent to j"><=></td>
+                    <tr>
+                      <td class="centered" data-toggle="tooltip" title="The less than or equal operator. Example: i <= j checks if i is less than or equal to j"><=</td>
+                      <td class="centered" data-toggle="tooltip" title="The greater than operator. Example: i > j checks if i is greater than j">></td>
+                      <td class="centered" data-toggle="tooltip" title="The greater than or equal operator. Example: i >= j checks if i is greater than or equal to j">>=</td>
+                      <td class="centered" data-toggle="tooltip" title="The negation operator. Example: !(i = 3) returns the negation of the condition that i is 3">!</td>
                     </tr>
-                    <tr class='op'>
-                      <td data-toggle="tooltip" title="The less than operator. Example: i < j checks if i is less than j"><</td>
-                      <td data-toggle="tooltip" title="The less than or equal operator. Example: i <= j checks if i is less than or equal to j"><=</td>
-                      <td data-toggle="tooltip" title="The greater than operator. Example: i > j checks if i is greater than j">></td>
-                      <td data-toggle="tooltip" title="The greater than or equal operator. Example: i >= j checks if i is greater than or equal to j">>=</td>
+                    <tr>
+                      <td class="centered" data-toggle="tooltip" title="The conjunction operator. Example: (i=2) &amp;&amp; (j>0) will return true only if both i=2 and j>0">&amp;&amp;</td>
+                      <td class="centered" data-toggle="tooltip" title="The disjunction operator. Example: (i=2) || (j>0) will return true if even one of the two conditions is true">||</td>
+                      <td class="centered" data-toggle="tooltip" title="The implication operator. Example: i => j checks if i implies j">=></td>
+                      <td class="centered" data-toggle="tooltip" title="The equivalence operator. Example: i <=> j checks if i is logically equivalent to j"><=></td>
                     </tr>
                   </table>
                 </div>
