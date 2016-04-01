@@ -10,14 +10,14 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
   gl.progressW = progressW;
   gl.scoreW = scoreW;
   gl.stickyW = stickyW;
-  gl.curGoal = null;
+  gl.curLvl = null;
   //gl.pwupSuggestion = new PowerupSuggestionAll(gl,2)
   gl.pwupSuggestion = new PowerupSuggestionFullHistory(gl, 5, "lfu")
 
   gl.clear = function () {
     foundInv = [];
     foundJSInv = [];
-    gl.curGoal = null;
+    gl.curLvl = null;
     progress = {}
     pwups = {};
   }
@@ -59,7 +59,7 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
     }
 
     try {
-      res = invEval(jsInv, data)
+      res = invEval(jsInv, gl.curLvl)
       tracesW.evalResult({ data: res })
 
       if (!evalResultBool(res))
@@ -108,7 +108,7 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
               scoreW.add(addScore);
 
               if (!progress.satisfied) {
-                goalSatisfied(gl.curGoal, foundJSInv,
+                gl.curLvl.goalSatisfied(foundJSInv,
                   function(newProgress) {
                     progress = newProgress
                     if (progress.satisfied) {
@@ -128,7 +128,7 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
 
   gl.loadLvl = function(lvl) {
     gl.clear();
-    gl.curGoal = lvl.goal;
+    gl.curLvl = lvl;
     stickyW.clear();
     progW.clear();
     tracesW.clearError();

@@ -25,12 +25,9 @@
 
   <script>
     var errorDelay = 2000;
-    var curLvl;
-    var curLvlSet;
-    var lvls = null;
     var errorTimer;
     var jsfound = [];
-    var curGoal;
+    var curLvl;
     var data;
     var progress;
     var ctr = 0;
@@ -80,7 +77,7 @@
         }
 
         try {
-          res = invEval(invToJS(inv), data)
+          res = invEval(invToJS(inv), curLvl)
           tracesW.evalResult({ data: res })
           bool = res.filter(function (x) { return typeof(x) == "boolean"; }).length
           all = res.length;
@@ -112,14 +109,19 @@
 
     var tutorialScript = [
       { setup: function (cs) {
-                  data = {
-                    data: [ [ 0 ], [ 1 ], [ 2 ] ],
+                  var lvl = {
+                    id: "tutorial",
+                    variables: [ "i" ],
+                    data: [ [ [ 0 ], [ 1 ], [ 2 ] ], null, null ],
                     goal: { },
                     hint: "",
-                    variables: [ "i" ]
+                    supports_pos_ex: false,
+                    supports_neg_ex: false,
+                    supports_ind_ex: false,
                   }
 
-                  tracesW = new TraceWindow($('#data-display'), data);
+                  curLvl = lvl;
+                  tracesW = new TraceWindow($('#data-display'), lvl);
                   tracesW.changed(function() {
                     if (errorTimer) {
                       window.clearTimeout(errorTimer);
@@ -128,7 +130,7 @@
                     updateUI();
                   })
 
-                  $('#hint').html(data.hint)
+                  $('#hint').html(lvl.hint)
                   updateUI()
                   cs.nextStep();
                }

@@ -38,10 +38,10 @@ function TraceWindow(div, data) {
     hstr += '<th><input id="formula-entry" type="text"><span id="errormsg">&nbsp</span></th>';
 
     hstr += '</tr>';
-    for (var i in data.data) {
+    for (var i in data.data[0]) {
       hstr += '<tr id= "' + i + '" class="traces-row">';
-      for (var j in data.data[i]) {
-        hstr += '<td>' + data.data[i][j] + '</td>';
+      for (var j in data.data[0][i]) {
+        hstr += '<td>' + data.data[0][i][j] + '</td>';
       }
       hstr += '<td class="temp_expr_eval">&nbsp</td></tr>';
     }

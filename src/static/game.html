@@ -41,18 +41,11 @@
     function loadTrace(traceId) {
       res = rpc.call('App.getData', [ curLvlSet, traceId ], function(res) {
         data = res;
-        curGoal = data.goal;
-        goalSatisfied(curGoal, jsfound, function(newProgress) {progress = newProgress});
+        var lvl = new Level(traceId, data.variables, [data.data, null, null],
+          data.goal, data.hint, false, false, false)
+        lvl.goalSatisfied(jsfound, function(newProgress) {progress = newProgress});
 
-        gameLogic.loadLvl(data)
-        //$('#hint').html(data.hint)
-
-        if (showNext(curGoal)) {
-          $('#next-lvl').show();
-        }
-        else {
-          $('#next-lvl').hide();
-        }
+        gameLogic.loadLvl(lvl)
       }, log)
     }
 
@@ -62,19 +55,11 @@
 
     function loadLvl(lvl) {
       jsfound = []
-      /*
-      $('#' + lvls[curLvl]).removeClass('bold');
-      $('#' + lvls[curLvl]).parent().css("background-color", "rgb(125,242,127)");
-      */
       $('#lvl_' + lvls[curLvl]).removeClass('bold');
       $('#lvl_' + lvls[curLvl]).removeClass('currentLevel');
       $('#lvl_' + lvls[curLvl]).parent().addClass('completedLevel');
 
       curLvl = lvl;
-      /*
-      $('#' + lvls[curLvl]).addClass('bold');
-      $('#' + lvls[curLvl]).parent().css("background-color", "#f29408");//addClass('current');
-      */
       $('#lvl_' + lvls[curLvl]).addClass('bold');
       $('#lvl_' + lvls[curLvl]).parent().addClass('currentLevel');
 

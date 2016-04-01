@@ -24,9 +24,9 @@ function invToJS(inv) {
   return inv.replace(/[^<>]=[^>]/g, function (v) { return v[0] + '==' + v[2]; })
 }
 
-function invEval(inv, data) {
+function invEval(inv, lvl) {
   // Sort variable names in order of decreasing length
-  vars = data.variables.map(function(val, ind, _) { return [val, ind]; })
+  vars = lvl.variables.map(function(val, ind, _) { return [val, ind]; })
   vars.sort(function (e1,e2) {
     s1 = e1[0]; s2 = e2[0];
     if (s1.length > s2.length) return -1;
@@ -37,10 +37,10 @@ function invEval(inv, data) {
   holds_arr = []
 
   // Do substitutions and eval
-  for (var row in data.data) {
+  for (var row in lvl.data[0]) {
     s = inv
     for (var v in vars) {
-      s = s.replace(new RegExp(vars[v][0], 'g'), data.data[row][vars[v][1]])
+      s = s.replace(new RegExp(vars[v][0], 'g'), lvl.data[0][row][vars[v][1]])
     }
     holds = eval(s)
     /*
