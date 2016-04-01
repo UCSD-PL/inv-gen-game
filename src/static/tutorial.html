@@ -236,6 +236,14 @@
                }
       },
       { setup: function (cs) {
+                 $('#two-player').show();
+                 uncover(scoreWCover, 1000, function() {
+                   curL = label($("#two-player"), "Click here to start a two-player game", "up");
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+                 })
+               }
+      },
+      { setup: function (cs) {
                  $('#multi').show();
                  uncover(scoreWCover, 1000, function() {
                    curL = label($("#multi"), "Click here to start a multiplayer game", "up");
@@ -260,11 +268,16 @@
       $('#score-div-row').hide();
       $('#single').hide();
       $('#multi').hide();
+      $('#two-player').hide();
 
       curScript = Script(tutorialScript);
 
       $('#single').click(function() {
         window.location.replace('single.html');
+      })
+
+      $('#two-player').click(function() {
+        window.location.replace('two.html');
       })
 
       $('#multi').click(function() {
@@ -290,10 +303,15 @@
         <div class='row-md-6 spaced' id='errormsg'> </div>
         <div class='row-md-6' id='done-row'>
           <div class='col-md-6' style='margin-top: 30px;'>
-            <button id='single' class='btn-next'>Start Single Game</button>
+            <button id='single' class='btn-next'>Single Game</button>
           </div>
           <div class='col-md-6' style='margin-top: 30px;'>
-            <button id='multi' class='btn-next'>Start Multiplayer Game</button>
+            <button id='two-player' class='btn-next'>2-Player Game</button>
+          </div>
+          <div class='row'>
+            <div class='col-md-6 col-md-offset-3'>
+              <button id='multi' class='btn-next'>Multiplayer Game</button>
+            </div>
           </div>
         </div>
       </div>
