@@ -280,3 +280,14 @@ th {
 .helpContent:hover {
   font-weight: bold;
 }
+
+.op {
+  font-family: monospace;
+  font-size: 16px;
+  text-align: center;
+}
+
+.opTable {
+  border: 1px solid #f29408;
+  width: 100%;
+}
