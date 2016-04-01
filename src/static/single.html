@@ -37,6 +37,7 @@
     var tracesW = null, progW = null, scoreW = null;
     var gameLogic = null;
     var stepTimeout = 5000;
+    var lvlPassed = null;
 
     function loadTrace(traceId) {
       res = rpc.call('App.getData', [ curLvlSet, traceId ], function(res) {
@@ -57,25 +58,27 @@
     }
 
     function nextLvl() {
+      lvlPassed[curLvl] = true;
       loadLvl(curLvl + 1);
     }
 
     function loadLvl(lvl) {
       jsfound = []
-      /*
-      $('#' + lvls[curLvl]).removeClass('bold');
-      $('#' + lvls[curLvl]).parent().css("background-color", "rgb(125,242,127)");
-      */
       $('#lvl_' + lvls[curLvl]).removeClass('bold');
       $('#lvl_' + lvls[curLvl]).removeClass('currentLevel');
-      $('#lvl_' + lvls[curLvl]).parent().addClass('completedLevel');
+
+      if(lvlPassed[curLvl] == true) {
+        $('#lvl_' + lvls[curLvl]).parent().addClass('completedLevel');
+      }
+      else {
+        $('#lvl_' + lvls[curLvl]).parent().removeClass('completedLevel');
+        $('#lvl_' + lvls[curLvl]).parent().removeClass('currentLevel');
+        $('#lvl_' + lvls[curLvl]).parent().addClass('pending');
+      }
 
       curLvl = lvl;
-      /*
-      $('#' + lvls[curLvl]).addClass('bold');
-      $('#' + lvls[curLvl]).parent().css("background-color", "#f29408");//addClass('current');
-      */
       $('#lvl_' + lvls[curLvl]).addClass('bold');
+      $('#lvl_' + lvls[curLvl]).parent().removeClass('completedLevel');
       $('#lvl_' + lvls[curLvl]).parent().addClass('currentLevel');
 
       if (lvl == lvls.length) {
@@ -93,6 +96,11 @@
       curLvlSet = lvlset;
       res = rpc.call('App.listData', [lvlset], function(res) {
         lvls = res;
+
+        /* Keep track of which levels were cleared */
+        lvlPassed = new Array(res.length);
+        for (var i = 0; i < res.length; ++i) { lvlPassed[i] = false; }
+
         hstr = '<ul class="levels">';
         for (var i in res) {
           hstr += '<li class="level pending">' + '<a class="loadLvl" id="lvl_' + res[i] + '" >' + i + '</a>' + '</li>';
@@ -250,7 +258,7 @@
             </div>
 
             <span id='next_lvl_span'>
-              <button id='next-lvl' class='btn-next'>Next Level</button>
+              <button id='next-lvl' class='btn-next-game'>Next Level</button>
             </span>
           </div>
 
@@ -300,7 +308,7 @@
 
       <div class='col-md-3' >
         <div id='score-div-row' class='row positioned box progressWindow'>
-          <div class='col-md-2'>Score: </div>
+          <div class='col-md-2' style='color: green'>Score</div>
           <div id='score-div' class='col-md-7 col-md-offset-3'>
           </div>
         </div>
