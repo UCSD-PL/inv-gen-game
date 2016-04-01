@@ -153,3 +153,11 @@ function setlen(s) {
   }
   return l;
 }
+
+function onFirstCall(firstCb, laterCb, registerFn) {
+  function wrapped_cb() {
+    firstCb.call(arguments)
+    regusterFn(laterCb)
+  }
+  return wrapped_cb;
+}
