@@ -21,6 +21,7 @@ source $DIR/bin/activate
 pip install flask
 pip install flask-jsonrpc
 pip install slimit
+pip install pyparsing
 
 if [ ! -d $DIR/third_party ] ; then
   mkdir $DIR/third_party
