@@ -1,11 +1,31 @@
 from flask import Flask
+from flask import request
 from flask_jsonrpc import JSONRPC as rpc
 from os.path import *
 from os import listdir
-from json import load
+from json import load, dumps 
 from z3 import *
 from js import invJSToZ3, addAllIntEnv, esprimaToZ3
+import argparse
 import traceback
+import time
+
+p = argparse.ArgumentParser(description="invariant gen game server")
+p.add_argument('--log', type=str, help='an optional log file to store all user actions. Entries are stored in JSON format.')
+
+args = p.parse_args();
+
+print args
+
+logF = None;
+if args.log:
+    logF = open(args.log,'w')
+
+def log(action):
+    action['time'] = time.time()
+    action['ip'] = request.remote_addr;
+    if (logF):
+        logF.write(dumps(action) + '\n')
 
 MYDIR=dirname(abspath(realpath(__file__)))
 z3s = Solver()
@@ -136,6 +156,7 @@ def getData(levelSet, traceId):
     if (traceId not in traces[levelSet]):
         raise Exception("Unkonwn trace " + traceId + " in levels " + levelSet)
 
+    log({"type": "load_data", "data":  traces[levelSet][traceId]})
     return traces[levelSet][traceId]
 
 def implies(inv1, inv2):
@@ -181,6 +202,7 @@ def equivalentPairs(invL1, invL2):
 
       res = [(x,y) for x in z3InvL1 for y in z3InvL2 if equivalent(x[1], y[1])]
       res = [(x[0], y[0]) for x,y in res]
+      log({"type": "equivalentPairs", "data":  (invL1, invL2, res)})
       return res
     except:
       traceback.print_exc();
@@ -195,7 +217,7 @@ def impliedPairs(invL1, invL2):
 
       res = [(x,y) for x in z3InvL1 for y in z3InvL2 if implies(x[1], y[1])]
       res = [(x[0], y[0]) for x,y in res]
-      print res
+      log({"type": "impliedPairs", "data":  (invL1, invL2, res)})
       return res
     except:
       traceback.print_exc();
@@ -204,20 +226,9 @@ def impliedPairs(invL1, invL2):
 
 @api.method("App.isTautology")
 def isTautology(inv):
-    return (tautology(esprimaToZ3(inv, {})))
-
-advance = False;
-@api.method("App.shouldAdvance")
-def shouldAdvance():
-    global advance
-    res = advance;
-    advance = False
-    return res 
-
-@api.method("App.setAdvance")
-def setAdvance():
-    global advance
-    advance = True;
+    res = (tautology(esprimaToZ3(inv, {})))
+    log({"type": "isTautology", "data":  (inv, res)})
+    return res
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')

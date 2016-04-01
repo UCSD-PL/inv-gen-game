@@ -40,6 +40,18 @@ function goalSatisfied(goal, invs, cb) {
   }
 }
 
+function showNext(goal) {
+  if (goal == null) {
+    return true;
+  }
+  else if (goal.manual) {
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+
 function progressEq(p1,p2) {
   return JSON.stringify(p1) === JSON.stringify(p2)
 }

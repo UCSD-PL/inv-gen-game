@@ -79,6 +79,7 @@ tr.false {
   border-color: #157d00;
   vertical-align: middle;
   background-color: rgb(125,242,127);
+  border-radius: 25px;
 }
 
 .scoreText {
@@ -101,6 +102,7 @@ tr.false {
 
 .tracesWindow {
   border-color: #f29408;
+  border-radius: 25px;
 }
 
 .msgWindow {
@@ -117,6 +119,7 @@ tr.false {
   text-align: center;
   vertical-align: middle;
   margin: 4px;
+  border-radius: 25px;
 }
 
 .pwup {
@@ -131,12 +134,12 @@ tr.false {
 
 .pwup-mul {
   position: absolute;
-  top:  22px;
-  left: 22px;
-  font-size: 22px;
-  font-weight:  bold;
-  font-family:  "courier";
-  color:  black;
+  top:  20px;
+  left: 20px;
+  font-size: 20px;
+  font-weight: bold;
+  font-family: "courier";
+  color: black;
 }
 
 #doge {
@@ -167,4 +170,154 @@ th {
 
 .temp_expr_eval {
   font-weight: bold;
+}
+
+.levels {
+  list-style-type:none;
+  padding: 0px;
+  text-align: center;
+  border-color: green;
+}
+
+.level {
+  background-color: rgb(255,255,255);
+  border-color: green;
+  border: 2px;
+  border-style: solid;
+  border-bottom: 0px;
+  font-size: 16px;
+  padding: 3px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.level:first-child {
+  border-bottom: solid;
+  border-bottom-color: green;
+  border-bottom-width: 0px;
+  border-top-right-radius: 15px;
+  border-top-left-radius: 15px;
+}
+
+.level:last-child {
+  border-bottom: solid;
+  border-bottom-color: green;
+  border-bottom-width: 2px;
+  border-bottom-right-radius: 15px;
+  border-bottom-left-radius: 15px;
+}
+
+.level:hover {
+  font-weight: bold;
+}
+
+.pending {
+  background-color: rgb(255,255,255);
+  border-color: green;
+}
+
+.btn-show-hint {
+  color: #ffffff;
+  font-size: 20px;
+  background: #f29408;
+  padding: 10px 20px 10px 20px;
+  text-decoration: none;
+  border-radius: 25px;
+}
+
+.btn-show-hint:hover {
+  background: #ffbf66;
+  text-decoration: none;
+}
+
+.btn-next {
+  color: #ffffff;
+  font-size: 20px;
+  background: #157d00;
+  padding: 10px 20px 10px 20px;
+  text-decoration: none;
+  border-radius: 25px;
+}
+
+.btn-next:hover {
+  background: #55c23c;
+  text-decoration: none;
+}
+
+.loadLvl {
+  color: black;
+}
+
+.loadLvl:hover {
+  color: black;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.table {
+  font-size: 16px;
+  border-radius: 25px;
+}
+
+.wow {
+  position:absolute;
+  left:0; right:0;
+  top:0; bottom:0;
+  margin:auto;
+  max-width:100%;
+  max-height:100%;
+  overflow:auto;
+}
+
+.help-icon {
+  width: 32px;
+  height: 32px;
+}
+
+.gap {
+  float: right;
+  text-align: right;
+}
+
+.helpContentWindow {
+  border-width: 2px;
+  border-style: solid;
+  border-color: #f29408;
+  vertical-align: middle;
+  font-size: 16px;
+  padding: 3px;
+  display: none;
+}
+
+.helpContent {
+  font-weight: normal;
+}
+
+.helpContent:hover {
+  font-weight: bold;
+}
+
+.opTable {
+  width: 100%;
+}
+
+.opTable td {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.opTable tr {
+  font-family: monospace;
+  font-size: 16px;
+  text-align: center;
+}
+
+.currentLevel {
+  font-weight: bold;
+  background-color: #f29408;
+}
+
+.completedLevel {
+  font-weight: normal;
+  background-color: rgb(125,242,127);
 }

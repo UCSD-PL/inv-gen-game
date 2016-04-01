@@ -6,7 +6,8 @@ THIRD_PARTY_DEPS=bootstrap.min.css \
 								 jquery.color-2.1.2.min.js\
 								 esprima.js\
 								 jquery-ui-1.11.4\
-								 doge.jpg
+								 doge.jpg\
+								 help-icon.png
 #								 crafty-min.js\
 
 all: $(THIRD_PARTY_DEPS)
@@ -42,6 +43,9 @@ jquery-ui-1.11.4:
 
 doge.jpg:
 	wget -O doge.jpg https://pbs.twimg.com/profile_images/378800000822867536/3f5a00acf72df93528b6bb7cd0a4fd0c.jpeg
+
+help-icon.png:
+	wget http://cseweb.ucsd.edu/~r1jha/images/help-icon.png
 
 clean:
 	rm -r $(THIRD_PARTY_DEPS)

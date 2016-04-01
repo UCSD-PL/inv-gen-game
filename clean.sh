@@ -8,6 +8,9 @@ popd
 pushd $MYDIR/intro-benchmarks
 make clean
 popd
+pushd $MYDIR/intro-benchmarks-pruned
+make clean
+popd
 pushd $MYDIR/src/harness/dilig/
 make clean
 popd

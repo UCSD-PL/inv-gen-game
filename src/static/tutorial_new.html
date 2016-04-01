@@ -191,8 +191,8 @@
                }
       },
       { setup: function (cs) {
-                 curL = label($("#formula-entry"), "Box also evaluates<br>" +
-                                                   "<emph>true</emph> or <emph>false</emph> <br> for each row!", "left")
+                 curL = label($("#formula-entry"), "Box also evaluates " +
+                                                   "<emph>true</emph> or <emph>false</emph><br>for each row!", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
@@ -211,7 +211,7 @@
       { setup: function (cs) {
                  $('#score-div-row').show();
                  uncover(scoreWCover, 1000, function() {
-                   curL = label($("#score-div"), "You get points! Sweet!", "up");
+                   curL = label($("#score-div"), "You get points for each discovered invariant!<br> Sweet!", "up");
                    scoreW.add(1);
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                  })
@@ -250,7 +250,6 @@
       scoreW = new ScoreWindow($('#score-div'));
       scoreWCover = cover($('#score-div-row'));
       $('#score-div-row').hide();
-
       $('#next-lvl').hide();
 
       curScript = Script(tutorialScript);
@@ -273,8 +272,8 @@
         </div>
         <div class='row-md-6 spaced' id='errormsg'> </div>
         <div class='row-md-6' id='done-row'>
-          <div class='col-md-3 col-md-offset-8' >
-            <button id='next-lvl'> Start Playing </button>
+          <div class='col-md-6 col-md-offset-4' style='margin-top: 30px;'>
+            <button id='next-lvl' class='btn-next'> Start Playing </button>
           </div>
         </div>
       </div>

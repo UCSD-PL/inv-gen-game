@@ -1,1 +1,1 @@
-{ "equivalent" : ["i==j", "i<k"] }
+{ "equivalent" : ["i==j", "k==i+1"] }

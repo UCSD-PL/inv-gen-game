@@ -6,12 +6,14 @@ function ProgressWindow(div) {
   progW.element = div;
 
   $(div).addClass('.progessWindow')
-  $(div).html("Discovered invariants:<br>" +
-    "<ul id='good-invariants' style='font-family:monospace;'></ul>")
+  $(div).html("Discovered invariants<br>" +
+    "<ul id='good-invariants' style='font-family: monospace; list-style-type: none; padding: 0px; text-align: center;'></ul>")
 
   invUL = $('#good-invariants')
 
   progW.addInvariant = function (inv) {
+      // if arrows are running, then stop them
+
       $(invUL).append("<li class='good-invariant' id='good_" +
         ctr + "'>" + invToHTML(inv) + "</li>")
       invMap[inv] = $('#good_' + ctr)
