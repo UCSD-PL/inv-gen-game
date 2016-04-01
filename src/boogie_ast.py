@@ -247,6 +247,16 @@ def parseAst(s):
                 return toks
         return act
 
+    def act_binary_exprs(s, loc, toks):
+        if (len(toks) == 1):
+            return toks
+        else:
+            ltoks = list(toks)
+            while len(ltoks) > 2:
+                ltoks[-3:] = [AstBinExpr.__parse__(ltoks[-3:])]
+
+            return ltoks
+
     def assign_act(s, loc, toks):
         assert (len(toks) == 2)
         return [AstAssignment(lhs, rhs) for (lhs, rhs) in zip(toks[0], toks[1])]
@@ -269,6 +279,8 @@ def parseAst(s):
     E6.setParseAction(expr_wrap(AstBinExpr))
     E5.setParseAction(expr_wrap(AstBinExpr))
     E3.setParseAction(expr_wrap(AstBinExpr))
+    EAnds.setParseAction(act_binary_exprs)
+    EOrs.setParseAction(act_binary_exprs)
     E2.setParseAction(expr_wrap(AstBinExpr))
     E1.setParseAction(expr_wrap(AstBinExpr))
     E0.setParseAction(expr_wrap(AstBinExpr))

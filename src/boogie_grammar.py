@@ -143,7 +143,9 @@ E4 << E5 + ZoM(ConcatOp + E4)
 E3 = (E4 + RelOp + E4| E4 )
 EOr = OrOp + E3
 EAnd = AndOp + E3
-E2 = (E3 + OoM(EOr) | E3 + OoM(EAnd) | E3)
+EOrs = OoM(EOr)
+EAnds = OoM(EAnd)
+E2 = (E3 + EOrs | E3 + EAnds | E3)
 E1 << (E2 + ZoM(ImplOp + E1))
 E0 << (E1 + ZoM(EquivOp + E0))
 Expr << E0
