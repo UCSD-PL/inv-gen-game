@@ -97,12 +97,18 @@ if __name__ == "__main__":
     print "=================="
     print "Values at loop header if we unroll 5 times: "
     print get_loop_header_values(loop, bbs, 5)
-    def tryinv(inv):
+    def tryinv(inv,loop,  bbs):
         print "Pre counter example for " + inv, str(loop_vc_pre_ctrex(loop, parseExprAst(inv)[0], bbs))
         print "Post counter example for " + inv, str(loop_vc_post_ctrex(loop, parseExprAst(inv)[0], bbs))
         print "Ind counter example for " + inv, str(loop_vc_ind_ctrex(loop, parseExprAst(inv)[0], bbs))
     
-    tryinv("j+k>=n")
-    tryinv("n < 2")
-    tryinv("k > 2*n")
-    tryinv("j+k>=n && j <= n")
+    tryinv("j+k>=n", loop, bbs)
+    tryinv("n < 2", loop, bbs)
+    tryinv("k > 2*n", loop, bbs)
+    tryinv("j+k>=n && j <= n", loop, bbs)
+
+    bbs = get_bbs("desugared_cegar1_noinv.bpl")
+    loop = list(loops(bbs))[0]
+    tryinv("x-y <= 2 && x-y >= -2", loop, bbs)
+    tryinv("x-y != 4", loop, bbs)
+    tryinv("!(x == 4 && y == 0)", loop, bbs)
