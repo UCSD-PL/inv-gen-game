@@ -39,14 +39,9 @@
     var stepTimeout = 5000;
 
     function loadTrace(traceId) {
-      res = rpc.call('App.getData', [ curLvlSet, traceId ], function(res) {
-        data = res;
-        var lvl = new Level(traceId, data.variables, [data.data, null, null],
-          data.goal, data.hint, false, false, false)
-        lvl.goalSatisfied(jsfound, function(newProgress) {progress = newProgress});
-
+      Level.load(curLvlSet, traceId, function(lvl) {
         gameLogic.loadLvl(lvl)
-      }, log)
+      })
     }
 
     function nextLvl() {
@@ -199,7 +194,8 @@
         $('#ops').slideToggle(200);
       })
 
-      loadLvlSet("pruned-intro-benchmarks");
+      //loadLvlSet("pruned-intro-benchmarks");
+      loadLvlSet("desugared-boogie-benchmarks");
 
       gameLogic.onLvlLoaded(function () {
         curScript = Script(tutorialScript)

@@ -58,7 +58,16 @@ function Level(id,
       error("Unknown goal " + goal.toSource());
     }
   }
+
 }
+
+Level.load = function(lvlSet, id, cb) {
+  rpc.call('App.loadLvl', [ lvlSet, id], function(data) {
+    cb(new Level(id, data.variables, data.data,
+      data.goal, data.hint, false, false, false))
+  }, log)
+}
+
 
 function showNext(goal) {
   if (goal == null) {

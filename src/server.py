@@ -6,6 +6,12 @@ from os import listdir
 from json import load, dumps 
 from z3 import *
 from js import invJSToZ3, addAllIntEnv, esprimaToZ3
+from boogie_ast import parseAst
+from boogie_bb import get_bbs
+from boogie_loops import loops, get_loop_header_values, \
+  loop_vc_pre_ctrex, loop_vc_post_ctrex, loop_vc_ind_ctrex
+from util import unique 
+
 import argparse
 import traceback
 import time
@@ -14,8 +20,6 @@ p = argparse.ArgumentParser(description="invariant gen game server")
 p.add_argument('--log', type=str, help='an optional log file to store all user actions. Entries are stored in JSON format.')
 
 args = p.parse_args();
-
-print args
 
 logF = None;
 if args.log:
@@ -26,9 +30,38 @@ def log(action):
     action['ip'] = request.remote_addr;
     if (logF):
         logF.write(dumps(action) + '\n')
+    else:
+        print dumps(action) + '\n'
 
 MYDIR=dirname(abspath(realpath(__file__)))
 z3s = Solver()
+
+def loadBoogieFile(fname):
+    bbs = get_bbs(fname)
+    loop = unique(loops(bbs), "Cannot handle program with multiple loops: " + fname)
+    header_vals = get_loop_header_values(loop, bbs, 3)
+
+    hint = None
+    try:
+        hint = open(fname[:-4] + '.hint').read()
+    except: pass
+
+    vs = list(header_vals[0].keys())
+
+    return { 'variables': vs,
+             'data': [[[ str(row[v]) for v in vs  ]  for row in header_vals], None, None],
+             'hint': hint,
+             'goal' : { "verify" : True },
+             'support_pos_ex' : True,
+             'support_neg_ex' : True,
+             'support_ind_ex' : True,
+             'program' : bbs,
+             'loop' : loop
+    }
+
+def loadBoogies(dirN):
+    return { name[:-4] : loadBoogieFile(dirN + '/' + name) for name in listdir(dirN)
+                if name.endswith('.bpl') }
 
 def readTrace(fname):
     rows = []
@@ -53,9 +86,12 @@ def readTrace(fname):
     except: pass
 
     return { 'variables': vs,
-             'data': [[ row.get(n, None) for n in vs  ]  for row in rows ],
+             'data': [[[ row.get(n, None) for n in vs  ]  for row in rows ], None, None],
              'hint': hint,
-             'goal' : goal
+             'goal' : goal,
+             'support_pos_ex' : False,
+             'support_neg_ex' : False,
+             'support_ind_ex' : False,
     }
 
 def loadTraces(dirN):
@@ -70,6 +106,7 @@ traces = {
     "intro-benchmarks": introTraces,
     "test-benchmarks": testTraces,
     "pruned-intro-benchmarks": prunedIntroTraces,
+    "desugared-boogie-benchmarks" : loadBoogies(MYDIR + '/../desugared-boogie-benchmarks'),
     "old-dilig-traces": {
       '15-c': {
           'variables': ['n', 'k', 'j'],
@@ -148,16 +185,29 @@ def listData(levelSet):
     res.sort()
     return res
 
-@api.method("App.getData")
-def getData(levelSet, traceId):
+@api.method("App.loadLvl")
+def loadLvl(levelSet, traceId):
     if (levelSet not in traces):
         raise Exception("Unkonwn level set " + levelSet)
 
     if (traceId not in traces[levelSet]):
         raise Exception("Unkonwn trace " + traceId + " in levels " + levelSet)
 
-    log({"type": "load_data", "data":  traces[levelSet][traceId]})
-    return traces[levelSet][traceId]
+    lvl = traces[levelSet][traceId]
+    if ('program' in lvl):
+      # This is a boogie level - don't return the program/loop and other book keeping
+      lvl = {
+             'variables': lvl['variables'],
+             'data': lvl['data'],
+             'hint': lvl['hint'],
+             'goal' : lvl['goal'],
+             'support_pos_ex' : lvl['support_pos_ex'],
+             'support_neg_ex' : lvl['support_neg_ex'],
+             'support_ind_ex' : lvl['support_ind_ex'],
+      }
+  
+    log({"type": "load_data", "data": lvl}) 
+    return lvl
 
 def implies(inv1, inv2):
     print "Are implies ", inv1, inv2
