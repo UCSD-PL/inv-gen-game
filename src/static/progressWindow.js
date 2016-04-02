@@ -1,15 +1,22 @@
-function ProgressWindow(div) {
+function ProgressWindow(player, div) {
   var progW = this;
   var ctr = 0;
   var invMap = {}
 
   progW.element = div;
+  var invUL = null;
 
   $(div).addClass('.progessWindow')
-  $(div).html("Discovered invariants<br>" +
-    "<ul id='good-invariants' style='font-family: monospace; list-style-type: none; padding: 0px; text-align: center;'></ul>")
-
-  invUL = $('#good-invariants')
+  if (player == 1) {
+    $(div).html("Discovered invariants<br>" +
+      "<ul id='good-invariants' style='font-family: monospace; list-style-type: none; padding: 0px; text-align: center;'></ul>");
+    invUL = $('#good-invariants');
+  }
+  else {
+    $(div).html("Discovered invariants<br>" +
+      "<ul id='good-invariants2' style='font-family: monospace; list-style-type: none; padding: 0px; text-align: center;'></ul>");
+    invUL = $('#good-invariants2');
+  }
 
   progW.addInvariant = function (inv) {
       // if arrows are running, then stop them

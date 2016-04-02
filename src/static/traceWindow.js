@@ -1,4 +1,4 @@
-function TraceWindow(div, data) {
+function TraceWindow(player, div, data) {
   var traceW = this;
   var errorTimer;
 
@@ -35,7 +35,12 @@ function TraceWindow(div, data) {
     for (var i in data.variables) {
       hstr += '<th>' + data.variables[i] + '</th>';
     }
-    hstr += '<th><input id="formula-entry" type="text"><span id="errormsg">&nbsp</span></th>';
+    if(player == 1) {
+      hstr += '<th><input id="formula-entry" type="text"><span id="errormsg">&nbsp</span></th>';
+    }
+    else {
+      hstr += '<th><input id="formula-entry2" type="text"><span id="errormsg">&nbsp</span></th>';
+    }
 
     hstr += '</tr>';
     for (var i in data.data) {
@@ -48,21 +53,54 @@ function TraceWindow(div, data) {
     hstr += '</table>'
     $(div).html(hstr)
 
-    $('#formula-entry').focus();
+    if(player == 1) {
+      $('#formula-entry').focus();
 
-    $('#formula-entry').keyup(function (keyEv) {
-      if (keyEv.keyCode == 13 && traceW.okToSubmit) {
-        traceW.commitCb();
-      } else
-        traceW.changedCb();
-    })
+      $('#formula-entry').keyup(function (keyEv) {
+        if (keyEv.keyCode == 13 && traceW.okToSubmit) {
+          traceW.commitCb();
+        } else
+          traceW.changedCb();
+      })
 
-    $('#formula-entry').focus();
+      $('#formula-entry').focus();
+    }
+    else {
+      $('#formula-entry2').focus();
+
+      $('#formula-entry2').keyup(function (keyEv) {
+        if (keyEv.keyCode == 13 && traceW.okToSubmit) {
+          traceW.commitCb();
+        } else
+          traceW.changedCb();
+      })
+
+      $('#formula-entry2').focus();
+    }
 
   }
 
-  this.curExp = function () { var v = $('#formula-entry').val(); return (v === undefined ? "" : v); }
-  this.setExp = function (exp) { $('#formula-entry').val(exp); traceW.changedCb(); }
+  this.curExp = function () {
+    var v = null;
+    if(player == 1) {
+      v = $('#formula-entry').val();
+    }
+    else {
+      v = $('#formula-entry2').val();
+    }
+    return (v === undefined ? "" : v);
+  }
+
+  this.setExp = function (exp) {
+    if (player == 1) {
+      $('#formula-entry').val(exp);
+    }
+    else {
+      $('#formula-entry2').val(exp);
+    }
+    traceW.changedCb();
+  }
+
   this.changed = function (cb) {
     traceW.changedCb = cb;
   }
@@ -92,8 +130,24 @@ function TraceWindow(div, data) {
 
   this.enableSubmit = function () { traceW.okToSubmit = true; }
   this.disableSubmit = function () { traceW.okToSubmit = false; }
-  this.disable = function () { $('#formula-entry').attr('disabled', 'disabled'); }
-  this.enable = function () { $('#formula-entry').removeAttr('disabled'); }
+
+  this.disable = function () {
+    if (player == 1) {
+      $('#formula-entry').attr('disabled', 'disabled');
+    }
+    else {
+      $('#formula-entry2').attr('disabled', 'disabled');
+    }
+  }
+
+  this.enable = function () {
+    if (player == 1) {
+      $('#formula-entry').removeAttr('disabled');
+    }
+    else {
+      $('#formula-entry2').removeAttr('disabled');
+    }
+  }
 
   if (data  !== undefined)
   {

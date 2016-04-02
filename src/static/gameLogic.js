@@ -65,9 +65,11 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
       if (!evalResultBool(res))
         return;
 
-      var redundant = progW.contains(inv)
+      //var redundant = progW.contains(inv)
+      var redundant = progressW.contains(inv)
       if (redundant) {
-        progW.markInvariant(inv, "duplicate")
+        //progW.markInvariant(inv, "duplicate")
+        progressW.markInvariant(inv, "duplicate")
         tracesW.immediateError("Duplicate Invariant!")
         return
       }
@@ -92,14 +94,16 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
 
           impliedBy(foundJSInv, jsInv, function (x) {
             if (x !== null) {
-              progW.markInvariant(foundInv[x], "implies")
+              //progW.markInvariant(foundInv[x], "implies")
+              progressW.markInvariant(foundInv[x], "implies")
               tracesW.immediateError("Implied by existing invariant!")
             } else {
               gl.pwupSuggestion.invariantTried(jsInv);
-              
+
               foundInv.push(inv)
               foundJSInv.push(jsInv)
-              progW.addInvariant(inv);
+              //progW.addInvariant(inv);
+              progressW.addInvariant(inv);
               var addScore = computeScore(jsInv, 1)
 
               if (addScore == 1) { // No powerups applied
@@ -130,7 +134,8 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
     gl.clear();
     gl.curGoal = lvl.goal;
     stickyW.clear();
-    progW.clear();
+    //progW.clear();
+    progressW.clear();
     tracesW.clearError();
     //scoreW.clear();
     tracesW.loadData(lvl);

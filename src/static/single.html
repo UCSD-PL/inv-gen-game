@@ -175,9 +175,9 @@
 
     $(document).ready(function() {
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
-      progW = new ProgressWindow($('#discovered-invariants-div'));
+      progW = new ProgressWindow(1, $('#discovered-invariants-div'));
       scoreW = new ScoreWindow($('#score-div'));
-      traceW = new TraceWindow($('#data-display'));
+      traceW = new TraceWindow(1, $('#data-display'));
       stickyW = new StickyWindow($('#sticky'))
       gameLogic = new GameLogic(traceW, progW, scoreW, stickyW);
 

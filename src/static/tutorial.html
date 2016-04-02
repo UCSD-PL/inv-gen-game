@@ -243,14 +243,14 @@
                  })
                }
       },
-      { setup: function (cs) {
+      /*{ setup: function (cs) {
                  $('#multi').show();
                  uncover(scoreWCover, 1000, function() {
                    curL = label($("#multi"), "Click here to join or host a multiplayer game", "up");
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                  })
                }
-      },
+      },*/
       { setup: function (cs) {
                }
       },
@@ -302,17 +302,19 @@
         </div>
         <div class='row-md-6 spaced' id='errormsg'> </div>
         <div class='row-md-6' id='done-row'>
-          <div class='col-md-6' style='margin-top: 30px;'>
+          <div class='col-md-6' style='margin-top: 50px;'>
             <button id='single' class='btn-next'>Single Game</button>
           </div>
-          <div class='col-md-6' style='margin-top: 30px;'>
+          <div class='col-md-6' style='margin-top: 50px;'>
             <button id='two-player' class='btn-next'>2-Player Game</button>
           </div>
+          <!--
           <div class='row'>
             <div class='col-md-6 col-md-offset-3'>
               <button id='multi' class='btn-next'>Multiplayer Game</button>
             </div>
           </div>
+        -->
         </div>
       </div>
       <div class='col-md-3' >
