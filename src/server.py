@@ -209,6 +209,45 @@ def loadLvl(levelSet, traceId):
     log({"type": "load_data", "data": lvl}) 
     return lvl
 
+@api.method("App.getExamples")
+def getExamples(levelSet, levelId, cur_data, ex_type, num):
+    if (levelSet not in traces):
+        raise Exception("Unkonwn level set " + levelSet)
+
+    if (traceId not in traces[levelSet]):
+        raise Exception("Unkonwn trace " + traceId + " in levels " + levelSet)
+
+    lvl = traces[levelSet][traceId]
+
+    if ((ex_type == 'positive' and not lvl['support_pos_ex']) or
+        (ex_type == 'negative' and not lvl['support_neg_ex']) or
+        (ex_type == 'inductive' and not lvl['support_ind_ex']))
+        raise Exception("Level " + traceId + ":" + levelSet + " doesn't support " + ex_type + " examples".)
+        raise Exception("Unkonwn example type.")
+
+    if ex_type == 'positive' :
+    elif ex_type == 'negative':
+    elif ex_type == 'inductive':
+    else:
+        raise Exception("Unkonwn example type.")
+      
+    
+    if ('program' not in lvl):
+      # Not a boogie level - error
+      raise Exception("Level " + traceId + " " + levelSet + " does not support examples.")
+      lvl = {
+             'variables': lvl['variables'],
+             'data': lvl['data'],
+             'hint': lvl['hint'],
+             'goal' : lvl['goal'],
+             'support_pos_ex' : lvl['support_pos_ex'],
+             'support_neg_ex' : lvl['support_neg_ex'],
+             'support_ind_ex' : lvl['support_ind_ex'],
+      }
+  
+    log({"type": "load_data", "data": lvl}) 
+    return lvl
+
 def implies(inv1, inv2):
     print "Are implies ", inv1, inv2
     s = Solver();
