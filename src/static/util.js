@@ -1,7 +1,5 @@
 log = function(arg) { console.log(arg); }
-
 error = function(arg) { log (arg); }
-
 assert = function (b, msg) {
   if (!b)
     error(msg);
@@ -9,11 +7,6 @@ assert = function (b, msg) {
 
 function fst(x) { return x[0]; }
 function snd(x) { return x[1]; }
-
-function removeLabel(l) {
-  $(l.elem).remove();
-  clearInterval(l.timer);
-}
 
 function shuffle(arr) {
     var j;
@@ -24,6 +17,11 @@ function shuffle(arr) {
         arr[j] = x;
     }
 };
+
+function removeLabel(l) {
+  $(l.elem).remove();
+  clearInterval(l.timer);
+}
 
 function label(elem, txt, direction) {
   p = $(elem).offset();
@@ -81,27 +79,6 @@ function label(elem, txt, direction) {
     ctr ++;
   }, pulse / 2)
   return { elem:  div, timer: interval };
-}
-
-function cover(elem, col='white', duration=0, cb = null) {
-  p = $(elem).offset();
-  var div = $("<div class='overlay_cover'></div>")
-  div.offset({ left: 0, top: 0})
-  $(elem).append(div);
-  if (duration=0) {
-    $(div).css({ 'background-color': col });
-  } else {
-    $(div).animate( { 'background-color': col }, duration, cb);
-  }
-  return div;
-}
-
-function uncover(cover, delay=1000, complete_cb) {
-  $(cover).animate({ 'background-color': "rgba(255,255,255,0)" }, delay,
-    function () {
-      $(cover).remove();
-      complete_cb();
-    });
 }
 
 function Script(steps) {

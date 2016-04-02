@@ -18,7 +18,7 @@
   <script src="scoreWindow.js"></script>
   <script src="logic.js"></script>
   <script src="eval.js"></script>
-  <script src="goal.js"></script>
+  <script src="level.js"></script>
   <script src="pp.js"></script>
   <script src="util.js"></script>
   <script src="esprima.js"></script>
@@ -28,12 +28,7 @@
     var errorTimer;
     var jsfound = [];
     var curLvl;
-    var data;
-    var progress;
-    var ctr = 0;
     var tracesW = null, progW = null, scoreW = null;
-    var progWCover = null;
-    var scoreWCover = null;
     var curL;
     var tempCb = null;
     var stepTimeout = 5000;
@@ -211,17 +206,15 @@
                }
       },
       { setup: function (cs) {
-                 $('#score-div-row').show();
-                 uncover(scoreWCover, 1000, function() {
+                 $('#score-div-row').fadeIn(1000, function() {
                    curL = label($("#score-div"), "You get points for each discovered invariant!<br> Sweet!", "up");
                    scoreW.add(1);
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
-                 })
+                  })
                }
       },
       { setup: function (cs) {
-                 $('#discovered-invariants-div').show();
-                 uncover(progWCover, 1000, function() {
+                 $('#discovered-invariants-div').fadeIn(1000, function() {
                    var inv = invPP(tracesW.curExp().trim());
                    addSuccessfulInvariant(inv);
                    curL = label($("#good_0"), "Your invariants appear here", "up");
@@ -230,8 +223,7 @@
                }
       },
       { setup: function (cs) {
-                 $('#next-lvl').show();
-                 uncover(scoreWCover, 1000, function() {
+                 $('#next-lvl').fadeIn(1000, function() {
                    curL = label($("#next-lvl"), "Click here to start playing!", "up");
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                  })
@@ -246,11 +238,9 @@
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
 
       progW = new ProgressWindow($('#discovered-invariants-div'));
-      progWCover = cover(progW.element);
       $('#discovered-invariants-div').hide();
 
       scoreW = new ScoreWindow($('#score-div'));
-      scoreWCover = cover($('#score-div-row'));
       $('#score-div-row').hide();
       $('#next-lvl').hide();
 
