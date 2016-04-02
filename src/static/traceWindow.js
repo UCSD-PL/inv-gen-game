@@ -31,7 +31,7 @@ function TraceWindow(player, div, data) {
 
 
   this.loadData = function(data) {
-    hstr = '<table class="table table-stripped"><tr>';
+    hstr = '<table class="table table-stripped" id="traces' + player + '"><tr>';
     for (var i in data.variables) {
       hstr += '<th>' + data.variables[i] + '</th>';
     }
@@ -43,8 +43,9 @@ function TraceWindow(player, div, data) {
     }
 
     hstr += '</tr>';
+
     for (var i in data.data) {
-      hstr += '<tr id= "' + i + '" class="traces-row">';
+      hstr += '<tr id= "' + player + i + '" class="traces-row">';
       for (var j in data.data[i]) {
         hstr += '<td>' + data.data[i][j] + '</td>';
       }
@@ -109,22 +110,43 @@ function TraceWindow(player, div, data) {
     traceW.commitCb = cb;
   }
 
+  /* need to check player */
   this.evalResult = function (res) {
-    if (res.data) {
-      for (var i in res.data) {
-        $('#' + i + ' .temp_expr_eval').html(JSON.stringify(res.data[i]))
-      }
+    if(player == 1) {
+      if (res.data) {
+        for (var i in res.data) {
+          $('#' + player + i + ' .temp_expr_eval').html(JSON.stringify(res.data[i]))
+        }
 
-      for (var i in res.data) {
-        $('#' + i).removeClass('true')
-        $('#' + i).removeClass('false')
-        if (typeof(res.data[i]) == "boolean")
-          $('#' + i).addClass(res.data[i] ? 'true' : 'false')
+        for (var i in res.data) {
+          $('#' + player + i).removeClass('true')
+          $('#' + player + i).removeClass('false')
+          if (typeof(res.data[i]) == "boolean")
+            $('#' + player + i).addClass(res.data[i] ? 'true' : 'false')
+        }
+      } else if (res.clear) {
+        $('.temp_expr_eval').html('');
+        $('.traces-row').removeClass('true')
+        $('.traces-row').removeClass('false')
       }
-    } else if (res.clear) {
-      $('.temp_expr_eval').html('');
-      $('.traces-row').removeClass('true')
-      $('.traces-row').removeClass('false')
+    }
+    else {
+      if (res.data) {
+        for (var i in res.data) {
+          $('#' + player + i + ' .temp_expr_eval').html(JSON.stringify(res.data[i]))
+        }
+
+        for (var i in res.data) {
+          $('#' + player + i).removeClass('true')
+          $('#' + player + i).removeClass('false')
+          if (typeof(res.data[i]) == "boolean")
+            $('#' + player + i).addClass(res.data[i] ? 'true' : 'false')
+        }
+      } else if (res.clear) {
+        $('.temp_expr_eval').html('');
+        $('.traces-row').removeClass('true')
+        $('.traces-row').removeClass('false')
+      }
     }
   }
 

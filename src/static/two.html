@@ -47,6 +47,9 @@
     var gameLogic2 = null;
     var lvlPassed2 = null;
 
+    var curLvlCompleted = null;
+    var curLvlCompleted2 = null;
+
     var player = 1;
 
     function loadTrace(traceId) {
@@ -59,6 +62,7 @@
         //$('#hint').html(data.hint)
 
         if (showNext(curGoal)) {
+          alert('showing next for player 1');
           $('#next-lvl').show();
         }
         else {
@@ -77,6 +81,7 @@
         //$('#hint').html(data.hint)
 
         if (showNext(curGoal2)) {
+          alert('showing next for player 2');
           $('#next-lvl2').show();
         }
         else {
@@ -266,55 +271,35 @@
     ]
 
     var hidePlayer1 = function() {
-      //hide player's ui elements
       $('#left').hide();
       $('#sticky').hide();
       $('#data-display').hide();
-      /*
-      $('#score-div-row').hide();
-      $('#discovered-invariants-div').hide();
-      */
       $('#traces-menu').hide();
       //$('#next-lvl').hide();
-
-      if(lvlPassed[curLvl]) {
-        $('#next-lvl').show();
-      }
-      else {
-        $('#next-lvl').hide();
-      }
+      $('#hint-col').hide();
     }
 
     var hidePlayer2 = function() {
-      //hide player's ui elements
       $('#left2').hide();
       $('#sticky2').hide();
       $('#data-display2').hide();
-      /*
-      $('#score-div-row2').hide();
-      $('#discovered-invariants-div2').hide();
-      */
       $('#traces-menu2').hide();
       //$('#next-lvl2').hide();
-
-      if(lvlPassed2[curLvl2]) {
-        $('#next-lvl2').show();
-      }
-      else {
-        $('#next-lvl2').hide();
-      }
+      $('#hint-col2').hide();
     }
 
     var showPlayer1 = function() {
       $('#curPlayer').html('1');
-      //show other ui elements
       $('#left').show();
       $('#sticky').show();
       $('#data-display').show();
       $('#score-div-row').show();
       $('#discovered-invariants-div').show();
       $('#traces-menu').show();
-      if(lvlPassed[curLvl]) {
+      $('#hint-col').show();
+
+      /* need to handle next level show/hide properly */
+      if(curLvlCompleted == curLvl) {
         $('#next-lvl').show();
       }
       else {
@@ -324,15 +309,18 @@
 
     var showPlayer2 = function() {
       $('#curPlayer').html('2');
-      //show other ui elements
       $('#left2').show();
       $('#sticky2').show();
       $('#data-display2').show();
       $('#score-div-row2').show();
       $('#discovered-invariants-div2').show();
       $('#traces-menu2').show();
-      if(lvlPassed2[curLvl2] && player == 2) {
-        $('#next-lvl2').toggle();
+      $('#hint-col2').show();
+
+      /* need to handle next level show/hide properly */
+      if(curLvlCompleted2 == curLvl2) {
+        $('#next-lvl2').show();
+        //$('#hint-col2').show();
       }
       else {
         $('#next-lvl2').hide();
@@ -385,10 +373,12 @@
       }
 
       gameLogic.onLvlPassed(function() {
+        curLvlCompleted = curLvl;
         $('#next-lvl').show();
       });
 
       gameLogic2.onLvlPassed(function() {
+        curLvlCompleted2 = curLvl2;
         $('#next-lvl2').show();
       });
 
@@ -405,7 +395,7 @@
         $('#hint2').html('');
         $('#hints2').hide();
         $('#btn-hint2').show();
-        nextLvl();
+        nextLvl2();
       })
 
       $('#btn-hint').click(function() {
@@ -439,6 +429,16 @@
       })
 
       $('#btn-switch').click(function() {
+        if(player == 1) {
+          player = 2;
+        }
+        else if(player == 2) {
+          player = 1;
+        }
+        switchPlayer();
+      })
+
+      $('#btn-switch2').click(function() {
         if(player == 1) {
           player = 2;
         }
@@ -516,11 +516,15 @@
             </span>
           </div>
 
-          <div class='col-md-8' id='hint-col2'>
+          <div class='col-md-12' id='hint-col2'>
             <button id='btn-hint2' class='btn-show-hint'>Show Hint</button>
-            <div class='col-md-6' id='hints2'>
+            <div class='col-md-4' id='hints2'>
               Hint:<br><span id='hint2'></span>
             </div>
+
+            <span id='next_move2'>
+              <button id='btn-switch2' class='btn-show-hint'>Switch Player</button>
+            </span>
 
             <span id='next_lvl_span2'>
               <button id='next-lvl2' class='btn-next-game'>Next Level</button>
