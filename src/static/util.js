@@ -27,6 +27,7 @@ function shuffle(arr) {
 
 function label(elem, txt, direction) {
   p = $(elem).offset();
+  alert(p);
   var x = p.left, y = p.top;
   var w = $(elem).outerWidth(), h = $(elem).outerHeight();
   var pulseWidth = 5;

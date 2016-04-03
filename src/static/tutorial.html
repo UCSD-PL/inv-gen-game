@@ -135,6 +135,7 @@
       },
       { setup: function (cs) {
                  curL = label($('#formula-entry'), "Type '3+4' here!", "left")
+                 alert('Hello Again');
                  $('#formula-entry').focus();
                  nextStepOnInvariant(cs, "3+4", labelRemover(curL));
                }
@@ -145,7 +146,7 @@
                }
       },
       { setup: function (cs) {
-                 curL = label($      ('#formula-entry'), "Now try i.", "left")
+                 curL = label($('#formula-entry'), "Now try i.", "left")
                  nextStepOnInvariant(cs, "i", labelRemover(curL));
                }
       },
@@ -197,8 +198,7 @@
                }
       },
       { setup: function (cs) {
-                 curL = label($("#formula-entry"),
-                  "Now try i >= 0", "left")
+                 curL = label($("#formula-entry"), "Now try i >= 0", "left")
                  nextStepOnInvariant(cs, "i>=0", labelRemover(curL));
                }
       },
@@ -228,8 +228,8 @@
                }
       },
       { setup: function (cs) {
-                 $('#single').show();
-                 uncover(scoreWCover, 1000, function() {
+                 $('#done-row').show();
+                 uncover(nextWCover, 1000, function() {
                    curL = label($("#single"), "Click here to start a single player game", "up");
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                  })
@@ -237,20 +237,16 @@
       },
       { setup: function (cs) {
                  $('#two-player').show();
-                 uncover(scoreWCover, 1000, function() {
-                   curL = label($("#two-player"), "Click here to start a two-player game", "up");
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
-                 })
+                 curL = label($("#two-player"), "Click here to start a two-player game", "up");
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
                }
       },
-      /*{ setup: function (cs) {
+      { setup: function (cs) {
                  $('#multi').show();
-                 uncover(scoreWCover, 1000, function() {
-                   curL = label($("#multi"), "Click here to join or host a multiplayer game", "up");
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
-                 })
+                 curL = label($("#multi"), "Click here to join or host a multiplayer game", "up");
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
                }
-      },*/
+      },
       { setup: function (cs) {
                }
       },
@@ -266,11 +262,19 @@
       scoreW = new ScoreWindow($('#score-div'));
       scoreWCover = cover($('#score-div-row'));
       $('#score-div-row').hide();
-      $('#single').hide();
+
+      nextWCover = cover($('#done-row'));
+      $('#done-row').hide();
+
+      /*$('#single').hide();
       $('#multi').hide();
-      $('#two-player').hide();
+      $('#two-player').hide();*/
+
+      alert('Hello');
 
       curScript = Script(tutorialScript);
+
+      alert('Hello Again');
 
       $('#single').click(function() {
         window.location.replace('single.html');
@@ -301,6 +305,7 @@
         <div class='row' id='data-display' style="font-family:monospace;">
         </div>
         <div class='row-md-6 spaced' id='errormsg'> </div>
+
         <div class='row-md-6' id='done-row'>
           <div class='col-md-6' style='margin-top: 50px;'>
             <button id='single' class='btn-next'>Single Game</button>
@@ -308,13 +313,13 @@
           <div class='col-md-6' style='margin-top: 50px;'>
             <button id='two-player' class='btn-next'>2-Player Game</button>
           </div>
-          <!--
+
           <div class='row'>
             <div class='col-md-6 col-md-offset-3'>
               <button id='multi' class='btn-next'>Multiplayer Game</button>
             </div>
           </div>
-        -->
+
         </div>
       </div>
       <div class='col-md-3' >
