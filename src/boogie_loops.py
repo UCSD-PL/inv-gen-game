@@ -7,7 +7,9 @@ from boogie_ssa import *
 from collections import namedtuple
 from z3 import *
 
-def loops(bbs, curpath = []):
+Loop = namedtuple("Loop", ["header", "loop_paths", "exit_paths"])
+
+def _loops(bbs, curpath = [], loop_m = {}):
     if (curpath == []):
         curpath.append(entry(bbs))
 
@@ -16,12 +18,21 @@ def loops(bbs, curpath = []):
 
     for s in bbs[curpath[-1]].successors:
         if (s in curpath):
-            yield curpath + [s]
+            if (s not in loop_m):
+                loop_m[s] = []
+
+            loop_m[s].append(loop_body(curpath + [s]))
             continue
+
         curpath.append(s)
-        for t in loops(bbs, curpath):
-            yield t
+        _loops(bbs, curpath, loop_m)
         curpath.pop()
+    return loop_m
+
+def loops(bbs):
+    loop_m = _loops(bbs)
+    return [ Loop(k, v, [ k, loop_exit_bb(v[0] + [k], bbs) ]) \
+        for (k,v) in loop_m.iteritems() ]
 
 def loop_exit_bb(loop, bbs):
     loop_succ = bbs[loop[-1]].successors
