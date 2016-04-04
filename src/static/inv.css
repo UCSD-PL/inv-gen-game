@@ -28,6 +28,10 @@ tr.false {
  font-weight: bold;
 }
 
+#hint2 {
+ font-weight: bold;
+}
+
 .good {
   color: green;
 }
