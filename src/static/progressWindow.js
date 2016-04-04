@@ -39,7 +39,6 @@ function ProgressWindow(player, div) {
 
       if (state == "checking") {
       } else if (state == "duplicate") {
-        console.log(div);
         div.addClass('error')
       } else if (state == "tautology") {
       } else if (state == "implies") {

@@ -21,7 +21,7 @@ function Powerup(id, html, holds, applies, transform, tip) {
   this.transform = transform;
 
   this.highlight = function(cb) {
-    pwup.element.effect("highlight", { color: "#008000" }, 500, cb);
+    pwup.element.effect("highlight", { color: "#008000" }, 1000, cb);
   }
 }
 
