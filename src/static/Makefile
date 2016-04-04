@@ -39,7 +39,7 @@ esprima.js:
 jquery-ui-1.11.4:
 	wget http://jqueryui.com/resources/download/jquery-ui-1.11.4.zip
 	unzip jquery-ui-1.11.4.zip
-
+	rm jquery-ui-1.11.4.zip
 
 doge.jpg:
 	wget -O doge.jpg https://pbs.twimg.com/profile_images/378800000822867536/3f5a00acf72df93528b6bb7cd0a4fd0c.jpeg

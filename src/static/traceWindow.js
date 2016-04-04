@@ -33,13 +33,13 @@ function TraceWindow(player, div, data) {
   this.loadData = function(data) {
     hstr = '<table class="table table-stripped" id="traces' + player + '"><tr>';
     for (var i in data.variables) {
-      hstr += '<th>' + data.variables[i] + '</th>';
+      hstr += '<th style="margin-top: 0px; border-top: 0px;">' + data.variables[i] + '</th>';
     }
     if(player == 1) {
-      hstr += '<th><input id="formula-entry" type="text"><span id="errormsg">&nbsp</span></th>';
+      hstr += '<th style="margin-top: 0px; border-top: 0px;"><input id="formula-entry" type="text"><span id="errormsg">&nbsp</span></th>';
     }
     else {
-      hstr += '<th><input id="formula-entry2" type="text"><span id="errormsg">&nbsp</span></th>';
+      hstr += '<th style="margin-top: 0px; border-top: 0px;"><input id="formula-entry2" type="text"><span id="errormsg">&nbsp</span></th>';
     }
 
     hstr += '</tr>';

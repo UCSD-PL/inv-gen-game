@@ -234,7 +234,12 @@
       },
       {
         setup: function (cs) {
-                   curL = label($('#hint-col'), "When a 'Next Level' button appears here,<br> you can advance.", "left");
+                  if($('#next-lvl').is(':hidden')) {
+                   curL = label($('#hint-col'), "When a 'Next Level'<br>button appears here,<br>you can advance.", "left");
+                 }
+                 else {
+                   curL = label($('#next-lvl'), "Click the 'Next Level' button to advance.", "left");
+                 }
                    $('body').focus();
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
                }
@@ -242,10 +247,61 @@
       {
         setup: function (cs) {
                    if($('#btn-hint').is(':hidden')) {
-                     curL = label($('#hint'), "These are hints you can use to win this level", "up");
+                     curL = label($('#hint'), "These are hints you can<br>use to win this level", "up");
                    }
                    else {
                      curL = label($('#btn-hint'), "Click here to get hints", "up");
+                   }
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+                 }
+      },
+      {
+        setup: function (cs) {
+                   curL = label($('#sticky :last'), "And you have powerups! <br> Hover over icons for more", "up")
+                   $('body').focus();
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+                 }
+      },
+      {
+        setup: function (cs) {
+                  curL = label($('#help'), "Click here if you need any help later", "left")
+                  $('body').focus();
+                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+        }
+      },
+      { setup: function (cs) {
+                   $('#formula-entry').focus();
+               }
+      },
+    ]
+
+    var tutorialScript2 = [
+      {
+        setup: function (cs) {
+                   curL = label($('#score-div-row2'), "Try and get as many points as you can!", "left")
+                   $('body').focus();
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+                 }
+      },
+      {
+        setup: function (cs) {
+                   if($('#next-lvl2').is(':hidden')) {
+                     curL = label($('#hint-col2'), "When a 'Next Level'<br>button appears here,<br>you can advance.", "left");
+                   }
+                   else {
+                     curL = label($('#next-lvl2'), "Click the 'Next Level' button to advance.", "left");
+                   }
+                   $('body').focus();
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+               }
+      },
+      {
+        setup: function (cs) {
+                   if($('#btn-hint2').is(':hidden')) {
+                     curL = label($('#hint'), "These are hints you can<br>use to win this level", "up");
+                   }
+                   else {
+                     curL = label($('#btn-hint2'), "Click here to get hints", "up");
                    }
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
                  }
@@ -265,7 +321,7 @@
         }
       },
       { setup: function (cs) {
-                   $('#formula-entry').focus();
+                   $('#formula-entry2').focus();
                }
       },
     ]
@@ -277,6 +333,7 @@
       $('#traces-menu').hide();
       //$('#next-lvl').hide();
       $('#hint-col').hide();
+      $('#btn-switch').hide();
     }
 
     var hidePlayer2 = function() {
@@ -286,6 +343,7 @@
       $('#traces-menu2').hide();
       //$('#next-lvl2').hide();
       $('#hint-col2').hide();
+      $('#btn-switch2').hide();
     }
 
     var showPlayer1 = function() {
@@ -297,6 +355,7 @@
       $('#discovered-invariants-div').show();
       $('#traces-menu').show();
       $('#hint-col').show();
+      $('#btn-switch').show();
 
       /* need to handle next level show/hide properly */
       if(curLvlCompleted == curLvl) {
@@ -316,6 +375,7 @@
       $('#discovered-invariants-div2').show();
       $('#traces-menu2').show();
       $('#hint-col2').show();
+      $('#btn-switch2').show();
 
       /* need to handle next level show/hide properly */
       if(curLvlCompleted2 == curLvl2) {
@@ -366,10 +426,14 @@
       if(player = 1) {
         $('#hint-col').show();
         $('#hint-col2').hide();
+        $('#btn-switch').show();
+        $('#btn-switch2').hide();
       }
       else if(player = 2) {
         $('#hint-col').hide();
         $('#hint-col2').show();
+        $('#btn-switch').hide();
+        $('#btn-switch2').show();
       }
 
       gameLogic.onLvlPassed(function() {
@@ -421,7 +485,10 @@
       })
 
       $('#arrows').click(function() {
-        Script(tutorialScript);
+        if(player == 1)
+          Script(tutorialScript);
+        else
+          Script(tutorialScript2);
       })
 
       $('#operator').click(function() {
@@ -429,22 +496,12 @@
       })
 
       $('#btn-switch').click(function() {
-        if(player == 1) {
-          player = 2;
-        }
-        else if(player == 2) {
-          player = 1;
-        }
+        player = 2;
         switchPlayer();
       })
 
       $('#btn-switch2').click(function() {
-        if(player == 1) {
-          player = 2;
-        }
-        else if(player == 2) {
-          player = 1;
-        }
+        player = 1;
         switchPlayer();
       })
 
@@ -474,7 +531,13 @@
       </div>
 
       <div class='row centered player' id='pnum'>
-        Player: <span id='curPlayer'>1<span>
+        Player: <span id='curPlayer'>1</span>
+          <span id='next_move'>
+            <button id='btn-switch' class='btn-show-hint'>Switch Player</button>
+          </span>
+          <span id='next_move2'>
+            <button id='btn-switch2' class='btn-show-hint'>Switch Player</button>
+          </span>
       </div>
 
       <div class='col-md-1' id='left'>
@@ -500,31 +563,23 @@
         <div class='row' id='data-display2' style="font-family:monospace; display: none;">
         </div>
 
-        <div class='row-md-12'>
-          <div class='col-md-12' id='hint-col'>
+        <div class='row-md-8'>
+          <div class='col-md-8' id='hint-col'>
             <button id='btn-hint' class='btn-show-hint'>Show Hint</button>
             <div class='col-md-4' id='hints'>
               Hint:<br><span id='hint'></span>
             </div>
-
-            <span id='next_move'>
-              <button id='btn-switch' class='btn-show-hint'>Switch Player</button>
-            </span>
 
             <span id='next_lvl_span'>
               <button id='next-lvl' class='btn-next-game'>Next Level</button>
             </span>
           </div>
 
-          <div class='col-md-12' id='hint-col2'>
+          <div class='col-md-8' id='hint-col2'>
             <button id='btn-hint2' class='btn-show-hint'>Show Hint</button>
             <div class='col-md-4' id='hints2'>
               Hint:<br><span id='hint2'></span>
             </div>
-
-            <span id='next_move2'>
-              <button id='btn-switch2' class='btn-show-hint'>Switch Player</button>
-            </span>
 
             <span id='next_lvl_span2'>
               <button id='next-lvl2' class='btn-next-game'>Next Level</button>

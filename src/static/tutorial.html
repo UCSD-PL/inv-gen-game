@@ -150,7 +150,6 @@
                }
       },
       { setup: function (cs) {
-                  /*curL = label("#2 .temp_expr_eval", "Column contains values of i!", "up")*/
                  curL = label("#12 .temp_expr_eval", "Column contains values of i!", "up")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
@@ -209,7 +208,7 @@
                }
       },
       { setup: function (cs) {
-                 $('#score-div-row').show();
+                 $('#score-div-row').slideDown();
                  uncover(scoreWCover, 1000, function() {
                    curL = label($("#score-div"), "You get points for each discovered invariant!<br> Sweet!", "up");
                    scoreW.add(1);
@@ -218,11 +217,11 @@
                }
       },
       { setup: function (cs) {
-                 $('#discovered-invariants-div').show();
+                 $('#discovered-invariants-div').slideDown();
                  uncover(progWCover, 1000, function() {
                    var inv = invPP(tracesW.curExp().trim());
                    addSuccessfulInvariant(inv);
-                   curL = label($("#good_0"), "Your invariants appear here", "up");
+                   curL = label($("#good_10"), "Your invariants appear here", "up");
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                  })
                }
@@ -292,7 +291,7 @@
 </body>
   <div class='container'>
     <div class='row centered title' id='top'>
-      Inv-Gen-Game
+      Inv-Gen-Game: Tutorial
     </div>
 
     <div class='row'>
