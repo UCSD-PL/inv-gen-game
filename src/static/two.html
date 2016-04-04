@@ -66,15 +66,20 @@
         gameLogic.loadLvl(data)
 
         if (showNext(curGoal)) {
-          player1Done = true;
+          //player1Done = true;
 
-          if(player2Done) {
+          //if(player2Done) {
             $('#next-lvl').show();
-          }
+          //}
         }
         else {
-          player1Done = false;
+          //player1Done = false;
           $('#next-lvl').hide();
+        }
+
+        if(curGoal.manual) {
+          player1Done = true;
+          $('#next-lvl').show();
         }
       }, log)
     }
@@ -88,14 +93,19 @@
         gameLogic2.loadLvl(data)
 
         if (showNext(curGoal2)) {
-          player2Done = true;
-          if(player1Done) {
+          //player2Done = true;
+          //if(player1Done) {
             $('#next-lvl2').show();
-          }
+          //}
         }
         else {
-          player2Done = false;
+          //player2Done = false;
           $('#next-lvl2').hide();
+        }
+
+        if(curGoal2.manual) {
+          player2Done = true;
+          $('#next-lvl2').show();
         }
       }, log)
     }
@@ -189,13 +199,12 @@
 
         $('#traces-menu').html(hstr);
 
-        /*
+
         $('.loadLvl').click(function (evt) {
-          if(player == 1) {
-            loadLvl(lvls.indexOf(this.id.substring(4)));
-          }
+          loadLvl(lvls.indexOf(this.id.substring(4)));
+          loadLvl2(lvls2.indexOf(this.id.substring(4)));
         });
-        */
+
 
         curLvl = -1;
         nextLvl();
@@ -219,13 +228,12 @@
 
         $('#traces-menu2').html(hstr);
 
-        /*
+
         $('.loadLvl').click(function (evt) {
-          if(player == 2) {
-            loadLvl2(lvls2.indexOf(this.id.substring(5)));
-          }
+          loadLvl(lvls.indexOf(this.id.substring(4)));
+          loadLvl2(lvls2.indexOf(this.id.substring(4)));
         });
-        */
+
 
         curLvl2 = -1;
         nextLvl2();
@@ -233,7 +241,21 @@
     }
 
     function doneScreen() {
-      $("#final-score").html("<p style='color: white; vertical-align: bottom'>WOW! Much Points! You got " + gameLogic.score()  + " points!</p>");
+      var score1 = gameLogic.score();
+      var score2 = gameLogic2.score();
+      var result = "<p style='color: white; vertical-align: bottom'>WOW! Such game! Much Points!<br>"
+
+      if(score1 > score2) {
+        result += "Winner: Player 1"
+      }
+      else if(score2 > score1) {
+        result += "Winner: Player 2"
+      }
+      else {
+        result += "It's a tie!"
+      }
+
+      $("#final-score").html(result);
       $("#doge").fadeIn();
     }
 
@@ -402,7 +424,6 @@
       $('#sticky').hide();
       $('#data-display').hide();
       $('#traces-menu').hide();
-      //$('#next-lvl').hide();
       $('#hint-col').hide();
       $('#btn-switch').hide();
     }
@@ -412,7 +433,6 @@
       $('#sticky2').hide();
       $('#data-display2').hide();
       $('#traces-menu2').hide();
-      //$('#next-lvl2').hide();
       $('#hint-col2').hide();
       $('#btn-switch2').hide();
     }
@@ -429,12 +449,14 @@
       $('#btn-switch').show();
 
       if(curLvlCompleted == curLvl) {
-        if(player1Done && player2Done) {
           $('#next-lvl').show();
-        }
       }
       else {
         $('#next-lvl').hide();
+      }
+
+      if(player1Done && player2Done) {
+        $('#next-lvl').show();
       }
     }
 
@@ -450,12 +472,14 @@
       $('#btn-switch2').show();
 
       if(curLvlCompleted2 == curLvl2) {
-        if(player1Done && player2Done) {
           $('#next-lvl2').show();
-        }
       }
       else {
         $('#next-lvl2').hide();
+      }
+
+      if(player1Done && player2Done) {
+        $('#next-lvl2').show();
       }
     }
 
