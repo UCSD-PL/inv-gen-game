@@ -64,7 +64,6 @@
         goalSatisfied(curGoal, jsfound, function(newProgress) {progress = newProgress});
 
         gameLogic.loadLvl(data)
-        //$('#hint').html(data.hint)
 
         if (showNext(curGoal)) {
           player1Done = true;
@@ -87,7 +86,6 @@
         goalSatisfied(curGoal2, jsfound2, function(newProgress) {progress = newProgress});
 
         gameLogic2.loadLvl(data)
-        //$('#hint').html(data.hint)
 
         if (showNext(curGoal2)) {
           player2Done = true;
@@ -235,7 +233,6 @@
     }
 
     function doneScreen() {
-      //loadLvlSet("test-benchmarks")
       $("#final-score").html("<p style='color: white; vertical-align: bottom'>WOW! Much Points! You got " + gameLogic.score()  + " points!</p>");
       $("#doge").fadeIn();
     }
@@ -431,7 +428,6 @@
       $('#hint-col').show();
       $('#btn-switch').show();
 
-      /* need to handle next level show/hide properly */
       if(curLvlCompleted == curLvl) {
         if(player1Done && player2Done) {
           $('#next-lvl').show();
@@ -453,11 +449,9 @@
       $('#hint-col2').show();
       $('#btn-switch2').show();
 
-      /* need to handle next level show/hide properly */
       if(curLvlCompleted2 == curLvl2) {
         if(player1Done && player2Done) {
           $('#next-lvl2').show();
-        //$('#hint-col2').show();
         }
       }
       else {
@@ -601,14 +595,6 @@
         Script(tutorialScript);
       else
         Script(tutorialScript2);
-
-
-      /*
-      gameLogic.onLvlLoaded(function () {
-        curScript = Script(tutorialScript)
-        gameLogic.onLvlLoaded(function (){})
-      })
-      */
 
     })
 
