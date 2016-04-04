@@ -52,6 +52,11 @@
 
     var player = 1;
 
+    var player1Done = false;
+    var player2Done = false;
+
+
+
     function loadTrace(traceId) {
       res = rpc.call('App.getData', [ curLvlSet, traceId ], function(res) {
         data = res;
@@ -62,10 +67,14 @@
         //$('#hint').html(data.hint)
 
         if (showNext(curGoal)) {
-          alert('showing next for player 1');
-          $('#next-lvl').show();
+          player1Done = true;
+
+          if(player2Done) {
+            $('#next-lvl').show();
+          }
         }
         else {
+          player1Done = false;
           $('#next-lvl').hide();
         }
       }, log)
@@ -81,10 +90,13 @@
         //$('#hint').html(data.hint)
 
         if (showNext(curGoal2)) {
-          alert('showing next for player 2');
-          $('#next-lvl2').show();
+          player2Done = true;
+          if(player1Done) {
+            $('#next-lvl2').show();
+          }
         }
         else {
+          player2Done = false;
           $('#next-lvl2').hide();
         }
       }, log)
@@ -92,11 +104,13 @@
 
     function nextLvl() {
       lvlPassed[curLvl] = true;
+      player1Done = false;
       loadLvl(curLvl + 1);
     }
 
     function nextLvl2() {
       lvlPassed2[curLvl2] = true;
+      player2Done = false;
       loadLvl2(curLvl2 + 1);
     }
 
@@ -177,11 +191,14 @@
 
         $('#traces-menu').html(hstr);
 
+        /*
         $('.loadLvl').click(function (evt) {
           if(player == 1) {
             loadLvl(lvls.indexOf(this.id.substring(4)));
           }
         });
+        */
+
         curLvl = -1;
         nextLvl();
       }, log)
@@ -204,11 +221,14 @@
 
         $('#traces-menu2').html(hstr);
 
+        /*
         $('.loadLvl').click(function (evt) {
           if(player == 2) {
             loadLvl2(lvls2.indexOf(this.id.substring(5)));
           }
         });
+        */
+
         curLvl2 = -1;
         nextLvl2();
       }, log)
@@ -227,8 +247,47 @@
     var tutorialScript = [
       {
         setup: function (cs) {
-                   curL = label($('#score-div-row'), "Try and get as many points as you can!", "left")
+                   curL = label($('#score-div-row'), "This is your score. Try and get<br>as many points as you can!", "left")
                    $('body').focus();
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+                 }
+      },
+      {
+        setup: function (cs) {
+                   curL = label($('#discovered-invariants-div'), "The invariants you find will appear here", "left")
+                   $('body').focus();
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+                 }
+      },
+      {
+        setup: function (cs) {
+                   curL = label($('#score-div-row2'), "This is your opponent's score", "left")
+                   $('body').focus();
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+                 }
+      },
+      {
+        setup: function (cs) {
+                   curL = label($('#discovered-invariants-div2'), "The invariants your opponent<br>finds will appear here", "left")
+                   $('body').focus();
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+                 }
+      },
+      {
+        setup: function (cs) {
+                   curL = label($('#sticky :last'), "And you have powerups!<br>Hover over icons for more", "up")
+                   $('body').focus();
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+                 }
+      },
+      {
+        setup: function (cs) {
+                   if($('#btn-hint').is(':hidden')) {
+                     curL = label($('#hint'), "These are hints you can<br>use to win this level", "up");
+                   }
+                   else {
+                     curL = label($('#btn-hint'), "Click here to get hints", "up");
+                   }
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
                  }
       },
@@ -246,24 +305,6 @@
       },
       {
         setup: function (cs) {
-                   if($('#btn-hint').is(':hidden')) {
-                     curL = label($('#hint'), "These are hints you can<br>use to win this level", "up");
-                   }
-                   else {
-                     curL = label($('#btn-hint'), "Click here to get hints", "up");
-                   }
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-                 }
-      },
-      {
-        setup: function (cs) {
-                   curL = label($('#sticky :last'), "And you have powerups! <br> Hover over icons for more", "up")
-                   $('body').focus();
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-                 }
-      },
-      {
-        setup: function (cs) {
                   curL = label($('#help'), "Click here if you need any help later", "left")
                   $('body').focus();
                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
@@ -278,22 +319,38 @@
     var tutorialScript2 = [
       {
         setup: function (cs) {
-                   curL = label($('#score-div-row2'), "Try and get as many points as you can!", "left")
+                   curL = label($('#score-div-row'), "This is your opponent's score", "left")
                    $('body').focus();
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
                  }
       },
       {
         setup: function (cs) {
-                   if($('#next-lvl2').is(':hidden')) {
-                     curL = label($('#hint-col2'), "When a 'Next Level'<br>button appears here,<br>you can advance.", "left");
-                   }
-                   else {
-                     curL = label($('#next-lvl2'), "Click the 'Next Level' button to advance.", "left");
-                   }
+                   curL = label($('#discovered-invariants-div'), "The invariants your opponent<br>finds will appear here", "left")
                    $('body').focus();
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-               }
+                 }
+      },
+      {
+        setup: function (cs) {
+                   curL = label($('#score-div-row2'), "This is your score. Try and get<br>as many points as you can", "left")
+                   $('body').focus();
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+                 }
+      },
+      {
+        setup: function (cs) {
+                   curL = label($('#discovered-invariants-div2'), "The invariants you find will appear here", "left")
+                   $('body').focus();
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+                 }
+      },
+      {
+        setup: function (cs) {
+                   curL = label($('div .pwup :last'), "And you have powerups!<br>Hover over icons for more", "up")
+                   $('body').focus();
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+                 }
       },
       {
         setup: function (cs) {
@@ -308,10 +365,15 @@
       },
       {
         setup: function (cs) {
-                   curL = label($('div .pwup :last'), "And you have powerups! <br> Hover over icons for more", "up")
+                   if($('#next-lvl2').is(':hidden')) {
+                     curL = label($('#hint-col2'), "When a 'Next Level'<br>button appears here,<br>you can advance.", "left");
+                   }
+                   else {
+                     curL = label($('#next-lvl2'), "Click the 'Next Level' button to advance.", "left");
+                   }
                    $('body').focus();
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-                 }
+               }
       },
       {
         setup: function (cs) {
@@ -359,7 +421,9 @@
 
       /* need to handle next level show/hide properly */
       if(curLvlCompleted == curLvl) {
-        $('#next-lvl').show();
+        if(player1Done && player2Done) {
+          $('#next-lvl').show();
+        }
       }
       else {
         $('#next-lvl').hide();
@@ -379,8 +443,10 @@
 
       /* need to handle next level show/hide properly */
       if(curLvlCompleted2 == curLvl2) {
-        $('#next-lvl2').show();
+        if(player1Done && player2Done) {
+          $('#next-lvl2').show();
         //$('#hint-col2').show();
+        }
       }
       else {
         $('#next-lvl2').hide();
@@ -388,6 +454,7 @@
     }
 
     var switchPlayer = function() {
+      $('#help-content').slideUp(200);
       if(player == 1) {
         hidePlayer2();
         showPlayer1();
@@ -438,12 +505,18 @@
 
       gameLogic.onLvlPassed(function() {
         curLvlCompleted = curLvl;
-        $('#next-lvl').show();
+        player1Done = true;
+        if(player1Done && player2Done) {
+          $('#next-lvl').show();
+        }
       });
 
       gameLogic2.onLvlPassed(function() {
         curLvlCompleted2 = curLvl2;
-        $('#next-lvl2').show();
+        player2Done = true;
+        if(player1Done && player2Done) {
+          $('#next-lvl2').show();
+        }
       });
 
       $('#next-lvl').click(function() {
@@ -452,6 +525,7 @@
         $('#hints').hide();
         $('#btn-hint').show();
         nextLvl();
+        nextLvl2();
       })
 
       $('#next-lvl2').click(function() {
@@ -460,6 +534,7 @@
         $('#hints2').hide();
         $('#btn-hint2').show();
         nextLvl2();
+        nextLvl();
       })
 
       $('#btn-hint').click(function() {
@@ -639,6 +714,8 @@
         </div>
 
         <div class='row good centered positioned' id='discovered-invariants-div'></div>
+
+        <hr>
 
         <div id='score-div-row2' class='row positioned box progressWindow'>
           <div class='col-md-2' style='color: green;'>Player2</div>
