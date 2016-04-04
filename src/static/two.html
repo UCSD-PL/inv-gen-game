@@ -88,7 +88,11 @@
       res = rpc.call('App.getData', [ curLvlSet2, traceId ], function(res) {
         data = res;
         curGoal2 = data.goal;
-        goalSatisfied(curGoal2, jsfound2, function(newProgress) {progress = newProgress});
+        goalSatisfied(curGoal2, jsfound2, function(newProgress)
+                                          {
+                                            progress = newProgress
+                                          }
+                      );
 
         gameLogic2.loadLvl(data)
 
@@ -193,7 +197,8 @@
 
         hstr = '<ul class="levels">';
         for (var i in res) {
-          hstr += '<li class="level pending">' + '<a class="loadLvl" id="lvl_' + res[i] + '" >' + i + '</a>' + '</li>';
+          hstr += '<li class="level pending">' + '<a class="loadLvl" id="lvl_'
+                  + res[i] + '" >' + i + '</a>' + '</li>';
         }
         hstr += '</ul>';
 
@@ -222,7 +227,8 @@
 
         hstr = '<ul class="levels">';
         for (var i in res) {
-          hstr += '<li class="level pending">' + '<a class="loadLvl" id="lvl2_' + res[i] + '" >' + i + '</a>' + '</li>';
+          hstr += '<li class="level pending">' + '<a class="loadLvl" id="lvl2_'
+                  + res[i] + '" >' + i + '</a>' + '</li>';
         }
         hstr += '</ul>';
 
@@ -243,7 +249,9 @@
     function doneScreen() {
       var score1 = gameLogic.score();
       var score2 = gameLogic2.score();
-      var result = "<p style='color: white; vertical-align: bottom'>WOW! Such game! Much Points!<br>"
+      var result = "<p style='color: white; vertical-align: bottom'>\
+                    WOW! Such game! Much Points!\
+                    <br>"
 
       if(score1 > score2) {
         result += "Winner: Player 1"
@@ -266,77 +274,101 @@
     var tutorialScript = [
       {
         setup: function (cs) {
-                   curL = label($('#score-div-row'), "This is Player 1's score", "left")
-                   $('body').focus();
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-                 }
-      },
-      {
-        setup: function (cs) {
-                   curL = label($('#discovered-invariants-div'), "The invariants Player 1<br>finds will appear here", "left")
-                   $('body').focus();
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-                 }
-      },
-      {
-        setup: function (cs) {
-                   curL = label($('#score-div-row2'), "This is Player 2's score", "left")
-                   $('body').focus();
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-                 }
-      },
-      {
-        setup: function (cs) {
-                   curL = label($('#discovered-invariants-div2'), "The invariants Player 2<br>finds will appear here", "left")
-                   $('body').focus();
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-                 }
-      },
-      {
-        setup: function (cs) {
-                   curL = label($('#sticky :last'), "And you have powerups!<br>Hover over icons for more", "up")
-                   $('body').focus();
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-                 }
-      },
-      {
-        setup: function (cs) {
-                   if($('#btn-hint').is(':hidden')) {
-                     curL = label($('#hint'), "These are hints you can<br>use to win this level", "up");
-                   }
-                   else {
-                     curL = label($('#btn-hint'), "Click here to get hints", "up");
-                   }
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-                 }
-      },
-      {
-        setup: function (cs) {
-                  curL = label($('#btn-switch'), "To pass up your turn, click here", "left");
-                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-        }
-      },
-      {
-        setup: function (cs) {
-                  if($('#next-lvl').is(':hidden')) {
-                   curL = label($('#hint-col'), "When a 'Next Level'<br>button appears here,<br>click it to advance", "left");
-                 }
-                 else {
-                   curL = label($('#next-lvl'), "Click the 'Next Level' button to advance.", "left");
-                 }
-                   $('body').focus();
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+                 curL = label($('#score-div-row'),
+                              "This is Player 1's score",
+                              "left")
+                 $('body').focus();
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
                }
       },
       {
         setup: function (cs) {
-                  curL = label($('#help'), "Click here if you need any help later", "left")
-                  $('body').focus();
-                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-        }
+                 curL = label($('#discovered-invariants-div'),
+                            "The invariants Player 1<br>finds will appear here",
+                            "left")
+                 $('body').focus();
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+               }
+      },
+      {
+        setup: function (cs) {
+                 curL = label($('#score-div-row2'),
+                            "This is Player 2's score",
+                            "left")
+                 $('body').focus();
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+               }
+      },
+      {
+        setup: function (cs) {
+                 curL = label($('#discovered-invariants-div2'),
+                            "The invariants Player 2<br>finds will appear here",
+                            "left")
+                 $('body').focus();
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+               }
+      },
+      {
+        setup: function (cs) {
+                 curL = label($('#sticky :last'),
+                          "And you have powerups!<br>Hover over icons for more",
+                          "up")
+                 $('body').focus();
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+               }
+      },
+      {
+        setup: function (cs) {
+                 if($('#btn-hint').is(':hidden')) {
+                   curL = label($('#hint'),
+                            "These are hints you can<br>use to win this level",
+                            "up");
+                 }
+                 else {
+                   curL = label($('#btn-hint'),
+                            "Click here to get hints",
+                            "up");
+                 }
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+               }
+      },
+      {
+        setup: function (cs) {
+                 curL = label($('#btn-switch'),
+                              "To pass up your turn, click here",
+                              "left");
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+               }
+      },
+      {
+        setup: function (cs) {
+                 if($('#next-lvl').is(':hidden')) {
+                   curL = label($('#hint-col'),
+                          "When a 'Next Level'<br>\
+                          button appears here,<br>\
+                          click it to advance",
+                          "left");
+                 }
+                 else {
+                   curL = label($('#next-lvl'),
+                            "Click the 'Next Level' button to advance.",
+                            "left");
+                 }
+                 $('body').focus();
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+               }
+      },
+      {
+        setup: function (cs) {
+                 curL = label($('#help'),
+                            "Click here if you need any help later",
+                            "left")
+                 $('body').focus();
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+               }
       },
       { setup: function (cs) {
-                   $('#formula-entry').focus();
+                 $('#formula-entry').focus();
                }
       },
     ]
@@ -344,74 +376,98 @@
     var tutorialScript2 = [
       {
         setup: function (cs) {
-                   curL = label($('#score-div-row'), "This is Player 1's score", "left")
-                   $('body').focus();
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-                 }
-      },
-      {
-        setup: function (cs) {
-                   curL = label($('#discovered-invariants-div'), "The invariants Player 1<br>finds will appear here", "left")
-                   $('body').focus();
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-                 }
-      },
-      {
-        setup: function (cs) {
-                   curL = label($('#score-div-row2'), "This is Player 2's score", "left")
-                   $('body').focus();
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-                 }
-      },
-      {
-        setup: function (cs) {
-                   curL = label($('#discovered-invariants-div2'), "The invariants Player 2 finds will appear here", "left")
-                   $('body').focus();
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-                 }
-      },
-      {
-        setup: function (cs) {
-                   curL = label($('div .pwup :last'), "And you have powerups!<br>Hover over icons for more", "up")
-                   $('body').focus();
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-                 }
-      },
-      {
-        setup: function (cs) {
-                   if($('#btn-hint2').is(':hidden')) {
-                     curL = label($('#hint2'), "These are hints you can<br>use to win this level", "up");
-                   }
-                   else {
-                     curL = label($('#btn-hint2'), "Click here to get hints", "up");
-                   }
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-                 }
-      },
-      {
-        setup: function (cs) {
-                  curL = label($('#btn-switch2'), "To pass up your turn, click here", "left");
-                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-        }
-      },
-      {
-        setup: function (cs) {
-                   if($('#next-lvl2').is(':hidden')) {
-                     curL = label($('#hint-col2'), "When a 'Next Level'<br>button appears here,<br>click it to advance", "left");
-                   }
-                   else {
-                     curL = label($('#next-lvl2'), "Click the 'Next Level' button to advance.", "left");
-                   }
-                   $('body').focus();
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+                 curL = label($('#score-div-row'),
+                        "This is Player 1's score",
+                        "left")
+                 $('body').focus();
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
                }
       },
       {
         setup: function (cs) {
-                  curL = label($('#help'), "Click here if you need any help later", "left")
-                  $('body').focus();
-                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-        }
+                 curL = label($('#discovered-invariants-div'),
+                        "The invariants Player 1<br>finds will appear here",
+                        "left")
+                 $('body').focus();
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+               }
+      },
+      {
+        setup: function (cs) {
+                 curL = label($('#score-div-row2'),
+                        "This is Player 2's score",
+                        "left")
+                 $('body').focus();
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+               }
+      },
+      {
+        setup: function (cs) {
+                 curL = label($('#discovered-invariants-div2'),
+                      "The invariants Player 2 finds will appear here",
+                      "left")
+                 $('body').focus();
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+               }
+      },
+      {
+        setup: function (cs) {
+                 curL = label($('div .pwup :last'),
+                        "And you have powerups!<br>Hover over icons for more",
+                        "up")
+                 $('body').focus();
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+               }
+      },
+      {
+        setup: function (cs) {
+                 if($('#btn-hint2').is(':hidden')) {
+                   curL = label($('#hint2'),
+                          "These are hints you can<br>use to win this level",
+                          "up");
+                 }
+                 else {
+                   curL = label($('#btn-hint2'),
+                          "Click here to get hints",
+                          "up");
+                 }
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+               }
+      },
+      {
+        setup: function (cs) {
+                 curL = label($('#btn-switch2'),
+                        "To pass up your turn, click here",
+                        "left");
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+               }
+      },
+      {
+        setup: function (cs) {
+                 if($('#next-lvl2').is(':hidden')) {
+                   curL = label($('#hint-col2'),
+                          "When a 'Next Level'<br>\
+                          button appears here,<br>\
+                          click it to advance",
+                          "left");
+                 }
+                 else {
+                   curL = label($('#next-lvl2'),
+                          "Click the 'Next Level' button to advance.",
+                          "left");
+                 }
+                 $('body').focus();
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+               }
+      },
+      {
+        setup: function (cs) {
+                 curL = label($('#help'),
+                        "Click here if you need any help later",
+                        "left")
+                 $('body').focus();
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+               }
       },
       { setup: function (cs) {
                    $('#formula-entry2').focus();
@@ -645,26 +701,31 @@
       </div>
 
       <div class='col-md-1' id='left'>
-        <p style='font-weight: bold; text-align: center; padding-top: 13px;'>Level</p>
+        <p style='font-weight: bold; text-align: center; padding-top: 13px;'>
+          Level
+        </p>
         <div  id='traces-menu'> </div>
       </div>
 
       <div class='col-md-1' id='left2' style='display: none'>
-        <p style='font-weight: bold; text-align: center; padding-top: 13px;'>Level</p>
+        <p style='font-weight: bold; text-align: center; padding-top: 13px;'>
+          Level
+        </p>
         <div  id='traces-menu2' style='display: none'> </div>
       </div>
 
       <div class='col-md-1 box stickyWindow' id='sticky'>
       </div>
 
-      <div class='col-md-1 box stickyWindow' id='sticky2' style="display: none;">
+      <div class='col-md-1 box stickyWindow' id='sticky2' style="display:none;">
       </div>
 
       <div class='col-md-6' id='middle'>
         <div class='row' id='data-display' style="font-family:monospace;">
         </div>
 
-        <div class='row' id='data-display2' style="font-family:monospace; display: none;">
+        <div class='row' id='data-display2'
+              style="font-family:monospace; display:none;">
         </div>
 
         <div class='row-md-8'>
@@ -692,39 +753,89 @@
 
           <div class='row'>
             <div class='col-md-6 gap'>
-              <img id='help' src="help-icon.png" class='help-icon' data-toggle="tooltip" title="Click to toggle help options"/>
+              <img id='help' src="help-icon.png" class='help-icon'
+                    data-toggle="tooltip" title="Click to toggle help options"/>
               <div id='help-content' class='helpContentWindow box'>
-                <span id='replay' class='helpContent' data-toggle="tooltip" title="Click to play the tutorial again">Replay tutorial</span>
+                <span id='replay' class='helpContent' data-toggle="tooltip"
+                      title="Click to play the tutorial again">
+                      Replay tutorial
+                </span>
                 <br>
-                <span id='arrows' class='helpContent' data-toggle="tooltip" title="Click to view the layout introduction">Understand screen layout</span>
+                <span id='arrows' class='helpContent' data-toggle="tooltip"
+                      title="Click to view the layout introduction">
+                      Understand screen layout
+                </span>
                 <br>
-                <span id='operator' class='helpContent' data-toggle="tooltip" title="Click to toggle the list of operators">Available operators</span>
+                <span id='operator' class='helpContent' data-toggle="tooltip"
+                      title="Click to toggle the list of operators">
+                      Available operators
+                </span>
                 <div id='ops' style="display: none;">
                   <hr style="height:1px; padding:0px; margin:0px;">
                   <table class='opTable'>
                     <tr>
-                      <td class="centered" data-toggle="tooltip" title="The addition operator. Example: i + j returns the sum of i and j">+</td>
-                      <td class="centered" data-toggle="tooltip" title="The subtraction operator. Example: i - j subtracts j from i">-</td>
-                      <td class="centered" data-toggle="tooltip" title="The multiplication operator. Example: 3 * x multiplies x by 3">*</td>
-                      <td class="centered" data-toggle="tooltip" title="The division operator. Example: j / x divides j by x">/</td>
+                      <td class="centered" data-toggle="tooltip" title="The addition operator. Example: i + j returns the sum of i and j">
+                        +
+                      </td>
+                      <td class="centered" data-toggle="tooltip" title="The subtraction operator. Example: i - j subtracts j from i">
+                        -
+                      </td>
+                      <td class="centered" data-toggle="tooltip" title="The multiplication operator. Example: 3 * x multiplies x by 3">
+                        *
+                      </td>
+                      <td class="centered" data-toggle="tooltip" title="The division operator. Example: j / x divides j by x">
+                        /
+                      </td>
                     </tr>
                     <tr>
-                      <td class="centered" data-toggle="tooltip" title="The modulo operator. Example: i % 2 returns the remainder of divisin i by 2">%</td>
-                      <td class="centered" data-toggle="tooltip" title="The equality operator. Example: i = 2 checks if i is equal to 2">=</td>
-                      <td class="centered" data-toggle="tooltip" title="The non-equality operator. Example: i != 2 checks if i is not equal to 2">!=</td>
-                      <td class="centered" data-toggle="tooltip" title="The less than operator. Example: i < j checks if i is less than j"><</td>
+                      <td class="centered" data-toggle="tooltip" title="The modulo operator. Example: i % 2 returns the remainder of division i by 2">
+                        %
+                      </td>
+                      <td class="centered" data-toggle="tooltip" title="The equality operator. Example: i = 2 checks if i is equal to 2">
+                        =
+                      </td>
+                      <td class="centered" data-toggle="tooltip" title="The non-equality operator. Example: i != 2 checks if i is not equal to 2">
+                        !=
+                      </td>
+                      <td class="centered" data-toggle="tooltip" title="The less than operator. Example: i < j checks if i is less than j">
+                        <
+                      </td>
                     </tr>
                     <tr>
-                      <td class="centered" data-toggle="tooltip" title="The less than or equal operator. Example: i <= j checks if i is less than or equal to j"><=</td>
-                      <td class="centered" data-toggle="tooltip" title="The greater than operator. Example: i > j checks if i is greater than j">></td>
-                      <td class="centered" data-toggle="tooltip" title="The greater than or equal operator. Example: i >= j checks if i is greater than or equal to j">>=</td>
-                      <td class="centered" data-toggle="tooltip" title="The negation operator. Example: !(i = 3) returns the negation of the condition that i is 3">!</td>
+                      <td class="centered" data-toggle="tooltip" title="The less than or equal operator.
+                                                                        Example: i <= j checks if i is less than or equal to j">
+                        <=
+                      </td>
+                      <td class="centered" data-toggle="tooltip" title="The greater than operator.
+                                                                        Example: i > j checks if i is greater than j">
+                        >
+                      </td>
+                      <td class="centered" data-toggle="tooltip" title="The greater than or equal operator.
+                                                                        Example: i >= j checks if i is greater than or equal to j">
+                        >=
+                      </td>
+                      <td class="centered" data-toggle="tooltip" title="The negation operator.
+                                                                        Example: !(i = 3) returns the negation of the condition that i is 3">
+                        !
+                      </td>
                     </tr>
                     <tr>
-                      <td class="centered" data-toggle="tooltip" title="The conjunction operator. Example: (i=2) &amp;&amp; (j>0) will return true only if both i=2 and j>0">&amp;&amp;</td>
-                      <td class="centered" data-toggle="tooltip" title="The disjunction operator. Example: (i=2) || (j>0) will return true if even one of the two conditions is true">||</td>
-                      <td class="centered" data-toggle="tooltip" title="The implication operator. Example: i => j checks if i implies j">=></td>
-                      <td class="centered" data-toggle="tooltip" title="The equivalence operator. Example: i <=> j checks if i is logically equivalent to j"><=></td>
+                      <td class="centered" data-toggle="tooltip" title="The conjunction operator.
+                                                                        Example: (i=2) &amp;&amp; (j>0) will return true only if both i=2 and j>0">
+                        &amp;&amp;
+                      </td>
+                      <td class="centered" data-toggle="tooltip" title="The disjunction operator.
+                                                                    Example: (i=2) || (j>0) will return true if even one of the two conditions is true">
+                        ||
+                      </td>
+                      <td class="centered" data-toggle="tooltip" title="The implication operator.
+                                                                        Example: i => j checks if i implies j">
+                        =>
+                      </td>
+                      <td class="centered" data-toggle="tooltip" title="The equivalence operator.
+                                                                        Example: i <=> j checks if i is logically equivalent to j">
+                        <=>
+                      </td>
                     </tr>
                   </table>
                 </div>
@@ -735,25 +846,34 @@
         </div>
       </div>
 
-      <div class='col-md-3' style="margin: 15px; margin-top: 0px; margin-bottom: 0px;">
+      <div class='col-md-3'
+            style="margin: 15px; margin-top: 0px; margin-bottom: 0px;">
 
         <div id='score-div-row' class='row positioned box progressWindow'>
-          <div class='col-md-2' style='color: green'>Player1</div>
+          <div class='col-md-2' style='color: green'>
+            Player1
+          </div>
           <div id='score-div' class='col-md-7 col-md-offset-3'>
           </div>
         </div>
 
-        <div class='row good centered positioned' id='discovered-invariants-div'></div>
+        <div class='row good centered positioned'
+            id='discovered-invariants-div'>
+        </div>
 
         <hr>
 
         <div id='score-div-row2' class='row positioned box progressWindow'>
-          <div class='col-md-2' style='color: green;'>Player2</div>
+          <div class='col-md-2' style='color: green;'>
+            Player2
+          </div>
           <div id='score-div2' class='col-md-7 col-md-offset-3'>
           </div>
         </div>
 
-        <div class='row good centered positioned' id='discovered-invariants-div2'></div>
+        <div class='row good centered positioned'
+            id='discovered-invariants-div2'>
+        </div>
       </div>
     </div>
   </div>
