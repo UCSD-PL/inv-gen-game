@@ -119,7 +119,7 @@
                     variables: [ "i" ]
                   }
 
-                  tracesW = new TraceWindow($('#data-display'), data);
+                  tracesW = new TraceWindow(1, $('#data-display'), data);
                   tracesW.changed(function() {
                     if (errorTimer) {
                       window.clearTimeout(errorTimer);
@@ -135,7 +135,6 @@
       },
       { setup: function (cs) {
                  curL = label($('#formula-entry'), "Type '3+4' here!", "left")
-                 alert('Hello Again');
                  $('#formula-entry').focus();
                  nextStepOnInvariant(cs, "3+4", labelRemover(curL));
                }
@@ -151,7 +150,8 @@
                }
       },
       { setup: function (cs) {
-                 curL = label("#2 .temp_expr_eval", "Column contains values of i!", "up")
+                  /*curL = label("#2 .temp_expr_eval", "Column contains values of i!", "up")*/
+                 curL = label("#12 .temp_expr_eval", "Column contains values of i!", "up")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
@@ -161,7 +161,7 @@
                }
       },
       { setup: function (cs) {
-                 curL = label("#2 .temp_expr_eval", "Now you get i+1 in this column!", "up")
+                 curL = label("#12 .temp_expr_eval", "Now you get i+1 in this column!", "up")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
@@ -177,17 +177,17 @@
                }
       },
       { setup: function (cs) {
-                 curL = label($("#0 .temp_expr_eval"), "Not true that 0>0", "left")
+                 curL = label($("#10 .temp_expr_eval"), "Not true that 0>0", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
-                 curL = label($("#1 .temp_expr_eval"), "It is true that 1>0", "left")
+                 curL = label($("#11 .temp_expr_eval"), "It is true that 1>0", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
-                 curL = label($("#2 .temp_expr_eval"), "It is true that 2>0", "left")
+                 curL = label($("#12 .temp_expr_eval"), "It is true that 2>0", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
@@ -204,7 +204,7 @@
       },
       { setup: function (cs) {
                  tracesW.msg("Press Enter...")
-                 curL = label($("#0 .temp_expr_eval"), "Hurray! All rows are green!<br>You found an invariant!", "left")
+                 curL = label($("#10 .temp_expr_eval"), "Hurray! All rows are green!<br>You found an invariant!", "left")
                  cs.nextStepOnKeyOrTimeout(-1, labelRemover(curL), 13)
                }
       },
@@ -229,10 +229,9 @@
       },
       { setup: function (cs) {
                  $('#done-row').show();
-                 uncover(nextWCover, 1000, function() {
+                 $('#single').show();
                    curL = label($("#single"), "Click here to start a single player game", "up");
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
-                 })
                }
       },
       { setup: function (cs) {
@@ -241,12 +240,14 @@
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
                }
       },
+      /*
       { setup: function (cs) {
                  $('#multi').show();
                  curL = label($("#multi"), "Click here to join or host a multiplayer game", "up");
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
                }
       },
+      */
       { setup: function (cs) {
                }
       },
@@ -255,7 +256,7 @@
     $(document).ready(function() {
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
 
-      progW = new ProgressWindow($('#discovered-invariants-div'));
+      progW = new ProgressWindow(1, $('#discovered-invariants-div'));
       progWCover = cover(progW.element);
       $('#discovered-invariants-div').hide();
 
@@ -263,18 +264,12 @@
       scoreWCover = cover($('#score-div-row'));
       $('#score-div-row').hide();
 
-      nextWCover = cover($('#done-row'));
       $('#done-row').hide();
-
-      /*$('#single').hide();
+      $('#single').hide();
       $('#multi').hide();
-      $('#two-player').hide();*/
-
-      alert('Hello');
+      $('#two-player').hide();
 
       curScript = Script(tutorialScript);
-
-      alert('Hello Again');
 
       $('#single').click(function() {
         window.location.replace('single.html');
@@ -284,9 +279,11 @@
         window.location.replace('two.html');
       })
 
+      /*
       $('#multi').click(function() {
         window.location.replace('multi.html');
       })
+      */
     })
 
   </script>

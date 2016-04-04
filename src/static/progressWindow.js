@@ -19,11 +19,9 @@ function ProgressWindow(player, div) {
   }
 
   progW.addInvariant = function (inv) {
-      // if arrows are running, then stop them
-
-      $(invUL).append("<li class='good-invariant' id='good_" +
+      $(invUL).append("<li class='good-invariant' id='good_" + player +
         ctr + "'>" + invToHTML(inv) + "</li>")
-      invMap[inv] = $('#good_' + ctr)
+      invMap[inv] = $('#good_' + player + ctr)
       ctr++;
   }
 
@@ -41,6 +39,7 @@ function ProgressWindow(player, div) {
 
       if (state == "checking") {
       } else if (state == "duplicate") {
+        console.log(div);
         div.addClass('error')
       } else if (state == "tautology") {
       } else if (state == "implies") {

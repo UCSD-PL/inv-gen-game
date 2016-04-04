@@ -110,7 +110,7 @@ function TraceWindow(player, div, data) {
     traceW.commitCb = cb;
   }
 
-  /* need to check player */
+  /* not working for tutorial */
   this.evalResult = function (res) {
     if(player == 1) {
       if (res.data) {
@@ -121,8 +121,9 @@ function TraceWindow(player, div, data) {
         for (var i in res.data) {
           $('#' + player + i).removeClass('true')
           $('#' + player + i).removeClass('false')
-          if (typeof(res.data[i]) == "boolean")
+          if (typeof(res.data[i]) == "boolean") {
             $('#' + player + i).addClass(res.data[i] ? 'true' : 'false')
+          }
         }
       } else if (res.clear) {
         $('.temp_expr_eval').html('');
