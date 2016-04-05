@@ -538,6 +538,10 @@
       gameLogic.onLvlPassed(function() {
         curLvlCompleted = curLvl;
         player1Done = true;
+
+        console.log("Invariants by Player 1:");
+        console.log(gameLogic.getFoundJSInv());
+
         if(player1Done && player2Done) {
           $('#next-lvl').show();
         }
@@ -546,6 +550,10 @@
       gameLogic2.onLvlPassed(function() {
         curLvlCompleted2 = curLvl2;
         player2Done = true;
+
+        console.log("Invariants by Player 2:");
+        console.log(gameLogic2.getFoundJSInv());
+
         if(player1Done && player2Done) {
           $('#next-lvl2').show();
         }
@@ -612,12 +620,16 @@
         switchPlayer();
       })
 
-
-
       loadLvlSet("pruned-intro-benchmarks");
       loadLvlSet2("pruned-intro-benchmarks");
 
       Script(tutorialScript);
+
+      /*
+      var foundJSInv = gameLogic.getFoundJSInv();
+      var foundJSInv2 = gameLogic2.getFoundJSInv();
+      addBonus(foundJSInv, foundJSInv2, tracesW, tracesW2, scoreW, scoreW2, player);
+      */
     })
 
   </script>
