@@ -29,6 +29,7 @@
   <script src="pp.js"></script>
   <script src="util.js"></script>
   <script src="powerups.js"></script>
+  <script src="bonus.js"></script>
 
   <script>
     var stepTimeout = 5000;
@@ -310,15 +311,23 @@
       },
       {
         setup: function (cs) {
+                if(player == 1) {
                  curL = label($('#sticky :last'),
                           "And you have powerups!<br>Hover over icons for more",
                           "up")
+                }
+                else {
+                  curL = label($('#sticky2 :last'),
+                           "And you have powerups!<br>Hover over icons for more",
+                           "up")
+                }
                  $('body').focus();
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
                }
       },
       {
         setup: function (cs) {
+                if(player == 1) {
                  if($('#btn-hint').is(':hidden')) {
                    curL = label($('#hint'),
                             "These are hints you can<br>use to win this level",
@@ -329,19 +338,40 @@
                             "Click here to get hints",
                             "up");
                  }
+               }
+               else {
+                 if($('#btn-hint2').is(':hidden')) {
+                   curL = label($('#hint2'),
+                            "These are hints you can<br>use to win this level",
+                            "up");
+                 }
+                 else {
+                   curL = label($('#btn-hint2'),
+                            "Click here to get hints",
+                            "up");
+                 }
+               }
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
                }
       },
       {
         setup: function (cs) {
+                if(player == 1) {
                  curL = label($('#btn-switch'),
                               "To pass up your turn, click here",
                               "left");
+                }
+                else {
+                  curL = label($('#btn-switch2'),
+                               "To pass up your turn, click here",
+                               "left");
+                }
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
                }
       },
       {
         setup: function (cs) {
+                if(player == 1) {
                  if($('#next-lvl').is(':hidden')) {
                    curL = label($('#hint-col'),
                           "When a 'Next Level'<br>\
@@ -354,6 +384,22 @@
                             "Click the 'Next Level' button to advance.",
                             "left");
                  }
+               }
+
+               else {
+                 if($('#next-lvl2').is(':hidden')) {
+                   curL = label($('#hint-col2'),
+                          "When a 'Next Level'<br>\
+                          button appears here,<br>\
+                          click it to advance",
+                          "left");
+                 }
+                 else {
+                   curL = label($('#next-lvl2'),
+                            "Click the 'Next Level' button to advance.",
+                            "left");
+                 }2
+               }
                  $('body').focus();
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
                }
@@ -373,107 +419,6 @@
       },
     ]
 
-    var tutorialScript2 = [
-      {
-        setup: function (cs) {
-                 curL = label($('#score-div-row'),
-                        "This is Player 1's score",
-                        "left")
-                 $('body').focus();
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-               }
-      },
-      {
-        setup: function (cs) {
-                 curL = label($('#discovered-invariants-div'),
-                        "The invariants Player 1<br>finds will appear here",
-                        "left")
-                 $('body').focus();
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-               }
-      },
-      {
-        setup: function (cs) {
-                 curL = label($('#score-div-row2'),
-                        "This is Player 2's score",
-                        "left")
-                 $('body').focus();
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-               }
-      },
-      {
-        setup: function (cs) {
-                 curL = label($('#discovered-invariants-div2'),
-                      "The invariants Player 2 finds will appear here",
-                      "left")
-                 $('body').focus();
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-               }
-      },
-      {
-        setup: function (cs) {
-                 curL = label($('div .pwup :last'),
-                        "And you have powerups!<br>Hover over icons for more",
-                        "up")
-                 $('body').focus();
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-               }
-      },
-      {
-        setup: function (cs) {
-                 if($('#btn-hint2').is(':hidden')) {
-                   curL = label($('#hint2'),
-                          "These are hints you can<br>use to win this level",
-                          "up");
-                 }
-                 else {
-                   curL = label($('#btn-hint2'),
-                          "Click here to get hints",
-                          "up");
-                 }
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-               }
-      },
-      {
-        setup: function (cs) {
-                 curL = label($('#btn-switch2'),
-                        "To pass up your turn, click here",
-                        "left");
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-               }
-      },
-      {
-        setup: function (cs) {
-                 if($('#next-lvl2').is(':hidden')) {
-                   curL = label($('#hint-col2'),
-                          "When a 'Next Level'<br>\
-                          button appears here,<br>\
-                          click it to advance",
-                          "left");
-                 }
-                 else {
-                   curL = label($('#next-lvl2'),
-                          "Click the 'Next Level' button to advance.",
-                          "left");
-                 }
-                 $('body').focus();
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-               }
-      },
-      {
-        setup: function (cs) {
-                 curL = label($('#help'),
-                        "Click here if you need any help later",
-                        "left")
-                 $('body').focus();
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-               }
-      },
-      { setup: function (cs) {
-                   $('#formula-entry2').focus();
-               }
-      },
-    ]
 
     var hidePlayer1 = function() {
       $('#left').hide();
@@ -550,6 +495,7 @@
         showPlayer2();
       }
     }
+
 
     $(document).ready(function() {
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
@@ -648,10 +594,8 @@
       })
 
       $('#arrows').click(function() {
-        if(player == 1)
-          Script(tutorialScript);
-        else
-          Script(tutorialScript2);
+        $('#help-content').slideUp(200);
+        Script(tutorialScript);
       })
 
       $('#operator').click(function() {
@@ -673,11 +617,7 @@
       loadLvlSet("pruned-intro-benchmarks");
       loadLvlSet2("pruned-intro-benchmarks");
 
-      if(player == 1)
-        Script(tutorialScript);
-      else
-        Script(tutorialScript2);
-
+      Script(tutorialScript);
     })
 
   </script>

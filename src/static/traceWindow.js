@@ -60,6 +60,8 @@ function TraceWindow(player, div, data) {
       $('#formula-entry').keyup(function (keyEv) {
         if (keyEv.keyCode == 13 && traceW.okToSubmit) {
           traceW.commitCb();
+          $('#btn-switch').click();
+          $('#formula-entry2').focus();
         } else
           traceW.changedCb();
       })
@@ -72,6 +74,8 @@ function TraceWindow(player, div, data) {
       $('#formula-entry2').keyup(function (keyEv) {
         if (keyEv.keyCode == 13 && traceW.okToSubmit) {
           traceW.commitCb();
+          $('#btn-switch2').click();
+          $('#formula-entry').focus();
         } else
           traceW.changedCb();
       })
