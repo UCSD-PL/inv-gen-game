@@ -10,12 +10,13 @@ from z3 import *
 
 Loop = namedtuple("Loop", ["header", "loop_paths", "exit_paths"])
 
-def _loops(bbs, curpath = [], loop_m = {}):
+def _loops(bbs, curpath, loop_m):
     if (curpath == []):
         curpath.append(entry(bbs))
 
-    if (not is_nd_bb_path_possible(curpath, bbs)):
-        return
+    #TODO: Is the code resilient to random dead loops?
+    #if (not is_nd_bb_path_possible(curpath, bbs)):
+    #    return
 
     for s in bbs[curpath[-1]].successors:
         if (s in curpath):
@@ -34,7 +35,8 @@ def _loops(bbs, curpath = [], loop_m = {}):
     return loop_m
 
 def loops(bbs):
-    loop_m = _loops(bbs)
+    loop_m = _loops(bbs, [], {})
+    print loop_m
     return [ Loop(k, v, [[ v[0][0], loop_exit_bb(v, bbs) ]]) \
         for (k,v) in loop_m.iteritems() ]
 
