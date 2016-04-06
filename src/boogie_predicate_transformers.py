@@ -1,7 +1,5 @@
 from boogie_ast import *;
 from boogie_z3 import *
-from boogie_bb import *
-from boogie_ssa import *
 from collections import namedtuple
 from z3 import *
 
@@ -29,9 +27,6 @@ def wp_stmts(stmts, pred, typeEnv):
         pred = wp_stmt(s, pred, typeEnv)
     return pred
 
-def wp_bb(bb, pred, typeEnv):
-    return wp_stmts(bb.stmts)
-
 def sp_stmt(stmt, pred, typeEnv):
     if (isinstance(stmt, AstLabel)):
         stmt = stmt.stmt
@@ -56,11 +51,3 @@ def sp_stmts(stmts, pred, typeEnv):
     for s in stmts:
         pred = sp_stmt(s, pred, typeEnv)
     return pred
-
-def sp_bb(bb, pred, typeEnv):
-    return sp_stmts(bb.stmts, pred, typeEnv)
-
-if __name__ == "__main__":
-    bbs = get_bbs("desugared3.bpl")
-    print sp_bb(bbs['anon0'], BoolVal(True), AllIntTypeEnv())
-    print sp_stmts(path_to_ssa(bbpath_to_stmts(['anon0', 'anon3_LoopHead', 'anon3_LoopBody'], bbs)), BoolVal(True), AllIntTypeEnv())

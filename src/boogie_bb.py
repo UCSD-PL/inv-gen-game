@@ -1,8 +1,5 @@
 from boogie_ast import *;
-from boogie_z3 import *
-from boogie_verify import *
 from collections import namedtuple
-from z3 import *
 
 BB = namedtuple("BB", ["predecessors", "stmts", "successors"])
 
@@ -51,5 +48,8 @@ def exit(bbs):
 def bbpath_to_stmts(bb_path, bbs):
     r = []
     for b in bb_path:   
-        r.extend(bbs[b].stmts)
+        if (isinstance(b, BB)):
+            r.extend(bbs[b].stmts)
+        else:
+            r.append([ bbpath_to_stmts(x, bbs) for x in b ])
     return r
