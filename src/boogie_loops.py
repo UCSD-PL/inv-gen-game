@@ -48,29 +48,35 @@ def loop_exit_bb(body_paths, bbs):
     return unique(loop_header_succ.difference(bbs_in_loop))
 
 # Assumes single loop at the end of the path
-def unroll_loop(loop, nunrolls):
-    return list(loop.header) + nunrolls * [ loop.loop_paths ]
+def unroll_loop(loop, nunrolls, extra_pred_bb = None):
+    return list(loop.header) + ([extra_pred_bb] if extra_pred_bb else []) + nunrolls * [ loop.loop_paths ]
+
+def bad_envs_to_expr(bad_envs):
+    s = "&&".join(["!(" + 
+                        "&&".join([("(%s==%d)" %(k, v)) for (k,v) in bad_env.iteritems()]) + ")"
+                        for bad_env in bad_envs])
+    if (s == ""):
+        return AstTrue()
+    return parseExprAst(s)[0]
 
 # Assumes single loop at the end of the path
-def get_loop_header_values(loop, bbs, unrollLimit = 5):
-    # Prefix Path
-    prefix_bbs = loop_prefix(loop)
-    loop_bbs = loop_body(loop)
-    nPrefixStmts = len(bbpath_to_stmts(prefix_bbs, bbs))
-    nLoopStmts =  len(bbpath_to_stmts(loop_bbs, bbs))
-
-    # Try unrolling it up to 5 times
+def get_loop_header_values(loop, bbs, unrollLimit = 5, forbidden_envs = None):
+    # Try unrolling it up to to the limit times
+    loop_header_bb = loop.loop_paths[0][0]
     nunrolls = 1;
 
-    while is_bb_path_possible(unroll_loop(loop, nunrolls), bbs) and nunrolls <= unrollLimit:
+    extra_bb = None
+    if (forbidden_envs):
+        extra_bb = "_tmp_header_pred_"
+        expr = bad_envs_to_expr(forbidden_envs)
+        bbs[extra_bb] = BB([], [ AstAssume(expr) ], [])
+
+    while is_nd_bb_path_possible(unroll_loop(loop, nunrolls, extra_bb), bbs) and nunrolls <= unrollLimit:
         nunrolls += 1;
 
-    #TODO: Fix unroll_loop to support newer version loops
-    unrolled_path = unroll_loop(loop, nunrolls)
-
-    assert nPrefixStmts + nunrolls * nLoopStmts == len(bbpath_to_stmts(unrolled_path, bbs))
+    unrolled_path = unroll_loop(loop, nunrolls, extra_bb)
     path_vars = get_path_vars(unrolled_path, bbs)
-    return [path_vars[nPrefixStmts + i * nLoopStmts] for i in xrange(0, nunrolls)]
+    return [bb[1][0] for bb in path_vars if bb[0] == loop_header_bb]
 
 def _unssa_z3_model(m, repl_m):
     updated = map(str, repl_m.keys())
@@ -117,8 +123,10 @@ if __name__ == "__main__":
         for (stmt, vrs) in zip(bbs[bb].stmts, envs):
             print str(stmt), " // Live Vars: ", vrs
     print "=================="
-    #print "Values at loop header if we unroll 5 times: "
-    #print get_loop_header_values(loop, bbs, 5)
+    print "Values at loop header if we unroll 5 times: "
+    print get_loop_header_values(loop, bbs, 5)
+    print get_loop_header_values(loop, bbs, 5, [{ 'k': 6, 'j':0, 'n':5 }, { 'k': 7, 'j': 0, 'n': 6 }])
+    """
     def tryinv(inv,loop,  bbs):
         print "Pre counter example for " + inv, str(loop_vc_pre_ctrex(loop, parseExprAst(inv)[0], bbs))
         print "Post counter example for " + inv, str(loop_vc_post_ctrex(loop, parseExprAst(inv)[0], bbs))
@@ -134,3 +142,4 @@ if __name__ == "__main__":
     tryinv("x-y <= 2 && x-y >= -2", loop, bbs)
     tryinv("x-y != 4", loop, bbs)
     tryinv("!(x == 4 && y == 0)", loop, bbs)
+    """
