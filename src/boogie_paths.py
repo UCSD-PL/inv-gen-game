@@ -3,9 +3,7 @@ from boogie_z3 import *
 from boogie_bb import *
 from boogie_ssa import *
 from boogie_predicate_transformers import wp_stmts
-from collections import namedtuple
 from z3 import *
-from copy import copy
 
 # BB_PATH = [ BB_LABEL ]
 # NONDET_BB_PATH = [ (BB | [ NONDET_BB_PATH ] ) ]
