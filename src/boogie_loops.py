@@ -53,7 +53,7 @@ def unroll_loop(loop, nunrolls, extra_pred_bb = None):
 
 def bad_envs_to_expr(bad_envs):
     s = "&&".join(["!(" + 
-                        "&&".join([("(%s==%d)" %(k, v)) for (k,v) in bad_env.iteritems()]) + ")"
+                        "&&".join([("(%s==%s)" %(k, str(v))) for (k,v) in bad_env.iteritems()]) + ")"
                         for bad_env in bad_envs])
     if (s == ""):
         return AstTrue()
@@ -63,7 +63,7 @@ def bad_envs_to_expr(bad_envs):
 def get_loop_header_values(loop, bbs, unrollLimit = 5, forbidden_envs = None):
     # Try unrolling it up to to the limit times
     loop_header_bb = loop.loop_paths[0][0]
-    nunrolls = 1;
+    nunrolls = 0;
 
     extra_bb = None
     if (forbidden_envs):
@@ -71,7 +71,7 @@ def get_loop_header_values(loop, bbs, unrollLimit = 5, forbidden_envs = None):
         expr = bad_envs_to_expr(forbidden_envs)
         bbs[extra_bb] = BB([], [ AstAssume(expr) ], [])
 
-    while is_nd_bb_path_possible(unroll_loop(loop, nunrolls, extra_bb), bbs) and nunrolls <= unrollLimit:
+    while is_nd_bb_path_possible(unroll_loop(loop, nunrolls, extra_bb), bbs) and nunrolls < unrollLimit:
         nunrolls += 1;
 
     unrolled_path = unroll_loop(loop, nunrolls, extra_bb)

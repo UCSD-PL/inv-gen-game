@@ -134,6 +134,14 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
     tracesW.clearError();
     //scoreW.clear();
     tracesW.loadData(lvl);
+    if (lvl.support_pos_ex) {
+      tracesW.moreExamples(function(type) {
+        rpc.call("App.getPositiveExamples", [curLvlSet, lvls[curLvl], lvl.data[0], 1], function (res) {
+          lvl.data[0] = lvl.data[0].concat(res)
+          tracesW.addData(res)
+        })
+      })
+    }
     tracesW.setExp("");
     gl.userInput(false);
     gl.pwupSuggestion.clear(lvl);

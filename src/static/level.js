@@ -64,7 +64,7 @@ function Level(id,
 Level.load = function(lvlSet, id, cb) {
   rpc.call('App.loadLvl', [ lvlSet, id], function(data) {
     cb(new Level(id, data.variables, data.data,
-      data.goal, data.hint, false, false, false))
+      data.goal, data.hint, data.support_pos_ex, data.support_neg_ex, data.support_ind_ex))
   }, log)
 }
 

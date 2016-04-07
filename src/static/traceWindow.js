@@ -46,6 +46,11 @@ function TraceWindow(div, data) {
       hstr += '<td class="temp_expr_eval">&nbsp</td></tr>';
     }
     hstr += '</table>'
+
+    if (data.support_pos_ex) {
+      hstr += '<div id="example_buttons"><button id="ask_pos_ex"> More Examples </button></div>'
+    }
+
     $(div).html(hstr)
 
     $('#formula-entry').focus();
@@ -57,8 +62,21 @@ function TraceWindow(div, data) {
         traceW.changedCb();
     })
 
+    $('#ask_pos_ex').click(function() {
+      traceW.moreExCb("positive")
+    })
+
     $('#formula-entry').focus();
 
+  }
+
+  this.addData = function(rows) {
+    nrows = $('table tr.traces-row').length
+    $('table').append(rows.map(
+      (row, ind) => "<tr class='traces-row' id='" + (ind + nrows) +"'>" + row.map(el => "<td>" + el + "</td>").join("") + 
+        "<td class='temp_expr_eval'>&nbsp</td></tr>"
+    ).join("\n"))
+    this.changedCb()
   }
 
   this.curExp = function () { var v = $('#formula-entry').val(); return (v === undefined ? "" : v); }
@@ -69,6 +87,10 @@ function TraceWindow(div, data) {
 
   this.commit = function (cb) {
     traceW.commitCb = cb;
+  }
+
+  this.moreExamples = function (cb) {
+    traceW.moreExCb = cb;
   }
 
   this.evalResult = function (res) {
