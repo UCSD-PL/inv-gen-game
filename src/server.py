@@ -40,7 +40,7 @@ z3s = Solver()
 
 def loadBoogieFile(fname):
     bbs = get_bbs(fname)
-    loop = unique(loops(bbs), "Cannot handle program with multiple loops: " + fname)
+    loop = unique(loops(bbs), "Cannot handle program with multiple loops:" + fname)
     header_vals = get_loop_header_values(loop, bbs, 0, 3)
 
     hint = None
