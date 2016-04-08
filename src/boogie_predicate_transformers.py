@@ -47,7 +47,6 @@ def sp_stmt(stmt, pred, typeEnv):
         raise Exception("Cannot handle Boogie Statement: " + str(stmt))
 
 def sp_stmts(stmts, pred, typeEnv):
-    print stmts
     for s in stmts:
         pred = sp_stmt(s, pred, typeEnv)
     return pred

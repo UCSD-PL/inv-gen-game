@@ -36,7 +36,6 @@ def _loops(bbs, curpath, loop_m):
 
 def loops(bbs):
     loop_m = _loops(bbs, [], {})
-    print loop_m
     return [ Loop(k, v, [[ v[0][0], loop_exit_bb(v, bbs) ]]) \
         for (k,v) in loop_m.iteritems() ]
 
