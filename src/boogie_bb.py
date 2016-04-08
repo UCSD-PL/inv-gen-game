@@ -35,13 +35,16 @@ def get_bbs(filename):
 
     return bbs
 
+def is_internal_bb(bb):
+    return bb.startswith("_union_") or bb == "_tmp_header_pred_"
+
 def entry(bbs):
-    e = [x for x in bbs if len(bbs[x].predecessors) == 0]
+    e = [x for x in bbs if not is_internal_bb(x) and len(bbs[x].predecessors) == 0]
     assert (len(e) == 1)
     return e[0]
 
 def exit(bbs):
-    e = [x for x in bbs if len(bbs[x].successors) == 0]
+    e = [x for x in bbs if not is_internal_bb(x) and len(bbs[x].successors) == 0]
     assert (len(e) == 1)
     return e[0]
 
