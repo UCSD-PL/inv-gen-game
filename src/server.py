@@ -5,12 +5,13 @@ from os.path import *
 from os import listdir
 from json import load, dumps 
 from z3 import *
-from js import invJSToZ3, addAllIntEnv, esprimaToZ3
-from boogie_ast import parseAst
+from js import invJSToZ3, addAllIntEnv, esprimaToZ3, esprimaToBoogie
+from boogie_ast import parseAst, AstBinExpr
 from boogie_bb import get_bbs
 from boogie_loops import loops, get_loop_header_values, \
   loop_vc_pre_ctrex, loop_vc_post_ctrex, loop_vc_ind_ctrex
 from util import unique, pp_exc
+from boogie_analysis import livevars
 
 import argparse
 import traceback
@@ -47,7 +48,7 @@ def loadBoogieFile(fname):
         hint = open(fname[:-4] + '.hint').read()
     except: pass
 
-    vs = list(header_vals[0].keys())
+    vs = list(livevars(bbs)[loop.loop_paths[0][0]])
 
     return { 'variables': vs,
              'data': [[[ str(row[v]) for v in vs  ]  for row in header_vals], None, None],
@@ -216,7 +217,10 @@ def _to_dict(vs, vals):
     return { vs[i]: vals[i] for i in xrange(0, len(vs)) }
 
 def _from_dict(vs, vals):
-    return [ vals[vs[i]].as_long() for i in xrange(0, len(vs)) ]
+    if type(vals) == tuple:
+        return ( _from_dict(vs, vals[0]), _from_dict(vs, vals[1]) )
+    else:
+        return [ vals[vs[i]].as_long() if vs[i] in vals else None for i in xrange(0, len(vs)) ]
 
 @api.method("App.getPositiveExamples")
 @pp_exc
@@ -265,14 +269,12 @@ def getPositiveExamples(levelSet, levelId, cur_expl_state, num):
     return (copy(cur_expl_state), js_found)
 
 def implies(inv1, inv2):
-    print "Are implies ", inv1, inv2
     s = Solver();
     s.add(inv1)
     s.add(Not(inv2))
     return unsat == s.check();
 
 def equivalent(inv1, inv2):
-    print "Are equivalent: ", inv1, inv2
     s = Solver();
     s.push();
     s.add(inv1)
@@ -333,6 +335,38 @@ def impliedPairs(invL1, invL2):
 def isTautology(inv):
     res = (tautology(esprimaToZ3(inv, {})))
     log({"type": "isTautology", "data":  (inv, res)})
+    return res
+
+@api.method("App.verifyInvariants")
+@pp_exc
+def verifyInvariants(levelSet, levelId, invs):
+    if (levelSet not in traces):
+        raise Exception("Unkonwn level set " + str(levelSet))
+
+    if (levelId not in traces[levelSet]):
+        raise Exception("Unkonwn trace " + str(levelId) + " in levels " + str(levelSet))
+
+    if (len(invs) == 0):
+        raise Exception("No invariants given")
+
+    lvl = traces[levelSet][levelId]
+
+    if ('program' not in lvl):
+      # Not a boogie level - error
+      raise Exception("Level " + str(levelId) + " " + str(levelSet) + " not a dynamic boogie level.")
+
+    boogie_invs = [ esprimaToBoogie(x, {}) for x in invs ]
+    boogie_inv = reduce(lambda x, y:    AstBinExpr(x, '&&', y), boogie_invs[1:], boogie_invs[0])
+    bbs = lvl['program']
+    loop = lvl['loop']
+
+    fix = lambda x: _from_dict(lvl['variables'], x)
+    pre_ctrex = map(fix, filter(lambda x:    x, [ loop_vc_pre_ctrex(loop, boogie_inv, bbs) ]))
+    post_ctrex = map(fix, filter(lambda x:    x, [ loop_vc_post_ctrex(loop, boogie_inv, bbs) ]))
+    ind_ctrex = map(fix, filter(lambda x:    x, [ loop_vc_ind_ctrex(loop, boogie_inv, bbs) ]))
+    res = (pre_ctrex, post_ctrex, ind_ctrex)
+
+    log({"type": "verifyInvariant", "data": res })
     return res
 
 if __name__ == "__main__":
