@@ -59,19 +59,33 @@ def bad_envs_to_expr(bad_envs):
         return AstTrue()
     return parseExprAst(s)[0]
 
+def good_env_to_expr(good_env):
+    s = "&&".join([("(%s==%s)" %(k, str(v))) for (k,v) in good_env.iteritems()])
+    if (s == ""):
+        return AstTrue()
+    return parseExprAst(s)[0]
+
 # Assumes single loop at the end of the path
-def get_loop_header_values(loop, bbs, unrollLimit = 5, forbidden_envs = None):
+def get_loop_header_values(loop, bbs, min_unrolls = 0, unrollLimit = 5, forbidden_envs = None,\
+  start_env = None):
     # Try unrolling it up to to the limit times
     loop_header_bb = loop.loop_paths[0][0]
-    nunrolls = 0;
+    nunrolls = min_unrolls;
 
     extra_bb = None
-    if (forbidden_envs):
+    if (forbidden_envs or start_env):
+        assert not (forbidden_envs and start_env)
         extra_bb = "_tmp_header_pred_"
-        expr = bad_envs_to_expr(forbidden_envs)
+        if forbidden_envs:
+            expr = bad_envs_to_expr(forbidden_envs)
+        else:
+            expr = good_env_to_expr(start_env)
         bbs[extra_bb] = BB([], [ AstAssume(expr) ], [])
 
-    while is_nd_bb_path_possible(unroll_loop(loop, nunrolls, extra_bb), bbs) and nunrolls < unrollLimit:
+    if (not is_nd_bb_path_possible(unroll_loop(loop, min_unrolls, extra_bb), bbs)):
+        return []
+
+    while is_nd_bb_path_possible(unroll_loop(loop, nunrolls+1, extra_bb), bbs) and nunrolls < unrollLimit:
         nunrolls += 1;
 
     unrolled_path = unroll_loop(loop, nunrolls, extra_bb)
@@ -124,8 +138,8 @@ if __name__ == "__main__":
             print str(stmt), " // Live Vars: ", vrs
     print "=================="
     print "Values at loop header if we unroll 5 times: "
-    print get_loop_header_values(loop, bbs, 5)
-    print get_loop_header_values(loop, bbs, 5, [{ 'k': 6, 'j':0, 'n':5 }, { 'k': 7, 'j': 0, 'n': 6 }])
+    print get_loop_header_values(loop, bbs, 0, 5)
+    print get_loop_header_values(loop, bbs, 0, 5, [{ 'k': 6, 'j':0, 'n':5 }, { 'k': 7, 'j': 0, 'n': 6 }])
     """
     def tryinv(inv,loop,  bbs):
         print "Pre counter example for " + inv, str(loop_vc_pre_ctrex(loop, parseExprAst(inv)[0], bbs))

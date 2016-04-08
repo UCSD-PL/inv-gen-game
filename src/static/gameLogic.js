@@ -136,9 +136,10 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
     tracesW.loadData(lvl);
     if (lvl.support_pos_ex) {
       tracesW.moreExamples(function(type) {
-        rpc.call("App.getPositiveExamples", [curLvlSet, lvls[curLvl], lvl.data[0], 1], function (res) {
-          lvl.data[0] = lvl.data[0].concat(res)
-          tracesW.addData(res)
+        rpc.call("App.getPositiveExamples", [curLvlSet, lvls[curLvl], lvl.exploration_state, 1], function (res) {
+          lvl.exploration_state = res[0]
+          lvl.data[0] = lvl.data[0].concat(res[1])
+          tracesW.addData(res[1])
         })
       })
     }

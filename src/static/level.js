@@ -1,6 +1,7 @@
 function Level(id, 
                variables,
                initial_data,
+               exploration_state,
                goal,
                hint,
                support_pos_ex,
@@ -9,6 +10,7 @@ function Level(id,
   this.id = id;
   this.positive_data, this.negative_data, this.inductive_data = initial_data;
   this.data = initial_data
+  this.exploration_state = exploration_state
   this.variables = variables
   this.goal = goal;
   this.hint = hint;
@@ -63,7 +65,7 @@ function Level(id,
 
 Level.load = function(lvlSet, id, cb) {
   rpc.call('App.loadLvl', [ lvlSet, id], function(data) {
-    cb(new Level(id, data.variables, data.data,
+    cb(new Level(id, data.variables, data.data, data.exploration_state,
       data.goal, data.hint, data.support_pos_ex, data.support_neg_ex, data.support_ind_ex))
   }, log)
 }

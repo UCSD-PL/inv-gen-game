@@ -10,11 +10,12 @@ from boogie_ast import parseAst
 from boogie_bb import get_bbs
 from boogie_loops import loops, get_loop_header_values, \
   loop_vc_pre_ctrex, loop_vc_post_ctrex, loop_vc_ind_ctrex
-from util import unique 
+from util import unique, pp_exc
 
 import argparse
 import traceback
 import time
+from copy import copy
 
 p = argparse.ArgumentParser(description="invariant gen game server")
 p.add_argument('--log', type=str, help='an optional log file to store all user actions. Entries are stored in JSON format.')
@@ -39,7 +40,7 @@ z3s = Solver()
 def loadBoogieFile(fname):
     bbs = get_bbs(fname)
     loop = unique(loops(bbs), "Cannot handle program with multiple loops: " + fname)
-    header_vals = get_loop_header_values(loop, bbs, 3)
+    header_vals = get_loop_header_values(loop, bbs, 0, 3)
 
     hint = None
     try:
@@ -50,6 +51,7 @@ def loadBoogieFile(fname):
 
     return { 'variables': vs,
              'data': [[[ str(row[v]) for v in vs  ]  for row in header_vals], None, None],
+             'exploration_state' : [ ([ str(header_vals[0][v]) for v in vs  ], len(header_vals), False) ],
              'hint': hint,
              'goal' : { "verify" : True },
              'support_pos_ex' : True,
@@ -199,6 +201,7 @@ def loadLvl(levelSet, traceId):
       lvl = {
              'variables': lvl['variables'],
              'data': lvl['data'],
+             'exploration_state': lvl['exploration_state'],
              'hint': lvl['hint'],
              'goal' : lvl['goal'],
              'support_pos_ex' : lvl['support_pos_ex'],
@@ -209,8 +212,15 @@ def loadLvl(levelSet, traceId):
     log({"type": "load_data", "data": lvl}) 
     return lvl
 
+def _to_dict(vs, vals):
+    return { vs[i]: vals[i] for i in xrange(0, len(vs)) }
+
+def _from_dict(vs, vals):
+    return [ vals[vs[i]].as_long() for i in xrange(0, len(vs)) ]
+
 @api.method("App.getPositiveExamples")
-def getPositiveExamples(levelSet, levelId, cur_data, num):
+@pp_exc
+def getPositiveExamples(levelSet, levelId, cur_expl_state, num):
     if (levelSet not in traces):
         raise Exception("Unkonwn level set " + str(levelSet))
 
@@ -225,19 +235,34 @@ def getPositiveExamples(levelSet, levelId, cur_data, num):
 
     bbs = lvl['program']
     loop = lvl["loop"]
-    bad_envs = [ { lvl['variables'][i] : row[i] for i in xrange(0, len(row)) } for row in cur_data ]
     found = []
-    while (len(found) < num):
-        new_vals = get_loop_header_values(loop, bbs, num, bad_envs)
+    need = num
+    for (ind, (loop_head, nunrolls, is_finished)) in enumerate(cur_expl_state):
+        if is_finished: continue
+        if need <= 0:   continue
+
+        good_env = _to_dict(lvl['variables'], loop_head)
+        new_vals = get_loop_header_values(loop, bbs, nunrolls+1, nunrolls+need, None, good_env)[nunrolls+1:]
+        
         found.extend(new_vals)
-        bad_envs.extend(new_vals)
+        need -= len(new_vals)
+
+        if len(new_vals) < num:
+            cur_expl_state[ind] = (loop_head, nunrolls + len(new_vals), True)
+        else:
+            cur_expl_state[ind] = (loop_head, nunrolls + num, False)
+
+    while need > 0:
+        bad_envs = [ _to_dict(lvl['variables'], row) for (row,_,_) in cur_expl_state ]
+        new_vals = get_loop_header_values(loop, bbs, 0, need, bad_envs, None)
+        found.extend(new_vals)
+        need -= len(new_vals)
+        cur_expl_state.append((_from_dict(lvl['variables'], new_vals[0]), len(new_vals)-1, False))
 
     # De-z3-ify the numbers
-    #found = [ { k: v.as_long() for (k,v) in env.iteritems() } for env in found]
-
-    js_found = [ [ env[lvl["variables"][i]].as_long() for i in xrange(0, len(env)) ]  for env in found]
-    log({"type": "getPositiveExamples", "data": js_found})
-    return js_found
+    js_found = [ _from_dict(lvl["variables"], env) for env in found]
+    log({"type": "getPositiveExamples", "data": (cur_expl_state, js_found)})
+    return (copy(cur_expl_state), js_found)
 
 def implies(inv1, inv2):
     print "Are implies ", inv1, inv2
