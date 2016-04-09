@@ -51,7 +51,7 @@ def loadBoogieFile(fname):
     vs = list(livevars(bbs)[loop.loop_paths[0][0]])
 
     return { 'variables': vs,
-             'data': [[[ str(row[v]) for v in vs  ]  for row in header_vals], None, None],
+             'data': [[[ str(row[v]) for v in vs  ]  for row in header_vals], [], []],
              'exploration_state' : [ ([ str(header_vals[0][v]) for v in vs  ], len(header_vals), False) ],
              'hint': hint,
              'goal' : { "verify" : True },
