@@ -34,3 +34,7 @@ function impliedBy(invL1, inv, cb) {
 function isTautology(inv, cb) {
   return rpc.call("App.isTautology", [ esprima.parse(inv) ], cb, log)
 }
+
+function counterexamples(lvlSet, lvlId, invs, cb) {
+  return rpc.call("App.verifyInvariants", [ lvlSet, lvlId, $.map(invs, esprima.parse) ], cb, log)
+}
