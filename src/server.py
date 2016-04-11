@@ -246,8 +246,7 @@ def getPositiveExamples(levelSet, levelId, cur_expl_state, num):
         if need <= 0:   continue
 
         good_env = _to_dict(lvl['variables'], loop_head)
-        new_vals = get_loop_header_values(loop, bbs, nunrolls+1, nunrolls+need, None, good_env)[nunrolls+1:]
-        
+        new_vals = get_loop_header_values(loop, bbs, nunrolls+1, nunrolls+1+need, None, good_env)[nunrolls+1:]
         found.extend(new_vals)
         need -= len(new_vals)
 
