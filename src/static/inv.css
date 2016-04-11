@@ -12,12 +12,16 @@
   /*color: rgb(255, 255, 0);*/
 }
 
-tr.true {
+.true {
   background-color: rgba(0, 128, 0, 0.5);
 }
 
-tr.false {
+.false {
   background-color: rgba(255, 0, 0, 0.5);
+}
+
+.inductive {
+  background-color: rgb(207, 207, 207);
 }
 
 .bold {
