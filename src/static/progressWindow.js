@@ -38,7 +38,10 @@ function ProgressWindow(div) {
       } else if (state == "tautology") {
       } else if (state == "implies") {
         div.addClass('error')
+      } else if (state == "counterexampled") {
+        div.addClass('error')
       } else if (state == "ok") {
+        div.removeClass('error')
       }
   }
 
