@@ -81,7 +81,7 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
       all = pos_res.length + neg_res.length + ind_res.length
       hold_pos = pos_res.filter(function (x) { return x; }).length
       hold_neg = neg_res.filter(function (x) { return x; }).length
-      hold_ind = ind_res.filter(function (x) { return x[0] == x[1]; }).length
+      hold_ind = ind_res.filter(function (x) { return !x[0] || x[1]; }).length
       hold = hold_pos + hold_neg + hold_ind
 
       if (hold < all)
