@@ -230,7 +230,7 @@ ProcedureDecl = PROCEDURE + ZoM(Attribute) + Id + PSig + SEMI + ZoM(Spec) |\
                 PROCEDURE + ZoM(Attribute) + Id + PSig + ZoM(Spec) + Body
 
 IOutParameters = RETURNS + LPARN + csl(IdsType) + RPARN
-ISig = G(O(TypeArgs)) + LPARN + G(csl(IdsType)) + RPARN + G(O(IOutParameters))
+ISig = G(O(TypeArgs)) + LPARN + G(O(csl(IdsType))) + RPARN + G(O(IOutParameters))
 ImplementationDecl = IMPLEMENTATION + G(ZoM(Attribute)) + Id + G(ISig) + G(ZoM(Body))
 
 Decl = TypeDecl | ConstantDecl | FunctionDecl | AxiomDecl | VarDecl | \
