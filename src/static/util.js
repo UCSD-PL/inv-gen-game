@@ -138,3 +138,8 @@ function onFirstCall(firstCb, laterCb, registerFn) {
   }
   return wrapped_cb;
 }
+
+function assert(c, msg) {
+  if (!c)
+    throw msg || "Assertion failed."
+}
