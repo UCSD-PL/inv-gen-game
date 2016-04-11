@@ -24,9 +24,9 @@ function invToJS(inv) {
   return inv.replace(/[^<>]=[^>]/g, function (v) { return v[0] + '==' + v[2]; })
 }
 
-function invEval(inv, lvl) {
+function invEval(inv, variables, data) {
   // Sort variable names in order of decreasing length
-  vars = lvl.variables.map(function(val, ind, _) { return [val, ind]; })
+  vars = variables.map(function(val, ind, _) { return [val, ind]; })
   vars.sort(function (e1,e2) {
     s1 = e1[0]; s2 = e2[0];
     if (s1.length > s2.length) return -1;
@@ -37,17 +37,12 @@ function invEval(inv, lvl) {
   holds_arr = []
 
   // Do substitutions and eval
-  for (var row in lvl.data[0]) {
+  for (var row in data) {
     s = inv
     for (var v in vars) {
-      s = s.replace(new RegExp(vars[v][0], 'g'), lvl.data[0][row][vars[v][1]])
+      s = s.replace(new RegExp(vars[v][0], 'g'), data[row][vars[v][1]])
     }
     holds = eval(s)
-    /*
-    if (typeof(holds) != 'boolean') {
-      throw new InvException("NOT_BOOL", holds)
-    }
-    */
     holds_arr.push(holds)
   }
   return holds_arr

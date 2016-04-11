@@ -59,7 +59,7 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
     }
 
     try {
-      res = invEval(jsInv, gl.curLvl)
+      res = invEval(jsInv, gl.curLvl.variables, gl.curLvl.data[0])
       tracesW.evalResult({ data: res })
 
       if (!evalResultBool(res))
