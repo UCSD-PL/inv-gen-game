@@ -49,8 +49,10 @@ function invEval(inv, variables, data) {
 }
 
 function evalResultBool(evalResult) {
-  for (var i in res) {
-    if (typeof(res[i]) != "boolean")
+  for (var i in evalResult) {
+    if (evalResult[i] instanceof Array)
+      return evalResultBool(evalResult[i])
+    if (typeof(evalResult[i]) != "boolean")
       return false;
   }
   return true;

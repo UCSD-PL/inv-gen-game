@@ -3,6 +3,8 @@ function CETraceWindow(div, data) {
   var errorTimer;
 
   traceW.okToSubmit = false;
+  traceW.dataMap = [[], [], []];
+  traceW.data = [[], [], []];
 
   traceW.immediateError = function (msg) {
     $("th #errormsg").html("<div class='error'> " + msg + "</div>");
@@ -29,25 +31,15 @@ function CETraceWindow(div, data) {
     traceW.immediateError("&nbsp");
   }
 
-  this.loadData = function(data) {
-    // For now assuming a level starts only with positive examples
-    assert(data.data[1].length == 0 && data.data[2].length == 0);
-    hstr = '<table id="data_table" class="table table-stripped"><tbody><tr>';
-    for (var i in data.variables) {
-      hstr += '<th>' + data.variables[i] + '</th>';
+  this.setVariables = function(lvl) {
+    hstr = '<table id="lvl_table" class="table table-stripped"><thead><tr>';
+    for (var i in lvl.variables) {
+      hstr += '<th>' + lvl.variables[i] + '</th>';
     }
     hstr += '<th><input id="formula-entry" type="text"><span id="errormsg">&nbsp</span></th>';
-    hstr += '</tr>';
-    for (var i in data.data[0]) {
-      hstr += '<tr id= "' + i + '" class="traces-row">';
-      for (var j in data.data[0][i]) {
-        hstr += '<td class="true">' + data.data[0][i][j] + '</td>';
-      }
-      hstr += '<td class="temp_expr_eval">&nbsp</td></tr>';
-    }
-    hstr += '</tbody></table>'
+    hstr += '</tr></thead><tbody></tbody></table>';
 
-    if (data.support_pos_ex) {
+    if (lvl.support_pos_ex) {
       hstr += '<div id="example_buttons"><button id="ask_pos_ex"> More Examples </button></div>'
     }
 
@@ -60,28 +52,75 @@ function CETraceWindow(div, data) {
         traceW.changedCb();
     })
 
-    $('#ask_pos_ex').click(function() {
-      traceW.moreExCb("positive")
-    })
+    if (lvl.support_pos_ex) {
+      $('#ask_pos_ex').click(function() {
+        traceW.moreExCb("positive")
+      })
+    }
 
-    $('#formula-entry').focus();
-
+    traceW.dataMap = [[], [], []];
+    traceW.data = [[], [], []];
   }
 
-  this.addData = function(rows, type) {
-    if (type == "positive")
-      clazz = "true"
-    else if (type == "negative")
-      clazz = "false"
-    else
-      clazz = "inductive"
+  this.clearData = function(type) {
+    traceW.data[type] = []
+    for (var i in traceW.dataMap[type]) {
+      if (traceW.dataMap[type][i].length == 2) {
+        traceW.dataMap[type][i][0].remove()
+        traceW.dataMap[type][i][1].remove()
+      } else
+        traceW.dataMap[type][i].remove()
+    }
+    traceW.dataMap[type] = []
+  }
 
-    nrows = $('table#data_table tr.traces-row').length
-    $('table#data_table').append(rows.map(
-      (row, ind) => "<tr class='traces-row' id='" + (ind + nrows) +"'>" +
-        row.map(el => "<td class='" + clazz + "'>" + el + "</td>").join("") + 
-        "<td class='temp_expr_eval'>&nbsp</td></tr>"
-    ).join("\n"))
+  this.addData = function(data) {
+    // For now support a single inductive counterexample
+    assert (data[2].length <= 1); 
+    classes = [ 'true', 'false', 'inductive' ]
+
+    id = $('table#data_table tr.traces-row').length
+    for (var type in [0,1,2]) {
+      for (var i in data[type]) {
+        data_id = traceW.data[type].length
+        if (type != 2) {
+          curRow = $(
+            "<tr class='traces-row' id='" + id +"'>" +
+              data[type][i].map(el => 
+                "<td class='" + classes[type]  + "'>" + el + "</td>").join("") +
+              "<td class='temp_expr_eval'>&nbsp</td>" +
+            "</tr>")
+        } else {
+          curRow = [ $(
+            "<tr class='traces-row' id='" + id +"'>" +
+              data[type][i][0].map(el => 
+                "<td class='" + classes[type]  + "'>" + el + "</td>").join("") +
+              "<td class='temp_expr_eval'>&nbsp</td>"),
+          curRow2 = $("<tr class='traces-row' id='" + id +"'>" +
+              data[type][i][1].map(el => 
+                "<td class='" + classes[type]  + "'>" + el + "</td>").join("") +
+              "<td class='temp_expr_eval'>&nbsp</td>" +
+            "</tr>") ]
+        }
+
+        id ++;
+        traceW.data[type].push(data[type][i])
+
+
+        for (var j = type; j >= 0; j --) {
+          var dataM = traceW.dataMap[j]
+          if (dataM.length > 0) {
+            dataM[dataM.length - 1].after(curRow)
+            break;
+          }
+        }
+
+        if (j == -1)
+          $("table#lvl_table tbody").append(curRow)
+
+        traceW.dataMap[type][data_id] = curRow
+      }
+    }
     this.changedCb()
   }
 
@@ -100,16 +139,26 @@ function CETraceWindow(div, data) {
   }
 
   this.evalResult = function (res) {
-    if (res.data) {
-      for (var i in res.data) {
-        $('#' + i + ' .temp_expr_eval').html(JSON.stringify(res.data[i]))
-      }
+    function _set(row, datum) {
+      var cell = row.children('.temp_expr_eval')
+      cell.html(JSON.stringify(datum))
+      cell.removeClass('true false')
+      if (typeof(datum) == "boolean")
+        cell.addClass(datum ? 'true' : 'false')
+    }
 
-      for (var i in res.data) {
-        $('#' + i + ' td.temp_expr_eval').removeClass('true')
-        $('#' + i + ' td.temp_expr_eval').removeClass('false')
-        if (typeof(res.data[i]) == "boolean")
-          $('#' + i + ' td.temp_expr_eval').addClass(res.data[i] ? 'true' : 'false')
+    if (res.data) {
+      for (var type in res.data) {
+        for (var i in res.data[type]) {
+          var datum = res.data[type][i]
+          var row = traceW.dataMap[type][i]
+
+          if (row.length == 2) {
+            _set(row[0], datum[0])
+            _set(row[1], datum[1])
+          } else
+            _set(row, datum)
+        }
       }
     } else if (res.clear) {
       $('.temp_expr_eval').html('');

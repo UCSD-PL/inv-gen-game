@@ -58,11 +58,14 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
     }
 
     try {
-      pos_res = invEval(jsInv, gl.curLvl.variables, gl.curLvl.data[0])
-      neg_res = invEval(jsInv, gl.curLvl.variables, gl.curLvl.data[1])
-      ind_res = invEval(jsInv, gl.curLvl.variables, gl.curLvl.data[2])
+      var pos_res = invEval(jsInv, gl.curLvl.variables, gl.curLvl.data[0])
+      var neg_res = invEval(jsInv, gl.curLvl.variables, gl.curLvl.data[1])
+      var ind_res = invEval(jsInv, gl.curLvl.variables, gl.curLvl.data[2])
 
-      res = pos_res.concat(neg_res).concat(ind_res)
+      // Pair the inductive results
+      ind_res = zip(ind_res.filter((_,i)=>i%2 == 0), ind_res.filter((_,i)=>i%2==1))
+
+      var res = [pos_res, neg_res, ind_res]
       tracesW.evalResult({ data: res })
 
       if (!evalResultBool(res))
@@ -75,10 +78,10 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
         return
       }
 
-      all = res.length
+      all = pos_res.length + neg_res.length + ind_res.length
       hold_pos = pos_res.filter(function (x) { return x; }).length
       hold_neg = neg_res.filter(function (x) { return x; }).length
-      hold_ind = ind_res.filter(function (x, ind) { return ind_res[(~~(ind/2))*2] == x; }).length
+      hold_ind = ind_res.filter(function (x) { return x[0] == x[1]; }).length
       hold = hold_pos + hold_neg + hold_ind
 
       if (hold < all)
@@ -102,19 +105,9 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
               tracesW.immediateError("Implied by existing invariant!")
             } else {
               gl.pwupSuggestion.invariantTried(jsInv);
-              
-              foundInv.push(inv)
-              foundJSInv.push(jsInv)
-              progW.addInvariant(inv);
-              var addScore = computeScore(jsInv, 1)
-
-              if (addScore == 1) { // No powerups applied
-                gl.setPowerups(gl.pwupSuggestion.getPwups());
-              }
-              scoreW.add(addScore);
 
               if (!progress.satisfied) {
-                gl.curLvl.goalSatisfied(foundJSInv,
+                gl.curLvl.goalSatisfied(foundJSInv.concat(jsInv),
                   function(newProgress) {
                     progress = newProgress
                     if (progress.satisfied) {
@@ -133,11 +126,12 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
                         //    enough. TODO: We currently don't display the
                         //    negative counterexamples. Whats a good way to show those?
                         if (progress.counterexamples[0].length > 0) {
-                          tracesW.addData(progress.counterexamples[0], "positive")
+                          tracesW.addData([progress.counterexamples[0], [], []])
                           gl.curLvl.data[0] = gl.curLvl.data[0].concat(progress.counterexamples[0])
                         } else if (progress.counterexamples[2].length > 0){
-                          tracesW.addData(progress.counterexamples[2][0], "inductive")
-                          gl.curLvl.data[2] = gl.curLvl.data[2].concat(progress.counterexamples[2][0])
+                          tracesW.clearData(2)
+                          tracesW.addData([[],[], progress.counterexamples[2]])
+                          gl.curLvl.data[2] = progress.counterexamples[2][0]
                         } else {
                           /*
                           // assert (progress.counterexamples[1].length > 0)
@@ -148,12 +142,22 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
                         } 
 
                         if (invalidInv) {
-                          progW.markInvariant(inv, "counterexampled")
-                          setTimeout(() => {
-                            progW.removeInvariant(inv)
-                            foundInv = foundInv.filter(x => x != inv)
-                            foundJSInv = foundJSInv.filter(x => x != jsInv)
-                          }, 2000)
+                          gl.userInput(false)
+                        } else {
+                          foundInv.push(inv)
+                          foundJSInv.push(jsInv)
+                          progW.addInvariant(inv);
+                          var addScore = computeScore(jsInv, 1)
+
+                          if (addScore == 1) { // No powerups applied
+                            gl.setPowerups(gl.pwupSuggestion.getPwups());
+                          }
+                          scoreW.add(addScore);
+                          tracesW.setExp("");
+
+                          // Clear inductive counterexamples
+                          gl.curLvl.data[2] = [];
+                          tracesW.clearData(2)
                         }
                       }
                     }
@@ -176,14 +180,15 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
     progW.clear();
     tracesW.clearError();
     //scoreW.clear();
-    tracesW.loadData(lvl);
+    tracesW.setVariables(lvl);
+    tracesW.addData(lvl.data);
     if (lvl.support_pos_ex) {
       tracesW.moreExamples(function(type) {
         rpc.call("App.getPositiveExamples", [curLvlSet, lvls[curLvl], lvl.exploration_state, 1],
         function (res) {
           lvl.exploration_state = res[0]
           lvl.data[0] = lvl.data[0].concat(res[1])
-          tracesW.addData(res[1], "positive")
+          tracesW.addData([res[1], [], []])
         })
       })
     }
@@ -230,7 +235,6 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
     tracesW.disable();
     gl.userInput(true);
     tracesW.enable();
-    tracesW.setExp("");
   })
 
   gl.lvlPassed = function () {}

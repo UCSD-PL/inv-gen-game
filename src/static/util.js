@@ -143,3 +143,11 @@ function assert(c, msg) {
   if (!c)
     throw msg || "Assertion failed."
 }
+
+function forAll(boolL) {
+  return boolL.map(x => x ? 1 : 0).reduce((x,y)=>x+y, 0) == boolL.length
+}
+
+function zip(a1, a2) {
+  return a1.map((_,i) => [a1[i], a2[i]])
+}
