@@ -87,6 +87,7 @@ def esprimaToZ3Expr(astn, typeEnv):
         '-': lambda x,y: x - y,
         '*': lambda x,y: x * y,
         '/': lambda x,y: x / y,
+        '%': lambda x,y: x % y,
       }[astn["operator"]](ln, rn)
     except:
       raise Exception("Unkown binary expression " + str(astn))
@@ -124,6 +125,7 @@ def esprimaToBoogieExprAst(astn, typeEnv):
         '-': '-',
         '*': '*',
         '/': '/',
+        '%': '%',
       }
       return AstBinExpr(ln, op[astn['operator']], rn)
     except:
