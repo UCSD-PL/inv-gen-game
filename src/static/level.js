@@ -55,7 +55,7 @@ function Level(id,
                  "equivalent": { "found": equiv.length , "total": goal.equivalent.length } })
       })
     } else if (goal.max_score) {
-      return { "satisfied" : true, "max_score" : { "found" : invs.length } }
+      cb({ "satisfied" : true, "max_score" : { "found" : invs.length } })
     } else if (goal.verify) {
       counterexamples(curLvlSet, lvls[curLvl], invs, function(res) {
         var pos=res[0],neg=res[1],ind = res[2]

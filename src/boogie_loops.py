@@ -47,8 +47,9 @@ def loop_exit_bb(body_paths, bbs):
     return unique(loop_header_succ.difference(bbs_in_loop))
 
 # Assumes single loop at the end of the path
-def unroll_loop(loop, nunrolls, extra_pred_bb = None):
-    return list(loop.header) + ([extra_pred_bb] if extra_pred_bb else []) + nunrolls * [ loop.loop_paths ]
+def unroll_loop(loop, nunrolls, extra_pred_bb = None, exact = False):
+    return list(loop.header) + ([extra_pred_bb] if extra_pred_bb else []) + \
+      nunrolls * [ loop.loop_paths ] + ([ loop.exit_paths ] if exact else [])
 
 def bad_envs_to_expr(bad_envs):
     s = "&&".join(["!(" + 
@@ -63,10 +64,23 @@ def good_env_to_expr(good_env):
     if (s == ""):
         return AstTrue()
     return parseExprAst(s)[0]
-
-# Assumes single loop at the end of the path
-def get_loop_header_values(loop, bbs, min_unrolls = 0, unrollLimit = 5, forbidden_envs = None,\
-  start_env = None):
+  
+# get_loop_header_values tries to unroll the given loop between min_unrolls and max_unrolls.
+#
+#   loop - loop to unroll (specified in the Loop named tuple format)
+#   bbs - the basic block representation of the function
+#   min_unrolls - minimum number of unrolls to try
+#   max_unrolls - max number of unrolls to try
+#   forbidden_envs - an optional list of 'bad' initial assignments for the live
+#     loop variables at the start of iteration. tries to find values that avoid
+#     those. Useful for driving the search away from previous examples.
+#   starting_env - an optional precise initial assignment for the live loop
+#     variables to start with. Useful when you want to continue unrolling a
+#     partially unrolled loop
+#   exact - if true, look for loop unrolling that exit the loop afterwards 
+#
+def get_loop_header_values(loop, bbs, min_unrolls = 0, max_unrolls = 5, \
+  forbidden_envs = None, start_env = None, exact = False):
     # Try unrolling it up to to the limit times
     loop_header_bb = loop.loop_paths[0][0]
     nunrolls = min_unrolls;
@@ -81,13 +95,15 @@ def get_loop_header_values(loop, bbs, min_unrolls = 0, unrollLimit = 5, forbidde
             expr = good_env_to_expr(start_env)
         bbs[extra_bb] = BB([], [ AstAssume(expr) ], [])
 
-    if (not is_nd_bb_path_possible(unroll_loop(loop, min_unrolls, extra_bb), bbs)):
+    # Dead loop with respect to the current forbidden/start environments
+    if (not is_nd_bb_path_possible(unroll_loop(loop, min_unrolls, extra_bb, False), bbs)):
         return []
 
-    while is_nd_bb_path_possible(unroll_loop(loop, nunrolls+1, extra_bb), bbs) and nunrolls < unrollLimit:
+    while is_nd_bb_path_possible(unroll_loop(loop, nunrolls+1, extra_bb, exact), bbs) and \
+      nunrolls < max_unrolls:
         nunrolls += 1;
 
-    unrolled_path = unroll_loop(loop, nunrolls, extra_bb)
+    unrolled_path = unroll_loop(loop, nunrolls, extra_bb, exact)
     path_vars = get_path_vars(unrolled_path, bbs)
     return [bb[1][0] for bb in path_vars if bb[0] == loop_header_bb]
 

@@ -3,6 +3,7 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
 
   var foundInv;
   var foundJSInv;
+  var overfittedInvs;
   var progress;
   var pwups;
 
@@ -16,6 +17,7 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
   gl.clear = function () {
     foundInv = [];
     foundJSInv = [];
+    overfittedInvs = [];
     gl.curLvl = null;
     progress = {}
     pwups = {};
@@ -111,9 +113,21 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
                   function(newProgress) {
                     progress = newProgress
                     if (progress.satisfied) {
+                      foundInv.push(inv)
+                      foundJSInv.push(jsInv)
+                      progW.addInvariant(inv);
+                      var addScore = computeScore(jsInv, 1)
+
+                      if (addScore == 1) { // No powerups applied
+                        gl.setPowerups(gl.pwupSuggestion.getPwups());
+                      }
                       gl.lvlPassed();
                     } else {
                       if (progress.counterexamples) {
+                        // Clear inductive counterexamples
+                        gl.curLvl.data[2] = [];
+                        tracesW.clearData(2)
+
                         var invalidInv = true;
                         // Order of checking and the short-circuiting here is important. We check first
                         // 1) precondition counterexamples (positive) as they
@@ -128,6 +142,7 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
                         if (progress.counterexamples[0].length > 0) {
                           tracesW.addData([progress.counterexamples[0], [], []])
                           gl.curLvl.data[0] = gl.curLvl.data[0].concat(progress.counterexamples[0])
+                          overfittedInvs = overfittedInvs.concat(jsInv)
                         } else if (progress.counterexamples[2].length > 0){
                           tracesW.clearData(2)
                           tracesW.addData([[],[], progress.counterexamples[2]])
@@ -154,10 +169,6 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
                           }
                           scoreW.add(addScore);
                           tracesW.setExp("");
-
-                          // Clear inductive counterexamples
-                          gl.curLvl.data[2] = [];
-                          tracesW.clearData(2)
                         }
                       }
                     }
@@ -184,12 +195,13 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
     tracesW.addData(lvl.data);
     if (lvl.support_pos_ex) {
       tracesW.moreExamples(function(type) {
-        rpc.call("App.getPositiveExamples", [curLvlSet, lvls[curLvl], lvl.exploration_state, 1],
-        function (res) {
-          lvl.exploration_state = res[0]
-          lvl.data[0] = lvl.data[0].concat(res[1])
-          tracesW.addData([res[1], [], []])
-        })
+        rpc.call("App.getPositiveExamples", [curLvlSet, lvls[curLvl], lvl.exploration_state, 
+          overfittedInvs.map(esprima.parse), 1],
+          function (res) {
+            lvl.exploration_state = res[0]
+            lvl.data[0] = lvl.data[0].concat(res[1])
+            tracesW.addData([res[1], [], []])
+          })
       })
     }
     tracesW.setExp("");

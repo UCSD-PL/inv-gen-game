@@ -6,11 +6,11 @@ from os import listdir
 from json import load, dumps 
 from z3 import *
 from js import invJSToZ3, addAllIntEnv, esprimaToZ3, esprimaToBoogie
-from boogie_ast import parseAst, AstBinExpr
+from boogie_ast import parseAst, AstBinExpr, AstTrue, AstUnExpr
 from boogie_bb import get_bbs
 from boogie_loops import loops, get_loop_header_values, \
   loop_vc_pre_ctrex, loop_vc_post_ctrex, loop_vc_ind_ctrex
-from util import unique, pp_exc
+from util import unique, pp_exc, powerset
 from boogie_analysis import livevars
 
 import argparse
@@ -38,21 +38,36 @@ def log(action):
 MYDIR=dirname(abspath(realpath(__file__)))
 z3s = Solver()
 
+def _tryUnroll(loop, bbs, min_un, max_un, bad_envs, good_env):
+    # Lets first try to find a terminating loop between min and max iterations
+    term_vals = get_loop_header_values(loop, bbs, min_un, max_un, bad_envs, good_env, True)
+    if (term_vals != []):
+      return (term_vals, True)
+
+    # Couldn't find a terminating loop between 0 and 6 iteration. Lets find
+    # a loop that has at LEAST min iterations
+    term_vals = get_loop_header_values(loop, bbs, min_un, max_un, False)
+    return (term_vals, False)
+
 def loadBoogieFile(fname):
     bbs = get_bbs(fname)
     loop = unique(loops(bbs), "Cannot handle program with multiple loops:" + fname)
-    header_vals = get_loop_header_values(loop, bbs, 0, 3)
+    header_vals, terminates = _tryUnroll(loop, bbs, 0, 6, None, None)
+    # Assume we have no tests with dead loops
+    assert(header_vals != [])
 
+    # See if there is a .hint files
     hint = None
     try:
         hint = open(fname[:-4] + '.hint').read()
     except: pass
 
+    # The variables to trace are all live variables at the loop header
     vs = list(livevars(bbs)[loop.loop_paths[0][0]])
 
     return { 'variables': vs,
              'data': [[[ str(row[v]) for v in vs  ]  for row in header_vals], [], []],
-             'exploration_state' : [ ([ str(header_vals[0][v]) for v in vs  ], len(header_vals), False) ],
+             'exploration_state' : [ ([ str(header_vals[0][v]) for v in vs  ], len(header_vals), terminates) ],
              'hint': hint,
              'goal' : { "verify" : True },
              'support_pos_ex' : True,
@@ -224,7 +239,7 @@ def _from_dict(vs, vals):
 
 @api.method("App.getPositiveExamples")
 @pp_exc
-def getPositiveExamples(levelSet, levelId, cur_expl_state, num):
+def getPositiveExamples(levelSet, levelId, cur_expl_state, overfittedInvs, num):
     if (levelSet not in traces):
         raise Exception("Unkonwn level set " + str(levelSet))
 
@@ -241,26 +256,27 @@ def getPositiveExamples(levelSet, levelId, cur_expl_state, num):
     loop = lvl["loop"]
     found = []
     need = num
+    heads = set([tuple(x[0]) for x in cur_expl_state])
+    overfitBoogieInvs = [esprimaToBoogie(x, {}) for x in overfittedInvs]
+
     for (ind, (loop_head, nunrolls, is_finished)) in enumerate(cur_expl_state):
         if is_finished: continue
         if need <= 0:   continue
 
         good_env = _to_dict(lvl['variables'], loop_head)
-        new_vals = get_loop_header_values(loop, bbs, nunrolls+1, nunrolls+1+need, None, good_env)[nunrolls+1:]
+        # Lets first try to find terminating executions:
+        new_vals, terminating= _tryUnroll(loop, bbs, nunrolls+1, nunrolls+1+need, None, good_env)
+        cur_expl_state[ind] = (loop_head, nunrolls + len(new_vals), terminating)
+    
         found.extend(new_vals)
         need -= len(new_vals)
-
-        if len(new_vals) < num:
-            cur_expl_state[ind] = (loop_head, nunrolls + len(new_vals), True)
-        else:
-            cur_expl_state[ind] = (loop_head, nunrolls + num, False)
 
     while need > 0:
         bad_envs = [ _to_dict(lvl['variables'], row) for (row,_,_) in cur_expl_state ]
-        new_vals = get_loop_header_values(loop, bbs, 0, need, bad_envs, None)
+        new_vals, terminating = _tryUnroll(loop, bbs, 0, need, bad_envs, None)
         found.extend(new_vals)
         need -= len(new_vals)
-        cur_expl_state.append((_from_dict(lvl['variables'], new_vals[0]), len(new_vals)-1, False))
+        cur_expl_state.append((_from_dict(lvl['variables'], new_vals[0]), len(new_vals)-1, terminating))
 
     # De-z3-ify the numbers
     js_found = [ _from_dict(lvl["variables"], env) for env in found]
