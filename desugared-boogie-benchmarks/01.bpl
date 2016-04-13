@@ -8,6 +8,7 @@ implementation run(n: int)
 
 
   anon0:
+    assume (n >= 0);
     x := 1;
     y := 1;
     count := n;
