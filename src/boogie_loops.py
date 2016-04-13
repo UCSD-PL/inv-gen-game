@@ -95,13 +95,12 @@ def get_loop_header_values(loop, bbs, min_unrolls = 0, max_unrolls = 5, \
             expr = good_env_to_expr(start_env)
         bbs[extra_bb] = BB([], [ AstAssume(expr) ], [])
 
-    # Dead loop with respect to the current forbidden/start environments
-    if (not is_nd_bb_path_possible(unroll_loop(loop, min_unrolls, extra_bb, False), bbs)):
-        return []
-
     while is_nd_bb_path_possible(unroll_loop(loop, nunrolls+1, extra_bb, exact), bbs) and \
       nunrolls < max_unrolls:
         nunrolls += 1;
+
+    if (not is_nd_bb_path_possible(unroll_loop(loop, nunrolls, extra_bb, exact), bbs)):
+        return []
 
     unrolled_path = unroll_loop(loop, nunrolls, extra_bb, exact)
     path_vars = get_path_vars(unrolled_path, bbs)

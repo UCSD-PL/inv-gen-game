@@ -46,13 +46,13 @@ def _tryUnroll(loop, bbs, min_un, max_un, bad_envs, good_env):
 
     # Couldn't find a terminating loop between 0 and 6 iteration. Lets find
     # a loop that has at LEAST min iterations
-    term_vals = get_loop_header_values(loop, bbs, min_un, max_un, False)
+    term_vals = get_loop_header_values(loop, bbs, min_un, max_un, bad_envs, good_env, False)
     return (term_vals, False)
 
 def loadBoogieFile(fname):
     bbs = get_bbs(fname)
     loop = unique(loops(bbs), "Cannot handle program with multiple loops:" + fname)
-    header_vals, terminates = _tryUnroll(loop, bbs, 0, 6, None, None)
+    header_vals, terminates = _tryUnroll(loop, bbs, 0, 4, None, None)
     # Assume we have no tests with dead loops
     assert(header_vals != [])
 
@@ -261,11 +261,12 @@ def getPositiveExamples(levelSet, levelId, cur_expl_state, overfittedInvs, num):
 
     for (ind, (loop_head, nunrolls, is_finished)) in enumerate(cur_expl_state):
         if is_finished: continue
-        if need <= 0:   continue
+        if need <= 0:   break
 
         good_env = _to_dict(lvl['variables'], loop_head)
         # Lets first try to find terminating executions:
-        new_vals, terminating= _tryUnroll(loop, bbs, nunrolls+1, nunrolls+1+need, None, good_env)
+        new_vals, terminating = _tryUnroll(loop, bbs, nunrolls+1, nunrolls+1+need, None, good_env)
+        new_vals = new_vals[nunrolls+1:]
         cur_expl_state[ind] = (loop_head, nunrolls + len(new_vals), terminating)
     
         found.extend(new_vals)
