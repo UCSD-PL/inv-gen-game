@@ -6,12 +6,13 @@ from os import listdir
 from json import load, dumps 
 from z3 import *
 from js import invJSToZ3, addAllIntEnv, esprimaToZ3, esprimaToBoogie
-from boogie_ast import parseAst, AstBinExpr, AstTrue, AstUnExpr
+from boogie_ast import parseAst, AstBinExpr, AstTrue, AstUnExpr, parseExprAst, ast_and, ast_or
 from boogie_bb import get_bbs
 from boogie_loops import loops, get_loop_header_values, \
   loop_vc_pre_ctrex, loop_vc_post_ctrex, loop_vc_ind_ctrex
-from util import unique, pp_exc, powerset
+from util import unique, pp_exc, powerset, average
 from boogie_analysis import livevars
+from boogie_eval import instantiateAndEval
 
 import argparse
 import traceback
@@ -49,12 +50,45 @@ def _tryUnroll(loop, bbs, min_un, max_un, bad_envs, good_env):
     term_vals = get_loop_header_values(loop, bbs, min_un, max_un, bad_envs, good_env, False)
     return (term_vals, False)
 
+def getInterestingTrace(loop, bbs, nunrolls):
+    invs = [ parseExprAst("x<y")[0], parseExprAst("x<=y")[0],
+             parseExprAst("x==c")[0], parseExprAst("x==y")[0],
+             parseExprAst("x==0")[0] ]
+    vals, terminates = _tryUnroll(loop, bbs, 0, 4, None, None)
+    traceVs = list(livevars(bbs)[loop.loop_paths[0][0]])
+    vals = [ { x : env[x] for x in traceVs } for env in vals ]
+    hold_for_data = []
+
+    def diversity(vals):
+        lsts = [ [ vals[i][k] for i in xrange(len(vals)) ] for k in vals[0].keys() ]
+        return average([len(set(lst)) for lst in lsts])
+        #return average([len(set(lst)) / 1.0 * len(lst) for lst in lsts])
+
+    for inv in invs:
+        hold_for_data.extend(instantiateAndEval(inv, vals))
+
+    print "The following invariants hold for initial trace: ", hold_for_data
+    res = [ (diversity(vals), 0, [], None, (vals, terminates)) ]
+    for s in powerset(hold_for_data):
+        inv = ast_or(s)
+        ctrex = loop_vc_pre_ctrex(loop, inv, bbs)
+        trace = _tryUnroll(loop, bbs, 0, 4, None, ctrex)
+        if ctrex:
+            res.append((diversity(trace[0]), len(s), list(s), ctrex, trace))
+
+    res.sort(key=lambda x:  x[0]);
+    print "The top 2 most 'diverse' traces found by trying to negate the initial invariants is: "
+    print res[-1]
+    print res[-2]
+    return res[-1][4]
+
 def loadBoogieFile(fname):
     bbs = get_bbs(fname)
     loop = unique(loops(bbs), "Cannot handle program with multiple loops:" + fname)
     header_vals, terminates = _tryUnroll(loop, bbs, 0, 4, None, None)
     # Assume we have no tests with dead loops
     assert(header_vals != [])
+    header_vals, terminates = getInterestingTrace(loop, bbs, 4)
 
     # See if there is a .hint files
     hint = None
@@ -372,14 +406,18 @@ def verifyInvariants(levelSet, levelId, invs):
       raise Exception("Level " + str(levelId) + " " + str(levelSet) + " not a dynamic boogie level.")
 
     boogie_invs = [ esprimaToBoogie(x, {}) for x in invs ]
-    boogie_inv = reduce(lambda x, y:    AstBinExpr(x, '&&', y), boogie_invs[1:], boogie_invs[0])
+    boogie_inv = ast_and(boogie_invs)
     bbs = lvl['program']
     loop = lvl['loop']
 
     fix = lambda x: _from_dict(lvl['variables'], x)
+    print "Try pre.."
     pre_ctrex = map(fix, filter(lambda x:    x, [ loop_vc_pre_ctrex(loop, boogie_inv, bbs) ]))
+    print "Try post.."
     post_ctrex = map(fix, filter(lambda x:    x, [ loop_vc_post_ctrex(loop, boogie_inv, bbs) ]))
+    print "Try ind.."
     ind_ctrex = map(fix, filter(lambda x:    x, [ loop_vc_ind_ctrex(loop, boogie_inv, bbs) ]))
+    print "Done."
     res = (pre_ctrex, post_ctrex, ind_ctrex)
 
     log({"type": "verifyInvariant", "data": res })

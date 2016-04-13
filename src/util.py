@@ -19,3 +19,6 @@ def pp_exc(f):
 def powerset(s):
   for subS in chain.from_iterable(combinations(s, l) for l in range(len(s) + 1)):
     yield set(subS)
+
+def average(vals):
+    return sum(vals) / (1.0 * len(vals))
