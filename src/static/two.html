@@ -539,8 +539,8 @@
         curLvlCompleted = curLvl;
         player1Done = true;
 
-        console.log("Invariants by Player 1:");
-        console.log(gameLogic.getFoundJSInv());
+        //console.log("Invariants by Player 1:");
+        //console.log(gameLogic.getFoundJSInv());
 
         if(player1Done && player2Done) {
           $('#next-lvl').show();
@@ -551,8 +551,8 @@
         curLvlCompleted2 = curLvl2;
         player2Done = true;
 
-        console.log("Invariants by Player 2:");
-        console.log(gameLogic2.getFoundJSInv());
+        //console.log("Invariants by Player 2:");
+        //console.log(gameLogic2.getFoundJSInv());
 
         if(player1Done && player2Done) {
           $('#next-lvl2').show();
@@ -564,7 +564,7 @@
         $('#hint').html('');
         $('#hints').hide();
         $('#btn-hint').show();
-        $('#btn-switch').click();
+        //$('#btn-switch').click();
         nextLvl();
         nextLvl2();
       })
@@ -574,7 +574,7 @@
         $('#hint2').html('');
         $('#hints2').hide();
         $('#btn-hint2').show();
-        $('#btn-switch2').click();
+        //$('#btn-switch2').click();
         nextLvl2();
         nextLvl();
       })

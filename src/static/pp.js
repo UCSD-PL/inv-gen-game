@@ -10,3 +10,22 @@ function invToHTML(inv) {
     .replace(/>=/g, "&gt=;")
     .replace(/&&/g, "&amp;&amp;")
 }
+
+function htmlToInv(html) {
+  console.log("html:" + JSON.stringify(html));
+  return html
+    .replace("&lt;", "<")
+    .replace("&gt;", ">")
+    .replace("&lt=;", "<=")
+    .replace("&gt=;", ">=")
+    .replace("&amp;&amp;", "&&")
+    //.replace("=", "==")
+    /*
+    .replace(/=/g, "==")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&lt=;/g, "<=")
+    .replace(/&gt=;/g, ">=")
+    .replace(/&amp;&amp;/g, "&&")
+    */
+}

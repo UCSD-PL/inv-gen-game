@@ -1,43 +1,81 @@
-function addBonus(foundJSInv, foundJSInv2, tracesW, tracesW2, scoreW, scoreW2, player) {
-
+function addBonus(player) {
   var bonus = 0;
 
-  if(player == 1) {
-    jsInv = invPP(tracesW.curExp().trim());
-    impliedBy(foundJSInv2, jsInv, function (x) {
-      if (x !== null) {
-        //progressW.markInvariant(foundJSInv2[x], "implies");
-        // foundInv[x] ==> JSinv
-        //tracesW.immediateError("Implied by existing invariant!")
+  console.log("\n\nPlayer: " + JSON.stringify(player));
 
-        console.log("\nPlayer 1's:");
-        console.log(JSON.stringify(jsInv));
-        console.log("is implied by Player 2's existing invariant:");
-        console.log(JSON.stringify(foundJSInv2[x]));
+  if (player == 1) {
+    var invHTML = $("#good-invariants").children().last().html();
+    var newInv = htmlToInv(invHTML);
+    //console.log("newInv: " + JSON.stringify(newInv));
 
-        bonus += 10;
-        scoreW.add(bonus);
+    var player2HTML = $("#good-invariants2").children();
+    //console.log(player2HTML);
+
+    var player2Invs = [];
+
+    if(player2HTML.length > 0) {
+      for(var i = 0; i < player2HTML.length; i++) {
+      //jQuery.each(player2HTML, function(h) {
+        var h = player2HTML[i].innerText;
+        //console.log("h : " + JSON.stringify(h));
+        var i = htmlToInv(h);
+        //console.log("i : " + JSON.stringify(i));
+        player2Invs.push(i);
+      //});
       }
-    })
+
+      //var player2Invs = player2HTML.map(htmlToInv); //this doesnt work!
+
+      console.log(player2Invs);
+
+      impliedBy(player2Invs, newInv, function(x) {
+        console.log(JSON.stringify(newInv) + " ==> " + JSON.stringify(player2Invs));
+      });
+      /*
+      player2Invs.each(function() {
+        var inv = htmlToInv($(this).html());
+        console.log(JSON.stringify(newInv) + "==>" + JSON.stringify(inv) + "?");
+        //if newInv ==> inv:  bonus += 10;
+      })
+      */
+    }
   }
 
+    else if (player == 2) {
+      var invHTML = $("#good-invariants2").children().last().html();
+      var newInv = htmlToInv(invHTML);
+      //console.log("newInv: " + JSON.stringify(newInv));
 
-  else if(player == 2) {
-    jsInv2 = invPP(tracesW2.curExp().trim());
-    impliedBy(foundJSInv, jsInv2, function(x) {
-      if (x !== null) {
-        //progressW.markInvariant(foundJSInv[x], "implies");
-        // foundInv[x] ==> JSinv
-        //tracesW.immediateError("Implied by existing invariant!")
+      var player1HTML = $("#good-invariants").children();
+      //console.log(player1HTML);
 
-        console.log("\nPlayer 2's:")
-        console.log(JSON.stringify(jsInv2));
-        console.log("is implied by Player 1's existing invariant:");
-        console.log(JSON.stringify(foundJSInv[x]));
+      var player1Invs = [];
 
-        bonus += 10;
-        scoreW2.add(bonus);
+      if(player1HTML.length > 0) {
+        for(var i = 0; i < player1HTML.length; i++) {
+        //jQuery.each(player1HTML, function(h) {
+          var h = player1HTML[i].innerText;
+          //console.log("h : " + JSON.stringify(h));
+          var j = htmlToInv(h);
+          //console.log("j : " + JSON.stringify(j));
+          player1Invs.push(j);
+        //});
+          }
+
+        console.log(player1Invs);
+
+        impliedBy(player1Invs, newInv, function(x) {
+          console.log(JSON.stringify(newInv) + " ==> " + JSON.stringify(player1Invs));
+        });
+
+        /*
+        player1Invs.each(function() {
+          var inv = htmlToInv($(this).html());
+          console.log(JSON.stringify(newInv) + "==>" + JSON.stringify(inv) + "?");
+          //if newInv ==> inv:  bonus += 10;
+        })
+        */
       }
-    })
-  }
+    }
+
 }

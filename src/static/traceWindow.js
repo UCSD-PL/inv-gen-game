@@ -2,6 +2,8 @@ function TraceWindow(player, div, data) {
   var traceW = this;
   var errorTimer;
 
+  traceW.getPlayer = function() { return player; }
+
   traceW.okToSubmit = false;
 
   traceW.immediateError = function (msg) {

@@ -6,6 +6,8 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
   var progress;
   var pwups;
 
+  var player = tracesW.getPlayer() //get player # here
+
   gl.tracesW = tracesW;
   gl.progressW = progressW;
   gl.scoreW = scoreW;
@@ -16,6 +18,14 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
 
   gl.getFoundJSInv = function() {
     return foundJSInv;
+  }
+
+  gl.getTracesW = function() {
+    return gl.tracesW;
+  }
+
+  gl.getScoreW = function() {
+    return gl.scoreW;
   }
 
   gl.clear = function () {
@@ -111,12 +121,15 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
               foundInv.push(inv)
               foundJSInv.push(jsInv)
               progressW.addInvariant(inv);
+
               var addScore = computeScore(jsInv, 1)
 
               if (addScore == 1) { // No powerups applied
                 gl.setPowerups(gl.pwupSuggestion.getPwups());
               }
               scoreW.add(addScore);
+
+              addBonus(player);
 
               if (!progress.satisfied) {
                 goalSatisfied(gl.curGoal, foundJSInv,
