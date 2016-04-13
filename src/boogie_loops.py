@@ -4,6 +4,7 @@ from boogie_z3 import *
 from boogie_bb import BB, get_bbs, entry
 from boogie_paths import get_path_vars, nd_bb_path_to_ssa, ssa_path_to_z3, wp_nd_ssa_path
 from boogie_ssa import *
+from boogie_eval import env_to_expr
 from collections import namedtuple
 from util import *
 from z3 import *
@@ -59,12 +60,6 @@ def bad_envs_to_expr(bad_envs):
         return AstTrue()
     return parseExprAst(s)[0]
 
-def good_env_to_expr(good_env):
-    s = "&&".join([("(%s==%s)" %(k, str(v))) for (k,v) in good_env.iteritems()])
-    if (s == ""):
-        return AstTrue()
-    return parseExprAst(s)[0]
-  
 # get_loop_header_values tries to unroll the given loop between min_unrolls and max_unrolls.
 #
 #   loop - loop to unroll (specified in the Loop named tuple format)
@@ -92,7 +87,7 @@ def get_loop_header_values(loop, bbs, min_unrolls = 0, max_unrolls = 5, \
         if forbidden_envs:
             expr = bad_envs_to_expr(forbidden_envs)
         else:
-            expr = good_env_to_expr(start_env)
+            expr = env_to_expr(start_env)
         bbs[extra_bb] = BB([], [ AstAssume(expr) ], [])
 
     while is_nd_bb_path_possible(unroll_loop(loop, nunrolls+1, extra_bb, exact), bbs) and \

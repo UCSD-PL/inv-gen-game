@@ -202,6 +202,9 @@ def stmt_changed(ast):
     else:
         return set([])
 
+def ast_and(exprs):
+    return reduce(lambda x,y:   AstBinExpr(x, "&&", y), exprs, AstTrue())
+
 def parseExprAst(s):
     def act_wrap(cl):
         def act(s, loc, toks):
