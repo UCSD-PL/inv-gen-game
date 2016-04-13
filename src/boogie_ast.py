@@ -202,8 +202,11 @@ def stmt_changed(ast):
     else:
         return set([])
 
-def ast_and(exprs):
-    return reduce(lambda x,y:   AstBinExpr(x, "&&", y), exprs, AstTrue())
+def ast_group_bin(exprs, op, default):
+    return reduce(lambda x,y:   AstBinExpr(x, op, y), exprs, default)
+
+def ast_and(exprs): return ast_group_bin(exprs, "&&", AstTrue())
+def ast_or(exprs): return ast_group_bin(exprs, "||", AstFalse()) 
 
 def parseExprAst(s):
     def act_wrap(cl):
