@@ -88,7 +88,7 @@ def loadBoogieFile(fname):
     header_vals, terminates = _tryUnroll(loop, bbs, 0, 4, None, None)
     # Assume we have no tests with dead loops
     assert(header_vals != [])
-    header_vals, terminates = getInterestingTrace(loop, bbs, 4)
+    #header_vals, terminates = getInterestingTrace(loop, bbs, 4)
 
     # See if there is a .hint files
     hint = None
