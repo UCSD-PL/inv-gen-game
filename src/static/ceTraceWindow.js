@@ -187,7 +187,7 @@ function CETraceWindow(div, data) {
 
   if (data  !== undefined)
   {
-    this.loadData(data)
+    this.addData(data)
   }
 
   $(div).addClass('box')

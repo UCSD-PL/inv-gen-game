@@ -13,7 +13,7 @@
   <script src="bootstrap.min.js"></script>
   <link rel="stylesheet" href="inv.css">
   <link rel="stylesheet" href="arrow.css">
-  <script src="traceWindow.js"></script>
+  <script src="ceTraceWindow.js"></script>
   <script src="progressWindow.js"></script>
   <script src="scoreWindow.js"></script>
   <script src="logic.js"></script>
@@ -72,8 +72,8 @@
         }
 
         try {
-          res = invEval(invToJS(inv), curLvl)
-          tracesW.evalResult({ data: res })
+          res = invEval(invToJS(inv), curLvl.variables, curLvl.data[0])
+          tracesW.evalResult({ data: [ res, [], [] ]})
           bool = res.filter(function (x) { return typeof(x) == "boolean"; }).length
           all = res.length;
           hold = res.filter(function (x) { return x; }).length
@@ -107,7 +107,7 @@
                   var lvl = {
                     id: "tutorial",
                     variables: [ "i" ],
-                    data: [ [ [ 0 ], [ 1 ], [ 2 ] ], null, null ],
+                    data: [ [ [ 0 ], [ 1 ], [ 2 ] ], [], [] ],
                     goal: { },
                     hint: "",
                     supports_pos_ex: false,
@@ -116,7 +116,9 @@
                   }
 
                   curLvl = lvl;
-                  tracesW = new TraceWindow($('#data-display'), lvl);
+                  console.log(lvl.data)
+                  tracesW = new CETraceWindow($('#data-display'));
+                  tracesW.setVariables(lvl)
                   tracesW.changed(function() {
                     if (errorTimer) {
                       window.clearTimeout(errorTimer);
@@ -124,7 +126,7 @@
                     }
                     updateUI();
                   })
-
+                  tracesW.addData(lvl.data);
                   $('#hint').html(lvl.hint)
                   updateUI()
                   cs.nextStep();
