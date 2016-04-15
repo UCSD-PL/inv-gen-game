@@ -1,6 +1,7 @@
 function CETraceWindow(div, data) {
   var traceW = this;
   var errorTimer;
+  var pulseTimer;
 
   traceW.okToSubmit = false;
   traceW.dataMap = [[], [], []];
@@ -63,6 +64,11 @@ function CETraceWindow(div, data) {
   }
 
   this.clearData = function(type) {
+    if (type == 2 && pulseTimer) {
+      window.clearTimeout(pulseTimer);
+      pulseTimer = null;
+    }
+
     traceW.data[type] = []
     for (var i in traceW.dataMap[type]) {
       if (traceW.dataMap[type][i].length == 2) {
@@ -79,10 +85,11 @@ function CETraceWindow(div, data) {
     assert (data[2].length <= 1); 
     classes = [ 'true', 'false', 'inductive' ]
 
-    id = $('table#data_table tr.traces-row').length
+    var id = $('table#data_table tr.traces-row').length
+
     for (var type in [0,1,2]) {
       for (var i in data[type]) {
-        data_id = traceW.data[type].length
+        var data_id = traceW.data[type].length
         if (type != 2) {
           curRow = $(
             "<tr class='traces-row' id='" + id +"'>" +
@@ -94,13 +101,18 @@ function CETraceWindow(div, data) {
           curRow = [ $(
             "<tr class='traces-row' id='" + id +"'>" +
               data[type][i][0].map(el => 
-                "<td class='" + classes[type]  + "'>" + el + "</td>").join("") +
+                "<td class='false ind_disp'>" + el + "</td>").join("") +
               "<td class='temp_expr_eval'>&nbsp</td>"),
-          curRow2 = $("<tr class='traces-row' id='" + id +"'>" +
+                    $("<tr class='traces-row' id='" + id +"'>" +
               data[type][i][1].map(el => 
-                "<td class='" + classes[type]  + "'>" + el + "</td>").join("") +
+                "<td class='true ind_disp'>" + el + "</td>").join("") +
               "<td class='temp_expr_eval'>&nbsp</td>" +
             "</tr>") ]
+          var i = 0;
+          pulseTimer = setInterval(function () {
+            $(curRow[i%2]).children(".ind_disp").effect("highlight", 1000);
+            i++
+          }, 1000)
         }
 
         id ++;
@@ -115,8 +127,9 @@ function CETraceWindow(div, data) {
           }
         }
 
-        if (j == -1)
+        if (j == -1) {
           $("table#lvl_table tbody").append(curRow)
+        }
 
         traceW.dataMap[type][data_id] = curRow
       }

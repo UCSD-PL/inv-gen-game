@@ -6,6 +6,7 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
   var overfittedInvs;
   var progress;
   var pwups;
+  var inductiveCtrxExpr = null;
 
   gl.tracesW = tracesW;
   gl.progressW = progressW;
@@ -46,6 +47,13 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
 
     var inv = invPP(tracesW.curExp().trim());
     var jsInv = invToJS(inv)
+
+    if (inductiveCtrxExpr != null && inductiveCtrxExpr != jsInv) {
+      gl.curLvl.data[2] = [];
+      tracesW.clearData(2)
+      inductiveCtrxExpr = null
+    }
+
     try {
       var parsedInv = esprima.parse(jsInv);
     } catch (err) {
@@ -107,6 +115,7 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
               tracesW.immediateError("Implied by existing invariant!")
             } else {
               gl.pwupSuggestion.invariantTried(jsInv);
+              gl.setPowerups(gl.pwupSuggestion.getPwups());
 
               if (!progress.satisfied) {
                 gl.curLvl.goalSatisfied(foundJSInv.concat(jsInv),
@@ -116,17 +125,10 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
                       foundInv.push(inv)
                       foundJSInv.push(jsInv)
                       progW.addInvariant(inv);
-                      var addScore = computeScore(jsInv, 1)
-
-                      if (addScore == 1) { // No powerups applied
-                        gl.setPowerups(gl.pwupSuggestion.getPwups());
-                      }
                       gl.lvlPassed();
                     } else {
                       if (progress.counterexamples) {
                         // Clear inductive counterexamples
-                        gl.curLvl.data[2] = [];
-                        tracesW.clearData(2)
 
                         var invalidInv = true;
                         // Order of checking and the short-circuiting here is important. We check first
@@ -147,6 +149,8 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
                           tracesW.clearData(2)
                           tracesW.addData([[],[], progress.counterexamples[2]])
                           gl.curLvl.data[2] = progress.counterexamples[2][0]
+                          inductiveCtrxExpr = jsInv
+                          //invalidInv = false;
                         } else {
                           /*
                           // assert (progress.counterexamples[1].length > 0)
@@ -159,15 +163,11 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
                         if (invalidInv) {
                           gl.userInput(false)
                         } else {
+                          var addScore = computeScore(jsInv, 1)
+                          scoreW.add(addScore);
                           foundInv.push(inv)
                           foundJSInv.push(jsInv)
                           progW.addInvariant(inv);
-                          var addScore = computeScore(jsInv, 1)
-
-                          if (addScore == 1) { // No powerups applied
-                            gl.setPowerups(gl.pwupSuggestion.getPwups());
-                          }
-                          scoreW.add(addScore);
                           tracesW.setExp("");
                         }
                       }
