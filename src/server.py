@@ -3,7 +3,7 @@ from flask import request
 from flask_jsonrpc import JSONRPC as rpc
 from os.path import *
 from os import listdir
-from json import load, dumps 
+from json import load, dumps
 from z3 import *
 from js import invJSToZ3, addAllIntEnv, esprimaToZ3
 import argparse
@@ -159,11 +159,13 @@ def getData(levelSet, traceId):
     log({"type": "load_data", "data":  traces[levelSet][traceId]})
     return traces[levelSet][traceId]
 
+# inv1 <== inv2 ?
 def implies(inv1, inv2):
     print "Are implies ", inv1, inv2
     s = Solver();
     s.add(inv1)
     s.add(Not(inv2))
+    print(str(inv2) + " ==> " + str(inv1) + " = " + str(unsat == s.check()))
     return unsat == s.check();
 
 def equivalent(inv1, inv2):

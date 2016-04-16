@@ -12,14 +12,11 @@ function invToHTML(inv) {
 }
 
 function htmlToInv(html) {
-  console.log("html:" + JSON.stringify(html));
-  return html
-    //.replace("=", "==")
+  h1 = html.replace("=", "==")
+  return h1
     .replace("&lt;", "<")
     .replace("&gt;", ">")
-    .replace("&lt;==", "<=")
-    .replace("&lt;=", "<=")
-    .replace("&gt;==", ">=")
-    .replace("&gt;=", ">=")
+    .replace("<==", "<=")
+    .replace(">==", ">=")
     .replace("&amp;&amp;", "&&")
 }
