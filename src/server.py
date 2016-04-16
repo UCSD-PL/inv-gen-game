@@ -159,13 +159,13 @@ def getData(levelSet, traceId):
     log({"type": "load_data", "data":  traces[levelSet][traceId]})
     return traces[levelSet][traceId]
 
-# inv1 <== inv2 ?
+# inv1 ==> inv2 ?
 def implies(inv1, inv2):
     print "Are implies ", inv1, inv2
     s = Solver();
     s.add(inv1)
     s.add(Not(inv2))
-    print(str(inv2) + " ==> " + str(inv1) + " = " + str(unsat == s.check()))
+    print(str(inv1) + " ==> " + str(inv2) + " = " + str(unsat == s.check()))
     return unsat == s.check();
 
 def equivalent(inv1, inv2):

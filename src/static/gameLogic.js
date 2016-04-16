@@ -110,10 +110,6 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
               progressW.markInvariant(foundInv[x], "implies");
               // foundInv[x] ==> JSinv
               tracesW.immediateError("Implied by existing invariant!")
-
-              console.log(JSON.stringify(jsInv));
-              console.log("is implied by existing invariant:");
-              console.log(JSON.stringify(foundInv[x]));
             }
             else {
               gl.pwupSuggestion.invariantTried(jsInv);
@@ -127,9 +123,10 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
               if (addScore == 1) { // No powerups applied
                 gl.setPowerups(gl.pwupSuggestion.getPwups());
               }
-              scoreW.add(addScore);
 
-              addBonus(player);
+              addScore += getBonus(player)
+
+              scoreW.add(addScore);
 
               if (!progress.satisfied) {
                 goalSatisfied(gl.curGoal, foundJSInv,
