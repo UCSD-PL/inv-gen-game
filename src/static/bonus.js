@@ -6,10 +6,10 @@ function addBonus(player) {
   if (player == 1) {
     var invHTML = $("#good-invariants").children().last().html();
     var newInv = htmlToInv(invHTML);
-    //console.log("newInv: " + JSON.stringify(newInv));
+    console.log("newInv: " + JSON.stringify(newInv));
 
     var player2HTML = $("#good-invariants2").children();
-    //console.log(player2HTML);
+    console.log(player2HTML);
 
     var player2Invs = [];
 
@@ -17,9 +17,9 @@ function addBonus(player) {
       for(var i = 0; i < player2HTML.length; i++) {
       //jQuery.each(player2HTML, function(h) {
         var h = player2HTML[i].innerText;
-        //console.log("h : " + JSON.stringify(h));
+        console.log("h : " + JSON.stringify(h));
         var i = htmlToInv(h);
-        //console.log("i : " + JSON.stringify(i));
+        console.log("i : " + JSON.stringify(i));
         player2Invs.push(i);
       //});
       }
@@ -44,10 +44,10 @@ function addBonus(player) {
     else if (player == 2) {
       var invHTML = $("#good-invariants2").children().last().html();
       var newInv = htmlToInv(invHTML);
-      //console.log("newInv: " + JSON.stringify(newInv));
+      console.log("newInv: " + JSON.stringify(newInv));
 
       var player1HTML = $("#good-invariants").children();
-      //console.log(player1HTML);
+      console.log(player1HTML);
 
       var player1Invs = [];
 
@@ -55,9 +55,9 @@ function addBonus(player) {
         for(var i = 0; i < player1HTML.length; i++) {
         //jQuery.each(player1HTML, function(h) {
           var h = player1HTML[i].innerText;
-          //console.log("h : " + JSON.stringify(h));
+          console.log("h : " + JSON.stringify(h));
           var j = htmlToInv(h);
-          //console.log("j : " + JSON.stringify(j));
+          console.log("j : " + JSON.stringify(j));
           player1Invs.push(j);
         //});
           }

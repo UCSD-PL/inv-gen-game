@@ -14,18 +14,12 @@ function invToHTML(inv) {
 function htmlToInv(html) {
   console.log("html:" + JSON.stringify(html));
   return html
+    //.replace("=", "==")
     .replace("&lt;", "<")
     .replace("&gt;", ">")
-    .replace("&lt=;", "<=")
-    .replace("&gt=;", ">=")
+    .replace("&lt;==", "<=")
+    .replace("&lt;=", "<=")
+    .replace("&gt;==", ">=")
+    .replace("&gt;=", ">=")
     .replace("&amp;&amp;", "&&")
-    //.replace("=", "==")
-    /*
-    .replace(/=/g, "==")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&lt=;/g, "<=")
-    .replace(/&gt=;/g, ">=")
-    .replace(/&amp;&amp;/g, "&&")
-    */
 }
