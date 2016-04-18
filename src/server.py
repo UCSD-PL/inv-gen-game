@@ -159,7 +159,7 @@ def getData(levelSet, traceId):
     log({"type": "load_data", "data":  traces[levelSet][traceId]})
     return traces[levelSet][traceId]
 
-# inv1 ==> inv2 ?
+# inv1 ==> inv2
 def implies(inv1, inv2):
     print "Are implies ", inv1, inv2
     s = Solver();
@@ -217,6 +217,7 @@ def impliedPairs(invL1, invL2):
       z3InvL1 = list(enumerate([esprimaToZ3(x, {}) for x in invL1]))
       z3InvL2 = list(enumerate([esprimaToZ3(x, {}) for x in invL2]))
 
+      # x[0] ==> y[0]
       res = [(x,y) for x in z3InvL1 for y in z3InvL2 if implies(x[1], y[1])]
       res = [(x[0], y[0]) for x,y in res]
       log({"type": "impliedPairs", "data":  (invL1, invL2, res)})

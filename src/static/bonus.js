@@ -4,9 +4,9 @@ function getAllPlayer1Inv() {
 
   if(player1HTML.length > 0) {
     for(var i = 0; i < player1HTML.length; i++) {
-      var h = player1HTML[i].innerText;
-      var i = htmlToInv(h);
-      player1Invs.push(i);
+      var html = player1HTML[i].innerText;
+      var inv = htmlToInv(html);
+      player1Invs.push(inv);
     }
   }
 
@@ -26,9 +26,9 @@ function getAllPlayer2Inv() {
 
   if(player2HTML.length > 0) {
     for(var i = 0; i < player2HTML.length; i++) {
-      var h = player2HTML[i].innerText;
-      var i = htmlToInv(h);
-      player2Invs.push(i);
+      var html = player2HTML[i].innerText;
+      var inv = htmlToInv(html);
+      player2Invs.push(inv);
     }
   }
 
@@ -49,8 +49,15 @@ function getBonus(player) {
     var newInv = getLastPlayer1Inv();
     var player2Invs = getAllPlayer2Inv();
 
-    impliedBy(player2Invs, newInv, function(x) {
-      console.log(JSON.stringify(newInv) + " ==> " + JSON.stringify(player2Invs) + " ?");
+    impliedPairs([newInv], player2Invs, function(x) {
+      console.log(x);
+      if(x != null) {
+        for(var i = 0; i < x.length; i++){
+          if(x[i][0] == 0){
+            console.log(JSON.stringify(newInv) + " ==> " + player2Invs[i] + " = True");
+          }
+        }
+      }
     });
   }
 
@@ -58,8 +65,15 @@ function getBonus(player) {
     var newInv = getLastPlayer2Inv();
     var player1Invs = getAllPlayer1Inv();
 
-    impliedBy(player1Invs, newInv, function(x) {
-      console.log(JSON.stringify(newInv) + " ==> " + JSON.stringify(player1Invs) + " ?");
+    impliedPairs([newInv], player1Invs, function(x) {
+      console.log(x)
+      if(x != null) {
+        for(var i = 0; i < x.length; i++) {
+          if(x[i][0] == 0) {
+            console.log(JSON.stringify(newInv) + " ==> " + player1Invs[i] + " = True");
+          }
+        }
+      }
     });
   }
 

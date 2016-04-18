@@ -110,6 +110,7 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
               progressW.markInvariant(foundInv[x], "implies");
               // foundInv[x] ==> JSinv
               tracesW.immediateError("Implied by existing invariant!")
+              tracesW.disableSubmit();
             }
             else {
               gl.pwupSuggestion.invariantTried(jsInv);
