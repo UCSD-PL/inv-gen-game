@@ -108,7 +108,7 @@ def _unssa_z3_model(m, repl_m):
         original + map(str, repl_m.values()) }
 
 def loop_vc_pre_ctrex(loop, inv, bbs):
-    prefix_ssa, ssa_env = nd_bb_path_to_ssa(list(loop.header), bbs, SSAEnv(None, ""))
+    prefix_ssa, ssa_env = nd_bb_path_to_ssa(list(loop.header) + [loop.loop_paths + loop.exit_paths], bbs, SSAEnv(None, ""))
     q = Not(Implies(And(ssa_path_to_z3(prefix_ssa, bbs)),
                         expr_to_z3(replace(inv, ssa_env.replm()), AllIntTypeEnv())))
     ctr = counterex(q)
