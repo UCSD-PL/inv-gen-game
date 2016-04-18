@@ -232,12 +232,14 @@ app = Server(__name__, static_folder='static/', static_url_path='')
 api = rpc(app, '/api')
 
 @api.method("App.listData")
+@pp_exc
 def listData(levelSet):
     res = traces[levelSet].keys();
     res.sort()
     return res
 
 @api.method("App.loadLvl")
+@pp_exc
 def loadLvl(levelSet, traceId):
     if (levelSet not in traces):
         raise Exception("Unkonwn level set " + levelSet)
@@ -352,6 +354,7 @@ def tautology(inv):
     return (unsat == s.check())
 
 @api.method("App.equivalentPairs")
+@pp_exc
 def equivalentPairs(invL1, invL2):
     try:
       z3InvL1 = list(enumerate([esprimaToZ3(x, {}) for x in invL1]))
@@ -367,6 +370,7 @@ def equivalentPairs(invL1, invL2):
       raise Exception(":(")
 
 @api.method("App.impliedPairs")
+@pp_exc
 def impliedPairs(invL1, invL2):
     try:
       z3InvL1 = list(enumerate([esprimaToZ3(x, {}) for x in invL1]))
@@ -382,6 +386,7 @@ def impliedPairs(invL1, invL2):
       raise Exception(":(")
 
 @api.method("App.isTautology")
+@pp_exc
 def isTautology(inv):
     res = (tautology(esprimaToZ3(inv, {})))
     log({"type": "isTautology", "data":  (inv, res)})
