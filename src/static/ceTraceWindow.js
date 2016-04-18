@@ -6,6 +6,7 @@ function CETraceWindow(div, data) {
   traceW.okToSubmit = false;
   traceW.dataMap = [[], [], []];
   traceW.data = [[], [], []];
+  traceW.ppInv = ""
 
   traceW.immediateError = function (msg) {
     $("th #errormsg").html("<div class='error'> " + msg + "</div>");
@@ -47,10 +48,13 @@ function CETraceWindow(div, data) {
     $(div).html(hstr)
     $('#formula-entry').focus();
     $('#formula-entry').keyup(function (keyEv) {
+      var curInv = invPP(traceW.curExp())
       if (keyEv.keyCode == 13 && traceW.okToSubmit) {
         traceW.commitCb();
-      } else
+      } else if (curInv != traceW.ppInv) {
+        traceW.ppInv = curInv;
         traceW.changedCb();
+      }
     })
 
     if (lvl.support_pos_ex) {
@@ -85,7 +89,7 @@ function CETraceWindow(div, data) {
     assert (data[2].length <= 1); 
     classes = [ 'true', 'false', 'inductive' ]
 
-    var id = $('table#data_table tr.traces-row').length
+    var id = $('table#lvl_table tr.traces-row').length
 
     for (var type in [0,1,2]) {
       for (var i in data[type]) {
@@ -99,11 +103,11 @@ function CETraceWindow(div, data) {
             "</tr>")
         } else {
           curRow = [ $(
-            "<tr class='traces-row' id='" + id +"'>" +
+            "<tr class='traces-row' id='" + id +"_0'>" +
               data[type][i][0].map(el => 
                 "<td class='false ind_disp'>" + el + "</td>").join("") +
               "<td class='temp_expr_eval'>&nbsp</td>"),
-                    $("<tr class='traces-row' id='" + id +"'>" +
+          $("<tr class='traces-row' id='" + id + "_1'>" +
               data[type][i][1].map(el => 
                 "<td class='true ind_disp'>" + el + "</td>").join("") +
               "<td class='temp_expr_eval'>&nbsp</td>" +
