@@ -46,11 +46,9 @@
     function addSuccessfulInvariant(inv) {
       jsfound.push(invToJS(inv))
       progW.addInvariant(inv);
-      tracesW.setExp('');
     }
 
     function updateUI() {
-        $('#errormsg').html("")
         var inv = invPP(tracesW.curExp().trim());
         try {
           var parsedInv = esprima.parse();
@@ -66,19 +64,11 @@
         if (tempCb != null)
           tempCb(inv)
 
-        var redundant = progW.contains(inv)
-        if (redundant) {
-          progW.markInvariant(inv, "duplicate")
-        }
-
         try {
-          res = invEval(invToJS(inv), curLvl.variables, curLvl.data[0])
-          tracesW.evalResult({ data: [ res, [], [] ]})
-          bool = res.filter(function (x) { return typeof(x) == "boolean"; }).length
-          all = res.length;
-          hold = res.filter(function (x) { return x; }).length
-          if (bool == all && hold == all)
-            tracesW.msg("Press Enter...")
+          res_pos = invEval(invToJS(inv), curLvl.variables, curLvl.data[0])
+          res_ind = invEval(invToJS(inv), curLvl.variables, curLvl.data[2])
+          res_ind = zip(res_ind.filter((_,i)=>i%2==0), res_ind.filter((_,i)=>i%2==1))
+          tracesW.evalResult({ data: [ res_pos, [], res_ind ]})
         } catch (err) {
           errorTimer = setTimeout(function() {
             tracesW.evalResult({ clear: true })
@@ -106,8 +96,8 @@
       { setup: function (cs) {
                   var lvl = {
                     id: "tutorial",
-                    variables: [ "i" ],
-                    data: [ [ [ 0 ], [ 1 ], [ 2 ] ], [], [] ],
+                    variables: [ "i", "n" ],
+                    data: [ [ [ 0, 2 ], [ 1, 2 ], [ 2, 2 ] ], [], [] ],
                     goal: { },
                     hint: "",
                     supports_pos_ex: false,
@@ -175,23 +165,17 @@
                }
       },
       { setup: function (cs) {
-                 curL = label($("#0 .temp_expr_eval"), "Not true that 0>0", "left")
+                 curL = label($("#0 .temp_expr_eval"), "Red means false.", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
-                 curL = label($("#1 .temp_expr_eval"), "It is true that 1>0", "left")
+                 curL = label($("#1 .temp_expr_eval"), "Green means true.", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
-                 curL = label($("#2 .temp_expr_eval"), "It is true that 2>0", "left")
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
-               }
-      },
-      { setup: function (cs) {
-                 curL = label($("#formula-entry"), "Box also evaluates " +
-                                                   "<emph>true</emph> or <emph>false</emph><br>for each row!", "left")
+                 curL = label($("#0 .temp_expr_eval"), "Colors don't mach up!<br> Should be true (green) but its false (red).", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
@@ -202,12 +186,23 @@
                }
       },
       { setup: function (cs) {
+                 curL = label($("#0 .temp_expr_eval"), "Hurray! Colors match on all rows!", "left")
+                 cs.nextStepOnKeyOrTimeout(-1, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#0 .temp_expr_eval"), "This is your goal: <br>to find an expression, so that the colors match<br>on each row.", "left")
+                 cs.nextStepOnKeyOrTimeout(-1, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
                  tracesW.msg("Press Enter...")
-                 curL = label($("#0 .temp_expr_eval"), "Hurray! All rows are green!<br>You found an invariant!", "left")
+                 curL = label($("#0 .temp_expr_eval"), "Press enter...", "left")
                  cs.nextStepOnKeyOrTimeout(-1, labelRemover(curL), 13)
                }
       },
       { setup: function (cs) {
+                 tracesW.msg("")
                  $('#score-div-row').fadeIn(1000, function() {
                    curL = label($("#score-div"), "You get points for each discovered invariant!<br> Sweet!", "up");
                    scoreW.add(1);
@@ -225,8 +220,106 @@
                }
       },
       { setup: function (cs) {
+               tracesW.setExp('');
+                 curL = label($("#formula-entry"),
+                  "Lets try one more: n=2", "left")
+                 $("#formula-entry").focus()
+                 nextStepOnInvariant(cs, "n=2", labelRemover(curL));
+               }
+      },
+      { setup: function (cs) {
+                 curLvl.data[0].push([0, 4])
+                 tracesW.addData([[[0, 4]], [], []])
+                 curL = label($("#3 .temp_expr_eval"),
+                  "You got another row!", "left")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#3 .temp_expr_eval"),
+                  "Colors don't match for this row!", "left")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#3 .temp_expr_eval"),
+                  "The row should be green <br> but your expression is red for this row!", "left")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#formula-entry"),
+                  "How about n>=0?", "left")
+                 $("#formula-entry").focus()
+                 nextStepOnInvariant(cs, "n>=0", labelRemover(curL));
+               }
+      },
+      { setup: function (cs) {
+                 tracesW.msg("Press Enter...")
+                 //curL = label($("#0 .temp_expr_eval"), "Press enter...", "left")
+                 cs.nextStepOnKeyOrTimeout(-1, labelRemover(curL), 13)
+               }
+      },
+      { setup: function (cs) {
+                 scoreW.add(1);
+                 addSuccessfulInvariant("n>=0");
+                 curL = label($("#good_1"),
+                  "Its correct!", "left")
+                 cs.nextStepOnKeyOrTimeout(1000, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#formula-entry"),
+                  "Ok, last one: i<3", "left")
+                 $("#formula-entry").focus()
+                 nextStepOnInvariant(cs, "i<3", labelRemover(curL));
+               }
+      },
+      { setup: function (cs) {
+                 curLvl.data[2].push([2, 3])
+                 curLvl.data[2].push([3, 3])
+                 tracesW.addData([[], [], [[[2, 3], [3, 3]]]])
+                 curL = label($("#4_0 .temp_expr_eval"),
+                  "You got two new rows now!", "left")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#4_0 .temp_expr_eval"),
+                  "Both with mismatching colors!", "left")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#4_0 .temp_expr_eval"),
+                  "Either this one should be all red..", "left")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#4_1 .temp_expr_eval"),
+                  "..or this one all green!", "left")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#formula-entry"),
+                  "Finally try i<=n", "left")
+                 $("#formula-entry").focus()
+                 nextStepOnInvariant(cs, "i<=n", labelRemover(curL));
+               }
+      },
+      { setup: function (cs) {
+                 scoreW.add(1);
+                 addSuccessfulInvariant("i<=n");
+                 curL = label($("#good_2"),
+                  "Its correct!", "left")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
                  $('#next-lvl').fadeIn(1000, function() {
-                   curL = label($("#next-lvl"), "Click here to start playing!", "up");
+                   curL = label($("#next-lvl"), "Proceed to the game!", "up");
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                  })
                }
