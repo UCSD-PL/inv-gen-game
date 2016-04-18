@@ -125,9 +125,13 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
                 gl.setPowerups(gl.pwupSuggestion.getPwups());
               }
 
-              addScore += getBonus(player)
-
               scoreW.add(addScore);
+
+              /* Check if it's a two-player game */
+              if($('#top').html().trim().includes("Two")) {
+                var bonusPoints = getBonus(player);
+                scoreW.add(bonusPoints); // isn't synchronized
+              }
 
               if (!progress.satisfied) {
                 goalSatisfied(gl.curGoal, foundJSInv,

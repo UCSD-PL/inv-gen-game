@@ -44,17 +44,18 @@ function getLastPlayer2Inv() {
 
 function getBonus(player) {
   var bonus = 0;
+  var increment = 1;
 
   if (player == 1) {
     var newInv = getLastPlayer1Inv();
     var player2Invs = getAllPlayer2Inv();
 
     impliedPairs([newInv], player2Invs, function(x) {
-      console.log(x);
       if(x != null) {
-        for(var i = 0; i < x.length; i++){
+        for(var i = 0; i < x.length; i++) {
           if(x[i][0] == 0){
-            console.log(JSON.stringify(newInv) + " ==> " + player2Invs[i] + " = True");
+            console.log(JSON.stringify(newInv) + " ==> " + player2Invs[x[i][1]] + " = True");
+            bonus = bonus + increment;
           }
         }
       }
@@ -66,11 +67,11 @@ function getBonus(player) {
     var player1Invs = getAllPlayer1Inv();
 
     impliedPairs([newInv], player1Invs, function(x) {
-      console.log(x)
       if(x != null) {
         for(var i = 0; i < x.length; i++) {
           if(x[i][0] == 0) {
-            console.log(JSON.stringify(newInv) + " ==> " + player1Invs[i] + " = True");
+            console.log(JSON.stringify(newInv) + " ==> " + player1Invs[x[i][1]] + " = True");
+            bonus = bonus + increment;
           }
         }
       }
