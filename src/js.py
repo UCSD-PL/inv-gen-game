@@ -75,8 +75,6 @@ def esprimaToZ3Expr(astn, typeEnv):
 
     try:
       return {
-        '&&': And,
-        '||': Or,
         '==': lambda x,y: x == y,
         '!=': lambda x,y: x != y,
         '<': lambda x,y: x < y,
@@ -91,11 +89,21 @@ def esprimaToZ3Expr(astn, typeEnv):
       }[astn["operator"]](ln, rn)
     except:
       raise Exception("Unkown binary expression " + str(astn))
+  elif (astn["type"] == "LogicalExpression"):
+    ln,rn = esprimaToZ3Expr(astn["left"], typeEnv), esprimaToZ3Expr(astn["right"], typeEnv)
+    try:
+      return {
+        '&&': And,
+        '||': Or,
+      }[astn["operator"]](ln, rn)
+    except:
+      raise Exception("Unkown logical expression " + str(astn))
   elif (astn["type"] == "Identifier"):
     return Int(astn["name"]);
   if (astn["type"] == "Literal"):
     return jsNumToZ3(astn["raw"])
   else:
+    print (astn["type"])
     raise Exception("Don't know how to parse " + str(astn))
 
 def esprimaToBoogieExprAst(astn, typeEnv):
@@ -113,8 +121,6 @@ def esprimaToBoogieExprAst(astn, typeEnv):
 
     try:
       op = {
-        '&&': '&&',
-        '||': '||',
         '==': '==',
         '!=': '!=',
         '<': '<',
@@ -130,6 +136,17 @@ def esprimaToBoogieExprAst(astn, typeEnv):
       return AstBinExpr(ln, op[astn['operator']], rn)
     except:
       raise Exception("Unkown binary expression " + str(astn))
+  elif (astn["type"] == "LogicalExpression"):
+    ln,rn = esprimaToBoogieExprAst(astn["left"], typeEnv), esprimaToBoogieExprAst(astn["right"], typeEnv)
+
+    try:
+      op = {
+        '&&': '&&',
+        '||': '||',
+      }
+      return AstBinExpr(ln, op[astn['operator']], rn)
+    except:
+      raise Exception("Unkown logical expression " + str(astn))
   elif (astn["type"] == "Identifier"):
     return AstId(astn["name"]);
   if (astn["type"] == "Literal"):
