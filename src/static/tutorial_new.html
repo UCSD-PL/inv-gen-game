@@ -189,23 +189,23 @@
                }
       },
       { setup: function (cs) {
-                 curL = label($("#0 .temp_expr_eval"), "Colors don't mach up!<br> Should be true (green) but its false (red).", "left")
+                 curL = label($("#0 .temp_expr_eval"), "This row is part green, part red<br>Lets fix that.", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
                  curL = label($("#formula-entry"),
-                  "Now try i >= 0", "left")
+                  "Type i >= 0", "left")
                  nextStepOnInvariant(cs, "i>=0", labelRemover(curL));
                }
       },
       { setup: function (cs) {
-                 curL = label($("#0 .temp_expr_eval"), "Hurray! Colors match on all rows!", "left")
+                 curL = label($("#0 .temp_expr_eval"), "Hurray! Each row is a single color now!!", "left")
                  cs.nextStepOnKeyOrTimeout(-1, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
-                 curL = label($("#0 .temp_expr_eval"), "This is your goal: <br>to find an expression, so that the colors match<br>on each row.", "left")
+                 curL = label($("#0 .temp_expr_eval"), "This is your goal: <br>to find an expression, so that each row is a single color.", "left")
                  cs.nextStepOnKeyOrTimeout(-1, labelRemover(curL), 32)
                }
       },
@@ -228,7 +228,7 @@
                  $('#discovered-invariants-div').fadeIn(1000, function() {
                    var inv = invPP(tracesW.curExp().trim());
                    addSuccessfulInvariant(inv);
-                   curL = label($("#good_0"), "Your invariants appear here", "up");
+                   curL = label($("#good_0"), "Your expressions appear here", "up");
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                  })
                }
@@ -251,25 +251,19 @@
       },
       { setup: function (cs) {
                  curL = label($("#3 .temp_expr_eval"),
-                  "Instead you got another row!", "left")
+                  "Instead you got another part red/part green row!", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
                  curL = label($("#3 .temp_expr_eval"),
-                  "Colors don't match for this row!", "left")
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
-               }
-      },
-      { setup: function (cs) {
-                 curL = label($("#3 .temp_expr_eval"),
-                  "The row should be green <br> but your expression is red!", "left")
+                  "The row should be all green!", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
                  curL = label($("#formula-entry"),
-                  "How about n>=0?", "left")
+                  "Lets try n>=0?", "left")
                  $("#formula-entry").focus()
                  nextStepOnInvariant(cs, "n>=0", labelRemover(curL));
                }
@@ -281,6 +275,7 @@
                }
       },
       { setup: function (cs) {
+                 tracesW.msg("")
                  scoreW.add(1);
                  addSuccessfulInvariant("n>=0");
                  curL = label($("#good_1"),
@@ -330,6 +325,13 @@
                }
       },
       { setup: function (cs) {
+                 tracesW.msg("Press Enter...")
+                 //curL = label($("#0 .temp_expr_eval"), "Press enter...", "left")
+                 cs.nextStepOnKeyOrTimeout(-1, labelRemover(curL), 13)
+               }
+      },
+      { setup: function (cs) {
+                 tracesW.msg("")
                  tracesW.clearData(2);
                  curLvl.data[2] = [];
                  scoreW.add(1);
@@ -364,7 +366,8 @@
                       ['&&', 'Logical And', '(n<5) && (n>0)'],
                       ['||', 'Logical Or', '(n>=5) || (n<=0)'],
                     ].map(
-                      ((x) => '<tr><td>' + x[0] + '</td><td>' + x[1] + '</td><td>' + x[2] + '</td></tr>')) +
+                      ((x) => '<tr><td>' + x[0] + '</td><td>' + x[1] + '</td><td>' + x[2] + '</td></tr>'))
+                     .join('\n') +
                     '</tbody></table></h3>' +
                     '</div>');
                     cs.nextStep()
