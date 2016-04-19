@@ -31,7 +31,7 @@
     var tracesW = null, progW = null, scoreW = null;
     var curL;
     var tempCb = null;
-    var stepTimeout = 5000;
+    var stepTimeout = -1;
 
     function keepItUp(res) {
       if (res.find) {
@@ -94,32 +94,42 @@
 
     var tutorialScript = [
       { setup: function (cs) {
-                  var lvl = {
-                    id: "tutorial",
-                    variables: [ "i", "n" ],
-                    data: [ [ [ 0, 2 ], [ 1, 2 ], [ 2, 2 ] ], [], [] ],
-                    goal: { },
-                    hint: "",
-                    supports_pos_ex: false,
-                    supports_neg_ex: false,
-                    supports_ind_ex: false,
-                  }
-
-                  curLvl = lvl;
-                  console.log(lvl.data)
-                  tracesW = new CETraceWindow($('#data-display'));
-                  tracesW.setVariables(lvl)
-                  tracesW.changed(function() {
-                    if (errorTimer) {
-                      window.clearTimeout(errorTimer);
-                      errorTimer = null;
-                    }
-                    updateUI();
+                  $('#data-display').html("<div class='text-center' style='display: none'><h1>First a quick tutorial. <br> You can press spacebar at any time to proceed to the next step (unless otherwise directed).</h1> </div>")
+                  $('#data-display div').fadeIn(1000, function () {
+                    cs.nextStepOnKeyOrTimeout(stepTimeout, ()=>0, 32)
                   })
-                  tracesW.addData(lvl.data);
-                  $('#hint').html(lvl.hint)
-                  updateUI()
-                  cs.nextStep();
+               }
+      },
+      { setup: function (cs) {
+                  $("#data-display div").fadeOut(1000, function () {
+                    var lvl = {
+
+                      id: "tutorial",
+                      variables: [ "i", "n" ],
+                      data: [ [ [ 0, 2 ], [ 1, 2 ], [ 2, 2 ] ], [], [] ],
+                      goal: { },
+                      hint: "",
+                      supports_pos_ex: false,
+                      supports_neg_ex: false,
+                      supports_ind_ex: false,
+                    }
+
+                    curLvl = lvl;
+                    console.log(lvl.data)
+                    tracesW = new CETraceWindow($('#data-display'));
+                    tracesW.setVariables(lvl)
+                    tracesW.changed(function() {
+                      if (errorTimer) {
+                        window.clearTimeout(errorTimer);
+                        errorTimer = null;
+                      }
+                      updateUI();
+                    })
+                    tracesW.addData(lvl.data);
+                    $('#hint').html(lvl.hint)
+                    updateUI()
+                    cs.nextStep();
+                  })
                }
       },
       { setup: function (cs) {
@@ -129,7 +139,7 @@
                }
       },
       { setup: function (cs) {
-                 curL = label(".temp_expr_eval", "3+4=7!", "left")
+                 curL = label("#2 .temp_expr_eval", "3+4=7!", "up")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
@@ -159,8 +169,12 @@
                }
       },
       { setup: function (cs) {
-                 curL = label($("#formula-entry"),
-                  "Now try i > 0", "left")
+                 curL = label($("#2 .temp_expr_eval"), "And the results appear here", "up")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#formula-entry"), "Now try i > 0", "left")
                  nextStepOnInvariant(cs, "i>0", labelRemover(curL));
                }
       },
@@ -204,7 +218,7 @@
       { setup: function (cs) {
                  tracesW.msg("")
                  $('#score-div-row').fadeIn(1000, function() {
-                   curL = label($("#score-div"), "You get points for each discovered invariant!<br> Sweet!", "up");
+                   curL = label($("#score-div"), "You get points for each expression!<br> Sweet!", "up");
                    scoreW.add(1);
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                   })
@@ -231,7 +245,13 @@
                  curLvl.data[0].push([0, 4])
                  tracesW.addData([[[0, 4]], [], []])
                  curL = label($("#3 .temp_expr_eval"),
-                  "You got another row!", "left")
+                  "n=2 did not get accepted!", "left")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#3 .temp_expr_eval"),
+                  "Instead you got another row!", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
@@ -243,7 +263,7 @@
       },
       { setup: function (cs) {
                  curL = label($("#3 .temp_expr_eval"),
-                  "The row should be green <br> but your expression is red for this row!", "left")
+                  "The row should be green <br> but your expression is red!", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
@@ -270,7 +290,7 @@
       },
       { setup: function (cs) {
                  curL = label($("#formula-entry"),
-                  "Ok, last one: i<3", "left")
+                  "Try i<3", "left")
                  $("#formula-entry").focus()
                  nextStepOnInvariant(cs, "i<3", labelRemover(curL));
                }
@@ -310,11 +330,44 @@
                }
       },
       { setup: function (cs) {
+                 tracesW.clearData(2);
+                 curLvl.data[2] = [];
                  scoreW.add(1);
                  addSuccessfulInvariant("i<=n");
                  curL = label($("#good_2"),
                   "Its correct!", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                  $('#data-display table').add('#score-div-row').add('#discovered-invariants-div')
+                  .fadeOut(1000, function () {
+                    cs.nextStep()
+                  })
+               }
+      },
+      { setup: function (cs) {
+                  $('#data-display').html('<div stype="display: none"><h1>Final words:</h1>' +
+                    '<h3><p>You can use all of the following operators:</p>' +
+                    '<table class="table table-stripped"><thead><tr><th>Operator</th><th>Description</th><th>Examples</th></tr></thead>' +
+                    '<tbody>' +
+                    [ ['+', 'Integer Addition', '3+4=7, i+1'],
+                      ['-', 'Integer Subtraction', '4-3=1, j-1'],
+                      ['*', 'Integer Multiplication', '4*3=12, n*2'],
+                      ['/', 'Integer Division', '5/2=2, n/3'],
+                      ['%', 'Remainder of Integer Division', '5%2=1, n%2'],
+                      ['()', 'Parenthesis', '3*(2+3)=15, 2*(n+1)'],
+                      ['=', 'Equality', '3=3, n=2'],
+                      ['!=', 'Inequality', '3!=2, n!=0'],
+                      ['&lt <br> &gt', 'Less than<br>Greater than', '2<3, n>0'],
+                      ['&lt= <br> &gt=', 'Less than or equal<br>Greater than or equal', '2<=2, n>=0'],
+                      ['&&', 'Logical And', '(n<5) && (n>0)'],
+                      ['||', 'Logical Or', '(n>=5) || (n<=0)'],
+                    ].map(
+                      ((x) => '<tr><td>' + x[0] + '</td><td>' + x[1] + '</td><td>' + x[2] + '</td></tr>')) +
+                    '</tbody></table></h3>' +
+                    '</div>');
+                    cs.nextStep()
                }
       },
       { setup: function (cs) {
