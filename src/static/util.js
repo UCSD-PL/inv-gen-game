@@ -94,12 +94,20 @@ function Script(steps) {
    if (timeout > 0) {
      s.timeoutId = setTimeout(function() {
        destructor();
+       $('body').off('keyup');
        $('body').off('keypress');
        s.nextStep();
      }, timeout);
    }
    $('body').keypress(function (ev) {
      if (keyCode === null || ev.which == keyCode) {
+       ev.stopPropagation();
+       return false;
+     }
+   })
+   $('body').keyup(function (ev) {
+     if (keyCode === null || ev.which == keyCode) {
+       $('body').off('keyup');
        $('body').off('keypress');
        destructor();
        if (timeout > 0)
