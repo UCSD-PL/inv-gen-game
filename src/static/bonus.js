@@ -42,7 +42,7 @@ function getLastPlayer2Inv() {
 }
 
 
-function getBonus(player) {
+function getBonus(player, fn) {
   var bonus = 0;
   var increment = 1;
 
@@ -54,8 +54,9 @@ function getBonus(player) {
       if(x != null) {
         for(var i = 0; i < x.length; i++) {
           if(x[i][0] == 0){
-            console.log(JSON.stringify(newInv) + " ==> " + player2Invs[x[i][1]] + " = True");
+            console.log(newInv + " ==> " + player2Invs[x[i][1]]);
             bonus = bonus + increment;
+            fn(increment);
           }
         }
       }
@@ -70,13 +71,14 @@ function getBonus(player) {
       if(x != null) {
         for(var i = 0; i < x.length; i++) {
           if(x[i][0] == 0) {
-            console.log(JSON.stringify(newInv) + " ==> " + player1Invs[x[i][1]] + " = True");
+            console.log(newInv + " ==> " + player1Invs[x[i][1]]);
             bonus = bonus + increment;
+            fn(increment);
           }
         }
       }
     });
   }
 
-  return bonus;
+  //fn(bonus);
 }
