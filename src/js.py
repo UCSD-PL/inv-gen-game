@@ -101,7 +101,10 @@ def esprimaToZ3Expr(astn, typeEnv):
   elif (astn["type"] == "Identifier"):
     return Int(astn["name"]);
   if (astn["type"] == "Literal"):
-    return jsNumToZ3(astn["raw"])
+    if (astn["raw"] in ["true", "false"]):
+      return astn["raw"] == "true"
+    else:
+      return jsNumToZ3(astn["raw"])
   else:
     print (astn["type"])
     raise Exception("Don't know how to parse " + str(astn))
@@ -150,7 +153,10 @@ def esprimaToBoogieExprAst(astn, typeEnv):
   elif (astn["type"] == "Identifier"):
     return AstId(astn["name"]);
   if (astn["type"] == "Literal"):
-    return AstNumber(int(astn["raw"]))
+    if (astn["raw"] in ["true", "false"]):
+      return AstTrue() if astn["raw"] == "true" else AstFalse()
+    else:
+      return AstNumber(int(astn["raw"]))
   else:
     raise Exception("Don't know how to parse " + str(astn))
 
