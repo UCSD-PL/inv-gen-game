@@ -1,12 +1,15 @@
 function CETraceWindow(div, data) {
   var traceW = this;
   var errorTimer;
-  var pulseTimer;
 
   traceW.okToSubmit = false;
   traceW.dataMap = [[], [], []];
   traceW.data = [[], [], []];
-  traceW.ppInv = ""
+  traceW.ppInv = "";
+  traceW.container = div;
+  traceW.switches = []
+
+  $(div).addClass('positioned')
 
   traceW.immediateError = function (msg) {
     $("th #errormsg").html("<div class='error'> " + msg + "</div>");
@@ -68,9 +71,11 @@ function CETraceWindow(div, data) {
   }
 
   this.clearData = function(type) {
-    if (type == 2 && pulseTimer) {
-      window.clearTimeout(pulseTimer);
-      pulseTimer = null;
+    if (type == 2) {
+      for (var i in traceW.switches) {
+        traceW.switches[i].destroy()
+      }
+      traceW.switches = []
     }
 
     traceW.data[type] = []
@@ -110,23 +115,21 @@ function CETraceWindow(div, data) {
           $("<tr class='traces-row' id='" + id + "_1'>" +
               data[type][i][1].map(el => 
                 "<td class='true ind_disp'>" + el + "</td>").join("") +
-              "<td class='temp_expr_eval'>&nbsp</td>" +
+              "<td class='greyed temp_expr_eval'>&nbsp</td>" +
             "</tr>") ]
-          var i = 0;
-          pulseTimer = setInterval(function () {
-            $(curRow[i%2]).children(".ind_disp").effect("highlight", 1000);
-            i++
-          }, 1000)
         }
 
-        id ++;
         traceW.data[type].push(data[type][i])
 
 
         for (var j = type; j >= 0; j --) {
           var dataM = traceW.dataMap[j]
           if (dataM.length > 0) {
-            dataM[dataM.length - 1].after(curRow)
+            if (dataM[dataM.length - 1].length == 2) {
+              dataM[dataM.length - 1][1].after(curRow)
+            } else {
+              dataM[dataM.length - 1].after(curRow)
+            }
             break;
           }
         }
@@ -136,6 +139,12 @@ function CETraceWindow(div, data) {
         }
 
         traceW.dataMap[type][data_id] = curRow
+
+        if (type == 2) {
+          traceW.switches.push(new KillSwitch(curRow[0]))
+          traceW.switches[data_id].onFlip(traceW.changedCb)
+        }
+        id ++;
       }
     }
     this.changedCb()
@@ -158,10 +167,12 @@ function CETraceWindow(div, data) {
   this.evalResult = function (res) {
     function _set(row, datum) {
       var cell = row.children('.temp_expr_eval')
-      cell.html(JSON.stringify(datum))
-      cell.removeClass('true false')
+      cell.html(datum === null ? '' : JSON.stringify(datum))
+      cell.removeClass('true false greyed')
       if (typeof(datum) == "boolean")
         cell.addClass(datum ? 'true' : 'false')
+      if (datum === null )
+        cell.addClass('greyed')
     }
 
     if (res.data) {
@@ -171,8 +182,26 @@ function CETraceWindow(div, data) {
           var row = traceW.dataMap[type][i]
 
           if (row.length == 2) {
-            _set(row[0], datum[0])
-            _set(row[1], datum[1])
+            var pos = this.switches[i].pos
+            if (pos == 0) {
+              row[0].children('td')
+              .removeClass('true false')
+              .addClass('false')
+              row[1].children('td')
+                .removeClass('greyed true false')
+                .addClass('greyed')
+              _set(row[0], datum[0])
+              _set(row[1], null)
+            } else {
+              row[0].children('td')
+              .removeClass('true false')
+              .addClass('true')
+              row[1].children('td')
+                .removeClass('greyed')
+                .addClass('true')
+              _set(row[0], datum[0])
+              _set(row[1], datum[1])
+            }
           } else
             _set(row, datum)
         }

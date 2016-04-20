@@ -325,3 +325,7 @@ th {
   font-weight: normal;
   background-color: rgb(125,242,127);
 }
+
+.greyed {
+  background-color: rgba(207, 207, 207, .5);
+}

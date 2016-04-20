@@ -159,3 +159,49 @@ function forAll(boolL) {
 function zip(a1, a2) {
   return a1.map((_,i) => [a1[i], a2[i]])
 }
+
+function KillSwitch(pt) {
+  var ks = this;
+  ks.pt  = pt;
+  ks.pos = 0; //Up
+  ks.html = $('<div class="kill-switch" style="position: absolute;"></div>')
+  pOff = $(pt).offset();
+  pW =  $(pt).width(); 
+  $(ks.html).position({
+    my: 'right top ',
+    of: pt,
+    at: 'right-40 top+10' 
+  })
+  //$(ks.html).offset({ top: pOff.top + 10, left: pOff.left + pW - 40 }); 
+  $('body').append(ks.html)
+
+  this.onFlipCb = (i)=>0;
+  this.onFlip = function (cb) {
+    ks.onFlipCb = cb;
+  }
+  this.refresh = function () {
+    if (ks.pos == 0) {
+      ks.html.html("<img src='knife-up.gif' style='width: 30; height: 60px;'/>")
+    } else {
+      ks.html.html("<img src='knife-down.gif' style='width: 30; height: 60px;'/>")
+    }
+  }
+
+  $(ks.html).click(function () {
+    if (ks.pos == 0) {
+      ks.pos = 1;
+    } else {
+      ks.pos = 0;
+    }
+    ks.refresh()
+    ks.onFlipCb(ks.pos)
+  })
+
+  this.destroy = function () {
+    $(ks.html).remove()
+  }
+
+  this.flip = function () { ks.html.click(); }
+
+  this.refresh()
+}

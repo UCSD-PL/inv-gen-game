@@ -48,11 +48,13 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
     var inv = invPP(tracesW.curExp().trim());
     var jsInv = invToJS(inv)
 
+    /*
     if (inductiveCtrxExpr != null && inductiveCtrxExpr != jsInv) {
       gl.curLvl.data[2] = [];
       tracesW.clearData(2)
       inductiveCtrxExpr = null
     }
+    */
 
     try {
       var parsedInv = esprima.parse(jsInv);
@@ -91,7 +93,29 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
       all = pos_res.length + neg_res.length + ind_res.length
       hold_pos = pos_res.filter(function (x) { return x; }).length
       hold_neg = neg_res.filter(function (x) { return x; }).length
-      hold_ind = ind_res.filter(function (x) { return !x[0] || x[1]; }).length
+      /*
+      best_choices = ind_res.map(function (x) {
+        if (!x[0])
+          return 0
+        else if (x[0] && x[1])
+          return 1
+        else
+          return -1
+      })
+
+      for (var i in best_choices) {
+        if (best_choices[i] != -1 && best_choices[i] != tracesW.switches[i].pos)
+          traceW.switches[i].flip()
+      }
+      */
+
+      ind_choices = tracesW.switches.map(x=>x.pos)
+      hold_ind = zip(ind_choices, ind_res).filter(function (x) {
+        if (x[0] == 0)
+          return !x[1][0]
+        else
+          return x[1][0] && x[1][1]
+      }).length
       hold = hold_pos + hold_neg + hold_ind
 
       if (hold < all)
@@ -99,7 +123,7 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
       else {
         tracesW.enableSubmit();
         if (!commit) {
-          tracesW.msg("Press Enter...");
+          tracesW.msg("<span class='good'>Press Enter...</span>");
           return;
         }
 
@@ -146,10 +170,11 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
                           gl.curLvl.data[0] = gl.curLvl.data[0].concat(progress.counterexamples[0])
                           overfittedInvs = overfittedInvs.concat(jsInv)
                         } else if (progress.counterexamples[2].length > 0){
-                          tracesW.clearData(2)
+                          //tracesW.clearData(2)
                           tracesW.addData([[],[], progress.counterexamples[2]])
-                          gl.curLvl.data[2] = progress.counterexamples[2][0]
-                          inductiveCtrxExpr = jsInv
+                          //gl.curLvl.data[2] = progress.counterexamples[2][0]
+                          gl.curLvl.data[2] = gl.curLvl.data[2].concat(progress.counterexamples[2][0])
+                          //inductiveCtrxExpr = jsInv
                           //invalidInv = false;
                         } else {
                           /*
@@ -191,6 +216,9 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
     progW.clear();
     tracesW.clearError();
     //scoreW.clear();
+    tracesW.clearData(0);
+    tracesW.clearData(1);
+    tracesW.clearData(2);
     tracesW.setVariables(lvl);
     tracesW.addData(lvl.data);
     if (lvl.support_pos_ex) {
