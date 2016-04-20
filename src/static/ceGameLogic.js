@@ -129,7 +129,7 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
 
         isTautology(invToJS(inv), function(res) {
           if (res) {
-            tracesW.error("This is a tautology...")
+            tracesW.error("This is a always true...")
             return
           }
 
