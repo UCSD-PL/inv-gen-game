@@ -187,6 +187,7 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
 
                         if (invalidInv) {
                           gl.userInput(false)
+                          tracesW.setExp("");
                         } else {
                           var addScore = computeScore(jsInv, 1)
                           scoreW.add(addScore);

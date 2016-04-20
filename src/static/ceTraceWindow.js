@@ -167,12 +167,25 @@ function CETraceWindow(div, data) {
   this.evalResult = function (res) {
     function _set(row, datum) {
       var cell = row.children('.temp_expr_eval')
-      cell.html(datum === null ? '' : JSON.stringify(datum))
+      cell.html(JSON.stringify(datum))
       cell.removeClass('true false greyed')
       if (typeof(datum) == "boolean")
         cell.addClass(datum ? 'true' : 'false')
-      if (datum === null )
-        cell.addClass('greyed')
+    }
+    function _grey(row) {
+      $(row).children('td')
+        .html('&nbsp')
+        .removeClass('true false')
+        .addClass('greyed')
+    }
+    function _ungrey(row, data, type) {
+      var dataCols = $(row).children('td').not('.temp_expr_eval')
+      dataCols.each(function (i) {
+        $(this).html(data[i]).removeClass('greyed true false').addClass(type)
+      })
+
+      $(row).children('.temp_expr_eval')
+        .removeClass('greyed true false')
     }
 
     if (res.data) {
@@ -184,21 +197,12 @@ function CETraceWindow(div, data) {
           if (row.length == 2) {
             var pos = this.switches[i].pos
             if (pos == 0) {
-              row[0].children('td')
-              .removeClass('true false')
-              .addClass('false')
-              row[1].children('td')
-                .removeClass('greyed true false')
-                .addClass('greyed')
+              _ungrey(row[0], traceW.data[type][i][0], "false")
+              _grey(row[1])
               _set(row[0], datum[0])
-              _set(row[1], null)
             } else {
-              row[0].children('td')
-              .removeClass('true false')
-              .addClass('true')
-              row[1].children('td')
-                .removeClass('greyed')
-                .addClass('true')
+              _ungrey(row[0], traceW.data[type][i][0], "true")
+              _ungrey(row[1], traceW.data[type][i][1], "true")
               _set(row[0], datum[0])
               _set(row[1], datum[1])
             }
@@ -210,6 +214,19 @@ function CETraceWindow(div, data) {
       $('.temp_expr_eval').html('');
       $('.traces-row td.temp_expr_eval').removeClass('true')
       $('.traces-row td.temp_expr_eval').removeClass('false')
+
+      for (var i in traceW.dataMap[2]) {
+            var pos = this.switches[i].pos
+            var row = traceW.dataMap[2][i]
+            if (pos == 0) {
+              _ungrey(row[0], traceW.data[2][i][0], "false")
+              _grey(row[1])
+            } else {
+              _ungrey(row[0], traceW.data[2][i][0], "true")
+              _ungrey(row[1], traceW.data[2][i][1], "true")
+            }
+      }
+
     }
   }
 
