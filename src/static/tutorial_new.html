@@ -14,6 +14,8 @@
   <link rel="stylesheet" href="inv.css">
   <link rel="stylesheet" href="arrow.css">
   <script src="ceTraceWindow.js"></script>
+  <script src="traceWindow.js"></script>
+  <script src="ceGameLogic.js"></script>
   <script src="progressWindow.js"></script>
   <script src="scoreWindow.js"></script>
   <script src="logic.js"></script>
@@ -28,7 +30,7 @@
     var errorTimer;
     var jsfound = [];
     var curLvl;
-    var tracesW = null, progW = null, scoreW = null;
+    var tracesW = null, progW = null, scoreW = null, stickyW = null, gameLogic = null;
     var curL;
     var tempCb = null;
     var stepTimeout = -1;
@@ -234,6 +236,22 @@
                }
       },
       { setup: function (cs) {
+               stickyW.fadeIn(500);
+               gameLogic = new CEGameLogic(tracesW, progW, scoreW, stickyW)
+               var lvl = {
+
+                 id: "tutorial",
+                 variables: [ "j", "n" ],
+                 data: [ [ [ 0, 3 ], [ 1, 3 ], [ 2, 3 ] [ 3, 3]], [], [] ],
+                 goal: { },
+                 hint: "",
+                 supports_pos_ex: false,
+                 supports_neg_ex: false,
+                 supports_ind_ex: false,
+               }
+               tracesW.setExp('');
+      },
+      { setup: function (cs) {
                tracesW.setExp('');
                  curL = label($("#formula-entry"),
                   "Lets try one more: n=2", "left")
@@ -390,10 +408,11 @@
 
       progW = new ProgressWindow($('#discovered-invariants-div'));
       $('#discovered-invariants-div').hide();
-
       scoreW = new ScoreWindow($('#score-div'));
       $('#score-div-row').hide();
       $('#next-lvl').hide();
+      stickyW = new StickyWindow($('#sticky'));
+      $('#sticky').hide();
 
       curScript = Script(tutorialScript);
 
@@ -409,6 +428,8 @@
   <div class='container'>
     <div class='row'>
       <div class='col-md-3' id='left'>
+      </div>
+      <div class='col-md-1 box stickyWindow' id='sticky'>
       </div>
       <div class='col-md-6' id='middle'>
         <div class='row' id='data-display' style="font-family:monospace;">
