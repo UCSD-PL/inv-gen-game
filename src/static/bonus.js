@@ -42,8 +42,30 @@ function getLastPlayer2Inv() {
 }
 
 
+function showImplication(src, dst) {
+  var srcX = src.offset().left + 200;
+  var srcY = src.offset().top + 10;
+
+  var dstX = dst.offset().left + 200;
+  var dstY = dst.offset().top + 10;
+
+  var midX = (srcX + dstX)/2 + 200;
+  var midY = (srcY + dstY)/2;
+
+  $(function(){
+    $(document.body).curvedArrow({
+        p0x: srcX,
+        p0y: srcY,
+        p1x: midX,
+        p1y: midY,
+        p2x: dstX,
+        p2y: dstY
+    });
+  });
+}
+
+
 function getBonus(player, fn) {
-  var bonus = 0;
   var increment = 1;
 
   if (player == 1) {
@@ -55,7 +77,16 @@ function getBonus(player, fn) {
         for(var i = 0; i < x.length; i++) {
           if(x[i][0] == 0){
             console.log(newInv + " ==> " + player2Invs[x[i][1]]);
-            bonus = bonus + increment;
+
+            // draw curved arrow from newInv to player2Invs[x[i][1]]
+            var src = $("#good-invariants").children().last();
+            var dst = $("#good-invariants2");
+            showImplication(src,dst);
+
+            // pause for 2 sec
+            // fadeout the implied invariant from player 2's set of invariants
+            // fadeout the curved arrow
+
             fn(increment);
           }
         }
@@ -72,13 +103,17 @@ function getBonus(player, fn) {
         for(var i = 0; i < x.length; i++) {
           if(x[i][0] == 0) {
             console.log(newInv + " ==> " + player1Invs[x[i][1]]);
-            bonus = bonus + increment;
             fn(increment);
+            //remove the implied invariant from player 1's set of invariants
+            //  move the invariant towards newInv
+            //  fade the invariant
+
+            //decrement player 1's points (by 1)
+            //  show the decrement in red color
           }
         }
       }
     });
   }
 
-  //fn(bonus);
 }

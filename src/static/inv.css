@@ -250,6 +250,18 @@ th {
   text-decoration: none;
 }
 
+.btn-pass {
+  color: #ffffff;
+  font-size: 20px;
+  background: #f29408;
+  padding: 10px 20px 10px 20px;
+  border-radius: 25px;
+}
+
+.btn-pass:hover {
+  background: #ffbf66;
+}
+
 .loadLvl {
   color: black;
 }

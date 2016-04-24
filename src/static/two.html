@@ -29,6 +29,7 @@
   <script src="pp.js"></script>
   <script src="util.js"></script>
   <script src="powerups.js"></script>
+  <script src="jquery.curvedarrow.js"></script>
   <script src="bonus.js"></script>
 
   <script>
@@ -456,7 +457,7 @@
         $('#next-lvl').hide();
       }
 
-      if(player1Done && player2Done) {
+      if(player1Done || player2Done) {
         $('#next-lvl').show();
       }
     }
@@ -479,7 +480,7 @@
         $('#next-lvl2').hide();
       }
 
-      if(player1Done && player2Done) {
+      if(player1Done || player2Done) {
         $('#next-lvl2').show();
       }
     }
@@ -542,7 +543,7 @@
         //console.log("Invariants by Player 1:");
         //console.log(gameLogic.getFoundJSInv());
 
-        if(player1Done && player2Done) {
+        if(player1Done || player2Done) {
           $('#next-lvl').show();
         }
       });
@@ -554,7 +555,7 @@
         //console.log("Invariants by Player 2:");
         //console.log(gameLogic2.getFoundJSInv());
 
-        if(player1Done && player2Done) {
+        if(player1Done || player2Done) {
           $('#next-lvl2').show();
         }
       });

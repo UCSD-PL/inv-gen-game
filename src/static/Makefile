@@ -7,7 +7,8 @@ THIRD_PARTY_DEPS=bootstrap.min.css \
 								 esprima.js\
 								 jquery-ui-1.11.4\
 								 doge.jpg\
-								 help-icon.png
+								 help-icon.png\
+								 jquery.curvedarrow.js
 #								 crafty-min.js\
 
 all: $(THIRD_PARTY_DEPS)
@@ -46,6 +47,9 @@ doge.jpg:
 
 help-icon.png:
 	wget http://cseweb.ucsd.edu/~r1jha/images/help-icon.png
+
+jquery.curvedarrow.js:
+	wget http://cseweb.ucsd.edu/~r1jha/jquery.curvedarrow.js
 
 clean:
 	rm -r $(THIRD_PARTY_DEPS)

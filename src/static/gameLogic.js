@@ -129,8 +129,6 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
 
               /* Check if it's a two-player game */
               if($('#top').html().trim().includes("Two")) {
-                //var bonusPoints = getBonus(player);
-                //scoreW.add(bonusPoints); // isn't synchronized
 
                 getBonus(player, function(pt) {
                   scoreW.add(pt);
