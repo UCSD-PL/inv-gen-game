@@ -66,14 +66,19 @@ function showImplication(src, dst) {
 
 
 function getBonus(player, fn) {
-  var increment = 1;
 
   if (player == 1) {
     var newInv = getLastPlayer1Inv();
     var player2Invs = getAllPlayer2Inv();
 
     impliedPairs([newInv], player2Invs, function(x) {
+      var increment = 0;
       if(x != null) {
+        for(var i = 0; i < x.length; i++) {
+          if(x[i][0] == 0){
+            increment += 1
+          }
+        }
         for(var i = 0; i < x.length; i++) {
           if(x[i][0] == 0){
             console.log(newInv + " ==> " + player2Invs[x[i][1]]);
@@ -84,11 +89,9 @@ function getBonus(player, fn) {
             showImplication(src,dst);
 
             $("#good-invariants2").children().eq(x[i][1]).addClass("implied");
-            setTimeout(function(){$('.curved_arrow').fadeOut(1000)}, 2000);
-
-            fn(increment);
           }
         }
+        setTimeout(function(){fn(increment); $('.curved_arrow').delay(1000).fadeOut(1000);}, 1000);
       }
     });
   }
@@ -98,9 +101,15 @@ function getBonus(player, fn) {
     var player1Invs = getAllPlayer1Inv();
 
     impliedPairs([newInv], player1Invs, function(x) {
+      var increment = 0;
       if(x != null) {
         for(var i = 0; i < x.length; i++) {
           if(x[i][0] == 0) {
+            increment += 1
+          }
+        }
+        for(var i = 0; i < x.length; i++) {
+          if(x[i][0] == 0){
             console.log(newInv + " ==> " + player1Invs[x[i][1]]);
 
             var src = $("#good-invariants2").children().last();
@@ -108,11 +117,9 @@ function getBonus(player, fn) {
             showImplication(src,dst);
 
             $("#good-invariants").children().eq(x[i][1]).addClass("implied");
-            setTimeout(function(){$('.curved_arrow').fadeOut(1000)}, 2000);
-
-            fn(increment);
           }
         }
+        setTimeout(function(){fn(increment); $('.curved_arrow').delay(1000).fadeOut(1000);}, 1000);
       }
     });
   }
