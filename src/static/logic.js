@@ -38,3 +38,11 @@ function isTautology(inv, cb) {
 function counterexamples(lvlSet, lvlId, invs, cb) {
   return rpc.call("App.verifyInvariants", [ lvlSet, lvlId, $.map(invs, esprima.parse) ], cb, log)
 }
+
+function pre_vc_ctrex(lvlSet, lvlId, invs, cb) {
+  return rpc.call("App.checkPreVC", [ lvlSet, lvlId, $.map(invs, esprima.parse) ], cb, log)
+}
+
+function ind_vc_ctrex(lvlSet, lvlId, invs, cb) {
+  return rpc.call("App.checkIndVC", [ lvlSet, lvlId, $.map(invs, esprima.parse) ], cb, log)
+}

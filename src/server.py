@@ -428,5 +428,63 @@ def verifyInvariants(levelSet, levelId, invs):
     log({"type": "verifyInvariant", "data": res })
     return res
 
+@api.method("App.checkPreVC")
+@pp_exc
+def checkPreVC(levelSet, levelId, invs):
+    if (levelSet not in traces):
+        raise Exception("Unkonwn level set " + str(levelSet))
+
+    if (levelId not in traces[levelSet]):
+        raise Exception("Unkonwn trace " + str(levelId) + " in levels " + str(levelSet))
+
+    if (len(invs) == 0):
+        raise Exception("No invariants given")
+
+    lvl = traces[levelSet][levelId]
+
+    if ('program' not in lvl):
+      # Not a boogie level - error
+      raise Exception("Level " + str(levelId) + " " + str(levelSet) + " not a dynamic boogie level.")
+
+    boogie_invs = [ esprimaToBoogie(x, {}) for x in invs ]
+    boogie_inv = ast_and(boogie_invs)
+    bbs = lvl['program']
+    loop = lvl['loop']
+
+    fix = lambda x: _from_dict(lvl['variables'], x)
+    print "Try pre.."
+    pre_ctrex = map(fix, filter(lambda x:    x, [ loop_vc_pre_ctrex(loop, boogie_inv, bbs) ]))
+    log({"type": "checkPreVC", "data": pre_ctrex })
+    return pre_ctrex 
+
+@api.method("App.checkIndVC")
+@pp_exc
+def checkIndVC(levelSet, levelId, invs):
+    if (levelSet not in traces):
+        raise Exception("Unkonwn level set " + str(levelSet))
+
+    if (levelId not in traces[levelSet]):
+        raise Exception("Unkonwn trace " + str(levelId) + " in levels " + str(levelSet))
+
+    if (len(invs) == 0):
+        raise Exception("No invariants given")
+
+    lvl = traces[levelSet][levelId]
+
+    if ('program' not in lvl):
+      # Not a boogie level - error
+      raise Exception("Level " + str(levelId) + " " + str(levelSet) + " not a dynamic boogie level.")
+
+    boogie_invs = [ esprimaToBoogie(x, {}) for x in invs ]
+    boogie_inv = ast_and(boogie_invs)
+    bbs = lvl['program']
+    loop = lvl['loop']
+
+    fix = lambda x: _from_dict(lvl['variables'], x)
+    print "Try pre.."
+    ind_ctrex = map(fix, filter(lambda x:    x, [ loop_vc_ind_ctrex(loop, boogie_inv, bbs) ]))
+    log({"type": "checkIndVC", "data": ind_ctrex })
+    return ind_ctrex 
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
