@@ -7,6 +7,7 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
   var progress;
   var pwups;
   var inductiveCtrxExpr = null;
+  var lvlPassedF = false;
 
   gl.tracesW = tracesW;
   gl.progressW = progressW;
@@ -75,7 +76,7 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
       var ind_res = invEval(jsInv, gl.curLvl.variables, gl.curLvl.data[2])
 
       // Pair the inductive results
-      ind_res = zip(ind_res.filter((_,i)=>i%2 == 0), ind_res.filter((_,i)=>i%2==1))
+      var ind_res = zip(ind_res.filter((_,i)=>i%2 == 0), ind_res.filter((_,i)=>i%2==1))
 
       var res = [pos_res, neg_res, ind_res]
       tracesW.evalResult({ data: res })
@@ -90,9 +91,9 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
         return
       }
 
-      all = pos_res.length + neg_res.length + ind_res.length
-      hold_pos = pos_res.filter(function (x) { return x; }).length
-      hold_neg = neg_res.filter(function (x) { return x; }).length
+      var all = pos_res.length + neg_res.length + ind_res.length
+      var hold_pos = pos_res.filter(function (x) { return x; }).length
+      var hold_neg = neg_res.filter(function (x) { return x; }).length
       /*
       best_choices = ind_res.map(function (x) {
         if (!x[0])
@@ -109,14 +110,14 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
       }
       */
 
-      ind_choices = tracesW.switches.map(x=>x.pos)
-      hold_ind = zip(ind_choices, ind_res).filter(function (x) {
+      var ind_choices = tracesW.switches.map(x=>x.pos)
+      var hold_ind = zip(ind_choices, ind_res).filter(function (x) {
         if (x[0] == 0)
           return !x[1][0]
         else
           return x[1][0] && x[1][1]
       }).length
-      hold = hold_pos + hold_neg + hold_ind
+      var hold = hold_pos + hold_neg + hold_ind
 
       if (hold < all)
         tracesW.error("Holds for " + hold + "/" + all + " cases.")
@@ -141,65 +142,33 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
               gl.pwupSuggestion.invariantTried(jsInv);
               gl.setPowerups(gl.pwupSuggestion.getPwups());
 
-              if (!progress.satisfied) {
-                gl.curLvl.goalSatisfied(foundJSInv.concat(jsInv),
-                  function(newProgress) {
-                    progress = newProgress
-                    if (progress.satisfied) {
-                      foundInv.push(inv)
-                      foundJSInv.push(jsInv)
-                      progW.addInvariant(inv);
-                      gl.lvlPassed();
-                    } else {
-                      if (progress.counterexamples) {
-                        // Clear inductive counterexamples
-
-                        var invalidInv = true;
-                        // Order of checking and the short-circuiting here is important. We check first
-                        // 1) precondition counterexamples (positive) as they
-                        //    are guaranteed to be negative values
-                        // 2) inductive counterexamples, as they are the only
-                        //    other barrier for a sound invariant
-                        // 3) postcondition failures - if only those are
-                        //    present, then the user has a sound inductive
-                        //    invariant that we should keep. Its just not tight
-                        //    enough. TODO: We currently don't display the
-                        //    negative counterexamples. Whats a good way to show those?
-                        if (progress.counterexamples[0].length > 0) {
-                          tracesW.addData([progress.counterexamples[0], [], []])
-                          gl.curLvl.data[0] = gl.curLvl.data[0].concat(progress.counterexamples[0])
-                          overfittedInvs = overfittedInvs.concat(jsInv)
-                        } else if (progress.counterexamples[2].length > 0){
-                          //tracesW.clearData(2)
-                          tracesW.addData([[],[], progress.counterexamples[2]])
-                          //gl.curLvl.data[2] = progress.counterexamples[2][0]
-                          gl.curLvl.data[2] = gl.curLvl.data[2].concat(progress.counterexamples[2][0])
-                          //inductiveCtrxExpr = jsInv
-                          //invalidInv = false;
-                        } else {
-                          /*
-                          // assert (progress.counterexamples[1].length > 0)
-                          tracesW.addData(progress.counterexamples[1], "negative")
-                          gl.curLvl.data[1] = gl.curLvl.data[1].concat(progress.counterexamples[1])
-                          */
-                          invalidInv = false;
-                        } 
-
-                        if (invalidInv) {
-                          gl.userInput(false)
-                          tracesW.setExp("");
-                        } else {
-                          var addScore = computeScore(jsInv, 1)
-                          scoreW.add(addScore);
-                          foundInv.push(inv)
-                          foundJSInv.push(jsInv)
-                          progW.addInvariant(inv);
-                          tracesW.setExp("");
-                        }
+              gl.curLvl.invSound(jsInv, foundJSInv, function (res) {
+                if (res.sound) {
+                  var addScore = computeScore(jsInv, 1)
+                  scoreW.add(addScore);
+                  foundInv.push(inv)
+                  foundJSInv.push(jsInv)
+                  progW.addInvariant(inv);
+                  tracesW.setExp("");
+                  if (!gl.lvlPassedF) {
+                    gl.curLvl.goalSatisfied(foundJSInv, function(res) {
+                      if (res.satisfied) {
+                        gl.lvlPassedF = true;
+                        gl.lvlPassed();
                       }
-                    }
-                });
-              }
+                    });
+                  }
+                } else {
+                  //TODO: Leftover from refactoring
+                  //overfittedInvs = overfittedInvs.concat(jsInv)
+                  gl.userInput(false)
+                  tracesW.setExp("");
+                  tracesW.addData(res.ctrex)
+                  for (var i in [0,1,2]) {
+                    gl.curLvl.data[i] = gl.curLvl.data[i].concat(res.ctrex[0])
+                  }
+                }
+              })
             }
           })
         })
@@ -211,6 +180,7 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
   }
 
   gl.loadLvl = function(lvl) {
+    gl.lvlPassedF = false;
     gl.clear();
     gl.curLvl = lvl;
     stickyW.clear();

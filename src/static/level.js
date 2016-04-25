@@ -7,6 +7,7 @@ function Level(id,
                support_pos_ex,
                supports_neg_ex,
                support_ind_ex) {
+  var lvl = this;
   this.id = id;
   this.positive_data, this.negative_data, this.inductive_data = initial_data;
   this.data = initial_data
@@ -18,8 +19,38 @@ function Level(id,
   this.supports_neg_ex = supports_neg_ex;
   this.support_ind_ex = support_ind_ex;
 
+  /* 
+     Given an invariant that holds for the current data,
+     is it sound? If this level supports positive and/or inductive
+     checking, see if there are counterexamples. Otherwise conclude
+     true.
+   */
+  this.invSound = function(inv, soundInvs, cb) {
+    if (lvl.support_pos_ex) {
+      pre_vc_ctrex(curLvlSet, lvls[curLvl], soundInvs.concat([inv]), function(pos_res) {
+        if (pos_res.length != 0) {
+          cb({ sound: false, ctrex: [pos_res, [], []] })
+        } else if (lvl.support_ind_ex) {
+          ind_vc_ctrex(curLvlSet, lvls[curLvl], soundInvs.concat([inv]), function(ind_res) {
+            cb({ sound: ind_res.length == 0, ctrex: [ [], [], ind_res ] })
+          })
+        } else {
+          cb({ sound: true, ctrex: [ [], [], [] ] })
+        }
+      })
+    }
+
+    if (lvl.support_ind_ex) {
+      ind_vc_ctrex(curLvlSet, this.id, soundInvs.concat([inv]), function(res) {
+        cb({ sound: res.length == 0, counterexample: res })
+      })
+    }
+
+    cb({ sound: true });
+  }
+
   this.goalSatisfied = function(invs, cb) {
-    var goal = this.goal;
+    var goal = lvl.goal;
     if (goal == null) {
       cb({ "satisfied" : true })
     } else if (goal.manual) {
@@ -67,7 +98,6 @@ function Level(id,
       error("Unknown goal " + goal.toSource());
     }
   }
-
 }
 
 Level.load = function(lvlSet, id, cb) {
