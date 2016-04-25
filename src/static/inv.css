@@ -24,6 +24,11 @@ tr.false {
   font-weight: bold;
 }
 
+.implied {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
 #hint {
  font-weight: bold;
 }

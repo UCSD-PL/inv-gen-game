@@ -8,13 +8,13 @@
             p2x: 100,
             p2y: 100,
             size: 30,
-            lineWidth: 10,
-            strokeStyle: 'rgb(245,238,49)'
+            lineWidth: 5,
+            strokeStyle: 'rgba(125,242,125, 0.5)'/*'rgb(245,238,49)'*/
         }, options);
-        
+
         var canvas = document.createElement('canvas');
         $(canvas).appendTo(this);
-        
+
         var x_min_max = quadraticCurveMinMax(settings.p0x, settings.p1x, settings.p2x);
         var y_min_max = quadraticCurveMinMax(settings.p0y, settings.p1y, settings.p2y);
         var padding = settings.size - settings.lineWidth;
@@ -39,7 +39,7 @@
 
 
         var ctx = canvas.getContext('2d');
-        
+
         // Styling
         ctx.strokeStyle = settings.strokeStyle;
         ctx.lineWidth = settings.lineWidth;
@@ -51,18 +51,18 @@
         ctx.moveTo(p0x, p0y);
         ctx.quadraticCurveTo(p1x, p1y, p2x, p2y);
         ctx.stroke();
-        
+
         // Arrow head
         var angle = Math.atan2(p2y - p1y, p2x - p1x);
         ctx.translate(p2x, p2y);
-        
+
         // Right side
         ctx.rotate(angle + 1);
         ctx.beginPath();
         ctx.moveTo(0, settings.size);
         ctx.lineTo(0, 0);
         ctx.stroke();
-        
+
         // Left side
         ctx.rotate(-2);
         ctx.lineTo(0, -settings.size);

@@ -80,12 +80,11 @@ function getBonus(player, fn) {
 
             // draw curved arrow from newInv to player2Invs[x[i][1]]
             var src = $("#good-invariants").children().last();
-            var dst = $("#good-invariants2");
+            var dst = $("#good-invariants2").children().eq(x[i][1]);
             showImplication(src,dst);
 
-            // pause for 2 sec
-            // fadeout the implied invariant from player 2's set of invariants
-            // fadeout the curved arrow
+            $("#good-invariants2").children().eq(x[i][1]).addClass("implied");
+            setTimeout(function(){$('.curved_arrow').fadeOut(1000)}, 2000);
 
             fn(increment);
           }
@@ -103,13 +102,15 @@ function getBonus(player, fn) {
         for(var i = 0; i < x.length; i++) {
           if(x[i][0] == 0) {
             console.log(newInv + " ==> " + player1Invs[x[i][1]]);
-            fn(increment);
-            //remove the implied invariant from player 1's set of invariants
-            //  move the invariant towards newInv
-            //  fade the invariant
 
-            //decrement player 1's points (by 1)
-            //  show the decrement in red color
+            var src = $("#good-invariants2").children().last();
+            var dst = $("#good-invariants").children().eq(x[i][1]);
+            showImplication(src,dst);
+
+            $("#good-invariants").children().eq(x[i][1]).addClass("implied");
+            setTimeout(function(){$('.curved_arrow').fadeOut(1000)}, 2000);
+
+            fn(increment);
           }
         }
       }

@@ -29,7 +29,7 @@
   <script src="pp.js"></script>
   <script src="util.js"></script>
   <script src="powerups.js"></script>
-  <script src="jquery.curvedarrow.js"></script>
+  <script src="curvedarrow.js"></script>
   <script src="bonus.js"></script>
 
   <script>
@@ -459,6 +459,7 @@
 
       if(player1Done || player2Done) {
         $('#next-lvl').show();
+        $('#next-lvl2').show();
       }
     }
 
@@ -481,6 +482,7 @@
       }
 
       if(player1Done || player2Done) {
+        $('#next-lvl').show();
         $('#next-lvl2').show();
       }
     }
@@ -545,6 +547,7 @@
 
         if(player1Done || player2Done) {
           $('#next-lvl').show();
+          $('#next-lvl2').show();
         }
       });
 
@@ -556,6 +559,7 @@
         //console.log(gameLogic2.getFoundJSInv());
 
         if(player1Done || player2Done) {
+          $('#next-lvl').show();
           $('#next-lvl2').show();
         }
       });
