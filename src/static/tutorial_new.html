@@ -29,6 +29,7 @@
 
   <script>
     var errorDelay = 2000;
+    var fadeDelay = 500;
     var errorTimer;
     var jsfound = [];
     var curLvl;
@@ -92,20 +93,32 @@
        }
     }
 
+    function nextStepOnGLInvariant(curScript, invariant, destructor, gl) {
+      gl.onUserInput(function(inv) {
+         if (inv == invariant) {
+           removeLabel(curL);
+           gl.onUserInput(function(inv) {})
+           destructor();
+           curScript.nextStep();
+         }
+       })
+    }
+
     function labelRemover(lbl) {
       return function () { removeLabel(lbl) }
     }
 
     var tutorialScript = [
       { setup: function (cs) {
-                  $('#data-display').html("<div class='text-center' style='display: none'><h1>First a quick tutorial. <br> You can press spacebar at any time to proceed to the next step (unless otherwise directed).</h1> </div>")
-                  $('#data-display div').fadeIn(1000, function () {
+                  $('.overlay').html("<h1>First a quick tutorial. <br> You can press spacebar at any time <br>to proceed to the next step.</h1>")
+                  $('.overlay').fadeIn(fadeDelay, function () {
                     cs.nextStepOnKeyOrTimeout(stepTimeout, ()=>0, 32)
                   })
                }
       },
+      // UI tutorial -----------------------------------------------------
       { setup: function (cs) {
-                  $("#data-display div").fadeOut(1000, function () {
+                  $(".overlay").fadeOut(fadeDelay, function () {
                     var lvl = {
 
                       id: "tutorial",
@@ -220,7 +233,7 @@
       },
       { setup: function (cs) {
                  tracesW.msg("")
-                 $('#score-div-row').fadeIn(1000, function() {
+                 $('#score-div-row').fadeIn(fadeDelay, function() {
                    curL = label($("#score-div"), "You get points for each expression!<br> Sweet!", "up");
                    scoreW.add(1);
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
@@ -228,7 +241,7 @@
                }
       },
       { setup: function (cs) {
-                 $('#discovered-invariants-div').fadeIn(1000, function() {
+                 $('#discovered-invariants-div').fadeIn(fadeDelay, function() {
                    var inv = invPP(tracesW.curExp().trim());
                    addSuccessfulInvariant(inv);
                    curL = label($("#good_0"), "Your expressions appear here", "up");
@@ -236,23 +249,150 @@
                  })
                }
       },
+      // Tutorial Levels for UI-----------------------------------------------
       { setup: function (cs) {
-                 $('#sticky').fadeIn(500);
+                  $('.overlay').html("<h1>Lets warm up with a couple of levels!</h1>")
+                  $('.overlay').fadeIn(fadeDelay, function () {
+                    cs.nextStepOnKeyOrTimeout(stepTimeout, ()=>0, 32)
+                  })
+               }
+      },
+      { setup: function (cs) {
+                 $(".overlay").fadeOut(fadeDelay, function () {
+                   $('#sticky').addClass("box stickyWindow");
+                   stickyW = new StickyWindow($('#sticky'));
+                   gameLogic = new CEGameLogic(tracesW, progW, scoreW, stickyW);
+                   var lvl = new Level("tutorial_lvl_1",
+                     [ "j", "n" ],
+                     [ [ [ 0, 3 ], [ 1, 3 ], [ 2, 3 ], [ 3, 3 ] ], [], [] ],
+                     {},
+                     { equivalent: ["j<=n"] },
+                     "What can you say about j and n?",
+                     false,
+                     false,
+                     false)
+                   gameLogic.loadLvl(lvl)
+                   tracesW.disable();
+                   cs.nextStep()
+                 })
+               }
+      },
+      { setup: function (cs) {
+                 $('#container').click()
+                 curL = label($("#sticky"), "You get extra points for some invariants!", "up");
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#sticky"), "Hover over each powerup for details!", "up");
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 tracesW.enable();
+                 $('#formula-entry').focus();
+                 gameLogic.onLvlPassed(()=>$('#next-lvl').fadeIn(fadeDelay, function() {}))
+               }
+      },
+      { setup: function (cs) {
+                 $('#next-lvl').hide();
                  gameLogic = new CEGameLogic(tracesW, progW, scoreW, stickyW);
-                 var lvl = new Level("tutorial_lvl_1",
-                   [ "j", "n" ],
-                   [ [ [ 0, 3 ], [ 1, 3 ], [ 2, 3 ], [ 3, 3 ] ], [], [] ],
+                 var lvl = new Level("tutorial_lvl_2",
+                   [ "k", "l" ],
+                   [ [ [ 1, 2 ], [ 2, 3 ], [ 3, 4 ] ], [], [] ],
                    {},
-                   { equivalent: ["j<=n"] },
-                   "",
+                   { equivalent: ["l==k+1"] },
+                   "How are l and k related?",
                    false,
                    false,
                    false)
-                 gameLogic.onLvlPassed(()=>cs.nextStep())
+                 gameLogic.onLvlPassed(()=>$('#next-lvl').fadeIn(fadeDelay, function() {}))
                  gameLogic.loadLvl(lvl)
                }
       },
       { setup: function (cs) {
+                 $('#next-lvl').hide();
+                 gameLogic = new CEGameLogic(tracesW, progW, scoreW, stickyW);
+                 var lvl = new Level("tutorial_lvl_3",
+                   [ "k", "l" ],
+                   [ [ [ 1, 3 ], [ 2, 6 ], [ 3, 9 ] ], [], [] ],
+                   {},
+                   { equivalent: ["l==k*3"] },
+                   "How are l and k related?",
+                   false,
+                   false,
+                   false)
+                 gameLogic.onLvlPassed(()=>$('#next-lvl').fadeIn(fadeDelay, function() {}))
+                 gameLogic.loadLvl(lvl)
+               }
+      },
+      // Negative examples tutorial ------------------------------------------
+      { setup: function (cs) {
+                  $('.overlay').html("<h1>Good job!<br>Lets go back to our example for a sec.</h1>")
+                  $('.overlay').fadeIn(fadeDelay, function () {
+                    cs.nextStepOnKeyOrTimeout(stepTimeout, ()=>0, 32)
+                  })
+               }
+      },
+      { setup: function (cs) {
+                 $(".overlay").fadeOut(fadeDelay, function () {
+                 var lvl = new Level("tutorial_example",
+                   [ "i", "n" ],
+                   [ [ [ 0, 2 ], [ 1, 2 ], [ 2, 2 ] ], [ [ 4, 3 ] ], [] ],
+                   { none: true },
+                   {},
+                   "How are i and n related?",
+                   false,
+                   false,
+                   false)
+                   gameLogic.loadLvl(lvl)
+                   curL = label($("#3 .temp_expr_eval"), "Got a new kind of row!", "left")
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+                 })
+               }
+      },
+      { setup: function (cs) {
+                 curL = label("#3 .temp_expr_eval", "Need to make it all red!", "left")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#formula-entry"), "Try i >= 0 again.", "left")
+                 nextStepOnGLInvariant(cs, "i>=0", labelRemover(curL), gameLogic);
+               }
+      },
+      { setup: function (cs) {
+                 curL = label("#3 .temp_expr_eval", "Not a single color here :(", "left")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#formula-entry"), "What about i <= n?", "left")
+                 nextStepOnGLInvariant(cs, "i<=n", labelRemover(curL), gameLogic);
+               }
+      },
+      { setup: function (cs) {
+                 curL = label("#3 .temp_expr_eval", "It worked!", "left")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label("#3 .temp_expr_eval", "Its single color!", "left")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      // Negative examples tutorial levels -----------------------------------
+      { setup: function (cs) {
+                  $('.overlay').html("<h1>Lets practice these red rows now.</h1>")
+                  $('.overlay').fadeIn(fadeDelay, function () {
+                    cs.nextStepOnKeyOrTimeout(stepTimeout, ()=>0, 32)
+                  })
+               }
+      },
+
+      // Positive and negative counterexamples tutorial ----------------------
+      { setup: function (cs) {
+                 $('#next-lvl').hide();
                  tracesW.setExp('');
                  curL = label($("#formula-entry"),
                    "Lets try one more: n=2", "left")
@@ -302,6 +442,8 @@
                  cs.nextStepOnKeyOrTimeout(1000, labelRemover(curL), 32)
                }
       },
+      // Positive and negative counterexamples tutorial levels ---------------
+      // Inductive counterexamples tutorial ----------------------------------
       { setup: function (cs) {
                  curL = label($("#formula-entry"),
                   "Try i<3", "left")
@@ -360,9 +502,11 @@
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
+      // Inductive counterexamples tutorial levels ---------------------------
+      // Conclusion ----------------------------------------------------------
       { setup: function (cs) {
                   $('#data-display table').add('#score-div-row').add('#discovered-invariants-div')
-                  .fadeOut(1000, function () {
+                  .fadeOut(fadeDelay, function () {
                     cs.nextStep()
                   })
                }
@@ -393,7 +537,7 @@
                }
       },
       { setup: function (cs) {
-                 $('#next-lvl').fadeIn(1000, function() {
+                 $('#next-lvl').fadeIn(fadeDelay, function() {
                    curL = label($("#next-lvl"), "Proceed to the game!", "up");
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                  })
@@ -412,13 +556,13 @@
       scoreW = new ScoreWindow($('#score-div'));
       $('#score-div-row').hide();
       $('#next-lvl').hide();
-      stickyW = new StickyWindow($('#sticky'));
-      $('#sticky').hide();
+      $('#overlay').hide();
 
-      curScript = Script(tutorialScript);
+      var curScript = new Script(tutorialScript);
 
       $('#next-lvl').click(function() {
-        window.location.replace('game.html');
+        curScript.nextStep();
+        //window.location.replace('game.html');
       })
     })
 
@@ -430,7 +574,7 @@
     <div class='row'>
       <div class='col-md-1' id='left'>
       </div>
-      <div class='col-md-1 box stickyWindow' style='display:hidden' id='sticky'>
+      <div class='col-md-1' id='sticky'>
       </div>
       <div class='col-md-6' id='middle'>
         <div class='row' id='data-display' style="font-family:monospace;">
@@ -438,7 +582,7 @@
         <div class='row-md-6 spaced' id='errormsg'> </div>
         <div class='row-md-6' id='done-row'>
           <div class='col-md-6 col-md-offset-4' style='margin-top: 30px;'>
-            <button id='next-lvl' class='btn-next'> Start Playing </button>
+            <button id='next-lvl' class='btn-next'> Next Level </button>
           </div>
         </div>
       </div>
@@ -453,5 +597,6 @@
       </div>
     </div>
   </div>
+  <div class='overlay text-center'></div>
 </div>
 </html>

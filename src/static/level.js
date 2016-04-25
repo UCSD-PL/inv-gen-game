@@ -94,6 +94,8 @@ function Level(id,
              "counterexamples": res
         })
       })
+    } else if (goal.none) {
+      cb({ "satisfied" : false })
     } else {
       error("Unknown goal " + goal.toSource());
     }

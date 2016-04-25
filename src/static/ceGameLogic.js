@@ -49,6 +49,7 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
     var inv = invPP(tracesW.curExp().trim());
     var jsInv = invToJS(inv)
 
+    gl.userInputCb(inv);
     /*
     if (inductiveCtrxExpr != null && inductiveCtrxExpr != jsInv) {
       gl.curLvl.data[2] = [];
@@ -93,7 +94,7 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
 
       var all = pos_res.length + neg_res.length + ind_res.length
       var hold_pos = pos_res.filter(function (x) { return x; }).length
-      var hold_neg = neg_res.filter(function (x) { return x; }).length
+      var hold_neg = neg_res.filter(function (x) { return !x; }).length
       /*
       best_choices = ind_res.map(function (x) {
         if (!x[0])
@@ -258,6 +259,12 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
   gl.onLvlLoaded = function (cb) {
     gl.lvlLoaded = cb;
   }
+
+  gl.userInputCb = function (dummy) {}
+  gl.onUserInput = function (cb) {
+    gl.userInputCb = cb;
+  }
+
 
   gl.score = function () { return scoreW.score; }
   gl.clear();
