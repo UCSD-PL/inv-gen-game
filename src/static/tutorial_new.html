@@ -15,6 +15,8 @@
   <link rel="stylesheet" href="arrow.css">
   <script src="ceTraceWindow.js"></script>
   <script src="traceWindow.js"></script>
+  <script src="stickyWindow.js"></script>
+  <script src="powerups.js"></script>
   <script src="ceGameLogic.js"></script>
   <script src="progressWindow.js"></script>
   <script src="scoreWindow.js"></script>
@@ -117,7 +119,6 @@
                     }
 
                     curLvl = lvl;
-                    console.log(lvl.data)
                     tracesW = new CETraceWindow($('#data-display'));
                     tracesW.setVariables(lvl)
                     tracesW.changed(function() {
@@ -236,25 +237,25 @@
                }
       },
       { setup: function (cs) {
-               stickyW.fadeIn(500);
-               gameLogic = new CEGameLogic(tracesW, progW, scoreW, stickyW)
-               var lvl = {
-
-                 id: "tutorial",
-                 variables: [ "j", "n" ],
-                 data: [ [ [ 0, 3 ], [ 1, 3 ], [ 2, 3 ] [ 3, 3]], [], [] ],
-                 goal: { },
-                 hint: "",
-                 supports_pos_ex: false,
-                 supports_neg_ex: false,
-                 supports_ind_ex: false,
+                 $('#sticky').fadeIn(500);
+                 gameLogic = new CEGameLogic(tracesW, progW, scoreW, stickyW);
+                 var lvl = new Level("tutorial_lvl_1",
+                   [ "j", "n" ],
+                   [ [ [ 0, 3 ], [ 1, 3 ], [ 2, 3 ], [ 3, 3 ] ], [], [] ],
+                   {},
+                   { equivalent: ["j<=n"] },
+                   "",
+                   false,
+                   false,
+                   false)
+                 gameLogic.onLvlPassed(()=>cs.nextStep())
+                 gameLogic.loadLvl(lvl)
                }
-               tracesW.setExp('');
       },
       { setup: function (cs) {
-               tracesW.setExp('');
+                 tracesW.setExp('');
                  curL = label($("#formula-entry"),
-                  "Lets try one more: n=2", "left")
+                   "Lets try one more: n=2", "left")
                  $("#formula-entry").focus()
                  nextStepOnInvariant(cs, "n=2", labelRemover(curL));
                }
@@ -427,9 +428,9 @@
 </body>
   <div class='container'>
     <div class='row'>
-      <div class='col-md-3' id='left'>
+      <div class='col-md-1' id='left'>
       </div>
-      <div class='col-md-1 box stickyWindow' id='sticky'>
+      <div class='col-md-1 box stickyWindow' style='display:hidden' id='sticky'>
       </div>
       <div class='col-md-6' id='middle'>
         <div class='row' id='data-display' style="font-family:monospace;">
