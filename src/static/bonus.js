@@ -91,7 +91,9 @@ function getBonus(player, fn) {
             $("#good-invariants2").children().eq(x[i][1]).addClass("implied");
           }
         }
-        setTimeout(function(){fn(increment); $('.curved_arrow').delay(1000).fadeOut(1000);}, 1000);
+        if(increment !=0) {
+          setTimeout(function(){fn(increment); $('.curved_arrow').delay(1000).fadeOut(1000);}, 1000);
+        }
       }
     });
   }
@@ -119,7 +121,9 @@ function getBonus(player, fn) {
             $("#good-invariants").children().eq(x[i][1]).addClass("implied");
           }
         }
-        setTimeout(function(){fn(increment); $('.curved_arrow').delay(1000).fadeOut(1000);}, 1000);
+        if(increment !=0) {
+          setTimeout(function(){fn(increment); $('.curved_arrow').delay(1000).fadeOut(1000);}, 1000);
+        }
       }
     });
   }
