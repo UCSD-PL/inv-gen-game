@@ -17,10 +17,6 @@ function equivalent(inv1, inv2, cb) {
  * Check if invL1 ==> any inv in invL2
  */
 function impliedPairs(invL1, invL2, cb) {
-  //console.log("impliedPairs");
-  //console.log(invL1);
-  //console.log(invL2);
-  //console.log(cb);
   return rpc.call("App.impliedPairs",
     [ $.map(invL1, esprima.parse), $.map(invL2, esprima.parse) ], cb, log)
 }

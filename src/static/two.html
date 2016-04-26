@@ -569,17 +569,27 @@
         $('#hint').html('');
         $('#hints').hide();
         $('#btn-hint').show();
-        //$('#btn-switch').click();
+
+        $('#next-lvl2').hide();
+        $('#hint2').html('');
+        $('#hints2').hide();
+        $('#btn-hint2').show();
+
         nextLvl();
         nextLvl2();
       })
 
       $('#next-lvl2').click(function() {
+        $('#next-lvl').hide();
+        $('#hint').html('');
+        $('#hints').hide();
+        $('#btn-hint').show();
+
         $('#next-lvl2').hide();
         $('#hint2').html('');
         $('#hints2').hide();
         $('#btn-hint2').show();
-        //$('#btn-switch2').click();
+
         nextLvl2();
         nextLvl();
       })
