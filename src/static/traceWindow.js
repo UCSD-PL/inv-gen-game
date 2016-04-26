@@ -62,7 +62,7 @@ function TraceWindow(player, div, data) {
       $('#formula-entry').keyup(function (keyEv) {
         if (keyEv.keyCode == 13 && traceW.okToSubmit) {
           traceW.commitCb();
-          $('#btn-switch').click();
+          setTimeout(function() {$('#btn-switch').click();}, 2000);
           $('#formula-entry2').focus();
         } else
           traceW.changedCb();
@@ -76,7 +76,7 @@ function TraceWindow(player, div, data) {
       $('#formula-entry2').keyup(function (keyEv) {
         if (keyEv.keyCode == 13 && traceW.okToSubmit) {
           traceW.commitCb();
-          $('#btn-switch2').click();
+          setTimeout(function() {$('#btn-switch2').click();}, 2000);
           $('#formula-entry').focus();
         } else
           traceW.changedCb();
