@@ -38,15 +38,13 @@ function Level(id,
           cb({ sound: true, ctrex: [ [], [], [] ] })
         }
       })
-    }
-
-    if (lvl.support_ind_ex) {
+    } else if (lvl.support_ind_ex) {
       ind_vc_ctrex(curLvlSet, this.id, soundInvs.concat([inv]), function(res) {
         cb({ sound: res.length == 0, counterexample: res })
       })
+    } else {
+      cb({ sound: true });
     }
-
-    cb({ sound: true });
   }
 
   this.goalSatisfied = function(invs, cb) {
