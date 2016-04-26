@@ -328,7 +328,8 @@
       },
       // Negative examples tutorial ------------------------------------------
       { setup: function (cs) {
-                  $('.overlay').html("<h1>Good job!<br>Lets go back to our example for a sec.</h1>")
+                 $('#next-lvl').hide();
+                  $('.overlay').html("<h1>Good job!<br>Lets go back to our tutorial.</h1>")
                   $('.overlay').fadeIn(fadeDelay, function () {
                     cs.nextStepOnKeyOrTimeout(stepTimeout, ()=>0, 32)
                   })
@@ -339,20 +340,20 @@
                  var lvl = new Level("tutorial_example",
                    [ "i", "n" ],
                    [ [ [ 0, 2 ], [ 1, 2 ], [ 2, 2 ] ], [ [ 4, 3 ] ], [] ],
-                   { none: true },
                    {},
+                   { none: true },
                    "How are i and n related?",
                    false,
                    false,
                    false)
                    gameLogic.loadLvl(lvl)
-                   curL = label($("#3 .temp_expr_eval"), "Got a new kind of row!", "left")
+                   curL = label($("#3 .temp_expr_eval"), "You can have 'red' rows!", "left")
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                  })
                }
       },
       { setup: function (cs) {
-                 curL = label("#3 .temp_expr_eval", "Need to make it all red!", "left")
+                 curL = label("#3 .temp_expr_eval", "Your expression needs to be false here", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
@@ -362,7 +363,7 @@
                }
       },
       { setup: function (cs) {
-                 curL = label("#3 .temp_expr_eval", "Not a single color here :(", "left")
+                 curL = label("#3 .temp_expr_eval", "Not red here :(", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
@@ -372,13 +373,22 @@
                }
       },
       { setup: function (cs) {
-                 curL = label("#3 .temp_expr_eval", "It worked!", "left")
+                 curL = label("#3 .temp_expr_eval", "Row is all red now!", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
-                 curL = label("#3 .temp_expr_eval", "Its single color!", "left")
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+                 curL = label("#2 .temp_expr_eval", "Each row is a single color!", "left")
+                 cs.nextStepOnKeyOrTimeout(-1, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label("#2 .temp_expr_eval", "Press Enter...", "left")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 13)
+               }
+      },
+      { setup: function (cs) {
+                 cs.nextStepOnKeyOrTimeout(2000, labelRemover(curL), 32)
                }
       },
       // Negative examples tutorial levels -----------------------------------
@@ -389,20 +399,108 @@
                   })
                }
       },
-
-      // Positive and negative counterexamples tutorial ----------------------
       { setup: function (cs) {
                  $('#next-lvl').hide();
-                 tracesW.setExp('');
-                 curL = label($("#formula-entry"),
-                   "Lets try one more: n=2", "left")
-                 $("#formula-entry").focus()
-                 nextStepOnInvariant(cs, "n=2", labelRemover(curL));
+                 $(".overlay").fadeOut(fadeDelay, function () {
+                   gameLogic = new CEGameLogic(tracesW, progW, scoreW, stickyW);
+                   var lvl = new Level("tutorial_lvl_4",
+                     [ "k", "l" ],
+                     [ [ [ 0, 3 ], [ 1, 3 ], [ 2, 3 ] ], [ [ 3, 3 ] ], [] ],
+                     {},
+                     { equivalent: ["k<l"] },
+                     "Can express l in terms of k?",
+                     false,
+                     false,
+                     false)
+                   gameLogic.onLvlPassed(()=>$('#next-lvl').fadeIn(fadeDelay, function() {}))
+                   gameLogic.loadLvl(lvl)
+                 })
                }
       },
       { setup: function (cs) {
-                 curLvl.data[0].push([0, 4])
-                 tracesW.addData([[[0, 4]], [], []])
+                 $('#next-lvl').hide();
+                 $(".overlay").fadeOut(fadeDelay, function () {
+                   gameLogic = new CEGameLogic(tracesW, progW, scoreW, stickyW);
+                   var lvl = new Level("tutorial_lvl_4",
+                     [ "k", "l" ],
+                     [ [ [ 0, 1 ], [ 1, 2 ], [ 2, 3 ] ], [ [ 3, 5 ] ], [] ],
+                     {},
+                     { equivalent: ["k+1==l"] },
+                     "Can express l in terms of k?",
+                     false,
+                     false,
+                     false)
+                   gameLogic.onLvlPassed(()=>$('#next-lvl').fadeIn(fadeDelay, function() {}))
+                   gameLogic.loadLvl(lvl)
+                 })
+               }
+      },
+      { setup: function (cs) {
+                 $('#next-lvl').hide();
+                 $(".overlay").fadeOut(fadeDelay, function () {
+                   gameLogic = new CEGameLogic(tracesW, progW, scoreW, stickyW);
+                   var lvl = new Level("tutorial_lvl_4",
+                     [ "k", "l" ],
+                     [ [ [ 0, 0 ], [ 1, 4 ], [ 2, 8 ] ], [ [ 3, 16 ] ], [] ],
+                     {},
+                     { equivalent: ["k*4==l"] },
+                     "Can express l in terms of k?",
+                     false,
+                     false,
+                     false)
+                   gameLogic.onLvlPassed(()=>$('#next-lvl').fadeIn(fadeDelay, function() {}))
+                   gameLogic.loadLvl(lvl)
+                 })
+               }
+      },
+
+      // New rows feedback tutorial ------------------------------------------
+      { setup: function (cs) {
+                 $('#next-lvl').hide();
+                  $('.overlay').html('<h1>Good Job!<br>' +
+                    'Sometimes we will give you guidance,' +
+                    '<br> in the form of new rows.</h1>')
+                  $('.overlay').fadeIn(fadeDelay, function () {
+                    cs.nextStepOnKeyOrTimeout(stepTimeout, ()=>0, 32)
+                  })
+               }
+      },
+      { setup: function (cs) {
+                 $('#next-lvl').hide();
+                 $(".overlay").fadeOut(fadeDelay, function () {
+                 var lvl = new Level("tutorial_example",
+                   [ "i", "n" ],
+                   [ [ [ 0, 2 ], [ 1, 2 ], [ 2, 2 ] ], [], [] ],
+                   {},
+                   { none: true },
+                   "",
+                   false,
+                   false,
+                   false)
+                   lvl.invSound = function(inv, soundInvs, cb) {
+                     //cb({ sound: inv == 'n>=0' })
+                     cb({ sound: false })
+                   }
+                   gameLogic.loadLvl(lvl)
+                   cs.nextStep()
+                 })
+               }
+      },
+      { setup: function (cs) {
+                 tracesW.setExp('');
+                 curL = label($("#formula-entry"), "Try n=2", "left")
+                 $("#formula-entry").focus()
+                 nextStepOnGLInvariant(cs, "n=2", labelRemover(curL), gameLogic);
+               }
+      },
+      { setup: function (cs) {
+                 tracesW.msg("Press Enter...")
+                 cs.nextStepOnKeyOrTimeout(-1, labelRemover(curL), 13)
+               }
+      },
+      { setup: function (cs) {
+                 gameLogic.addData([[[0,3]], [], []])
+                 gameLogic.userInput(false)
                  curL = label($("#3 .temp_expr_eval"),
                   "n=2 did not get accepted!", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
@@ -410,13 +508,13 @@
       },
       { setup: function (cs) {
                  curL = label($("#3 .temp_expr_eval"),
-                  "Instead you got another part red/part green row!", "left")
+                  "Instead you got another row <br> with mismatched colors!", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
                  curL = label($("#3 .temp_expr_eval"),
-                  "The row should be all green!", "left")
+                  "This row should be all green!", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
@@ -424,12 +522,11 @@
                  curL = label($("#formula-entry"),
                   "Lets try n>=0?", "left")
                  $("#formula-entry").focus()
-                 nextStepOnInvariant(cs, "n>=0", labelRemover(curL));
+                 nextStepOnGLInvariant(cs, "n>=0", labelRemover(curL), gameLogic);
                }
       },
       { setup: function (cs) {
                  tracesW.msg("Press Enter...")
-                 //curL = label($("#0 .temp_expr_eval"), "Press enter...", "left")
                  cs.nextStepOnKeyOrTimeout(-1, labelRemover(curL), 13)
                }
       },
@@ -437,44 +534,70 @@
                  tracesW.msg("")
                  scoreW.add(1);
                  addSuccessfulInvariant("n>=0");
-                 curL = label($("#good_1"),
-                  "Its correct!", "left")
-                 cs.nextStepOnKeyOrTimeout(1000, labelRemover(curL), 32)
+                 curL = label($("#discovered-invariants-div"),
+                  "n>=0 was accepted!", "up")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
-      // Positive and negative counterexamples tutorial levels ---------------
+      { setup: function (cs) {
+                 curL = label($("#3 .temp_expr_eval"),
+                  "new rows can also be red (negative examples)", "left")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#3 .temp_expr_eval"),
+                  "Finally, sometimes we will give you 2 rows!", "left")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
       // Inductive counterexamples tutorial ----------------------------------
       { setup: function (cs) {
                  curL = label($("#formula-entry"),
                   "Try i<3", "left")
                  $("#formula-entry").focus()
-                 nextStepOnInvariant(cs, "i<3", labelRemover(curL));
+                 nextStepOnGLInvariant(cs, "i<3", labelRemover(curL), gameLogic);
                }
       },
       { setup: function (cs) {
-                 curLvl.data[2].push([2, 3])
-                 curLvl.data[2].push([3, 3])
-                 tracesW.addData([[], [], [[[2, 3], [3, 3]]]])
+                 gameLogic.addData([[], [], [[[2, 3], [3, 3]]]])
+                 gameLogic.userInput(false)
                  curL = label($("#4_0 .temp_expr_eval"),
                   "You got two new rows now!", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
-                 curL = label($("#4_0 .temp_expr_eval"),
-                  "Both with mismatching colors!", "left")
+                 curL = label($(".kill-switch img"),
+                  "And you have a switch.", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
-                 curL = label($("#4_0 .temp_expr_eval"),
-                  "Either this one should be all red..", "left")
+                 curL = label($(".kill-switch img"),
+                  "Try clicking it a couple of times!", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
+                 curL = label($(".kill-switch img"),
+                  "The switch lets you choose your goal.", "left")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 if (tracesW.switches[0].pos != 0)
+                   tracesW.switches[0].flip()
+
+                 curL = label($("#4_0 .temp_expr_eval"),
+                  "Either just this row should be red..", "left")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 tracesW.switches[0].flip()
                  curL = label($("#4_1 .temp_expr_eval"),
-                  "..or this one all green!", "left")
+                  "...or both rows should be green.", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
@@ -482,30 +605,27 @@
                  curL = label($("#formula-entry"),
                   "Finally try i<=n", "left")
                  $("#formula-entry").focus()
-                 nextStepOnInvariant(cs, "i<=n", labelRemover(curL));
+                 nextStepOnGLInvariant(cs, "i<=n", labelRemover(curL), gameLogic);
                }
       },
       { setup: function (cs) {
-                 tracesW.msg("Press Enter...")
-                 //curL = label($("#0 .temp_expr_eval"), "Press enter...", "left")
+                 curL = label($("#3 .temp_expr_eval"), "Press enter...", "left")
                  cs.nextStepOnKeyOrTimeout(-1, labelRemover(curL), 13)
                }
       },
       { setup: function (cs) {
                  tracesW.msg("")
-                 tracesW.clearData(2);
-                 curLvl.data[2] = [];
                  scoreW.add(1);
                  addSuccessfulInvariant("i<=n");
-                 curL = label($("#good_2"),
-                  "Its correct!", "left")
+                 curL = label($("#discovered-invariants-div"),
+                  "This one worked!", "up")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
-      // Inductive counterexamples tutorial levels ---------------------------
       // Conclusion ----------------------------------------------------------
       { setup: function (cs) {
                   $('#data-display table').add('#score-div-row').add('#discovered-invariants-div')
+                  .add('#sticky').add('.kill-switch')
                   .fadeOut(fadeDelay, function () {
                     cs.nextStep()
                   })
@@ -537,6 +657,11 @@
                }
       },
       { setup: function (cs) {
+                 $('#next-lvl').html("Start Playing")
+                 $('#next-lvl').off("click")
+                 $('#next-lvl').click(function() {
+                   window.location.replace('game.html');
+                 })
                  $('#next-lvl').fadeIn(fadeDelay, function() {
                    curL = label($("#next-lvl"), "Proceed to the game!", "up");
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)

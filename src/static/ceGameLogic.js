@@ -160,13 +160,10 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
                     });
                   }
                 } else {
-                  //TODO: Leftover from refactoring
-                  //overfittedInvs = overfittedInvs.concat(jsInv)
-                  gl.userInput(false)
-                  tracesW.setExp("");
-                  tracesW.addData(res.ctrex)
-                  for (var i in [0,1,2]) {
-                    gl.curLvl.data[i] = gl.curLvl.data[i].concat(res.ctrex[0])
+                  if (res.hasOwnProperty('ctrex')) {
+                    gl.addData(res.ctrex);
+                    gl.userInput(false)
+                    tracesW.setExp("");
                   }
                 }
               })
@@ -265,6 +262,13 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
     gl.userInputCb = cb;
   }
 
+  gl.addData = function (data) {
+    tracesW.addData(data)
+    for (var i in [0,1]) {
+      gl.curLvl.data[i] = gl.curLvl.data[i].concat(data[i])
+    }
+    gl.curLvl.data[2] = gl.curLvl.data[2].concat(data[2].reduce((a,b)=>a.concat(b), []))
+  }
 
   gl.score = function () { return scoreW.score; }
   gl.clear();

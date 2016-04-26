@@ -97,7 +97,7 @@ function Level(id,
     } else if (goal.none) {
       cb({ "satisfied" : false })
     } else {
-      error("Unknown goal " + goal.toSource());
+      error("Unknown goal " + JSON.stringify(goal));
     }
   }
 }
