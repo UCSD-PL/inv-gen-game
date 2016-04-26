@@ -94,8 +94,11 @@
 
     function doneScreen() {
       //loadLvlSet("test-benchmarks")
-      $("#final-score").html("<p style='color: white; vertical-align: bottom'>WOW! Much Points! You got " + gameLogic.score()  + " points!</p>");
-      $("#doge").fadeIn();
+      $(".overlay").html("<h1 class='good'> Good job! You finished all levels! <br> Your score is: " +
+        gameLogic.score()  + "!</h1><br>" +
+        "<h2> Please submit the screencast of your work! </h2>"
+      );
+      $(".overlay").fadeIn(1000);
     }
 
     function labelRemover(lbl) {
@@ -295,11 +298,6 @@
 
 
   </div>
-
-  <div id="doge" style="display: none;" class="wow">
-    <img src="doge.jpg"/>
-    <div id="final-score" class="wow"> </div>
-  </div>
-
+  <div class='overlay text-center' style='display: none;'></div> 
 </body>
 </html>
