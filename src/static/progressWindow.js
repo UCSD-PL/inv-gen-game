@@ -6,7 +6,7 @@ function ProgressWindow(div) {
   progW.element = div;
 
   $(div).addClass('.progessWindow')
-  $(div).html("Discovered invariants<br>" +
+  $(div).html("Accepted expressions<br>" +
     "<ul id='good-invariants' style='font-family: monospace; list-style-type: none; padding: 0px; text-align: center;'></ul>")
 
   invUL = $('#good-invariants')

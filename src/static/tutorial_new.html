@@ -222,7 +222,7 @@
       },
       { setup: function (cs) {
                  curL = label($("#0 .temp_expr_eval"), "This is your goal: <br>" +
-                    "to find an expression, so that each row is a single color.",
+                    "to find an expression, <br> such that each row is a single color.",
                     "left")
                  cs.nextStepOnKeyOrTimeout(-1, labelRemover(curL), 32)
                }
@@ -281,7 +281,7 @@
       },
       { setup: function (cs) {
                  $('#container').click()
-                 curL = label($("#sticky"), "You get extra points for some invariants!", "up");
+                 curL = label($("#sticky"), "You get extra points for some expressions!", "up");
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
@@ -353,7 +353,7 @@
                }
       },
       { setup: function (cs) {
-                 curL = label("#3 .temp_expr_eval", "Your expression needs to be false here", "left")
+                 curL = label("#3 .temp_expr_eval", "Your expression should be false here", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
