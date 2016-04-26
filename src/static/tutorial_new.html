@@ -221,7 +221,9 @@
                }
       },
       { setup: function (cs) {
-                 curL = label($("#0 .temp_expr_eval"), "This is your goal: <br>to find an expression, so that each row is a single color.", "left")
+                 curL = label($("#0 .temp_expr_eval"), "This is your goal: <br>" +
+                    "to find an expression, so that each row is a single color.",
+                    "left")
                  cs.nextStepOnKeyOrTimeout(-1, labelRemover(curL), 32)
                }
       },
@@ -266,7 +268,7 @@
                      [ "j", "n" ],
                      [ [ [ 0, 3 ], [ 1, 3 ], [ 2, 3 ], [ 3, 3 ] ], [], [] ],
                      {},
-                     { equivalent: ["j<=n"] },
+                     { atleast: 1 },
                      "What can you say about j and n?",
                      false,
                      false,
@@ -296,12 +298,11 @@
       },
       { setup: function (cs) {
                  $('#next-lvl').hide();
-                 gameLogic = new CEGameLogic(tracesW, progW, scoreW, stickyW);
                  var lvl = new Level("tutorial_lvl_2",
                    [ "k", "l" ],
                    [ [ [ 1, 2 ], [ 2, 3 ], [ 3, 4 ] ], [], [] ],
                    {},
-                   { equivalent: ["l==k+1"] },
+                   { atleast: 1 },
                    "How are l and k related?",
                    false,
                    false,
@@ -312,12 +313,11 @@
       },
       { setup: function (cs) {
                  $('#next-lvl').hide();
-                 gameLogic = new CEGameLogic(tracesW, progW, scoreW, stickyW);
                  var lvl = new Level("tutorial_lvl_3",
                    [ "k", "l" ],
                    [ [ [ 1, 3 ], [ 2, 6 ], [ 3, 9 ] ], [], [] ],
                    {},
-                   { equivalent: ["l==k*3"] },
+                   { atleast: 1 },
                    "How are l and k related?",
                    false,
                    false,
@@ -402,12 +402,11 @@
       { setup: function (cs) {
                  $('#next-lvl').hide();
                  $(".overlay").fadeOut(fadeDelay, function () {
-                   gameLogic = new CEGameLogic(tracesW, progW, scoreW, stickyW);
                    var lvl = new Level("tutorial_lvl_4",
                      [ "k", "l" ],
                      [ [ [ 0, 3 ], [ 1, 3 ], [ 2, 3 ] ], [ [ 3, 3 ] ], [] ],
                      {},
-                     { equivalent: ["k<l"] },
+                     { atleast: 1},
                      "Can express l in terms of k?",
                      false,
                      false,
@@ -420,12 +419,11 @@
       { setup: function (cs) {
                  $('#next-lvl').hide();
                  $(".overlay").fadeOut(fadeDelay, function () {
-                   gameLogic = new CEGameLogic(tracesW, progW, scoreW, stickyW);
                    var lvl = new Level("tutorial_lvl_4",
                      [ "k", "l" ],
                      [ [ [ 0, 1 ], [ 1, 2 ], [ 2, 3 ] ], [ [ 3, 5 ] ], [] ],
                      {},
-                     { equivalent: ["k+1==l"] },
+                     { atleast: 1 },
                      "Can express l in terms of k?",
                      false,
                      false,
@@ -438,12 +436,11 @@
       { setup: function (cs) {
                  $('#next-lvl').hide();
                  $(".overlay").fadeOut(fadeDelay, function () {
-                   gameLogic = new CEGameLogic(tracesW, progW, scoreW, stickyW);
                    var lvl = new Level("tutorial_lvl_4",
                      [ "k", "l" ],
                      [ [ [ 0, 0 ], [ 1, 4 ], [ 2, 8 ] ], [ [ 3, 16 ] ], [] ],
                      {},
-                     { equivalent: ["k*4==l"] },
+                     { atleast: 1 },
                      "Can express l in terms of k?",
                      false,
                      false,
@@ -560,6 +557,13 @@
                }
       },
       { setup: function (cs) {
+                 tracesW.msg("Press Enter...")
+                 curL = label($("#3 .temp_expr_eval"), "Press enter...", "left")
+                 cs.nextStepOnKeyOrTimeout(-1, labelRemover(curL), 13)
+               }
+      },
+      { setup: function (cs) {
+                 tracesW.msg("")
                  gameLogic.addData([[], [], [[[2, 3], [3, 3]]]])
                  gameLogic.userInput(false)
                  curL = label($("#4_0 .temp_expr_eval"),

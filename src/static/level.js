@@ -94,6 +94,8 @@ function Level(id,
       })
     } else if (goal.none) {
       cb({ "satisfied" : false })
+    } else if (goal.hasOwnProperty('atleast')) {
+      cb({ "satisfied" : invs.length >= goal.atleast })
     } else {
       error("Unknown goal " + JSON.stringify(goal));
     }

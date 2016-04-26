@@ -35,10 +35,12 @@
   <script>
     var curLvl;
     var curLvlSet;
+    var curL = null;
     var lvls = null;
     var tracesW = null, progW = null, scoreW = null;
     var gameLogic = null;
     var stepTimeout = 5000;
+    var curScript = null;
 
     function loadTrace(traceId) {
       Level.load(curLvlSet, traceId, function(lvl) {
@@ -135,6 +137,7 @@
       },
       { setup: function (cs) {
                    $('#formula-entry').focus();
+                   curScript = null;
                }
       },
     ]
@@ -182,7 +185,7 @@
       })
 
       $('#arrows').click(function() {
-        Script(tutorialScript);
+        curScript = new Script(tutorialScript);
       })
 
       $('#operator').click(function() {
@@ -193,8 +196,13 @@
       loadLvlSet("desugared-boogie-benchmarks");
 
       gameLogic.onLvlLoaded(function () {
-        curScript = Script(tutorialScript)
+        curScript = new Script(tutorialScript)
         gameLogic.onLvlLoaded(function (){})
+      })
+
+      gameLogic.onUserInput(function () {
+        if (curScript)
+          curScript.cancel()
       })
     })
 

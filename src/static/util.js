@@ -85,8 +85,10 @@ function Script(steps) {
   var s = this;
   s.step = -1;
   s.steps = steps;
+  s.cancelCb = null;
   s.nextStep = function () {
     s.step ++;
+    s.cancelCb = null;
     s.steps[s.step].setup(s);
   }
 
@@ -98,6 +100,13 @@ function Script(steps) {
        $('body').off('keypress');
        s.nextStep();
      }, timeout);
+   }
+   s.cancelCb = function () {
+     if (timeout > 0)
+       clearTimeout(s.timeoutId);
+     $('body').off('keyup');
+     $('body').off('keypress');
+     destructor();
    }
    $('body').keypress(function (ev) {
      if (keyCode === null || ev.which == keyCode) {
@@ -119,6 +128,7 @@ function Script(steps) {
    });
   }
 
+  s.cancel = function() { if (s.cancelCb) s.cancelCb(); }
   s.nextStep();
 }
 
