@@ -9,7 +9,7 @@
             p2y: 100,
             size: 30,
             lineWidth: 5,
-            strokeStyle: 'rgba(125,242,125, 0.5)'/*'rgb(245,238,49)'*/
+            strokeStyle: 'rgba(125,242,125, 0.75)'
         }, options);
 
         var canvas = document.createElement('canvas');

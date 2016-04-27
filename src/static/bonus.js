@@ -44,10 +44,10 @@ function getLastPlayer2Inv() {
 
 function showImplication(player, src, dst) {
   var srcX = src.offset().left + 200;
-  var srcY = src.offset().top + 10;
+  var srcY = src.offset().top + 15;
 
   var dstX = dst.offset().left + 200;
-  var dstY = dst.offset().top + 10;
+  var dstY = dst.offset().top + 15;
 
   var midX = (srcX + dstX)/2 + 200;
   var midY = (srcY + dstY)/2;

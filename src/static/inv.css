@@ -89,6 +89,9 @@ tr.false {
   vertical-align: middle;
   background-color: rgb(125,242,127);
   border-radius: 25px;
+  border-left: 0px;
+  border-bottom: 0px;
+  border-right: 0px;
 }
 
 .scoreWindow1 {
@@ -98,6 +101,9 @@ tr.false {
   vertical-align: middle;
   background-color: rgba(255,127,127,0.5);
   border-radius: 25px;
+  border-left: 0px;
+  border-bottom: 0px;
+  border-right: 0px;
 }
 
 .scoreWindow2 {
@@ -107,6 +113,9 @@ tr.false {
   vertical-align: middle;
   background-color: rgba(127,127,255,0.5);
   border-radius: 25px;
+  border-left: 0px;
+  border-bottom: 0px;
+  border-right: 0px;
 }
 
 .scoreText {
@@ -301,6 +310,34 @@ th {
   text-decoration: none;
 }
 
+.btn-show-hint1 {
+  color: #ffffff;
+  font-size: 20px;
+  background: rgba(255,0,0,0.75);
+  padding: 10px 20px 10px 20px;
+  text-decoration: none;
+  border-radius: 25px;
+}
+
+.btn-show-hint1:hover {
+  background: rgba(255,0,0,0.5);
+  text-decoration: none;
+}
+
+.btn-show-hint2 {
+  color: #ffffff;
+  font-size: 20px;
+  background: rgba(0,0,255,0.6);
+  padding: 10px 20px 10px 20px;
+  text-decoration: none;
+  border-radius: 25px;
+}
+
+.btn-show-hint2:hover {
+  background: rgba(0,0,255,0.3);
+  text-decoration: none;
+}
+
 .btn-next {
   color: #ffffff;
   font-size: 20px;
@@ -462,6 +499,11 @@ th {
   padding: 10px 20px 10px 20px;
   text-decoration: none;
   border-radius: 25px;
+}
+
+.btn-next-game:hover {
+  background: #55c23c;
+  text-decoration: none;
 }
 
 .player {
