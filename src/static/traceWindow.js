@@ -184,5 +184,10 @@ function TraceWindow(player, div, data) {
   }
 
   $(div).addClass('box')
-  $(div).addClass('tracesWindow')
+  if(player == 1) {
+    $(div).addClass('tracesWindow1')
+  }
+  else {
+    $(div).addClass('tracesWindow2')
+  }
 }

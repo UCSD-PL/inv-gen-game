@@ -42,7 +42,7 @@ function getLastPlayer2Inv() {
 }
 
 
-function showImplication(src, dst) {
+function showImplication(player, src, dst) {
   var srcX = src.offset().left + 200;
   var srcY = src.offset().top + 10;
 
@@ -53,14 +53,28 @@ function showImplication(src, dst) {
   var midY = (srcY + dstY)/2;
 
   $(function(){
-    $(document.body).curvedArrow({
-        p0x: srcX,
-        p0y: srcY,
-        p1x: midX,
-        p1y: midY,
-        p2x: dstX,
-        p2y: dstY
-    });
+    if(player == 1) {
+      $(document.body).curvedArrow({
+          p0x: srcX,
+          p0y: srcY,
+          p1x: midX,
+          p1y: midY,
+          p2x: dstX,
+          p2y: dstY,
+          strokeStyle: "rgba(255,128,128,0.5)"
+      });
+    }
+    else {
+      $(document.body).curvedArrow({
+          p0x: srcX,
+          p0y: srcY,
+          p1x: midX,
+          p1y: midY,
+          p2x: dstX,
+          p2y: dstY,
+          strokeStyle: "rgba(128,128,255,0.5)"
+      });
+    }
   });
 }
 
@@ -86,7 +100,7 @@ function getBonus(player, fn) {
             // draw curved arrow from newInv to player2Invs[x[i][1]]
             var src = $("#good-invariants").children().last();
             var dst = $("#good-invariants2").children().eq(x[i][1]);
-            showImplication(src,dst);
+            showImplication(player, src,dst);
 
             $("#good-invariants2").children().eq(x[i][1]).addClass("implied");
           }
@@ -116,7 +130,7 @@ function getBonus(player, fn) {
 
             var src = $("#good-invariants2").children().last();
             var dst = $("#good-invariants").children().eq(x[i][1]);
-            showImplication(src,dst);
+            showImplication(player, src,dst);
 
             $("#good-invariants").children().eq(x[i][1]).addClass("implied");
           }

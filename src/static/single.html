@@ -181,10 +181,18 @@
     $(document).ready(function() {
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
       progW = new ProgressWindow(1, $('#discovered-invariants-div'));
-      scoreW = new ScoreWindow($('#score-div'));
+      scoreW = new ScoreWindow(0, $('#score-div'));
       traceW = new TraceWindow(1, $('#data-display'));
-      stickyW = new StickyWindow($('#sticky'))
+      stickyW = new StickyWindow(1, $('#sticky'))
       gameLogic = new GameLogic(traceW, progW, scoreW, stickyW);
+
+      $("#sticky").removeClass("stickyWindow1")
+      $("#data-display").removeClass("tracesWindow1")
+      $("#data-display").addClass("tracesWindow")
+      $("#score-div").removeClass("scoreWindow1")
+      $("#score-div").addClass("scoreWindow")
+      $("#score-div").removeClass("scoreText1")
+      $("#score-div").addClass("scoreText")
 
       $('#hints').hide();
       $('#next-lvl').hide();
@@ -316,8 +324,8 @@
 
       <div class='col-md-3' >
         <div id='score-div-row' class='row positioned box progressWindow'>
-          <div class='col-md-2' style='color: green'>Score</div>
-          <div id='score-div' class='col-md-7 col-md-offset-3'>
+          <div style='color: green'>Score</div>
+          <div id='score-div' style='border-top-left-radius: 0px; border-top-right-radius: 0px;'>
           </div>
         </div>
         <div class='row good centered positioned' id='discovered-invariants-div'>

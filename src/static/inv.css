@@ -91,10 +91,42 @@ tr.false {
   border-radius: 25px;
 }
 
+.scoreWindow1 {
+  border-width: 1px;
+  border-style: solid;
+  border-color: red;
+  vertical-align: middle;
+  background-color: rgba(255,127,127,0.5);
+  border-radius: 25px;
+}
+
+.scoreWindow2 {
+  border-width: 1px;
+  border-style: solid;
+  border-color: blue;
+  vertical-align: middle;
+  background-color: rgba(127,127,255,0.5);
+  border-radius: 25px;
+}
+
 .scoreText {
   font-size: 40px;
   font-weight: bold;
   color:  green;
+  text-align: center;
+}
+
+.scoreText1 {
+  font-size: 40px;
+  font-weight: bold;
+  color:  red;
+  text-align: center;
+}
+
+.scoreText2 {
+  font-size: 40px;
+  font-weight: bold;
+  color:  blue;
   text-align: center;
 }
 
@@ -109,8 +141,30 @@ tr.false {
   border-color: #157d00;
 }
 
+.progressWindow1 {
+  font-size: 25px;
+  border-color: red;
+  color: red;
+}
+
+.progressWindow2 {
+  font-size: 25px;
+  border-color: blue;
+  color: blue;
+}
+
 .tracesWindow {
   border-color: #f29408;
+  border-radius: 25px;
+}
+
+.tracesWindow1 {
+  border-color: red;
+  border-radius: 25px;
+}
+
+.tracesWindow2 {
+  border-color: blue;
   border-radius: 25px;
 }
 
@@ -120,6 +174,14 @@ tr.false {
 
 .stickyWindow {
   border-color: #f29408;
+}
+
+.stickyWindow1 {
+  border-color: red;
+}
+
+.stickyWindow2 {
+  border-color: blue;
 }
 
 .box {
@@ -406,4 +468,12 @@ th {
   font-size: 24px;
   font-weight: bold;
   margin-bottom: 20px;
+}
+
+.player1 {
+  color: red;
+}
+
+.player2 {
+  color: blue;
 }

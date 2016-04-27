@@ -1,9 +1,14 @@
-function StickyWindow(div) {
+function StickyWindow(player, div) {
   var stickyW = this;
   stickyW.element = div;
 
   $(div).addClass("box");
-  $(div).addClass("stickyWindow");
+  if(player == 1) {
+    $(div).addClass("stickyWindow1");
+  }
+  else {
+    $(div).addClass("stickyWindow2");
+  }
   $(div).addClass("col-md-1");
 
   stickyW.add = function (pwup) {
