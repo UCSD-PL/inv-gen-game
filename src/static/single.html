@@ -184,7 +184,7 @@
       scoreW = new ScoreWindow(0, $('#score-div'));
       traceW = new TraceWindow(1, $('#data-display'));
       stickyW = new StickyWindow(1, $('#sticky'))
-      gameLogic = new GameLogic(traceW, progW, scoreW, stickyW);
+      gameLogic = new GameLogic(0, traceW, progW, scoreW, stickyW);
 
       $("#sticky").removeClass("stickyWindow1")
       $("#data-display").removeClass("tracesWindow1")
@@ -250,6 +250,7 @@
     <div class='row'>
       <div class='row centered title' id='top'>
         Inv-Gen-Game: Single Player
+        <hr>
       </div>
 
       <div class='col-md-1' id='left'>

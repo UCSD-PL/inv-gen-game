@@ -1,4 +1,4 @@
-function GameLogic(tracesW, progressW, scoreW, stickyW) {
+function GameLogic(player, tracesW, progressW, scoreW, stickyW) {
   var gl = this;
 
   var foundInv;
@@ -6,7 +6,7 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
   var progress;
   var pwups;
 
-  var player = tracesW.getPlayer() //get player # here
+  //var player = tracesW.getPlayer() //get player # here
 
   gl.tracesW = tracesW;
   gl.progressW = progressW;
@@ -14,7 +14,7 @@ function GameLogic(tracesW, progressW, scoreW, stickyW) {
   gl.stickyW = stickyW;
   gl.curGoal = null;
   //gl.pwupSuggestion = new PowerupSuggestionAll(gl,2)
-  gl.pwupSuggestion = new PowerupSuggestionFullHistory(gl, 5, "lfu")
+  gl.pwupSuggestion = new PowerupSuggestionFullHistory(player, gl, 5, "lfu")
 
   gl.getFoundJSInv = function() {
     return foundJSInv;

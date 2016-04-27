@@ -4,7 +4,7 @@
  *  holds(inv:str) -> bool  - function that determines if it holds to an invariant.
  *  transform(score:int) -> int - how it transforms the score
  */
-function Powerup(id, html, holds, applies, transform, tip) {
+function Powerup(player, id, html, holds, applies, transform, tip) {
   var pwup = this;
   this.id = id;
   this.html = html;
@@ -21,21 +21,41 @@ function Powerup(id, html, holds, applies, transform, tip) {
   this.transform = transform;
 
   this.highlight = function(cb) {
-    pwup.element.effect("highlight", { color: "#00b000" }, 1000, cb);
+    if(player == 1) {
+      pwup.element.effect("highlight", { color: "#f00000" }, 1000, cb);
+    }
+    else if(player == 2) {
+      pwup.element.effect("highlight", { color: "#0000f0" }, 1000, cb);
+    }
+    else {
+      pwup.element.effect("highlight", { color: "#00d000" }, 1000, cb);
+    }
   }
 }
 
-function mkMultiplierPwup(id, html, holds, applies, mult, tip) {
-  return new Powerup(id + "x" + mult,
-                      "<div class='pwup box'>" + html + "<div class='pwup-mul'>" +
-                      mult + "X</div></div>",
+function mkMultiplierPwup(player, id, html, holds, applies, mult, tip) {
+  var htmlContent = html + "<div class='pwup-mul'>" +
+  mult + "X</div></div>";
+
+  if(player == 1) {
+    htmlContent = "<div class='pwup1 box'>" + htmlContent
+  }
+  else if(player == 2) {
+    htmlContent = "<div class='pwup2 box'>" + htmlContent
+  }
+  else {
+    htmlContent = "<div class='pwup box'>" + htmlContent
+  }
+
+  return new Powerup(player, id + "x" + mult,
+                      htmlContent,
                       holds,
                       applies,
                       function (s) { return s * mult; }, tip);
 }
 
-function mkVarOnlyPwup(mult = 2) {
-  return mkMultiplierPwup("var only", "<span style='position: absolute; left:13px'>1</span>" +
+function mkVarOnlyPwup(player, mult = 2) {
+  return mkMultiplierPwup(player, "var only", "<span style='position: absolute; left:13px'>1</span>" +
                                       "<span style='position: absolute;color:red; left:10px'>&#10799;</span>",
     function (inv) {
       return setlen(literals(inv)) == 0;
@@ -44,8 +64,8 @@ function mkVarOnlyPwup(mult = 2) {
     mult + "X if you don't use constants")
 }
 
-function mkXVarPwup(nvars, mult = 2) {
-  return mkMultiplierPwup("NVars=" + nvars, nvars + "V",
+function mkXVarPwup(player, nvars, mult = 2) {
+  return mkMultiplierPwup(player, "NVars=" + nvars, nvars + "V",
     function (inv) {
       return setlen(identifiers(inv)) == nvars;
     },
@@ -54,7 +74,7 @@ function mkXVarPwup(nvars, mult = 2) {
     mult + "X if you use " + nvars +  " variable(s)")
 }
 
-function mkUseOpPwup(op, mult = 2) {
+function mkUseOpPwup(player, op, mult = 2) {
   var ppOp = op;
 
   if (op == "<" || op == ">" || op == "<=" || op == ">=")
@@ -66,7 +86,7 @@ function mkUseOpPwup(op, mult = 2) {
   else if (op == "+")
     ppOp = "addition"
 
-  return mkMultiplierPwup("Use Op: " + op, op,
+  return mkMultiplierPwup(player, "Use Op: " + op, op,
     function (inv) {
       return op in operators(inv);
     },
@@ -75,8 +95,8 @@ function mkUseOpPwup(op, mult = 2) {
     mult + "X if you use " + ppOp)
 }
 
-function mkUseOpsPwup(ops, html, name, mult = 2) {
-  return mkMultiplierPwup("Use Ops: " + ops, html,
+function mkUseOpsPwup(player, ops, html, name, mult = 2) {
+  return mkMultiplierPwup(player, "Use Ops: " + ops, html,
     function (inv) {
       var inv_ops = operators(inv);
       for (var i in ops) {
@@ -96,20 +116,20 @@ function mkUseOpsPwup(ops, html, name, mult = 2) {
  * show all applicable powerups, that haven't
  * been used in threshold moves.
  */
-function PowerupSuggestionAll(gl, threshold) {
+function PowerupSuggestionAll(player, gl, threshold) {
   var pwupS = this;
   pwupS.gameLogic = gl;
   pwupS.threshold = threshold;
   var all_pwups = [
-    mkVarOnlyPwup(),
-    mkXVarPwup(1,2),
-    mkXVarPwup(2,2),
-    mkXVarPwup(3,2),
-    mkXVarPwup(4,2),
-    mkUseOpsPwup(["<=", ">=", "<", ">"], "<>", "inequality"),
-    mkUseOpsPwup(["=="], "=", "equality"),
-    mkUseOpPwup("*"),
-    mkUseOpPwup("+"),
+    mkVarOnlyPwup(player),
+    mkXVarPwup(player, 1,2),
+    mkXVarPwup(player, 2,2),
+    mkXVarPwup(player, 3,2),
+    mkXVarPwup(player, 4,2),
+    mkUseOpsPwup(player, ["<=", ">=", "<", ">"], "<>", "inequality"),
+    mkUseOpsPwup(player, ["=="], "=", "equality"),
+    mkUseOpPwup(player, "*"),
+    mkUseOpPwup(player, "+"),
   ]
   pwupS.actual = []
   pwupS.age = {}
@@ -150,7 +170,7 @@ function PowerupSuggestionAll(gl, threshold) {
  * consider the full history so far. Disply the top N
  * powerups, ordered by LRU/LFU.
  */
-function PowerupSuggestionFullHistory(gl, n, type) {
+function PowerupSuggestionFullHistory(player, gl, n, type) {
   var pwupS = this;
   pwupS.gameLogic = gl;
   pwupS.nDisplay = n;
@@ -160,15 +180,15 @@ function PowerupSuggestionFullHistory(gl, n, type) {
   pwupS.type = type;
 
   var all_pwups = [
-    mkVarOnlyPwup(),
-    mkXVarPwup(1,2),
-    mkXVarPwup(2,2),
-    mkXVarPwup(3,2),
-    mkXVarPwup(4,2),
-    mkUseOpsPwup(["<=", ">=", "<", ">"], "<>", "inequality"),
-    mkUseOpsPwup(["=="], "=", "equality"),
-    mkUseOpPwup("*"),
-    mkUseOpPwup("+"),
+    mkVarOnlyPwup(player),
+    mkXVarPwup(player, 1,2),
+    mkXVarPwup(player, 2,2),
+    mkXVarPwup(player, 3,2),
+    mkXVarPwup(player, 4,2),
+    mkUseOpsPwup(player, ["<=", ">=", "<", ">"], "<>", "inequality"),
+    mkUseOpsPwup(player, ["=="], "=", "equality"),
+    mkUseOpPwup(player, "*"),
+    mkUseOpPwup(player, "+"),
   ]
 
   for (var i in all_pwups) {
