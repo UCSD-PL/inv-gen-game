@@ -56,7 +56,7 @@ function mkMultiplierPwup(player, id, html, holds, applies, mult, tip) {
 
 function mkVarOnlyPwup(player, mult = 2) {
   return mkMultiplierPwup(player, "var only", "<span style='position: absolute; left:13px'>1</span>" +
-                                      "<span style='position: absolute;color:red; left:10px'>&#10799;</span>",
+                                      "<span style='position: absolute;color:black; left:10px;'>&#10799;</span>",
     function (inv) {
       return setlen(literals(inv)) == 0;
     },
