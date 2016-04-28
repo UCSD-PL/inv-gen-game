@@ -1,12 +1,14 @@
-implementation run(n: int)
+implementation main()
 {
+  var x: int;
+  var y: int;
+  var s: int;
   var j: int;
-  var k: int;
 
 
   anon0:
-    assume n > 0;
-    assume k > n;
+    s := 0;
+    assume x >= 0;
     j := 0;
     goto anon3_LoopHead;
 
@@ -14,13 +16,13 @@ implementation run(n: int)
     goto anon3_LoopDone, anon3_LoopBody;
 
   anon3_LoopBody:
-    assume {:partition} j < n;
+    assume {:partition} j < x;
+    s := s + y;
     j := j + 1;
-    k := k - 1;
     goto anon3_LoopHead;
 
   anon3_LoopDone:
-    assume {:partition} n <= j;
-    assert k >= 0;
+    assume {:partition} x <= j;
+    assert s == x * y;
     return;
 }
