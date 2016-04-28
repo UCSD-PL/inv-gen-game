@@ -34,7 +34,7 @@
     var jsfound = [];
     var curLvl;
     var tracesW = null, progW = null, scoreW = null, stickyW = null, gameLogic = null;
-    var curL;
+    var curL, curL1;
     var tempCb = null;
     var stepTimeout = -1;
 
@@ -168,7 +168,11 @@
       { setup: function (cs) {
                  curL = label({ of: "#2 .temp_expr_eval", at: "left+10 bottom" },
                               "Column contains values of i!", "up")
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+                 curL1 = label({ of: "#2", at: "left-10 bottom" },
+                              "", "up")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, () => {
+                   removeLabel(curL); removeLabel(curL1);
+                 }, 32)
                }
       },
       { setup: function (cs) {
@@ -179,7 +183,11 @@
       { setup: function (cs) {
                  curL = label({ of: "#2 .temp_expr_eval", at: "left+10 bottom" },
                               "Now you get i+1 in this column!", "up")
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+                 curL1 = label({ of: "#2", at: "left-10 bottom" },
+                              "", "up")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, () => {
+                   removeLabel(curL); removeLabel(curL1);
+                 }, 32)
                }
       },
       { setup: function (cs) {
@@ -372,7 +380,7 @@
                }
       },
       { setup: function (cs) {
-                 curL = label("#3 .temp_expr_eval", "Not red here :(", "left")
+                 curL = label("#3 .temp_expr_eval", "Not red, since 4>=0", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
@@ -383,7 +391,7 @@
       },
       { setup: function (cs) {
                  tracesW.disable()
-                 curL = label("#3 .temp_expr_eval", "Row is all red now!", "left")
+                 curL = label("#3 .temp_expr_eval", "Row is all red now, since 4>3!", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
