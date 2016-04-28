@@ -108,26 +108,12 @@
     var tutorialScript = [
       {
         setup: function (cs) {
-                   curL = label($('#hint-col'), "When a 'Next Level' button appears here,<br> you can advance.", "left");
-                   $('body').focus();
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-               }
-      },
-      {
-        setup: function (cs) {
                    if($('#btn-hint').is(':hidden')) {
                      curL = label($('#hint'), "These are hints you can use to win this level", "up");
                    }
                    else {
                      curL = label($('#btn-hint'), "Click here to get hints", "up");
                    }
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-                 }
-      },
-      {
-        setup: function (cs) {
-                   curL = label($('div .pwup :last'), "And you have powerups! <br> Hover over icons for more", "up")
-                   $('body').focus();
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
                  }
       },

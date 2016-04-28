@@ -50,13 +50,6 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
     var jsInv = invToJS(inv)
 
     gl.userInputCb(inv);
-    /*
-    if (inductiveCtrxExpr != null && inductiveCtrxExpr != jsInv) {
-      gl.curLvl.data[2] = [];
-      tracesW.clearData(2)
-      inductiveCtrxExpr = null
-    }
-    */
 
     try {
       var parsedInv = esprima.parse(jsInv);

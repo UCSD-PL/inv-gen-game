@@ -23,59 +23,71 @@ function removeLabel(l) {
   clearInterval(l.timer);
 }
 
-function label(elem, txt, direction) {
-  p = $(elem).offset();
-  var x = p.left, y = p.top;
-  var w = $(elem).outerWidth(), h = $(elem).outerHeight();
+function label(arg, txt, direction) {
   var pulseWidth = 5;
   var pulse = 500;
+  var pos = null
+  
+  if (arg.hasOwnProperty("of")) {
+    pos = arg
+  } else {
+    pos = {
+      of: arg
+    }
+    if (direction == "up") {
+      pos['at'] = 'center bottom'
+    } else if (direction == "down") {
+      pos['at'] = 'center top'
+    } else if (direction == "left") {
+      pos['at'] = 'right center'
+    } else if (direction == "right") {
+      pos['at'] = 'left center'
+    }
+  }
 
   if (direction == "up") {
     clazz = "arrow_up"
-    animate_prop = "top"
     text_pos = "top:  30px;"
     arrow_pos = "left:  20px; top:  20px;"
-    var ox = x;
-    var oy = y + h + 5;
-    var v1 = oy, v2 = v1 + pulseWidth;
+    arrow_div_pos = "left-10 top"
+    arrow_div_pos1 = "left-10 top+" + pulseWidth
   } else if (direction == "down") {
     clazz = "arrow_down"
-    animate_prop = "top"
     text_pos = "top:  0px;"
     arrow_pos = "left:  20px; top:  40px;"
-    var ox = x;
-    var oy = y - 60;
-    var v1 = oy, v2 = v1 - pulseWidth;
+    arrow_div_pos = "center bottom"
+    arrow_div_pos1 = "center bottom-" + pulseWidth
   } else if (direction == "left") {
     clazz = "arrow_left"
-    animate_prop = "left"
     text_pos = "left:  30px; top: -10px;"
     arrow_pos = "left:  0px; top:  0px;"
-    var ox = x + w + 5;
-    var oy = y;
-    var v1 = ox, v2 = ox + pulseWidth;
+    arrow_div_pos = "left top-7"
+    arrow_div_pos1 = "left+" + pulseWidth + " top-7"
   } else if (direction == "right") {
     clazz = "arrow_right"
-    animate_prop = "left"
     text_pos = "float:  left;"
     arrow_pos = "float: right;"
-    var ox = x - 100;
-    var oy = y;
-    var v1 = ox, v2 = ox - pulseWidth;
+    arrow_div_pos = "right center"
+    arrow_div_pos1 = "right-" + pulseWidth +" center"
   }
 
   var div = $("<div class='absolute'><div class=" + clazz +
     " style='" + arrow_pos + "'></div><div style='" + text_pos +
     "position: relative; text-align: center;'>" + txt + "</div></div>")
 
-  div.offset({ left:  ox, top: oy})
   $('body').append(div);
+
+  var arrowDiv = $(div).children('div')[0]
+  var apos = $(arrowDiv).position();
+
+  pos.my = arrow_div_pos
+  $(div).position(pos)
+  pos.using = (css, dummy) => $(div).animate(css, pulse / 2);
   var ctr = 0;
   var interval = setInterval(function () {
-    v = (ctr % 2 == 0 ? v1 : v2) + "px"
-    p = {}
-    p[animate_prop] = v;
-    $(div).animate(p, pulse / 2)
+    v = (ctr % 2 == 0 ? arrow_div_pos : arrow_div_pos1)
+    pos.my = v;
+    $(div).position(pos)
     ctr ++;
   }, pulse / 2)
   return { elem:  div, timer: interval };
@@ -178,9 +190,9 @@ function KillSwitch(pt) {
   pOff = $(pt).offset();
   pW =  $(pt).width(); 
   das.position(ks.html, {
-    my: 'right top ',
+    my: 'right center',
     of: pt,
-    at: 'right-40 top+10' 
+    at: 'right-40 bottom' 
   })
   $('body').append(ks.html)
 
