@@ -131,7 +131,7 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
           impliedBy(foundJSInv, jsInv, function (x) {
             if (x !== null) {
               progW.markInvariant(foundInv[x], "implies")
-              tracesW.immediateError("Implied by existing invariant!")
+              tracesW.immediateError("This is weaker than an found expression!")
             } else {
               gl.pwupSuggestion.invariantTried(jsInv);
               gl.setPowerups(gl.pwupSuggestion.getPwups());
