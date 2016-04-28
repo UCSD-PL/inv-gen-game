@@ -110,7 +110,7 @@
 
     var tutorialScript = [
       { setup: function (cs) {
-                  $('.overlay').html("<h1>First a quick tutorial. <br> You can press spacebar at any time <br>to proceed to the next step.</h1>")
+                  $('.overlay').html("<h1>Welcome to the <span class='good'>InvGen</span> Tutorial!<br> You can press spacebar at any time <br>to proceed to the next step.</h1>")
                   $('.overlay').fadeIn(fadeDelay, function () {
                     cs.nextStepOnKeyOrTimeout(stepTimeout, ()=>0, 32)
                   })
@@ -382,6 +382,7 @@
                }
       },
       { setup: function (cs) {
+                 tracesW.disable()
                  curL = label("#3 .temp_expr_eval", "Row is all red now!", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
@@ -392,8 +393,9 @@
                }
       },
       { setup: function (cs) {
+                 tracesW.enable()
                  curL = label("#formula-entry", "Press Enter...", "left")
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 13)
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, ()=> { removeLabel(curL); tracesW.commitCb(); }, 13)
                }
       },
       { setup: function (cs) {
