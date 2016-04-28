@@ -177,12 +177,11 @@ function KillSwitch(pt) {
   ks.html = $('<div class="kill-switch" style="position: absolute;"></div>')
   pOff = $(pt).offset();
   pW =  $(pt).width(); 
-  $(ks.html).position({
+  das.position(ks.html, {
     my: 'right top ',
     of: pt,
     at: 'right-40 top+10' 
   })
-  //$(ks.html).offset({ top: pOff.top + 10, left: pOff.left + pW - 40 }); 
   $('body').append(ks.html)
 
   this.onFlipCb = (i)=>0;
@@ -209,9 +208,35 @@ function KillSwitch(pt) {
 
   this.destroy = function () {
     $(ks.html).remove()
+    das.remove(ks.html)
   }
 
   this.flip = function () { ks.html.click(); }
 
   this.refresh()
 }
+
+function DynamicAttachments(div) {
+  var da = this;
+  da.objs = []
+  da.position = function(target, spec) {
+    var htmlTarget = $(target)[0]
+    for (var i in da.objs) {
+      if (da.objs[i][0] == htmlTarget) {
+        da.objs[i][1] = spec;
+        $(htmlTarget).position(spec)
+        return
+      }
+    }
+    da.objs.push([htmlTarget, spec])
+    $(htmlTarget).position(spec)
+  }
+  da.reflowAll = () => { 
+    for (var i in da.objs) {
+      $(da.objs[i][0]).position(da.objs[i][1])
+    }
+  };
+  da.remove = (elmt) => { da.objs = da.objs.filter( (item) => $(item)[0] != $(elmt)[0] ) }
+}
+
+var das = new DynamicAttachments();

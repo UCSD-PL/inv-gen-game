@@ -13,10 +13,12 @@ function CETraceWindow(div, data) {
 
   traceW.immediateError = function (msg) {
     $("th #errormsg").html("<div class='error'> " + msg + "</div>");
+    das.reflowAll();
   }
 
   traceW.immediateMsg = function (msg) {
     $("th #errormsg").html("<div class='msg'> " + msg + "</div>");
+    das.reflowAll();
   }
 
   traceW.error = traceW.immediateError;
@@ -68,6 +70,7 @@ function CETraceWindow(div, data) {
 
     traceW.dataMap = [[], [], []];
     traceW.data = [[], [], []];
+    das.reflowAll();
   }
 
   this.clearData = function(type) {
@@ -87,6 +90,7 @@ function CETraceWindow(div, data) {
         traceW.dataMap[type][i].remove()
     }
     traceW.dataMap[type] = []
+    das.reflowAll();
   }
 
   this.addData = function(data) {
@@ -147,6 +151,7 @@ function CETraceWindow(div, data) {
         id ++;
       }
     }
+    das.reflowAll();
     this.changedCb()
   }
 
@@ -228,6 +233,7 @@ function CETraceWindow(div, data) {
       }
 
     }
+    das.reflowAll();
   }
 
   this.enableSubmit = function () { traceW.okToSubmit = true; }
