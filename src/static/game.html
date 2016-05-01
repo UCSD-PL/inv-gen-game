@@ -147,10 +147,15 @@
 
       gameLogic.onLvlPassed(function() {
         $('#next-lvl').show();
+        curL = label({ of: $('#next-lvl'), at: "right center"},
+              "Click Here! (50c bonus!)", left)
       });
 
       $('#next-lvl').click(function() {
         $('#next-lvl').hide();
+        if (curL)
+          removeLabel(curL);
+
         $('#hint').html('');
         $('#hints').hide();
         $('#btn-hint').show();
@@ -174,7 +179,9 @@
       })
 
       $('#arrows').click(function() {
-        curScript = new Script(tutorialScript);
+        if (curScript == null) {
+          curScript = new Script(tutorialScript);
+        }
       })
 
       $('#operator').click(function() {
@@ -190,8 +197,10 @@
       })
 
       gameLogic.onUserInput(function () {
-        if (curScript)
+        if (curScript) {
           curScript.cancel()
+          curScript = null
+        }
       })
     })
 

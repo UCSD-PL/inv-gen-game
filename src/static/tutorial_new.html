@@ -310,11 +310,16 @@
       { setup: function (cs) {
                  tracesW.enable();
                  $('#formula-entry').focus();
-                 gameLogic.onLvlPassed(()=>$('#next-lvl').fadeIn(fadeDelay, function() {}))
+                 gameLogic.onLvlPassed(()=>
+                    $('#next-lvl').fadeIn(fadeDelay, ()=> {
+                      curL = label({ of: $('#next-lvl'), at: "right center" },
+                                   "Click Here! (15c bonus!)", "left")
+                    }))
                }
       },
       { setup: function (cs) {
                  $('#next-lvl').hide();
+                 removeLabel(curL);
                  var lvl = new Level("tutorial_lvl_2",
                    [ "k", "l" ],
                    [ [ [ 1, 2 ], [ 2, 3 ], [ 3, 4 ] ], [], [] ],
@@ -324,11 +329,11 @@
                    false,
                    false,
                    false)
-                 gameLogic.onLvlPassed(()=>$('#next-lvl').fadeIn(fadeDelay, function() {}))
                  gameLogic.loadLvl(lvl)
                }
       },
       { setup: function (cs) {
+                 removeLabel(curL);
                  $('#next-lvl').hide();
                  var lvl = new Level("tutorial_lvl_3",
                    [ "k", "l" ],
@@ -339,12 +344,12 @@
                    false,
                    false,
                    false)
-                 gameLogic.onLvlPassed(()=>$('#next-lvl').fadeIn(fadeDelay, function() {}))
                  gameLogic.loadLvl(lvl)
                }
       },
       // Negative examples tutorial ------------------------------------------
       { setup: function (cs) {
+                 removeLabel(curL);
                  $('#next-lvl').hide();
                   $('.overlay').html("<h1>Good job!<br>Lets go back to our tutorial.</h1>")
                   $('.overlay').fadeIn(fadeDelay, function () {
@@ -419,6 +424,7 @@
                }
       },
       { setup: function (cs) {
+                 removeLabel(curL);
                  $('#next-lvl').hide();
                  $(".overlay").fadeOut(fadeDelay, function () {
                    var lvl = new Level("tutorial_lvl_4",
@@ -430,12 +436,12 @@
                      false,
                      false,
                      false)
-                   gameLogic.onLvlPassed(()=>$('#next-lvl').fadeIn(fadeDelay, function() {}))
                    gameLogic.loadLvl(lvl)
                  })
                }
       },
       { setup: function (cs) {
+                 removeLabel(curL);
                  $('#next-lvl').hide();
                  $(".overlay").fadeOut(fadeDelay, function () {
                    var lvl = new Level("tutorial_lvl_4",
@@ -447,12 +453,12 @@
                      false,
                      false,
                      false)
-                   gameLogic.onLvlPassed(()=>$('#next-lvl').fadeIn(fadeDelay, function() {}))
                    gameLogic.loadLvl(lvl)
                  })
                }
       },
       { setup: function (cs) {
+                 removeLabel(curL);
                  $('#next-lvl').hide();
                  $(".overlay").fadeOut(fadeDelay, function () {
                    var lvl = new Level("tutorial_lvl_4",
@@ -464,7 +470,6 @@
                      false,
                      false,
                      false)
-                   gameLogic.onLvlPassed(()=>$('#next-lvl').fadeIn(fadeDelay, function() {}))
                    gameLogic.loadLvl(lvl)
                  })
                }
@@ -472,6 +477,7 @@
 
       // New rows feedback tutorial ------------------------------------------
       { setup: function (cs) {
+                 removeLabel(curL);
                  $('#next-lvl').hide();
                   $('.overlay').html('<h1>Good Job!<br>' +
                     'Sometimes we will give you guidance,' +
