@@ -38,6 +38,8 @@
     var tempCb = null;
     var stepTimeout = -1;
 
+    disableBackspaceNav();
+
     function keepItUp(res) {
       if (res.find) {
         prog = res.find

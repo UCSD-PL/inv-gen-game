@@ -156,7 +156,6 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
                   if (res.hasOwnProperty('ctrex')) {
                     gl.addData(res.ctrex);
                     gl.userInput(false)
-                    tracesW.setExp("");
                   }
                 }
               })

@@ -42,6 +42,8 @@
     var stepTimeout = 5000;
     var curScript = null;
 
+    disableBackspaceNav();
+
     function loadTrace(traceId) {
       Level.load(curLvlSet, traceId, function(lvl) {
         gameLogic.loadLvl(lvl)
