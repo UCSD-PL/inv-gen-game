@@ -168,8 +168,8 @@
       { setup: function (cs) {
                  curL = label({ of: "#2 .temp_expr_eval", at: "left+10 bottom" },
                               "Column contains values of i!", "up")
-                 curL1 = label({ of: "#2", at: "left-10 bottom" },
-                              "", "up")
+                 curL1 = label({ of: $("#lvl_table > thead > tr > th:nth-child(1)"), at: "left center" },
+                              "", "right")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, () => {
                    removeLabel(curL); removeLabel(curL1);
                  }, 32)
@@ -183,8 +183,8 @@
       { setup: function (cs) {
                  curL = label({ of: "#2 .temp_expr_eval", at: "left+10 bottom" },
                               "Now you get i+1 in this column!", "up")
-                 curL1 = label({ of: "#2", at: "left-10 bottom" },
-                              "", "up")
+                 curL1 = label({ of: $("#lvl_table > thead > tr > th:nth-child(1)"), at: "left center" },
+                              "", "right")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, () => {
                    removeLabel(curL); removeLabel(curL1);
                  }, 32)
@@ -250,7 +250,7 @@
                  tracesW.msg("")
                  $('#score-div-row').fadeIn(fadeDelay, function() {
                    curL = label({ of: $("#score-div-row"), at: "left+10 bottom" },
-                                "You get points for each expression!<br> Sweet!", "up");
+                                "You get points for each <br> accepted expression! Sweet!", "up");
                    scoreW.add(1);
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                   })
@@ -261,7 +261,7 @@
                    var inv = invPP(tracesW.curExp().trim());
                    addSuccessfulInvariant(inv);
                    curL = label({ of: $("#good_0"), at: "left+10 bottom" },
-                                "Your expressions appear here", "up");
+                                "Your accepted expressions <br> appear here", "up");
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                  })
                }
@@ -691,8 +691,8 @@
                    window.location.replace('game.html');
                  })
                  $('#next-lvl').fadeIn(fadeDelay, function() {
-                   curL = label({ of: $("#next-lvl"), at: "left+10 bottom"},
-                                "Proceed to the game!", "up");
+                   curL = label({ of: $("#next-lvl"), at: "left center"},
+                                "Proceed to the game!", "right");
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                  })
                }

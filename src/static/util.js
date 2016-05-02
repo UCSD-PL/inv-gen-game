@@ -84,12 +84,15 @@ function label(arg, txt, direction) {
   $(div).position(pos)
   pos.using = (css, dummy) => $(div).animate(css, pulse / 2);
   var ctr = 0;
-  var interval = setInterval(function () {
+  function mkAnimF(pos, arrow_div_pos, arrow_div_pos1) {
+    return function () {
     v = (ctr % 2 == 0 ? arrow_div_pos : arrow_div_pos1)
     pos.my = v;
     $(div).position(pos)
     ctr ++;
-  }, pulse / 2)
+  }
+  }
+  var interval = setInterval(mkAnimF(pos, arrow_div_pos, arrow_div_pos1), pulse / 2)
   return { elem:  div, timer: interval };
 }
 
