@@ -19,36 +19,45 @@ keywords = "game, math, programming"
 
 description = "Help us evaluate our verification game InvGen! Each level is structured as a math puzzle, where you try to come up with correct expressions Your work directly helps with the verification of programs!"
 
-htmlOverview = """<p>We are developing a new game to study the potential for human intelligence to help with program verification tasks. The game consists of a short tutorial, followed by only 5 levels! Your goal in each level is to come up with expressions that are accepted by the game. If the game rejects an expression, it will give you more guidance! Here is what you need to do concretely:</p>
+htmlOverview = """<p>We are developing a new game to aid program verification. The game consists of a short tutorial, followed by only 5 levels! Your goal in each level is to come up with expressions that are accepted by the game. If the game rejects an expression, it will give you more guidance! </p>
+
+<p>
+Here is what you need to do concretely:
+</p>
 
 <ol>
 <li>
 Install a free screen recording software of your choice. For example:
-<a href='http://screencast-o-matic.com/home'>http://screencast-o-matic.com/home</a>
+<a target='_blank' href='http://screencast-o-matic.com/home'>http://screencast-o-matic.com/home</a>
+
+<br/>
+<p> <b> Note: </b> Some free screen recording software has a limit on the length of the video (e.g. 10 min). If you run into this, please split your recording into several smaller videos, then zip them up and upload them as a single ile. </p>
 </li>
 
 <li>
-Begin recording your screen
+Begin recording your screen.
 </li>
 
 <li>
-Use Google Chrome to navigate to http://zoidberg.ucsd.edu:5000/tutorial_new.html
+Use Google Chrome to navigate to <a target='_blank' href='http://zoidberg.ucsd.edu:5000/tutorial_new.html'> http://zoidberg.ucsd.edu:5000/tutorial_new.html </a>
 </li>
 
 <li>
-Play through the short tutorial
+Play through the short tutorial. Note that the tutorial has 6 easy sample levels spread throughout it. <b>You will get 15c bonus for each sample level you pass!</b>
 </li>
 
 <li>
-Play as far as you can through the 5 game levels.
+Play as far as you can through the 5 actual game levels (these come after the end of the tutorial).<b>You will get 50c bonus for each actual level you pass!</b>
 </li>
 
 <li>
-Upload the recording of your browser screen, as you were playing the game.
+Upload the recording(s) of your browser screen, as you were playing the game.
 </li>
 </ol>
 
 Thank you!"""
+
+reward = '2.00'
 
 try:
     mc = connect(args.credentials_file, args.sandbox)
@@ -70,7 +79,7 @@ try:
                       title=Title,
                       description=description,
                       keywords=keywords,
-                      reward='0.01',
+                      reward=reward,
                       duration=timedelta(0, 45*60))
     assert len(r) == 1
     print "Created HIT ", r[0].HITId
