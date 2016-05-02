@@ -22,6 +22,7 @@ pip install flask
 pip install flask-jsonrpc
 pip install slimit
 pip install pyparsing
+pip install boto
 
 if [ ! -d $DIR/third_party ] ; then
   mkdir $DIR/third_party
