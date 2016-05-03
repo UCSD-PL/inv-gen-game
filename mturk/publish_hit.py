@@ -3,6 +3,7 @@ from argparse import *
 from traceback import *
 import sys
 from boto.mturk.question import *
+from boto.mturk.qualification import *
 from boto.mturk.connection import *
 from datetime import *
 from common import error, mkParser, connect
@@ -72,6 +73,8 @@ try:
                  True)
 
     qf = QuestionForm([o, q])
+    mastersQualType = "2ARFPLSP75KLA8M8DH1HTEQVJT3SY6" if args.sandbox else \
+                      "2F1QJWKUDD8XADTFD2Q0G6UTO95ALH"
 
     r = mc.create_hit(question=qf,
                       lifetime=timedelta(7),
@@ -80,7 +83,12 @@ try:
                       description=description,
                       keywords=keywords,
                       reward=reward,
-                      duration=timedelta(0, 45*60))
+                      duration=timedelta(0, 45*60),
+                      qualifications=Qualifications([
+                        NumberHitsApprovedRequirement("GreaterThanOrEqualTo", 1000), 
+                        PercentAssignmentsApprovedRequirement("GreaterThanOrEqualTo", 97), 
+                        Requirement(mastersQualType, "Exists")
+                      ]))
     assert len(r) == 1
     print "Created HIT ", r[0].HITId
 except:
