@@ -2,7 +2,7 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
   var gl = this;
 
   var foundInv;
-  var foundJSInv;
+  var foundJSInv, inv_fail_pre, inv_fail_ind, inv_sound;
   var overfittedInvs;
   var progress;
   var pwups;
@@ -19,6 +19,11 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
   gl.clear = function () {
     foundInv = [];
     foundJSInv = [];
+
+    inv_fail_pre = [];
+    inv_fail_ind = [];
+    inv_sound = [];
+
     overfittedInvs = [];
     gl.curLvl = null;
     progress = {}
@@ -88,22 +93,6 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
       var all = pos_res.length + neg_res.length + ind_res.length
       var hold_pos = pos_res.filter(function (x) { return x; }).length
       var hold_neg = neg_res.filter(function (x) { return !x; }).length
-      /*
-      best_choices = ind_res.map(function (x) {
-        if (!x[0])
-          return 0
-        else if (x[0] && x[1])
-          return 1
-        else
-          return -1
-      })
-
-      for (var i in best_choices) {
-        if (best_choices[i] != -1 && best_choices[i] != tracesW.switches[i].pos)
-          traceW.switches[i].flip()
-      }
-      */
-
       var ind_choices = tracesW.switches.map(x=>x.pos)
       var hold_ind = zip(ind_choices, ind_res).filter(function (x) {
         if (x[0] == 0)
@@ -137,7 +126,15 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
               gl.setPowerups(gl.pwupSuggestion.getPwups());
 
               gl.curLvl.invSound(jsInv, foundJSInv, function (res) {
-                if (res.sound) {
+                if (res.ctrex[0].length != 0) {
+                  inv_fail_pre.push(inv)
+                } else if (res.ctrex[2].length != 0) {
+                  inv_fail_ind.push(inv)
+                } else {
+                  inv_sound.push(inv)
+                } 
+
+                if (res.sound || gl.curLvl.multiround) {
                   var addScore = computeScore(jsInv, 1)
                   scoreW.add(addScore);
                   foundInv.push(inv)
@@ -153,10 +150,8 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
                     });
                   }
                 } else {
-                  if (res.hasOwnProperty('ctrex')) {
-                    gl.addData(res.ctrex);
-                    gl.userInput(false)
-                  }
+                  gl.addData(res.ctrex);
+                  gl.userInput(false)
                 }
               })
             }

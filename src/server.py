@@ -50,11 +50,8 @@ def _tryUnroll(loop, bbs, min_un, max_un, bad_envs, good_env):
     term_vals = get_loop_header_values(loop, bbs, min_un, max_un, bad_envs, good_env, False)
     return (term_vals, False)
 
-def getInterestingTrace(loop, bbs, nunrolls):
-    invs = [ parseExprAst("x<y")[0], parseExprAst("x<=y")[0],
-             parseExprAst("x==c")[0], parseExprAst("x==y")[0],
-             parseExprAst("x==0")[0] ]
-    vals, terminates = _tryUnroll(loop, bbs, 0, 4, None, None)
+def getInterestingTrace(loop, bbs, nunrolls, invs):
+    vals, terminates = _tryUnroll(loop, bbs, 0, nunrolls, None, None)
     traceVs = list(livevars(bbs)[loop.loop_paths[0][0]])
     vals = [ { x : env[x] for x in traceVs } for env in vals ]
     hold_for_data = []
@@ -72,7 +69,7 @@ def getInterestingTrace(loop, bbs, nunrolls):
     for s in powerset(hold_for_data):
         inv = ast_or(s)
         ctrex = loop_vc_pre_ctrex(loop, inv, bbs)
-        trace = _tryUnroll(loop, bbs, 0, 4, None, ctrex)
+        trace = _tryUnroll(loop, bbs, 0, nunrolls, None, ctrex)
         if ctrex:
             res.append((diversity(trace[0]), len(s), list(s), ctrex, trace))
 
@@ -82,13 +79,14 @@ def getInterestingTrace(loop, bbs, nunrolls):
     print res[-2]
     return res[-1][4]
 
-def loadBoogieFile(fname):
+def loadBoogieFile(fname, multiround):
     bbs = get_bbs(fname)
     loop = unique(loops(bbs), "Cannot handle program with multiple loops:" + fname)
     header_vals, terminates = _tryUnroll(loop, bbs, 0, 4, None, None)
     # Assume we have no tests with dead loops
     assert(header_vals != [])
-    #header_vals, terminates = getInterestingTrace(loop, bbs, 4)
+    #header_vals, terminates = getInterestingTrace(loop, bbs, 4,
+    #  [ parseExprAst(inv)[0] for inv in ["x<y", "x<=y", "x==c", "x==y", "x==0"] ])
 
     # See if there is a .hint files
     hint = None
@@ -103,16 +101,17 @@ def loadBoogieFile(fname):
              'data': [[[ str(row[v]) for v in vs  ]  for row in header_vals], [], []],
              'exploration_state' : [ ([ str(header_vals[0][v]) for v in vs  ], len(header_vals), terminates) ],
              'hint': hint,
-             'goal' : { "verify" : True },
+             'goal' : { "verify" : True } if (not multiround) else { "rounds" : True }
              'support_pos_ex' : True,
              'support_neg_ex' : True,
              'support_ind_ex' : True,
+             'multiround'     : multiround,
              'program' : bbs,
              'loop' : loop
     }
 
-def loadBoogies(dirN):
-    return { name[:-4] : loadBoogieFile(dirN + '/' + name) for name in listdir(dirN)
+def loadBoogies(dirN, multiround = False):
+    return { name[:-4] : loadBoogieFile(dirN + '/' + name, multiround) for name in listdir(dirN)
                 if name.endswith('.bpl') }
 
 def readTrace(fname):
@@ -144,6 +143,7 @@ def readTrace(fname):
              'support_pos_ex' : False,
              'support_neg_ex' : False,
              'support_ind_ex' : False,
+             'multiround'     : False,
     }
 
 def loadTraces(dirN):
@@ -158,7 +158,7 @@ traces = {
     "intro-benchmarks": introTraces,
     "test-benchmarks": testTraces,
     "pruned-intro-benchmarks": prunedIntroTraces,
-    "desugared-boogie-benchmarks" : loadBoogies(MYDIR + '/../desugared-boogie-benchmarks'),
+    "desugared-boogie-benchmarks" : loadBoogies(MYDIR + '/../desugared-boogie-benchmarks', True),
     "old-dilig-traces": {
       '15-c': {
           'variables': ['n', 'k', 'j'],
@@ -259,6 +259,7 @@ def loadLvl(levelSet, traceId):
              'support_pos_ex' : lvl['support_pos_ex'],
              'support_neg_ex' : lvl['support_neg_ex'],
              'support_ind_ex' : lvl['support_ind_ex'],
+             'multiround'     : lvl['multiround'],
       }
   
     log({"type": "load_data", "data": lvl}) 

@@ -6,7 +6,8 @@ function Level(id,
                hint,
                support_pos_ex,
                supports_neg_ex,
-               support_ind_ex) {
+               support_ind_ex,
+               multiround) {
   var lvl = this;
   this.id = id;
   this.positive_data, this.negative_data, this.inductive_data = initial_data;
@@ -18,11 +19,12 @@ function Level(id,
   this.support_pos_ex = support_pos_ex;
   this.supports_neg_ex = supports_neg_ex;
   this.support_ind_ex = support_ind_ex;
+  this.multiround = multiround;
 
   /* 
      Given an invariant that holds for the current data,
      is it sound? If this level supports positive and/or inductive
-     checking, see if there are counterexamples. Otherwise conclude
+     checking, see if there are counterexamples. Otherwise return
      true.
    */
   this.invSound = function(inv, soundInvs, cb) {
@@ -40,10 +42,10 @@ function Level(id,
       })
     } else if (lvl.support_ind_ex) {
       ind_vc_ctrex(curLvlSet, this.id, soundInvs.concat([inv]), function(res) {
-        cb({ sound: res.length == 0, counterexample: res })
+        cb({ sound: res.length == 0, counterexample: [ [], [], res ] })
       })
     } else {
-      cb({ sound: true });
+      cb({ sound: true, ctrex: [ [], [], [] ] });
     }
   }
 
@@ -70,7 +72,7 @@ function Level(id,
       }
 
       cb({ "satisfied": numFound == goal.find.length,
-               "find": { "found": numFound, "total": goal.find.length } })
+           "find": { "found": numFound, "total": goal.find.length } })
     } else  if (goal.equivalent) {
       equivalentPairs(goal.equivalent, invs, function(pairs) {
         var numFound = 0;
@@ -81,7 +83,7 @@ function Level(id,
         }
 
         cb({ "satisfied": equiv.length == goal.equivalent.length,
-                 "equivalent": { "found": equiv.length , "total": goal.equivalent.length } })
+             "equivalent": { "found": equiv.length , "total": goal.equivalent.length } })
       })
     } else if (goal.max_score) {
       cb({ "satisfied" : true, "max_score" : { "found" : invs.length } })
@@ -96,6 +98,17 @@ function Level(id,
       cb({ "satisfied" : false })
     } else if (goal.hasOwnProperty('atleast')) {
       cb({ "satisfied" : invs.length >= goal.atleast })
+    } else if (goal.hasOwnProperty('rounds')) {
+      counterexamples(curLvlSet, lvls[curLvl], invs, function(res) {
+        var pos=res[0],neg=res[1],ind = res[2]
+        var verifies = pos.length == 0 && neg.length == 0 && ind.length == 0;
+        if (verifies) {
+          cb({ "satisfied": true })
+        } else {
+          // RPC Callback - look for a negating trace
+        }
+      })
+      cb({ "satisfied" : invs.length >= goal.atleast })
     } else {
       error("Unknown goal " + JSON.stringify(goal));
     }
@@ -105,7 +118,8 @@ function Level(id,
 Level.load = function(lvlSet, id, cb) {
   rpc.call('App.loadLvl', [ lvlSet, id], function(data) {
     cb(new Level(id, data.variables, data.data, data.exploration_state,
-      data.goal, data.hint, data.support_pos_ex, data.support_neg_ex, data.support_ind_ex))
+      data.goal, data.hint, data.support_pos_ex, data.support_neg_ex, data.support_ind_ex,
+      data.multiround))
   }, log)
 }
 
