@@ -110,17 +110,6 @@
     var tutorialScript = [
       {
         setup: function (cs) {
-                   if($('#btn-hint').is(':hidden')) {
-                     curL = label($('#hint'), "These are hints you can use to win this level", "up");
-                   }
-                   else {
-                     curL = label($('#btn-hint'), "Click here to get hints", "up");
-                   }
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-                 }
-      },
-      {
-        setup: function (cs) {
                   curL = label($('#help'), "Click here if you need any help later", "left")
                   $('body').focus();
                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
@@ -142,10 +131,7 @@
       stickyW = new StickyWindow($('#sticky'))
       gameLogic = new CEGameLogic(traceW, progW, scoreW, stickyW);
 
-      $('#hints').hide();
       $('#next-lvl').hide();
-      $('#hint-col').show();
-      $('#hint').html('');
 
       gameLogic.onLvlPassed(function() {
         $('#next-lvl').show();
@@ -158,16 +144,7 @@
         if (curL)
           removeLabel(curL);
 
-        $('#hint').html('');
-        $('#hints').hide();
-        $('#btn-hint').show();
         nextLvl();
-      })
-
-      $('#btn-hint').click(function() {
-        $(this).hide();
-        $('#hints').show();
-        $('#hint').html(gameLogic.curLvl.hint);
       })
 
       $('#help').click(function() {
@@ -224,11 +201,6 @@
         <div class='row-md-6'>
 
           <div class='col-md-8' id='hint-col'>
-            <button id='btn-hint' class='btn-show-hint'>Show Hint</button>
-            <div class='col-md-6' id='hints'>
-              Hint:<br><span id='hint'></span>
-            </div>
-
             <span id='next_lvl_span'>
               <button id='next-lvl' class='btn-next'>Next Level</button>
             </span>

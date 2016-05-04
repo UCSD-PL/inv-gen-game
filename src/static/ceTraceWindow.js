@@ -99,6 +99,10 @@ function CETraceWindow(div, data) {
     classes = [ 'true', 'false', 'inductive' ]
 
     var id = $('table#lvl_table tr.traces-row').length
+    var lbls = []
+    var appendedData = traceW.data[0].length > 0 ||
+                       traceW.data[1].length > 0 ||
+                       traceW.data[2].length > 0;
 
     for (var type in [0,1,2]) {
       for (var i in data[type]) {
@@ -125,7 +129,6 @@ function CETraceWindow(div, data) {
 
         traceW.data[type].push(data[type][i])
 
-
         for (var j = type; j >= 0; j --) {
           var dataM = traceW.dataMap[j]
           if (dataM.length > 0) {
@@ -139,8 +142,10 @@ function CETraceWindow(div, data) {
         }
 
         if (j == -1) {
+          // First Piece of data
           $("table#lvl_table tbody").append(curRow)
         }
+
 
         traceW.dataMap[type][data_id] = curRow
 
@@ -149,9 +154,23 @@ function CETraceWindow(div, data) {
           traceW.switches[data_id].onFlip(traceW.changedCb)
         }
         id ++;
+
+        if (appendedData) {
+          // New piece of data - mark
+          $(curRow).each(function () { 
+            lbls.push(label({ of: $(this), at: "right center" }, "new", "left"))
+          })
+        }
       }
     }
     das.reflowAll();
+    function mkLblCleaner(lbls) {
+      return function () {
+        for (var i in lbls)
+          removeLabel(lbls[i])
+      }
+    }
+    setTimeout(mkLblCleaner(lbls), 5000)
     this.changedCb()
   }
 
