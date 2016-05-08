@@ -5,11 +5,16 @@ function ProgressWindow(div) {
 
   progW.element = div;
 
-  $(div).addClass('.progessWindow')
-  $(div).html("Accepted expressions<br>" +
-    "<ul id='good-invariants' style='font-family: monospace; list-style-type: none; padding: 0px; text-align: center;'></ul>")
+  //$(div).addClass('.progessWindow')
+  //$(div).addClass('box')
+  $(div).html("<div class='progressWindow box good centered positioned'> Accepted expressions<br>" +
+    "<ul id='good-invariants' style='font-family: monospace; list-style-type: none; padding: 0px; text-align: center;'></ul></div>")
+
+  $(div).append("<div class='ignoreWindow box warn centered positioned'>Ignored expressions<br>" +
+    "<ul id='ignored-invariants' style='font-family: monospace; list-style-type: none; padding: 0px; text-align: center;'></ul></div>")
 
   invUL = $('#good-invariants')
+  ignUL = $('#ignored-invariants')
 
   progW.addInvariant = function (inv) {
       // if arrows are running, then stop them
@@ -17,6 +22,15 @@ function ProgressWindow(div) {
       $(invUL).append("<li class='good-invariant' id='good_" +
         ctr + "'>" + invToHTML(inv) + "</li>")
       invMap[inv] = $('#good_' + ctr)
+      ctr++;
+  }
+
+  progW.addIgnored = function (inv) {
+      // if arrows are running, then stop them
+
+      $(ignUL).append("<li class='ignored-invariant' id='ign_" +
+        ctr + "'>" + invToHTML(inv) + "</li>")
+      invMap[inv] = $('#ign_' + ctr)
       ctr++;
   }
 
@@ -53,6 +67,7 @@ function ProgressWindow(div) {
 
   progW.clear = function () {
     $(invUL).html('')
+    $(ignUL).html('')
     invMap = {}
     ctr = 0
   }
@@ -61,6 +76,4 @@ function ProgressWindow(div) {
     return invMap.hasOwnProperty(inv);
   }
 
-  $(div).addClass('box')
-  $(div).addClass('progressWindow')
 }

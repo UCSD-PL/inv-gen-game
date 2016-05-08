@@ -137,10 +137,10 @@ function replace(inv, replF) {
               } ]
            }
 
-  if (inv.type == "BinaryExpression") {
+  if (inv.type == "BinaryExpression" || inv.type == "LogicalExpression") {
     var lhs = replace(inv.left, replF)
     var rhs = replace(inv.right, replF)
-    return replF({ "type":"BinaryExpression",
+    return replF({ "type": inv.type,
                    "operator": inv.operator,
                    "left": lhs,
                    "right": rhs, })

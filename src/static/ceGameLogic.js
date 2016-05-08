@@ -2,7 +2,7 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
   var gl = this;
 
   var foundInv;
-  var foundJSInv, overfitted_invs, nonind_invariants, sound_invariants;
+  var foundJSInv, ignoredJSInv, overfitted_invs, nonind_invariants, sound_invariants;
   var overfittedInvs;
   var progress;
   var pwups;
@@ -19,6 +19,7 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
   gl.clear = function () {
     foundInv = [];
     foundJSInv = [];
+    ignoredJSInv = [];
 
     overfitted_invs = [];
     nonind_invariants = [];
@@ -117,68 +118,76 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
             return
           }
 
-          impliedBy(foundJSInv, jsInv, function (x) {
+          equivalentToAny(ignoredJSInv, jsInv, function (x) {
             if (x !== null) {
               progW.markInvariant(foundInv[x], "implies")
-              tracesW.immediateError("This is weaker than an found expression!")
-            } else {
-              gl.pwupSuggestion.invariantTried(jsInv);
-              gl.setPowerups(gl.pwupSuggestion.getPwups());
-
-              gl.curLvl.invSound(jsInv, sound_invariants, function (res) {
-                if (res.ctrex[0].length != 0) {
-                  overfitted_invs.push(jsInv)
-                } else if (res.ctrex[2].length != 0) {
-                  nonind_invariants.push(jsInv)
-                } else {
-                  sound_invariants.push(jsInv)
-                } 
-
-                if (res.sound || gl.curLvl.multiround) {
-                  var addScore = computeScore(jsInv, 1)
-                  scoreW.add(addScore);
-                  foundInv.push(inv)
-                  foundJSInv.push(jsInv)
-                  progW.addInvariant(inv);
-                  tracesW.setExp("");
-                  if (!gl.lvlPassedF) {
-                    gl.curLvl.goalSatisfied(
-                      foundJSInv, 
-                      overfitted_invs, 
-                      nonind_invariants,
-                      sound_invariants, 
-                      function(res) {
-                        var lvl = gl.curLvl
-                        if (res.satisfied) {
-                          gl.lvlPassedF = true;
-                          gl.lvlPassed();
-                        } else if (lvl.multiround && foundJSInv.length > 1) {
-                          rpc.call("App.getPositiveExamples", [ curLvlSet, 
-                            lvl.id, lvl.exploration_state,
-                            overfitted_invs.map(esprima.parse), 5], (data) => {
-                              var templates = foundJSInv.map(abstractLiterals)
-                              rpc.call("App.instantiate", [templates, lvl.variables, data[1]],
-                              (invs) => {
-                                invs = invs.map((inv) => inv.substring(1, inv.length - 1))
-                                invs = invs.filter( (item, ind) => invs.indexOf(item) == ind )
-                                var newLvl = new Level(lvl.id,
-                                  lvl.variables, [data[1], [], []], data[0], lvl.goal,
-                                  lvl.hint, lvl.support_pos_ex, lvl.support_neg_ex,
-                                  lvl.support_ind_ex, lvl.multiround, invs)
-                                lvls.splice(curLvl+1, 0, newLvl)
-                                gl.lvlPassedF = true;
-                                gl.lvlPassed();
-                              })
-                            })
-                        }
-                      });
-                  }
-                } else {
-                  gl.addData(res.ctrex);
-                  gl.userInput(false)
-                }
-              })
+              tracesW.immediateError("This is equivalent to an ignored expression!")
+              return;
             }
+
+            impliedBy(foundJSInv, jsInv, function (x) {
+              if (x !== null) {
+                progW.markInvariant(foundInv[x], "implies")
+                tracesW.immediateError("This is weaker than a found expression!")
+              } else {
+                gl.pwupSuggestion.invariantTried(jsInv);
+                gl.setPowerups(gl.pwupSuggestion.getPwups());
+
+                gl.curLvl.invSound(jsInv, sound_invariants, function (res) {
+                  if (res.ctrex[0].length != 0) {
+                    overfitted_invs.push(jsInv)
+                  } else if (res.ctrex[2].length != 0) {
+                    nonind_invariants.push(jsInv)
+                  } else {
+                    sound_invariants.push(jsInv)
+                  } 
+
+                  if (res.sound || gl.curLvl.multiround) {
+                    var addScore = computeScore(jsInv, 1)
+                    scoreW.add(addScore);
+                    foundInv.push(inv)
+                    foundJSInv.push(jsInv)
+                    progW.addInvariant(inv);
+                    tracesW.setExp("");
+                    if (!gl.lvlPassedF) {
+                      gl.curLvl.goalSatisfied(
+                        foundJSInv, 
+                        overfitted_invs, 
+                        nonind_invariants,
+                        sound_invariants, 
+                        function(res) {
+                          var lvl = gl.curLvl
+                          if (res.satisfied) {
+                            gl.lvlPassedF = true;
+                            gl.lvlPassed();
+                          } else if (lvl.multiround && foundJSInv.length > 1) {
+                            rpc.call("App.getPositiveExamples", [ curLvlSet, 
+                              lvl.id, lvl.exploration_state,
+                              overfitted_invs.map(esprima.parse), 5], (data) => {
+                                var templates = foundJSInv.map(abstractLiterals)
+                                rpc.call("App.instantiate", [templates, lvl.variables, data[1]],
+                                (invs) => {
+                                  invs = invs.map((inv) => inv.substring(1, inv.length - 1))
+                                  invs = invs.filter( (item, ind) => invs.indexOf(item) == ind )
+                                  var newLvl = new Level(lvl.id,
+                                    lvl.variables, [data[1], [], []], data[0], lvl.goal,
+                                    lvl.hint, lvl.support_pos_ex, lvl.support_neg_ex,
+                                    lvl.support_ind_ex, lvl.multiround, invs)
+                                  lvls.splice(curLvl+1, 0, newLvl)
+                                  gl.lvlPassedF = true;
+                                  gl.lvlPassed();
+                                })
+                              })
+                          }
+                        });
+                    }
+                  } else {
+                    gl.addData(res.ctrex);
+                    gl.userInput(false)
+                  }
+                })
+              }
+            })
           })
         })
       }
@@ -231,12 +240,15 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
           sound_invariants.push(inv)
         } 
 
-        if (res.sound || gl.curLvl.multiround) {
+        if (res.sound) {
           var addScore = computeScore(inv, 1)
           scoreW.add(addScore);
           foundInv.push(inv)
           foundJSInv.push(inv)
           progW.addInvariant(inv);
+        } else {
+          ignoredJSInv.push(inv)
+          progW.addIgnored(inv);
         }
       })(sInv))
     }

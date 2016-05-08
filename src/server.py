@@ -72,6 +72,7 @@ def findNegatingTrace(loop, bbs, nunrolls, invs):
         ctrex = loop_vc_pre_ctrex(loop, inv, bbs)
         trace, terminates = _tryUnroll(loop, bbs, 0, nunrolls, None, ctrex)
         if (ctrex and len(trace) > 0):
+            print "Ctrexample for ", inv, " is ", trace
             res.append((diversity(trace), len(s), list(s), ctrex, (trace, terminates)))
 
     res.sort(key=lambda x:  x[0]);
@@ -323,6 +324,7 @@ def getPositiveExamples(levelSet, levelId, cur_expl_state, overfittedInvs, num):
     heads = set([tuple(x[0]) for x in cur_expl_state])
     overfitBoogieInvs = [esprimaToBoogie(x, {}) for x in overfittedInvs]
     negatedVals, terminates = findNegatingTrace(loop, bbs, num, overfitBoogieInvs)
+    print "Negated vals: ", negatedVals
 
     if (negatedVals):
         cur_expl_state.insert(0, (_from_dict(lvl['variables'], negatedVals[0]), 0, False))
@@ -332,6 +334,8 @@ def getPositiveExamples(levelSet, levelId, cur_expl_state, overfittedInvs, num):
     for (ind, (loop_head, nunrolls, is_finished)) in enumerate(cur_expl_state):
         if is_finished: continue
         if need <= 0:   break
+
+        print "Getting values from ", ind
 
         good_env = _to_dict(lvl['variables'], loop_head)
         # Lets first try to find terminating executions:

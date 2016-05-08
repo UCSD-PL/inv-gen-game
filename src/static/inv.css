@@ -110,6 +110,11 @@
   border-color: #157d00;
 }
 
+.ignoreWindow {
+  font-size: 25px;
+  border-color: rgb(204, 102, 0);
+}
+
 .tracesWindow {
   border-color: #f29408;
   border-radius: 25px;
