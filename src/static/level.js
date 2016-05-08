@@ -7,7 +7,8 @@ function Level(id,
                support_pos_ex,
                supports_neg_ex,
                support_ind_ex,
-               multiround) {
+               multiround,
+               startingInvs) {
   var lvl = this;
   this.id = id;
   this.positive_data, this.negative_data, this.inductive_data = initial_data;
@@ -20,6 +21,7 @@ function Level(id,
   this.supports_neg_ex = supports_neg_ex;
   this.support_ind_ex = support_ind_ex;
   this.multiround = multiround;
+  this.startingInvs = startingInvs;
 
   /* 
      Given an invariant that holds for the current data,
@@ -29,11 +31,11 @@ function Level(id,
    */
   this.invSound = function(inv, soundInvs, cb) {
     if (lvl.support_pos_ex) {
-      pre_vc_ctrex(curLvlSet, lvls[curLvl], soundInvs.concat([inv]), function(pos_res) {
+      pre_vc_ctrex(curLvlSet, lvl.id, soundInvs.concat([inv]), function(pos_res) {
         if (pos_res.length != 0) {
           cb({ sound: false, ctrex: [pos_res, [], []] })
         } else if (lvl.support_ind_ex) {
-          ind_vc_ctrex(curLvlSet, lvls[curLvl], soundInvs.concat([inv]), function(ind_res) {
+          ind_vc_ctrex(curLvlSet, lvl.id, soundInvs.concat([inv]), function(ind_res) {
             cb({ sound: ind_res.length == 0, ctrex: [ [], [], ind_res ] })
           })
         } else {
@@ -49,7 +51,7 @@ function Level(id,
     }
   }
 
-  this.goalSatisfied = function(invs, cb) {
+  this.goalSatisfied = function(all_invs, overfitted, nonind, sound, cb) {
     var goal = lvl.goal;
     if (goal == null) {
       cb({ "satisfied" : true })
@@ -60,7 +62,7 @@ function Level(id,
       for (var i=0; i < goal.find.length; i++) {
         var found = false;
         for (var j=0; j < goal.find[i].length; j++) {
-          if ($.inArray(goal.find[i][j], invs) != -1) {
+          if ($.inArray(goal.find[i][j], all_invs) != -1) {
             found = true;
             break;
           }
@@ -74,7 +76,7 @@ function Level(id,
       cb({ "satisfied": numFound == goal.find.length,
            "find": { "found": numFound, "total": goal.find.length } })
     } else  if (goal.equivalent) {
-      equivalentPairs(goal.equivalent, invs, function(pairs) {
+      equivalentPairs(goal.equivalent, all_invs, function(pairs) {
         var numFound = 0;
         var equiv = []
         for (var i=0; i < pairs.length; i++) {
@@ -86,29 +88,22 @@ function Level(id,
              "equivalent": { "found": equiv.length , "total": goal.equivalent.length } })
       })
     } else if (goal.max_score) {
-      cb({ "satisfied" : true, "max_score" : { "found" : invs.length } })
+      cb({ "satisfied" : true, "max_score" : { "found" : all_invs.length } })
     } else if (goal.verify) {
-      counterexamples(curLvlSet, lvls[curLvl], invs, function(res) {
-        var pos=res[0],neg=res[1],ind = res[2]
-        cb({ "satisfied": pos.length == 0 && neg.length == 0 && ind.length == 0,
-             "counterexamples": res
+      if (sound.length > 0) {
+        counterexamples(curLvlSet, lvl.id, sound, function(res) {
+          var pos=res[0],neg=res[1],ind = res[2]
+          cb({ "satisfied": pos.length == 0 && neg.length == 0 && ind.length == 0,
+               "counterexamples": res
+          })
         })
-      })
+      } else {
+        cb({ "satisfied": false, "counterexamples": [ [], [], [] ]})
+      }
     } else if (goal.none) {
       cb({ "satisfied" : false })
     } else if (goal.hasOwnProperty('atleast')) {
-      cb({ "satisfied" : invs.length >= goal.atleast })
-    } else if (goal.hasOwnProperty('rounds')) {
-      counterexamples(curLvlSet, lvls[curLvl], invs, function(res) {
-        var pos=res[0],neg=res[1],ind = res[2]
-        var verifies = pos.length == 0 && neg.length == 0 && ind.length == 0;
-        if (verifies) {
-          cb({ "satisfied": true })
-        } else {
-          // RPC Callback - look for a negating trace
-        }
-      })
-      cb({ "satisfied" : invs.length >= goal.atleast })
+      cb({ "satisfied" : all_invs.length >= goal.atleast })
     } else {
       error("Unknown goal " + JSON.stringify(goal));
     }
@@ -119,7 +114,7 @@ Level.load = function(lvlSet, id, cb) {
   rpc.call('App.loadLvl', [ lvlSet, id], function(data) {
     cb(new Level(id, data.variables, data.data, data.exploration_state,
       data.goal, data.hint, data.support_pos_ex, data.support_neg_ex, data.support_ind_ex,
-      data.multiround))
+      data.multiround, []))
   }, log)
 }
 

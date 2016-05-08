@@ -2,7 +2,7 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
   var gl = this;
 
   var foundInv;
-  var foundJSInv, inv_fail_pre, inv_fail_ind, inv_sound;
+  var foundJSInv, overfitted_invs, nonind_invariants, sound_invariants;
   var overfittedInvs;
   var progress;
   var pwups;
@@ -20,9 +20,9 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
     foundInv = [];
     foundJSInv = [];
 
-    inv_fail_pre = [];
-    inv_fail_ind = [];
-    inv_sound = [];
+    overfitted_invs = [];
+    nonind_invariants = [];
+    sound_invariants = [];
 
     overfittedInvs = [];
     gl.curLvl = null;
@@ -125,13 +125,13 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
               gl.pwupSuggestion.invariantTried(jsInv);
               gl.setPowerups(gl.pwupSuggestion.getPwups());
 
-              gl.curLvl.invSound(jsInv, foundJSInv, function (res) {
+              gl.curLvl.invSound(jsInv, sound_invariants, function (res) {
                 if (res.ctrex[0].length != 0) {
-                  inv_fail_pre.push(inv)
+                  overfitted_invs.push(jsInv)
                 } else if (res.ctrex[2].length != 0) {
-                  inv_fail_ind.push(inv)
+                  nonind_invariants.push(jsInv)
                 } else {
-                  inv_sound.push(inv)
+                  sound_invariants.push(jsInv)
                 } 
 
                 if (res.sound || gl.curLvl.multiround) {
@@ -142,12 +142,36 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
                   progW.addInvariant(inv);
                   tracesW.setExp("");
                   if (!gl.lvlPassedF) {
-                    gl.curLvl.goalSatisfied(foundJSInv, function(res) {
-                      if (res.satisfied) {
-                        gl.lvlPassedF = true;
-                        gl.lvlPassed();
-                      }
-                    });
+                    gl.curLvl.goalSatisfied(
+                      foundJSInv, 
+                      overfitted_invs, 
+                      nonind_invariants,
+                      sound_invariants, 
+                      function(res) {
+                        var lvl = gl.curLvl
+                        if (res.satisfied) {
+                          gl.lvlPassedF = true;
+                          gl.lvlPassed();
+                        } else if (lvl.multiround && foundJSInv.length > 1) {
+                          rpc.call("App.getPositiveExamples", [ curLvlSet, 
+                            lvl.id, lvl.exploration_state,
+                            overfitted_invs.map(esprima.parse), 5], (data) => {
+                              var templates = foundJSInv.map(abstractLiterals)
+                              rpc.call("App.instantiate", [templates, lvl.variables, data[1]],
+                              (invs) => {
+                                invs = invs.map((inv) => inv.substring(1, inv.length - 1))
+                                invs = invs.filter( (item, ind) => invs.indexOf(item) == ind )
+                                var newLvl = new Level(lvl.id,
+                                  lvl.variables, [data[1], [], []], data[0], lvl.goal,
+                                  lvl.hint, lvl.support_pos_ex, lvl.support_neg_ex,
+                                  lvl.support_ind_ex, lvl.multiround, invs)
+                                lvls.splice(curLvl+1, 0, newLvl)
+                                gl.lvlPassedF = true;
+                                gl.lvlPassed();
+                              })
+                            })
+                        }
+                      });
                   }
                 } else {
                   gl.addData(res.ctrex);
@@ -179,7 +203,7 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
     tracesW.addData(lvl.data);
     if (lvl.support_pos_ex) {
       tracesW.moreExamples(function(type) {
-        rpc.call("App.getPositiveExamples", [curLvlSet, lvls[curLvl], lvl.exploration_state, 
+        rpc.call("App.getPositiveExamples", [curLvlSet, gl.curLvl.id, lvl.exploration_state, 
           overfittedInvs.map(esprima.parse), 1],
           function (res) {
             lvl.exploration_state = res[0]
@@ -187,12 +211,35 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
             tracesW.addData([res[1], [], []])
           })
       })
+    } else {
+      tracesW.moreExamples((type) => assert(false, "Shouldn't get here"))
     }
     tracesW.setExp("");
     gl.userInput(false);
     gl.pwupSuggestion.clear(lvl);
     gl.setPowerups(gl.pwupSuggestion.getPwups())
     gl.lvlLoaded();
+
+    for (var i in lvl.startingInvs) {
+      var sInv = lvl.startingInvs[i]
+      gl.curLvl.invSound(sInv, sound_invariants, ((inv) => (res) => {
+        if (res.ctrex[0].length != 0) {
+          overfitted_invs.push(inv)
+        } else if (res.ctrex[2].length != 0) {
+          nonind_invariants.push(inv)
+        } else {
+          sound_invariants.push(inv)
+        } 
+
+        if (res.sound || gl.curLvl.multiround) {
+          var addScore = computeScore(inv, 1)
+          scoreW.add(addScore);
+          foundInv.push(inv)
+          foundJSInv.push(inv)
+          progW.addInvariant(inv);
+        }
+      })(sInv))
+    }
   }
 
   gl.addPowerup = function(pwup) {

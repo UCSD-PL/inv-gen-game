@@ -26,9 +26,9 @@ def evalPred(boogie_expr, env, consts = []):
 # Given an invariant template as a boogie expression where [x,y,z] are
 # variables and [a,b,c] constants And a series of environments, find all
 # instantiations of the template that holds for all elements of the series.
-def instantiateAndEval(inv, vals):
-    def vars(expr): return [ x for x in expr_read(expr) if x in ["x", "y", "z"] ]
-    def consts(expr): return [ x for x in expr_read(expr) if x in ["a", "b", "c"] ]
+def instantiateAndEval(inv, vals, var_names = ["x", "y", "z"], const_names = ["a", "b", "c"] ):
+    def vars(expr): return [ x for x in expr_read(expr) if x in var_names ]
+    def consts(expr): return [ x for x in expr_read(expr) if x in const_names ]
 
     res = []
     vs = vars(inv)

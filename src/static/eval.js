@@ -124,3 +124,57 @@ function operators(inv) {
 
   return {}
 }
+
+function replace(inv, replF) {
+  if (typeof(inv) == "string")
+    return replace(esprima.parse(inv), replF)
+
+  if (inv.type == "Program")
+    return { "type" : "Program",
+             "body": [ { 
+                "type": "ExpressionStatement",
+                "expression": replace(inv.body[0].expression, replF)
+              } ]
+           }
+
+  if (inv.type == "BinaryExpression") {
+    var lhs = replace(inv.left, replF)
+    var rhs = replace(inv.right, replF)
+    return replF({ "type":"BinaryExpression",
+                   "operator": inv.operator,
+                   "left": lhs,
+                   "right": rhs, })
+  }
+
+  if (inv.type == "UnaryExpression") {
+    var exp = replace(inv.argument, replF)
+    return replF({ "type": "UnaryExpression",
+                   "operator": inv.operator,
+                   "argument": exp,
+           })
+  }
+
+  if (inv.type == "Literal") {
+    return replF({ "type": "Literal", "raw": inv.raw })
+  }
+
+  if (inv.type == "Identifier") {
+    return replF({ "type": "Identifier", "name": inv.name })
+  }
+
+  assert(false, "Shouldn't get here")
+}
+
+function abstractLiterals(inv) {
+  var newVars= [];
+  var newInv = replace(inv, (node) => {
+    if (node.type == "Literal") {
+      var newId = "a" + newVars.length
+      newVars.push(newId)
+      return { "type": "Identifier", "name": newId }
+    }
+
+    return node
+  })
+  return [ newInv, newVars ]
+}

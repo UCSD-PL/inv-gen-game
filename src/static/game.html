@@ -53,23 +53,30 @@
     }
 
     function loadLvl(lvl) {
-      jsfound = []
-      $('#lvl_' + lvls[curLvl]).removeClass('bold');
-      $('#lvl_' + lvls[curLvl]).removeClass('currentLevel');
-      $('#lvl_' + lvls[curLvl]).parent().addClass('completedLevel');
-
-      curLvl = lvl;
-      $('#lvl_' + lvls[curLvl]).addClass('bold');
-      $('#lvl_' + lvls[curLvl]).parent().addClass('currentLevel');
-
       if (lvl == lvls.length) {
-        return doneScreen();
-      }
-      else {
+        doneScreen();
+      } else {
+        if (typeof(lvls[curLvl]) == "string") {
+          $('#lvl_' + lvls[curLvl]).removeClass('bold');
+          $('#lvl_' + lvls[curLvl]).removeClass('currentLevel');
+          $('#lvl_' + lvls[curLvl]).parent().addClass('completedLevel');
+        }
+
+        curLvl = lvl;
+        if (typeof(lvls[lvl]) == "string") {
+          $('#lvl_' + lvls[curLvl]).addClass('bold');
+          $('#lvl_' + lvls[curLvl]).parent().addClass('currentLevel');
+        }
+
         if (lvl == lvls.length - 1) {
           $('#next-lvl').html('Finish');
         }
-        loadTrace(lvls[curLvl]);
+
+        if (typeof(lvls[lvl]) == "string") {
+          loadTrace(lvls[curLvl]);
+        } else {
+          gameLogic.loadLvl(lvls[curLvl])
+        }
       }
     }
 

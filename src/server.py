@@ -13,6 +13,7 @@ from boogie_loops import loops, get_loop_header_values, \
 from util import unique, pp_exc, powerset, average
 from boogie_analysis import livevars
 from boogie_eval import instantiateAndEval
+from boogie_z3 import expr_to_z3, AllIntTypeEnv
 
 import argparse
 import traceback
@@ -50,7 +51,7 @@ def _tryUnroll(loop, bbs, min_un, max_un, bad_envs, good_env):
     term_vals = get_loop_header_values(loop, bbs, min_un, max_un, bad_envs, good_env, False)
     return (term_vals, False)
 
-def getInterestingTrace(loop, bbs, nunrolls, invs):
+def findNegatingTrace(loop, bbs, nunrolls, invs):
     vals, terminates = _tryUnroll(loop, bbs, 0, nunrolls, None, None)
     traceVs = list(livevars(bbs)[loop.loop_paths[0][0]])
     vals = [ { x : env[x] for x in traceVs } for env in vals ]
@@ -62,22 +63,22 @@ def getInterestingTrace(loop, bbs, nunrolls, invs):
         #return average([len(set(lst)) / 1.0 * len(lst) for lst in lsts])
 
     for inv in invs:
-        hold_for_data.extend(instantiateAndEval(inv, vals))
+        hold_for_data.extend(instantiateAndEval(inv, vals, traceVs, ["a", "b", "c"]))
 
     print "The following invariants hold for initial trace: ", hold_for_data
-    res = [ (diversity(vals), 0, [], None, (vals, terminates)) ]
+    res = [ ]
     for s in powerset(hold_for_data):
         inv = ast_or(s)
         ctrex = loop_vc_pre_ctrex(loop, inv, bbs)
-        trace = _tryUnroll(loop, bbs, 0, nunrolls, None, ctrex)
-        if ctrex:
-            res.append((diversity(trace[0]), len(s), list(s), ctrex, trace))
+        trace, terminates = _tryUnroll(loop, bbs, 0, nunrolls, None, ctrex)
+        if (ctrex and len(trace) > 0):
+            res.append((diversity(trace), len(s), list(s), ctrex, (trace, terminates)))
 
     res.sort(key=lambda x:  x[0]);
-    print "The top 2 most 'diverse' traces found by trying to negate the initial invariants is: "
-    print res[-1]
-    print res[-2]
-    return res[-1][4]
+    if (len(res) > 0):
+        return res[-1][4]
+    else:
+        return (None, False)
 
 def loadBoogieFile(fname, multiround):
     bbs = get_bbs(fname)
@@ -85,7 +86,7 @@ def loadBoogieFile(fname, multiround):
     header_vals, terminates = _tryUnroll(loop, bbs, 0, 4, None, None)
     # Assume we have no tests with dead loops
     assert(header_vals != [])
-    #header_vals, terminates = getInterestingTrace(loop, bbs, 4,
+    #header_vals, terminates = findNegatingTrace(loop, bbs, 4,
     #  [ parseExprAst(inv)[0] for inv in ["x<y", "x<=y", "x==c", "x==y", "x==0"] ])
 
     # See if there is a .hint files
@@ -101,7 +102,7 @@ def loadBoogieFile(fname, multiround):
              'data': [[[ str(row[v]) for v in vs  ]  for row in header_vals], [], []],
              'exploration_state' : [ ([ str(header_vals[0][v]) for v in vs  ], len(header_vals), terminates) ],
              'hint': hint,
-             'goal' : { "verify" : True } if (not multiround) else { "rounds" : True }
+             'goal' : { "verify" : True },
              'support_pos_ex' : True,
              'support_neg_ex' : True,
              'support_ind_ex' : True,
@@ -274,6 +275,32 @@ def _from_dict(vs, vals):
     else:
         return [ vals[vs[i]].as_long() if vs[i] in vals else None for i in xrange(0, len(vs)) ]
 
+@api.method("App.instantiate")
+@pp_exc
+def instantiate(invs, traceVars, trace):
+    res = []
+    z3Invs = []
+    boogieInvs = [ (x[1], esprimaToBoogie(x[0], {})) for x in invs]
+    vals = map(lambda x:    _to_dict(traceVars, x), trace)
+
+    for (constVars, bInv) in boogieInvs:
+        for instInv in instantiateAndEval(bInv, vals, traceVars, constVars):
+            instZ3Inv = expr_to_z3(instInv, AllIntTypeEnv())
+            implied = False
+            z3Inv = None
+
+            for z3Inv in z3Invs:
+                if implies(z3Inv, instZ3Inv):
+                    implied = True;
+                    break
+
+            if (implied):   continue
+            res.append(instInv)
+            z3Invs.append(instZ3Inv)
+
+    print "Instantiated: ", res, " from ", invs
+    return map(lambda x: str(x), res)
+    
 @api.method("App.getPositiveExamples")
 @pp_exc
 def getPositiveExamples(levelSet, levelId, cur_expl_state, overfittedInvs, num):
@@ -295,6 +322,12 @@ def getPositiveExamples(levelSet, levelId, cur_expl_state, overfittedInvs, num):
     need = num
     heads = set([tuple(x[0]) for x in cur_expl_state])
     overfitBoogieInvs = [esprimaToBoogie(x, {}) for x in overfittedInvs]
+    negatedVals, terminates = findNegatingTrace(loop, bbs, num, overfitBoogieInvs)
+
+    if (negatedVals):
+        cur_expl_state.insert(0, (_from_dict(lvl['variables'], negatedVals[0]), 0, False))
+
+    print cur_expl_state
 
     for (ind, (loop_head, nunrolls, is_finished)) in enumerate(cur_expl_state):
         if is_finished: continue
