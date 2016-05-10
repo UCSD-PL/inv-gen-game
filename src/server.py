@@ -6,7 +6,7 @@ from os import listdir
 from json import load, dumps 
 from z3 import *
 from js import invJSToZ3, addAllIntEnv, esprimaToZ3, esprimaToBoogie
-from boogie_ast import parseAst, AstBinExpr, AstTrue, AstUnExpr, parseExprAst, ast_and, ast_or
+from boogie_ast import parseAst, AstBinExpr, AstTrue, AstUnExpr, parseExprAst, ast_and, ast_or, replace
 from boogie_bb import get_bbs
 from boogie_loops import loops, get_loop_header_values, \
   loop_vc_pre_ctrex, loop_vc_post_ctrex, loop_vc_ind_ctrex
@@ -14,6 +14,8 @@ from util import unique, pp_exc, powerset, average
 from boogie_analysis import livevars
 from boogie_eval import instantiateAndEval
 from boogie_z3 import expr_to_z3, AllIntTypeEnv
+from boogie_paths import sp_nd_ssa_path, nd_bb_path_to_ssa, wp_nd_ssa_path
+from boogie_ssa import SSAEnv
 
 import argparse
 import traceback
@@ -495,6 +497,19 @@ def checkPreVC(levelSet, levelId, invs):
     log({"type": "checkPreVC", "data": pre_ctrex })
     return pre_ctrex 
 
+# Given a set of candidate loop invariants, and a loop
+# partition them into disjoin sets of influence based on
+# the dependencies between variables in the loop body
+# The soundness of invariants in a given set should be
+# independent of the soundness of invariants in other sets.
+def partitionInvariants(invs, loop, bbs):
+    body_ssa, ssa_env = nd_bb_path_to_ssa([ loop.loop_paths ], bbs, SSAEnv(None, ""))
+    inv_sps = [ sp_nd_ssa_path(body_ssa, bbs, expr_to_z3(x, AllIntTypeEnv()), AllIntTypeEnv()) for x in invs ]
+    print "SPs: ", inv_sps
+    inv_sps = [ wp_nd_ssa_path(body_ssa, bbs, expr_to_z3(replace(x, ssa_env.replm()), AllIntTypeEnv()), AllIntTypeEnv()) for x in invs ]
+    print "WPs: ", inv_sps
+    
+
 @api.method("App.checkIndVC")
 @pp_exc
 def checkIndVC(levelSet, levelId, invs):
@@ -517,6 +532,7 @@ def checkIndVC(levelSet, levelId, invs):
     boogie_inv = ast_and(boogie_invs)
     bbs = lvl['program']
     loop = lvl['loop']
+    partitionInvariants(boogie_invs, loop, bbs)
 
     fix = lambda x: _from_dict(lvl['variables'], x)
     print "Try pre.."

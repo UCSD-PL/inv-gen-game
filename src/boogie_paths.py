@@ -2,7 +2,7 @@ from boogie_ast import *;
 from boogie_z3 import *
 from boogie_bb import *
 from boogie_ssa import *
-from boogie_predicate_transformers import wp_stmts
+from boogie_predicate_transformers import wp_stmts, sp_stmts
 from z3 import *
 
 # BB_PATH = [ BB_LABEL ]
@@ -119,6 +119,14 @@ def wp_nd_ssa_path(ssa_p, bbs, pred, typeEnv):
             pred = Or([wp_nd_ssa_path(subp, bbs, pred, typeEnv) for subp in arg[1]])
         else:
             pred = wp_stmts(_ssa_stmts(bbs[arg[0]].stmts, arg[1]), pred, typeEnv)
+    return pred
+
+def sp_nd_ssa_path(ssa_p, bbs, pred, typeEnv):
+    for arg in ssa_p:
+        if (arg[0].startswith("_split_")):
+            pred = Or([sp_nd_ssa_path(subp, bbs, pred, typeEnv) for subp in arg[1]])
+        else:
+            pred = sp_stmts(_ssa_stmts(bbs[arg[0]].stmts, arg[1]), pred, typeEnv)
     return pred
 
 if __name__ == "__main__":

@@ -8,6 +8,7 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
   var pwups;
   var inductiveCtrxExpr = null;
   var lvlPassedF = false;
+  var minInvForNextLvl = 3;
 
   gl.tracesW = tracesW;
   gl.progressW = progressW;
@@ -160,7 +161,7 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
                           if (res.satisfied) {
                             gl.lvlPassedF = true;
                             gl.lvlPassed();
-                          } else if (lvl.multiround && foundJSInv.length > 1) {
+                          } else if (lvl.multiround && foundJSInv.length > minInvForNextLvl) {
                             rpc.call("App.getPositiveExamples", [ curLvlSet, 
                               lvl.id, lvl.exploration_state,
                               overfitted_invs.map(esprima.parse), 5], (data) => {

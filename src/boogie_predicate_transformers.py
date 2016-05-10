@@ -10,8 +10,7 @@ def wp_stmt(stmt, pred, typeEnv):
     if (isinstance(stmt, AstAssignment)):
         assignee = str(stmt.lhs)
         # Should already be SSA-ed
-        assert(assignee not in expr_read(stmt.expr) and \
-              (assignee not in map(str, ids(pred))))
+        assert(assignee not in expr_read(stmt.rhs))
         lhs = typeEnv[stmt.lhs](assignee)
         rhs = expr_to_z3(stmt.rhs, typeEnv)
         return substitute(pred, (lhs, rhs))
@@ -24,7 +23,9 @@ def wp_stmt(stmt, pred, typeEnv):
 
 def wp_stmts(stmts, pred, typeEnv):
     for s in reversed(stmts):
+        old_pred = pred 
         pred = wp_stmt(s, pred, typeEnv)
+        print "WP of ", old_pred, " w.r.t. ", s, " is ", pred
     return pred
 
 def sp_stmt(stmt, pred, typeEnv):
