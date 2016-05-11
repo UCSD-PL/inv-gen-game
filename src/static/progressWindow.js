@@ -1,4 +1,4 @@
-function ProgressWindow(div) {
+function ProgressWindow(div, has_ignores = false) {
   var progW = this;
   var ctr = 0;
   var invMap = {}
@@ -9,12 +9,13 @@ function ProgressWindow(div) {
   //$(div).addClass('box')
   $(div).html("<div class='progressWindow box good centered positioned'> Accepted expressions<br>" +
     "<ul id='good-invariants' style='font-family: monospace; list-style-type: none; padding: 0px; text-align: center;'></ul></div>")
-
-  $(div).append("<div class='ignoreWindow box warn centered positioned'>Ignored expressions<br>" +
-    "<ul id='ignored-invariants' style='font-family: monospace; list-style-type: none; padding: 0px; text-align: center;'></ul></div>")
-
   invUL = $('#good-invariants')
-  ignUL = $('#ignored-invariants')
+
+  if (has_ignores) {
+    $(div).append("<div class='ignoreWindow box warn centered positioned'>Ignored expressions<br>" +
+      "<ul id='ignored-invariants' style='font-family: monospace; list-style-type: none; padding: 0px; text-align: center;'></ul></div>")
+    ignUL = $('#ignored-invariants')
+  }
 
   progW.addInvariant = function (inv) {
       // if arrows are running, then stop them
@@ -25,13 +26,15 @@ function ProgressWindow(div) {
       ctr++;
   }
 
-  progW.addIgnored = function (inv) {
-      // if arrows are running, then stop them
+  if (has_ignores) {
+    progW.addIgnored = function (inv) {
+        // if arrows are running, then stop them
 
-      $(ignUL).append("<li class='ignored-invariant' id='ign_" +
-        ctr + "'>" + invToHTML(inv) + "</li>")
-      invMap[inv] = $('#ign_' + ctr)
-      ctr++;
+        $(ignUL).append("<li class='ignored-invariant' id='ign_" +
+          ctr + "'>" + invToHTML(inv) + "</li>")
+        invMap[inv] = $('#ign_' + ctr)
+        ctr++;
+    }
   }
 
   progW.removeInvariant = function (inv) {
@@ -67,7 +70,8 @@ function ProgressWindow(div) {
 
   progW.clear = function () {
     $(invUL).html('')
-    $(ignUL).html('')
+    if (has_ignores)
+      $(ignUL).html('')
     invMap = {}
     ctr = 0
   }

@@ -6,16 +6,18 @@ from os import listdir
 from json import load, dumps 
 from z3 import *
 from js import invJSToZ3, addAllIntEnv, esprimaToZ3, esprimaToBoogie
-from boogie_ast import parseAst, AstBinExpr, AstTrue, AstUnExpr, parseExprAst, ast_and, ast_or, replace
+from boogie_ast import parseAst, AstBinExpr, AstTrue, AstUnExpr, parseExprAst,\
+    ast_and, ast_or, replace, expr_read
 from boogie_bb import get_bbs
 from boogie_loops import loops, get_loop_header_values, \
   loop_vc_pre_ctrex, loop_vc_post_ctrex, loop_vc_ind_ctrex
 from util import unique, pp_exc, powerset, average
 from boogie_analysis import livevars
 from boogie_eval import instantiateAndEval
-from boogie_z3 import expr_to_z3, AllIntTypeEnv
+from boogie_z3 import expr_to_z3, AllIntTypeEnv, ids
 from boogie_paths import sp_nd_ssa_path, nd_bb_path_to_ssa, wp_nd_ssa_path
 from boogie_ssa import SSAEnv
+from graph import strongly_connected_components, collapse_scc, topo_sort
 
 import argparse
 import traceback
@@ -162,7 +164,7 @@ traces = {
     "intro-benchmarks": introTraces,
     "test-benchmarks": testTraces,
     "pruned-intro-benchmarks": prunedIntroTraces,
-    "desugared-boogie-benchmarks" : loadBoogies(MYDIR + '/../desugared-boogie-benchmarks', True),
+    "desugared-boogie-benchmarks" : loadBoogies(MYDIR + '/../desugared-boogie-benchmarks', False),
     "old-dilig-traces": {
       '15-c': {
           'variables': ['n', 'k', 'j'],
@@ -504,11 +506,34 @@ def checkPreVC(levelSet, levelId, invs):
 # independent of the soundness of invariants in other sets.
 def partitionInvariants(invs, loop, bbs):
     body_ssa, ssa_env = nd_bb_path_to_ssa([ loop.loop_paths ], bbs, SSAEnv(None, ""))
-    inv_sps = [ sp_nd_ssa_path(body_ssa, bbs, expr_to_z3(x, AllIntTypeEnv()), AllIntTypeEnv()) for x in invs ]
-    print "SPs: ", inv_sps
-    inv_sps = [ wp_nd_ssa_path(body_ssa, bbs, expr_to_z3(replace(x, ssa_env.replm()), AllIntTypeEnv()), AllIntTypeEnv()) for x in invs ]
-    print "WPs: ", inv_sps
-    
+    inv_wps = [ wp_nd_ssa_path(body_ssa, bbs,
+                              expr_to_z3(replace(x, ssa_env.replm()), AllIntTypeEnv()),
+                              AllIntTypeEnv())
+                for x in invs ]
+    print "WPs: ", inv_wps
+    infl_vars = [ set(ids(x)) for x in inv_wps ]
+    expr_vars = [ expr_read(x) for x in invs ]
+    influences = { i : set() for i in xrange(len(invs)) }
+
+    print invs
+    print infl_vars
+    print expr_vars
+
+    for i in xrange(len(invs)):
+        for j in xrange(len(invs)):
+            if (i == j):    continue
+            if len(infl_vars[i].intersection(expr_vars[j])) > 0:
+                # Expression j influences the outcome of expression i
+                influences[i].add(j)
+
+    sccs = strongly_connected_components(influences)
+    collapsed_influences = collapse_scc(influences, sccs)
+    check_order = { ind: comp for (comp, ind) in topo_sort(collapsed_influences).iteritems() }
+    print 'Order'
+    for comp_ind in range(len(check_order)):
+        print "Component: ", comp_ind
+        for n in sccs[comp_ind]:
+            print "    ", invs[n]
 
 @api.method("App.checkIndVC")
 @pp_exc
