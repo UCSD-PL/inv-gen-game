@@ -15,7 +15,7 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
   gl.scoreW = scoreW;
   gl.stickyW = stickyW;
   gl.curLvl = null;
-  gl.pwupSuggestion = new PowerupSuggestionFullHistory(gl, 5, "lfu")
+  gl.pwupSuggestion = new PowerupSuggestionFullHistory(5, "lfu")
 
   gl.clear = function () {
     foundInv = [];
