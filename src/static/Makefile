@@ -9,7 +9,10 @@ THIRD_PARTY_DEPS=bootstrap.min.css \
 								 help-icon.png
 #								 crafty-min.js\
 
-all: $(THIRD_PARTY_DEPS)
+all: $(THIRD_PARTY_DEPS) ts-files
+
+ts-files:
+	tsc
 
 bootstrap.min.css:
 	wget https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css

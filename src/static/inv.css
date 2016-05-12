@@ -110,6 +110,13 @@
   border-color: #157d00;
 }
 
+.progressWindow ul {
+  font-family:  monospace;
+  list-style-type: none;
+  padding:  0px;
+  text-align: center;
+}
+
 .ignoreWindow {
   font-size: 25px;
   border-color: rgb(204, 102, 0);
