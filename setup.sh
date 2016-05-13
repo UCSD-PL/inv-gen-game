@@ -49,4 +49,6 @@ fi
 
 npm install
 
+echo 'export PATH=$PATH:$MYDIR/node_modules/.bin/'
+
 echo "To begin developing run source $DIR/bin/activate and then make"
