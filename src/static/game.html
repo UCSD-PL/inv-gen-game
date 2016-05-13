@@ -21,7 +21,7 @@
   <script src="build/ts/progressWindow.js"></script>
   <script src="build/ts/scoreWindow.js"></script>
   <script src="build/ts/logic.js"></script>
-  <script src="ceTraceWindow.js"></script>
+  <script src="build/ts/ceTraceWindow.js"></script>
   <script src="ceGameLogic.js"></script>
   <script src="level.js"></script>
   <script src="build/ts/eval.js"></script>
@@ -131,7 +131,7 @@
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
       progW = new ProgressWindow($('#discovered-invariants-div'));
       scoreW = new ScoreWindow($('#score-div'));
-      traceW = new CETraceWindow($('#data-display'));
+      traceW = new CounterExampleTracesWindow($('#data-display'));
       stickyW = new StickyWindow($('#sticky'))
       gameLogic = new CEGameLogic(traceW, progW, scoreW, stickyW);
 

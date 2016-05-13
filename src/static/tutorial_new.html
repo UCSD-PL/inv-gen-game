@@ -13,7 +13,7 @@
   <script src="bootstrap.min.js"></script>
   <link rel="stylesheet" href="inv.css">
   <link rel="stylesheet" href="arrow.css">
-  <script src="ceTraceWindow.js"></script>
+  <script src="build/ts/ceTraceWindow.js"></script>
   <script src="build/ts/stickyWindow.js"></script>
   <script src="build/ts/powerups.js"></script>
   <script src="ceGameLogic.js"></script>
@@ -133,9 +133,9 @@
                     }
 
                     curLvl = lvl;
-                    tracesW = new CETraceWindow($('#data-display'));
+                    tracesW = new CounterExampleTracesWindow($('#data-display'));
                     tracesW.setVariables(lvl)
-                    tracesW.changed(function() {
+                    tracesW.onChanged(function() {
                       if (errorTimer) {
                         window.clearTimeout(errorTimer);
                         errorTimer = null;

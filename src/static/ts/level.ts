@@ -1,4 +1,3 @@
-type dataT = [ [[number]], [[number]], [[number]] ]
 class Level {
   constructor(public id: string,
     public variables: string[],

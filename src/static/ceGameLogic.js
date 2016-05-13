@@ -212,7 +212,7 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
     tracesW.setVariables(lvl);
     tracesW.addData(lvl.data);
     if (lvl.support_pos_ex) {
-      tracesW.moreExamples(function(type) {
+      tracesW.onMoreExamples(function(type) {
         rpc.call("App.getPositiveExamples", [curLvlSet, gl.curLvl.id, lvl.exploration_state, 
           overfittedInvs.map(esprima.parse), 1],
           function (res) {
@@ -222,7 +222,7 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
           })
       })
     } else {
-      tracesW.moreExamples((type) => assert(false, "Shouldn't get here"))
+      tracesW.onMoreExamples((type) => assert(false, "Shouldn't get here"))
     }
     tracesW.setExp("");
     gl.userInput(false);
@@ -282,11 +282,11 @@ function CEGameLogic(tracesW, progressW, scoreW, stickyW) {
     delete pwups[pwup.id]
   }
 
-  tracesW.changed(function () {
+  tracesW.onChanged(function () {
     gl.userInput(false);
   })
 
-  tracesW.commit(function () {
+  tracesW.onCommit(function () {
     tracesW.msg("Trying out...");
     tracesW.disable();
     gl.userInput(true);
