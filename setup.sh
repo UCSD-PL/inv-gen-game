@@ -39,4 +39,6 @@ fi
 
 deactivate
 
+npm install
+
 echo "To begin developing run source $DIR/bin/activate and then make"
