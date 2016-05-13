@@ -89,43 +89,51 @@ function getBonus(player, fn) {
       if(x != null) {
         for(var i = 0; i < x.length; i++) {
           console.log(newInv + " <=> " + player2Invs[x[i][1]]);
+          console.log(progW);
+          console.log(tracesW);
+          traceW.disableSubmit();
+          progW.markInvariant(newInv, "duplicate")
+          traceW.immediateError("Duplicate Invariant!")
         }
       }
-    });
-
-    impliedPairs(player2Invs, [newInv], function(x) {
-      if(x != null) {
-        for(var i = 0; i < x.length; i++) {
-          console.log(player2Invs[x[i][1]] + " ==> " + newInv);
-        }
-      }
-    });
-
-    impliedPairs([newInv], player2Invs, function(x) {
-      var increment = 0;
-      if(x != null) {
-        for(var i = 0; i < x.length; i++) {
-          if(x[i][0] == 0){
-            increment += 1
+      else {
+        impliedPairs(player2Invs, [newInv], function(x) {
+          if(x != null) {
+            for(var i = 0; i < x.length; i++) {
+              console.log(player2Invs[x[i][1]] + " ==> " + newInv);
+            }
           }
-        }
-        for(var i = 0; i < x.length; i++) {
-          if(x[i][0] == 0){
-            console.log(newInv + " ==> " + player2Invs[x[i][1]]);
+          else {
+            impliedPairs([newInv], player2Invs, function(x) {
+              var increment = 0;
+              if(x != null) {
+                for(var i = 0; i < x.length; i++) {
+                  if(x[i][0] == 0){
+                    increment += 1
+                  }
+                }
+                for(var i = 0; i < x.length; i++) {
+                  if(x[i][0] == 0){
+                    console.log(newInv + " ==> " + player2Invs[x[i][1]]);
 
-            // draw curved arrow from newInv to player2Invs[x[i][1]]
-            var src = $("#good-invariants").children().last();
-            var dst = $("#good-invariants2").children().eq(x[i][1]);
-            showImplication(player, src,dst);
+                    // draw curved arrow from newInv to player2Invs[x[i][1]]
+                    var src = $("#good-invariants").children().last();
+                    var dst = $("#good-invariants2").children().eq(x[i][1]);
+                    showImplication(player, src,dst);
 
-            $("#good-invariants2").children().eq(x[i][1]).addClass("implied");
+                    $("#good-invariants2").children().eq(x[i][1]).addClass("implied");
+                  }
+                }
+                if(increment !=0) {
+                  setTimeout(function(){fn(increment); $('.curved_arrow').delay(1000).fadeOut(1000);}, 1000);
+                }
+              }
+            });
           }
-        }
-        if(increment !=0) {
-          setTimeout(function(){fn(increment); $('.curved_arrow').delay(1000).fadeOut(1000);}, 1000);
-        }
+        });
       }
     });
+
   }
 
   else if (player == 2) {
@@ -135,7 +143,14 @@ function getBonus(player, fn) {
     equivalentPairs([newInv], player1Invs, function(x) {
       if(x != null) {
         for(var i = 0; i < x.length; i++) {
-          console.log(newInv + "<=>" + player1Invs[x[i][1]]);
+          console.log(newInv + " <=> " + player1Invs[x[i][1]]);
+          console.log(progW2);
+          console.log(tracesW2);
+          traceW2.disableSubmit();
+          progW2.markInvariant(newInv, "duplicate");
+          traceW2.immediateError("Duplicate Invariant!")
+          //alert("Duplicate Invariant!: " + newInv + " <=> " + player1Invs[x[i][1]]);
+          return;
         }
       }
     });
