@@ -11,7 +11,10 @@ THIRD_PARTY_DEPS=bootstrap.min.css \
 
 all: $(THIRD_PARTY_DEPS) ts-files
 
-ts-files:
+typings:
+	typings install
+
+ts-files: typings
 	tsc
 
 bootstrap.min.css:
