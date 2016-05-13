@@ -85,6 +85,22 @@ function getBonus(player, fn) {
     var newInv = getLastPlayer1Inv();
     var player2Invs = getAllPlayer2Inv();
 
+    equivalentPairs([newInv], player2Invs, function(x) {
+      if(x != null) {
+        for(var i = 0; i < x.length; i++) {
+          console.log(newInv + " <=> " + player2Invs[x[i][1]]);
+        }
+      }
+    });
+
+    impliedPairs(player2Invs, [newInv], function(x) {
+      if(x != null) {
+        for(var i = 0; i < x.length; i++) {
+          console.log(player2Invs[x[i][1]] + " ==> " + newInv);
+        }
+      }
+    });
+
     impliedPairs([newInv], player2Invs, function(x) {
       var increment = 0;
       if(x != null) {
@@ -115,6 +131,22 @@ function getBonus(player, fn) {
   else if (player == 2) {
     var newInv = getLastPlayer2Inv();
     var player1Invs = getAllPlayer1Inv();
+
+    equivalentPairs([newInv], player1Invs, function(x) {
+      if(x != null) {
+        for(var i = 0; i < x.length; i++) {
+          console.log(newInv + "<=>" + player1Invs[x[i][1]]);
+        }
+      }
+    });
+
+    impliedPairs(player2Invs, [newInv], function(x) {
+      if(x != null) {
+        for(var i = 0; i < x.length; i++) {
+          console.log(player2Invs[x[i][1]] + " ==> " + newInv);
+        }
+      }
+    });
 
     impliedPairs([newInv], player1Invs, function(x) {
       var increment = 0;
