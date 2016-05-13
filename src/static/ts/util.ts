@@ -1,7 +1,10 @@
 type directionT = "up" | "down" | "left" | "right"
 function log(arg: any): void { console.log(arg); }
 function error(arg: any): void { log (arg); }
-function assert(c:boolean, msg:any): void {
+function assert(c:boolean, msg?:any): void {
+  if (msg == undefined)
+    msg = "Oh-oh"
+
   if (!c)
     throw msg || "Assertion failed."
 }
