@@ -5,6 +5,7 @@ type appliesT = (lvl: Level) => boolean
 interface IPowerup {
   id: string;
   html: string;
+  element: JQuery;
   holds(inv:invariantT): boolean;
   transform(score:number): number;
   applies(lvl: Level): boolean;
