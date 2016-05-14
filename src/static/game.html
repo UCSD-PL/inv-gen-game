@@ -22,8 +22,8 @@
   <script src="build/ts/scoreWindow.js"></script>
   <script src="build/ts/logic.js"></script>
   <script src="build/ts/ceTraceWindow.js"></script>
-  <script src="ceGameLogic.js"></script>
-  <script src="level.js"></script>
+  <script src="build/ts/ceGameLogic.js"></script>
+  <script src="build/ts/level.js"></script>
   <script src="build/ts/eval.js"></script>
   <script src="build/ts/pp.js"></script>
   <script src="build/ts/util.js"></script>
@@ -101,7 +101,7 @@
     function doneScreen() {
       //loadLvlSet("test-benchmarks")
       $(".overlay").html("<h1 class='good'> Good job! You finished all levels! <br> Your score is: " +
-        gameLogic.score()  + "!</h1><br>" +
+        gameLogic.score  + "!</h1><br>" +
         "<h2> Please submit the screencast of your work! </h2>"
       );
       $(".overlay").fadeIn(1000);
@@ -133,7 +133,7 @@
       scoreW = new ScoreWindow($('#score-div'));
       traceW = new CounterExampleTracesWindow($('#data-display'));
       stickyW = new StickyWindow($('#sticky'))
-      gameLogic = new CEGameLogic(traceW, progW, scoreW, stickyW);
+      gameLogic = new CounterexampleGameLogic(traceW, progW, scoreW, stickyW);
 
       $('#next-lvl').hide();
 
@@ -263,13 +263,7 @@
         <div class='row good centered positioned' id='discovered-invariants-div'>
         </div>
       </div>
-
-
-
     </div>
-
-
-
   </div>
   <div class='overlay text-center' style='display: none;'></div> 
 </body>

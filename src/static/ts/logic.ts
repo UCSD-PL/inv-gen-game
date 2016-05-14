@@ -46,7 +46,7 @@ function isTautology(inv:string, cb:(res:boolean)=>void): void {
   rpc.call("App.isTautology", [ esprima.parse(inv) ], cb, log)
 }
 
-function counterexamples(lvlSet: string, lvlId: string, invs: string[], cb: (res: [number[][], number[][], number[][]]) => void) {
+function counterexamples(lvlSet: string, lvlId: string, invs: string[], cb: (res: dataT) => void) {
   return rpc.call("App.verifyInvariants", [ lvlSet, lvlId, invs.map(esprima.parse) ], cb, log)
 }
 

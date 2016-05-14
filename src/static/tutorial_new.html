@@ -16,12 +16,12 @@
   <script src="build/ts/ceTraceWindow.js"></script>
   <script src="build/ts/stickyWindow.js"></script>
   <script src="build/ts/powerups.js"></script>
-  <script src="ceGameLogic.js"></script>
+  <script src="build/ts/ceGameLogic.js"></script>
   <script src="build/ts/progressWindow.js"></script>
   <script src="build/ts/scoreWindow.js"></script>
   <script src="build/ts/logic.js"></script>
   <script src="build/ts/eval.js"></script>
-  <script src="level.js"></script>
+  <script src="build/ts/level.js"></script>
   <script src="build/ts/pp.js"></script>
   <script src="build/ts/util.js"></script>
   <script src="esprima.js"></script>
@@ -279,16 +279,12 @@
                  $(".overlay").fadeOut(fadeDelay, function () {
                    $('#sticky').addClass("box stickyWindow");
                    stickyW = new StickyWindow($('#sticky'));
-                   gameLogic = new CEGameLogic(tracesW, progW, scoreW, stickyW);
+                   gameLogic = new CounterexampleGameLogic(tracesW, progW, scoreW, stickyW);
                    var lvl = new Level("tutorial_lvl_1",
                      [ "j", "n" ],
                      [ [ [ 0, 3 ], [ 1, 3 ], [ 2, 3 ], [ 3, 3 ] ], [], [] ],
-                     {},
                      { atleast: 1 },
-                     "What can you say about j and n?",
-                     false,
-                     false,
-                     false)
+                     "What can you say about j and n?")
                    gameLogic.loadLvl(lvl)
                    tracesW.disable();
                    cs.nextStep()
@@ -324,12 +320,7 @@
                  var lvl = new Level("tutorial_lvl_2",
                    [ "k", "l" ],
                    [ [ [ 1, 2 ], [ 2, 3 ], [ 3, 4 ] ], [], [] ],
-                   {},
-                   { atleast: 1 },
-                   "How are l and k related?",
-                   false,
-                   false,
-                   false)
+                   { atleast: 1 })
                  gameLogic.loadLvl(lvl)
                }
       },
@@ -339,12 +330,7 @@
                  var lvl = new Level("tutorial_lvl_3",
                    [ "k", "l" ],
                    [ [ [ 1, 3 ], [ 2, 6 ], [ 3, 9 ] ], [], [] ],
-                   {},
-                   { atleast: 1 },
-                   "How are l and k related?",
-                   false,
-                   false,
-                   false)
+                   { atleast: 1 })
                  gameLogic.loadLvl(lvl)
                }
       },
