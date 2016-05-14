@@ -39,17 +39,20 @@ function ProgressWindow(player, div) {
 
       if (state == "checking") {
       } else if (state == "duplicate") {
-        div.addClass('error')
+        //div.addClass('error')
+        div.addClass('bold')
       } else if (state == "tautology") {
       } else if (state == "implies") {
-        div.addClass('error')
+        //div.addClass('error')
+        div.addClass('bold')
       } else if (state == "ok") {
       }
   }
 
   progW.clearMarks = function () {
     for (var i in invMap) {
-      invMap[i].removeClass("error")
+      //invMap[i].removeClass("error")
+      invMap[i].removeClass("bold")
     }
   }
 

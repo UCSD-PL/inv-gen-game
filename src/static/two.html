@@ -57,6 +57,8 @@
     var player1Done = false;
     var player2Done = false;
 
+    var allowSwitch = true;
+
 
 
     function loadTrace(traceId) {
@@ -489,6 +491,13 @@
 
     var switchPlayer = function() {
       $('#help-content').slideUp(200);
+      traceW.clearError();
+      traceW2.clearError();
+
+      if(!allowSwitch) {
+        return;
+      }
+
       if(player == 1) {
         hidePlayer2();
         showPlayer1();

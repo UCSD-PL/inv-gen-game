@@ -57,6 +57,10 @@ function GameLogic(player, tracesW, progressW, scoreW, stickyW) {
     tracesW.clearError();
     progressW.clearMarks();
 
+    progW.clearMarks();
+
+    progW2.clearMarks();
+
     var inv = invPP(tracesW.curExp().trim());
     var jsInv = invToJS(inv)
     try {
@@ -73,6 +77,8 @@ function GameLogic(player, tracesW, progressW, scoreW, stickyW) {
     }
 
     try {
+      var doProceed = true;
+
       res = invEval(jsInv, data)
       tracesW.evalResult({ data: res })
 
@@ -83,8 +89,80 @@ function GameLogic(player, tracesW, progressW, scoreW, stickyW) {
       if (redundant) {
         progressW.markInvariant(inv, "duplicate")
         tracesW.immediateError("Duplicate Invariant!")
+        doProceed = false;
         return
       }
+      /* Check for redundant2 with other player's invariants */
+      if(player == 1) {
+        if(progW2.contains(inv)) {
+          progW2.markInvariant(inv, "duplicate")
+          traceW.immediateError("Duplicate Invariant!")
+          doProceed = false
+          return;
+        }
+
+        var player2Invs = getAllPlayer2Inv();
+
+        equivalentPairs([inv], player2Invs, function(x) {
+          if(x != null && player2Invs.length != 0 && typeof player2Invs[x] != "undefined") {
+            //console.log(inv + " <=> " + player2Invs[x]);
+            progW2.markInvariant(player2Invs[x], "duplicate")
+            traceW.immediateError("Duplicate Invariant!")
+            traceW.disableSubmit();
+            doProceed = false;
+            return;
+          }
+          else {
+            impliedBy(player2Invs, inv, function(x) {
+              if (x !== null) {
+                //console.log(player2Invs[x] + " ==> " + inv)
+                progW2.markInvariant(player2Invs[x], "implies");
+                traceW.immediateError("Implied by opponent's invariant!")
+                traceW.disableSubmit();
+                doProceed = false;
+                return;
+              }
+            });
+          }
+        });
+      }
+
+      else if(player == 2) {
+        if(progW.contains(inv)) {
+          progW.markInvariant(inv, "duplicate")
+          traceW2.immediateError("Duplicate Invariant!")
+          doProceed = false;
+          return;
+        }
+
+        var player1Invs = getAllPlayer1Inv();
+
+        equivalentPairs([inv], player1Invs, function(x) {
+          if(x != null && player1Invs.length != 0 && typeof player1Invs[x] != "undefined") {
+            //console.log(inv + " <=> " + player1Invs[x]);
+            progW.markInvariant(player1Invs[x], "duplicate");
+            traceW2.immediateError("Duplicate Invariant!")
+            traceW2.disableSubmit();
+            doProceed = false;
+            return;
+          }
+
+          else {
+            impliedBy(player1Invs, inv, function(x) {
+              if (x !== null) {
+                //console.log(player1Invs[x] + " ==> " + inv)
+                progW.markInvariant(player1Invs[x], "implies");
+                traceW2.immediateError("Implied by opponent's invariant!")
+                traceW2.disableSubmit();
+                doProceed = false;
+                return;
+              }
+            });
+          }
+        });
+      }
+
+
 
       all = res.length
       hold = res.filter(function (x) { return x; }).length
@@ -92,47 +170,54 @@ function GameLogic(player, tracesW, progressW, scoreW, stickyW) {
       if (hold < all)
         tracesW.error("Holds for " + hold + "/" + all + " cases.")
       else {
-        tracesW.enableSubmit();
-        if (!commit) {
-          tracesW.msg("Press Enter...");
-          return;
-        }
-
 
         isTautology(invToJS(inv), function(res) {
           if (res) {
             tracesW.error("This is a tautology...")
+            tracesW.disableSubmit();
+            doProceed = false;
             return
           }
 
           impliedBy(foundJSInv, jsInv, function (x) {
             if (x !== null) {
               progressW.markInvariant(foundInv[x], "implies");
-              // foundInv[x] ==> JSinv
               tracesW.immediateError("Implied by existing invariant!")
               tracesW.disableSubmit();
+              doProceed = false;
             }
             else {
-              gl.pwupSuggestion.invariantTried(jsInv);
+              if(doProceed == true)
+              {
+                tracesW.enableSubmit();
+                if (!commit) {
+                  tracesW.msg("Press Enter...");
+                  return;
+                }
 
-              foundInv.push(inv)
-              foundJSInv.push(jsInv)
-              progressW.addInvariant(inv);
+                gl.pwupSuggestion.invariantTried(jsInv);
 
-              var addScore = computeScore(jsInv, 1)
+                foundInv.push(inv)
+                foundJSInv.push(jsInv)
+                progressW.addInvariant(inv);
 
-              if (addScore == 1) { // No powerups applied
-                gl.setPowerups(gl.pwupSuggestion.getPwups());
-              }
+                var addScore = computeScore(jsInv, 1)
 
-              scoreW.add(addScore);
+                if (addScore == 1) { // No powerups applied
+                  gl.setPowerups(gl.pwupSuggestion.getPwups());
+                }
 
-              /* Check if it's a two-player game */
-              if($('#top').html().trim().includes("Two")) {
+                scoreW.add(addScore);
 
-                getBonus(player, function(pt) {
-                  scoreW.add(pt);
-                });
+                /* Check if it's a two-player game */
+                if($('#top').html().trim().includes("Two")) {
+
+                  getBonus(player, function(pt) {
+                    scoreW.add(pt);
+                  });
+                }
+
+                allowSwitch = true;
               }
 
               if (!progress.satisfied) {
