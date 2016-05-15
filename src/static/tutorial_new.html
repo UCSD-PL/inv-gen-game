@@ -279,7 +279,7 @@
                  $(".overlay").fadeOut(fadeDelay, function () {
                    $('#sticky').addClass("box stickyWindow");
                    stickyW = new StickyWindow($('#sticky'));
-                   gameLogic = new CounterexampleGameLogic(tracesW, progW, scoreW, stickyW);
+                   gameLogic = new StaticGameLogic(tracesW, progW, scoreW, stickyW);
                    var lvl = new Level("tutorial_lvl_1",
                      [ "j", "n" ],
                      [ [ [ 0, 3 ], [ 1, 3 ], [ 2, 3 ], [ 3, 3 ] ], [], [] ],
@@ -346,15 +346,18 @@
       },
       { setup: function (cs) {
                  $(".overlay").fadeOut(fadeDelay, function () {
+                 gameLogic = new TutorialCounterexampleGameLogic(tracesW, progW, scoreW, stickyW);
+                 gameLogic.onInvSound((inv, cb)=> cb(true, { ctrex: [[],[],[]] }));
+                 gameLogic.onLvlPassed(()=>
+                    $('#next-lvl').fadeIn(fadeDelay, ()=> {
+                      curL = label({ of: $('#next-lvl'), at: "right center" },
+                                   "Click Here! (15c bonus!)", "left")
+                    }))
                  var lvl = new Level("tutorial_example",
                    [ "i", "n" ],
                    [ [ [ 0, 2 ], [ 1, 2 ], [ 2, 2 ] ], [ [ 4, 3 ] ], [] ],
-                   {},
                    { none: true },
-                   "How are i and n related?",
-                   false,
-                   false,
-                   false)
+                   "How are i and n related?")
                    gameLogic.loadLvl(lvl)
                    curL = label($("#3 .temp_expr_eval"), "You can have 'red' rows!", "left")
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
@@ -417,12 +420,8 @@
                    var lvl = new Level("tutorial_lvl_4",
                      [ "k", "l" ],
                      [ [ [ 0, 3 ], [ 1, 3 ], [ 2, 3 ] ], [ [ 3, 3 ] ], [] ],
-                     {},
                      { atleast: 1},
-                     "Can express l in terms of k?",
-                     false,
-                     false,
-                     false)
+                     "Can express l in terms of k?")
                    gameLogic.loadLvl(lvl)
                  })
                }
@@ -434,12 +433,8 @@
                    var lvl = new Level("tutorial_lvl_4",
                      [ "k", "l" ],
                      [ [ [ 0, 1 ], [ 1, 2 ], [ 2, 3 ] ], [ [ 3, 5 ] ], [] ],
-                     {},
                      { atleast: 1 },
-                     "Can express l in terms of k?",
-                     false,
-                     false,
-                     false)
+                     "Can express l in terms of k?")
                    gameLogic.loadLvl(lvl)
                  })
                }
@@ -451,12 +446,8 @@
                    var lvl = new Level("tutorial_lvl_4",
                      [ "k", "l" ],
                      [ [ [ 0, 0 ], [ 1, 4 ], [ 2, 8 ] ], [ [ 3, 16 ] ], [] ],
-                     {},
                      { atleast: 1 },
-                     "Can express l in terms of k?",
-                     false,
-                     false,
-                     false)
+                     "Can express l in terms of k?")
                    gameLogic.loadLvl(lvl)
                  })
                }
@@ -477,18 +468,11 @@
       { setup: function (cs) {
                  $('#next-lvl').hide();
                  $(".overlay").fadeOut(fadeDelay, function () {
+                 gameLogic.onInvSound((inv, cb)=> cb(false, { ctrex: [ [],[],[] ] }));
                  var lvl = new Level("tutorial_example",
                    [ "i", "n" ],
                    [ [ [ 0, 2 ], [ 1, 2 ], [ 2, 2 ] ], [], [] ],
-                   {},
-                   { none: true },
-                   "",
-                   false,
-                   false,
-                   false)
-                   lvl.invSound = function(inv, soundInvs, cb) {
-                     cb({ sound: false })
-                   }
+                   { none: true })
                    gameLogic.loadLvl(lvl)
                    cs.nextStep()
                  })

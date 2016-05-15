@@ -67,21 +67,21 @@ function estree_reduce<T>(t: ESTree.Node, cb: (n:ESTree.Node, args:T[]) => T): T
 
   if (t.type == "BinaryExpression") {
     let be = <ESTree.BinaryExpression>t
-    var lhs = estree_reduce(be.left, cb)
-    var rhs = estree_reduce(be.right, cb)
+    let lhs: T = estree_reduce(be.left, cb)
+    let rhs: T = estree_reduce(be.right, cb)
     return cb(t, [lhs, rhs])
   }
 
   if (t.type == "LogicalExpression") {
     let be = <ESTree.LogicalExpression>t
-    var lhs = estree_reduce(be.left, cb)
-    var rhs = estree_reduce(be.right, cb)
+    let lhs: T = estree_reduce(be.left, cb)
+    let rhs: T = estree_reduce(be.right, cb)
     return cb(t, [lhs, rhs])
   }
 
   if (t.type == "UnaryExpression") {
     let ue = <ESTree.UnaryExpression>t
-    var exp = estree_reduce(ue.argument, cb)
+    let exp: T = estree_reduce(ue.argument, cb)
     return cb(t, [ exp ])
   }
 
@@ -159,14 +159,14 @@ function operators(inv:(string|ESTree.Node)):strset {
       return args[0]
 
     if (nd.type == "BinaryExpression" || nd.type == "LogicalExpression") {
-      let be = <ESTree.BinaryExpression>inv
+      let be = <ESTree.BinaryExpression>nd
       let p: strset = {}
       p[be.operator] = true;
       return union(union(p, args[0]), args[1])
     }
 
     if (nd.type == "UnaryExpression") {
-      let ue =  <ESTree.UnaryExpression>inv
+      let ue =  <ESTree.UnaryExpression>nd
       let p: strset = {}
       p[ue.operator] = true;
       return union(p, args[0])

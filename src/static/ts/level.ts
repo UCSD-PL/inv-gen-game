@@ -2,7 +2,7 @@ class Level {
   constructor(public id: string,
     public variables: string[],
     public data:  dataT,
-    public goal:  string,
+    public goal:  any,
     public hint:  string) {
   }
   static load(lvlSet: string, id: string, cb: (lvl: Level)=>void) {

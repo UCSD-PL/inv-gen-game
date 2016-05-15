@@ -1,6 +1,6 @@
 type voidCb = ()=>void
 type boolCb = (res: boolean)=>void
-type invSoundnessResT = { sound: boolean, ctrex: [ any[], any[], any[] ]}
+type invSoundnessResT = { ctrex: [ any[], any[], any[] ]}
 declare var curLvlSet: string; // TODO: Remove hack
 
 interface IGameLogic {
@@ -20,7 +20,7 @@ interface IDynGameLogic extends IGameLogic {
   clear(): void;
   loadLvl(lvl: Level): void;
   addData(data: dataT): void;
-  invSound(inv: invariantT, cb: (res:invSoundnessResT)=>void): void;
+  invSound(inv: invariantT, cb: (sound: boolean, res:invSoundnessResT)=>void): void;
 
   userInput(commit: boolean): void
   goalSatisfied(cb:(sat: boolean, feedback: any)=>void):void;
@@ -85,7 +85,7 @@ abstract class BaseGameLogic implements IGameLogic {
   protected computeScore(inv: string, s: number): number {
     let pwups = this.pwupSuggestion.getPwups();
     let hold = pwups.filter((pwup)=> pwup.holds(inv))
-    let newScore = pwups.reduce((score, pwup) => pwup.transform(score), s)
+    let newScore = hold.reduce((score, pwup) => pwup.transform(score), s)
     hold.forEach((pwup)=>pwup.highlight(()=>0));
     return newScore;
   }
@@ -105,6 +105,165 @@ abstract class BaseGameLogic implements IGameLogic {
   onLvlPassed(cb: ()=>void): void { this.lvlPassedCb = cb; };
   onLvlLoaded(cb: ()=>void): void { this.lvlLoadedCb = cb; };
   onCommit(cb: ()=>void): void { this.commitCb = cb; };
+}
+
+class StaticGameLogic extends BaseGameLogic implements IGameLogic {
+  foundJSInv: string[] = [];
+  foundInv: string[] = [];
+  lvlPassedF: boolean = false;
+
+  constructor(public tracesW: ITracesWindow,
+              public progressW: IProgressWindow,
+              public scoreW: ScoreWindow,
+              public stickyW: StickyWindow) {
+    super(tracesW, progressW, scoreW, stickyW);
+    this.pwupSuggestion = new PowerupSuggestionFullHistory(5, "lfu");
+  }
+
+  clear(): void {
+    super.clear();
+    this.foundJSInv = [];
+    this.foundInv = [];
+    this.lvlPassedF = false;
+  }
+
+  goalSatisfied(cb:(sat: boolean, feedback?: any)=>void):void {
+    let goal = this.curLvl.goal;
+    if (goal == null) {
+      cb(true)
+    } else if (goal.manual) {
+      cb(false)
+    } else  if (goal.find) {
+      var numFound = 0;
+      for (var i=0; i < goal.find.length; i++) {
+        var found = false;
+        for (var j=0; j < goal.find[i].length; j++) {
+          if ($.inArray(goal.find[i][j], this.foundJSInv) != -1) {
+            found = true;
+            break;
+          }
+        }
+
+        if (found)
+          numFound ++;
+
+      }
+
+      cb(numFound == goal.find.length,
+         { "find": { "found": numFound, "total": goal.find.length } })
+    } else  if (goal.equivalent) {
+      equivalentPairs(goal.equivalent, this.foundJSInv, function(pairs) {
+        var numFound = 0;
+        var equiv = []
+        for (var i=0; i < pairs.length; i++) {
+          if (-1 == $.inArray(pairs[i][0], equiv))
+            equiv.push(pairs[i][0])
+        }
+
+        cb(equiv.length == goal.equivalent.length,
+           { "equivalent": { "found": equiv.length , "total": goal.equivalent.length } })
+      })
+    } else if (goal.max_score) {
+      cb(true, { "max_score" : { "found" : this.foundJSInv.length } })
+    } else if (goal.none) {
+      cb(false)
+    } else if (goal.hasOwnProperty('atleast')) {
+      cb(this.foundJSInv.length >= goal.atleast)
+    } else {
+      error("Unknown goal " + JSON.stringify(goal));
+    }
+  }
+
+  userInput(commit: boolean): void {
+    this.tracesW.disableSubmit();
+    this.tracesW.clearError();
+    this.progressW.clearMarks();
+
+    let inv = invPP(this.tracesW.curExp().trim());
+    let jsInv = invToJS(inv)
+
+    this.userInputCb(inv);
+
+    try {
+      let parsedInv = esprima.parse(jsInv);
+    } catch (err) {
+      this.tracesW.delayedError(inv + " is not a valid expression.");
+      return;
+    }
+
+    if (inv.length == 0) {
+      this.tracesW.evalResult({ clear: true })
+      return;
+    }
+
+    try {
+      let pos_res = invEval(jsInv, this.curLvl.variables, this.curLvl.data[0])
+      let res: [any[], any[], [any, any][]] = [pos_res, [], []]
+      this.tracesW.evalResult({ data: res })
+
+      if (!evalResultBool(res))
+        return;
+
+      let redundant = this.progressW.contains(inv)
+      if (redundant) {
+        this.progressW.markInvariant(inv, "duplicate")
+        this.tracesW.immediateError("Duplicate Invariant!")
+        return
+      }
+
+      let all = pos_res.length
+      let hold = pos_res.filter(function (x) { return x; }).length
+
+      if (hold < all)
+        this.tracesW.error("Holds for " + hold + "/" + all + " cases.")
+      else {
+        this.tracesW.enableSubmit();
+        if (!commit) {
+          this.tracesW.msg("<span class='good'>Press Enter...</span>");
+          return;
+        }
+
+        let gl = this;
+        isTautology(invToJS(inv), function(res) {
+          if (res) {
+            gl.tracesW.error("This is a always true...")
+            return
+          }
+
+          impliedBy(gl.foundJSInv, jsInv, function (x: number) {
+            if (x !== null) {
+              gl.progressW.markInvariant(gl.foundInv[x], "implies")
+              gl.tracesW.immediateError("This is weaker than a found expression!")
+            } else {
+              var addScore = gl.computeScore(jsInv, 1)
+
+              gl.pwupSuggestion.invariantTried(jsInv);
+              setTimeout(() => gl.setPowerups(gl.pwupSuggestion.getPwups()), 1000); // TODO: Remove hack
+
+              gl.score += addScore;
+              gl.scoreW.add(addScore);
+              gl.foundInv.push(inv)
+              gl.foundJSInv.push(jsInv)
+              gl.progressW.addInvariant(inv);
+              gl.tracesW.setExp("");
+              if (!gl.lvlPassedF) {
+                gl.goalSatisfied((sat, feedback) => {
+                  var lvl = gl.curLvl
+                  if (sat) {
+                    gl.lvlPassedF = true;
+                    gl.lvlPassedCb();
+                  }
+                });
+              }
+            }
+          })
+        })
+      }
+
+    } catch (err) {
+      this.tracesW.delayedError(<string>interpretError(err))
+    }
+  }
 }
 
 class CounterexampleGameLogic extends BaseGameLogic implements IDynGameLogic {
@@ -144,15 +303,15 @@ class CounterexampleGameLogic extends BaseGameLogic implements IDynGameLogic {
     this.tracesW.addData(data)
   }
 
-  invSound(inv: invariantT, cb: (res:invSoundnessResT)=>void): void {
+  invSound(inv: invariantT, cb: (sound: boolean, res:invSoundnessResT)=>void): void {
     let invs = this.soundInvs.concat([inv])
     let gl = this;
     pre_vc_ctrex(curLvlSet, this.curLvl.id, invs, function(pos_res) {
       if (pos_res.length != 0) {
-        cb({ sound: false, ctrex: [pos_res, [], []] })
+        cb(false, { ctrex: [pos_res, [], []] })
       } else {
         ind_vc_ctrex(curLvlSet, gl.curLvl.id, invs, function(ind_res) {
-          cb({ sound: ind_res.length == 0, ctrex: [ [], [], ind_res ] })
+          cb(ind_res.length == 0, { ctrex: [ [], [], ind_res ] })
         })
       }
     })
@@ -247,7 +406,7 @@ class CounterexampleGameLogic extends BaseGameLogic implements IDynGameLogic {
               gl.pwupSuggestion.invariantTried(jsInv);
               gl.setPowerups(gl.pwupSuggestion.getPwups());
 
-              gl.invSound(jsInv, function (res) {
+              gl.invSound(jsInv, function (sound, res) {
                 if (res.ctrex[0].length != 0) {
                   gl.overfittedInvs.push(jsInv)
                 } else if (res.ctrex[2].length != 0) {
@@ -256,7 +415,7 @@ class CounterexampleGameLogic extends BaseGameLogic implements IDynGameLogic {
                   gl.soundInvs.push(jsInv)
                 } 
 
-                if (res.sound) {
+                if (sound) {
                   var addScore = gl.computeScore(jsInv, 1)
                   gl.score += addScore;
                   gl.scoreW.add(addScore);
@@ -285,6 +444,30 @@ class CounterexampleGameLogic extends BaseGameLogic implements IDynGameLogic {
 
     } catch (err) {
       this.tracesW.delayedError(<string>interpretError(err))
+    }
+  }
+}
+
+
+class TutorialCounterexampleGameLogic extends CounterexampleGameLogic {
+  invSoundCb: (inv: invariantT, cb: (res:invSoundnessResT)=>void)=>void = null;
+  onInvSound(cb:(inv: invariantT, cb: (res:invSoundnessResT)=>void)=>void) {
+    this.invSoundCb = cb;
+  }
+
+  invSound(inv, cb) {
+    if (this.invSoundCb)
+      this.invSoundCb(inv, cb);
+  }
+
+  goalSatisfied(cb:(sat: boolean, feedback?: any)=>void):void {
+    let goal = this.curLvl.goal;
+    if (goal.none) {
+      cb(false)
+    } else if (goal.hasOwnProperty('atleast')) {
+      cb(this.foundJSInv.length >= goal.atleast)
+    } else {
+      error("Unknown goal " + JSON.stringify(goal));
     }
   }
 }
