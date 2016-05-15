@@ -49,4 +49,4 @@ help-icon.png:
 	wget http://cseweb.ucsd.edu/~r1jha/images/help-icon.png
 
 clean:
-	rm -r $(THIRD_PARTY_DEPS)
+	rm -r $(THIRD_PARTY_DEPS) jquery-ui-1.11.4.zip*

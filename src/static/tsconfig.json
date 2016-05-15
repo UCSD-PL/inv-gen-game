@@ -33,5 +33,21 @@
     "insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis": false,
     "placeOpenBraceOnNewLineForFunctions": false,
     "placeOpenBraceOnNewLineForControlBlocks": false
+  },
+  "files": [
+    "ts/eval.ts",
+    "ts/gameLogic.ts",
+    "ts/level.ts",
+    "ts/logic.ts",
+    "ts/powerups.ts",
+    "ts/pp.ts",
+    "ts/progressWindow.ts",
+    "ts/scoreWindow.ts",
+    "ts/stickyWindow.ts",
+    "ts/traceWindow.ts",
+    "ts/util.ts"
+  ],
+  "atom": {
+    "rewriteTsconfig": true
   }
 }
