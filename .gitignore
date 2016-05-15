@@ -20,3 +20,7 @@ src/static/jquery-ui-1.11.4.zip*
 src/static/jquery-ui-1.11.4/
 src/static/help-icon.png
 env
+build
+node_modules
+src/static/build
+src/static/typings
