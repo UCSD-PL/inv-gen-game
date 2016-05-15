@@ -2,6 +2,10 @@ function invPP(inv) {
   return inv.replace(/===/g, '=').replace(/==/g, '=').replace(/\s/g, '')
 }
 
+function ppToInv(pp) {
+  return pp.replace(/=/g, '==').replace(/\s/g, '')
+}
+
 function invToHTML(inv) {
   return inv
     .replace(/</g, "&lt;")

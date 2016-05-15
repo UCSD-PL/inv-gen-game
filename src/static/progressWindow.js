@@ -30,23 +30,24 @@ function ProgressWindow(player, div) {
   }
 
   progW.markInvariant = function (inv, state) {
-      var div = invMap[inv]
+    //var div = invMap[inv]
+    var div = invMap[invPP(inv)]
 
-      if (div === undefined) {
-        console.log("Unknown invariant " + inv);
-        return
-      }
+    if (div === undefined) {
+      console.log("Unknown invariant " + inv);
+      return
+    }
 
-      if (state == "checking") {
-      } else if (state == "duplicate") {
-        //div.addClass('error')
-        div.addClass('bold')
-      } else if (state == "tautology") {
-      } else if (state == "implies") {
-        //div.addClass('error')
-        div.addClass('bold')
-      } else if (state == "ok") {
-      }
+    if (state == "checking") {
+    } else if (state == "duplicate") {
+      //div.addClass('error')
+      div.addClass('bold')
+    } else if (state == "tautology") {
+    } else if (state == "implies") {
+      //div.addClass('error')
+      div.addClass('bold')
+    } else if (state == "ok") {
+    }
   }
 
   progW.clearMarks = function () {
@@ -64,6 +65,7 @@ function ProgressWindow(player, div) {
 
   progW.contains = function (inv) {
     return invMap.hasOwnProperty(inv);
+    //return invMap.hasOwnProperty(htmlToInv(inv));
   }
 
   $(div).addClass('box')
