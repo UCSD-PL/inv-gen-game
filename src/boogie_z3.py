@@ -11,7 +11,7 @@ def expr_to_z3(expr, typeEnv):
         return typeEnv[expr.name](expr.name)
     elif isinstance(expr, AstTrue):
         return True;
-    elif isinstance(expr, AstTrue):
+    elif isinstance(expr, AstFalse):
         return False;
     elif isinstance(expr, AstUnExpr):
         z3_inner = expr_to_z3(expr.expr, typeEnv)

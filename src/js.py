@@ -2,6 +2,7 @@ from slimit.parser import Parser
 from slimit.visitors.nodevisitor import ASTVisitor
 from slimit.visitors import nodevisitor
 from slimit import ast
+from boogie_ast import *
 from z3 import *
 
 def addAllIntEnv(inv, env = {}):
@@ -74,8 +75,6 @@ def esprimaToZ3Expr(astn, typeEnv):
 
     try:
       return {
-        '&&': And,
-        '||': Or,
         '==': lambda x,y: x == y,
         '!=': lambda x,y: x != y,
         '<': lambda x,y: x < y,
@@ -86,13 +85,78 @@ def esprimaToZ3Expr(astn, typeEnv):
         '-': lambda x,y: x - y,
         '*': lambda x,y: x * y,
         '/': lambda x,y: x / y,
+        '%': lambda x,y: x % y,
       }[astn["operator"]](ln, rn)
     except:
       raise Exception("Unkown binary expression " + str(astn))
+  elif (astn["type"] == "LogicalExpression"):
+    ln,rn = esprimaToZ3Expr(astn["left"], typeEnv), esprimaToZ3Expr(astn["right"], typeEnv)
+    try:
+      return {
+        '&&': And,
+        '||': Or,
+      }[astn["operator"]](ln, rn)
+    except:
+      raise Exception("Unkown logical expression " + str(astn))
   elif (astn["type"] == "Identifier"):
     return Int(astn["name"]);
   if (astn["type"] == "Literal"):
-    return jsNumToZ3(astn["raw"])
+    if (astn["raw"] in ["true", "false"]):
+      return astn["raw"] == "true"
+    else:
+      return jsNumToZ3(astn["raw"])
+  else:
+    print (astn["type"])
+    raise Exception("Don't know how to parse " + str(astn))
+
+def esprimaToBoogieExprAst(astn, typeEnv):
+  if (astn["type"] == "UnaryExpression"):
+    arg = esprimaToBoogieExprAst(astn["argument"], typeEnv)
+    try:
+      return AstUnExpr({
+        '-': '-',
+        '!': '!'
+      }[astn['operator']], arg)
+    except:
+      raise Exception("Unknown unary expression " + str(astn))
+  elif (astn["type"] == "BinaryExpression"):
+    ln,rn = esprimaToBoogieExprAst(astn["left"], typeEnv), esprimaToBoogieExprAst(astn["right"], typeEnv)
+
+    try:
+      op = {
+        '==': '==',
+        '!=': '!=',
+        '<': '<',
+        '>': '>',
+        '<=': '<=',
+        '>=': '>=',
+        '+': '+',
+        '-': '-',
+        '*': '*',
+        '/': '/',
+        '%': '%',
+      }
+      return AstBinExpr(ln, op[astn['operator']], rn)
+    except:
+      raise Exception("Unkown binary expression " + str(astn))
+  elif (astn["type"] == "LogicalExpression"):
+    ln,rn = esprimaToBoogieExprAst(astn["left"], typeEnv), esprimaToBoogieExprAst(astn["right"], typeEnv)
+
+    try:
+      op = {
+        '&&': '&&',
+        '||': '||',
+      }
+      return AstBinExpr(ln, op[astn['operator']], rn)
+    except:
+      raise Exception("Unkown logical expression " + str(astn))
+  elif (astn["type"] == "Identifier"):
+    return AstId(astn["name"]);
+  if (astn["type"] == "Literal"):
+    if (astn["raw"] in ["true", "false"]):
+      return AstTrue() if astn["raw"] == "true" else AstFalse()
+    else:
+      return AstNumber(int(astn["raw"]))
   else:
     raise Exception("Don't know how to parse " + str(astn))
 
@@ -103,6 +167,14 @@ def esprimaToZ3(inv, typeEnv):
     "expression" not in inv["body"][0]):
     raise Exception("Bad struct")
   return esprimaToZ3Expr(inv["body"][0]["expression"], typeEnv)
+
+def esprimaToBoogie(inv, typeEnv):
+  if (inv["type"] != "Program" or "body" not in inv or \
+    len(inv["body"]) != 1 or
+    inv["body"][0]["type"] != "ExpressionStatement" or \
+    "expression" not in inv["body"][0]):
+    raise Exception("Bad struct")
+  return esprimaToBoogieExprAst(inv["body"][0]["expression"], typeEnv)
 
 if __name__ == "__main__":
   p = Parser()

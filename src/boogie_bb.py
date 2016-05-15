@@ -1,8 +1,5 @@
 from boogie_ast import *;
-from boogie_z3 import *
-from boogie_verify import *
 from collections import namedtuple
-from z3 import *
 
 BB = namedtuple("BB", ["predecessors", "stmts", "successors"])
 
@@ -38,18 +35,24 @@ def get_bbs(filename):
 
     return bbs
 
+def is_internal_bb(bb):
+    return bb.startswith("_union_") or bb == "_tmp_header_pred_"
+
 def entry(bbs):
-    e = [x for x in bbs if len(bbs[x].predecessors) == 0]
+    e = [x for x in bbs if not is_internal_bb(x) and len(bbs[x].predecessors) == 0]
     assert (len(e) == 1)
     return e[0]
 
 def exit(bbs):
-    e = [x for x in bbs if len(bbs[x].successors) == 0]
+    e = [x for x in bbs if not is_internal_bb(x) and len(bbs[x].successors) == 0]
     assert (len(e) == 1)
     return e[0]
 
 def bbpath_to_stmts(bb_path, bbs):
     r = []
     for b in bb_path:   
-        r.extend(bbs[b].stmts)
+        if (isinstance(b, BB)):
+            r.extend(bbs[b].stmts)
+        else:
+            r.append([ bbpath_to_stmts(x, bbs) for x in b ])
     return r

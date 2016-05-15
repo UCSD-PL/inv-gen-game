@@ -1,15 +1,21 @@
-function ProgressWindow(div) {
+function ProgressWindow(div, has_ignores = false) {
   var progW = this;
   var ctr = 0;
   var invMap = {}
 
   progW.element = div;
 
-  $(div).addClass('.progessWindow')
-  $(div).html("Discovered invariants<br>" +
-    "<ul id='good-invariants' style='font-family: monospace; list-style-type: none; padding: 0px; text-align: center;'></ul>")
-
+  //$(div).addClass('.progessWindow')
+  //$(div).addClass('box')
+  $(div).html("<div class='progressWindow box good centered positioned'> Accepted expressions<br>" +
+    "<ul id='good-invariants' style='font-family: monospace; list-style-type: none; padding: 0px; text-align: center;'></ul></div>")
   invUL = $('#good-invariants')
+
+  if (has_ignores) {
+    $(div).append("<div class='ignoreWindow box warn centered positioned'>Ignored expressions<br>" +
+      "<ul id='ignored-invariants' style='font-family: monospace; list-style-type: none; padding: 0px; text-align: center;'></ul></div>")
+    ignUL = $('#ignored-invariants')
+  }
 
   progW.addInvariant = function (inv) {
       // if arrows are running, then stop them
@@ -18,6 +24,17 @@ function ProgressWindow(div) {
         ctr + "'>" + invToHTML(inv) + "</li>")
       invMap[inv] = $('#good_' + ctr)
       ctr++;
+  }
+
+  if (has_ignores) {
+    progW.addIgnored = function (inv) {
+        // if arrows are running, then stop them
+
+        $(ignUL).append("<li class='ignored-invariant' id='ign_" +
+          ctr + "'>" + invToHTML(inv) + "</li>")
+        invMap[inv] = $('#ign_' + ctr)
+        ctr++;
+    }
   }
 
   progW.removeInvariant = function (inv) {
@@ -38,7 +55,10 @@ function ProgressWindow(div) {
       } else if (state == "tautology") {
       } else if (state == "implies") {
         div.addClass('error')
+      } else if (state == "counterexampled") {
+        div.addClass('error')
       } else if (state == "ok") {
+        div.removeClass('error')
       }
   }
 
@@ -50,6 +70,8 @@ function ProgressWindow(div) {
 
   progW.clear = function () {
     $(invUL).html('')
+    if (has_ignores)
+      $(ignUL).html('')
     invMap = {}
     ctr = 0
   }
@@ -58,6 +80,4 @@ function ProgressWindow(div) {
     return invMap.hasOwnProperty(inv);
   }
 
-  $(div).addClass('box')
-  $(div).addClass('progressWindow')
 }

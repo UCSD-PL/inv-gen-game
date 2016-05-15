@@ -5,17 +5,29 @@ from os.path import *
 from os import listdir
 from json import load, dumps 
 from z3 import *
-from js import invJSToZ3, addAllIntEnv, esprimaToZ3
+from js import invJSToZ3, addAllIntEnv, esprimaToZ3, esprimaToBoogie
+from boogie_ast import parseAst, AstBinExpr, AstTrue, AstUnExpr, parseExprAst,\
+    ast_and, ast_or, replace, expr_read
+from boogie_bb import get_bbs
+from boogie_loops import loops, get_loop_header_values, \
+  loop_vc_pre_ctrex, loop_vc_post_ctrex, loop_vc_ind_ctrex
+from util import unique, pp_exc, powerset, average
+from boogie_analysis import livevars
+from boogie_eval import instantiateAndEval
+from boogie_z3 import expr_to_z3, AllIntTypeEnv, ids
+from boogie_paths import sp_nd_ssa_path, nd_bb_path_to_ssa, wp_nd_ssa_path
+from boogie_ssa import SSAEnv
+from graph import strongly_connected_components, collapse_scc, topo_sort
+
 import argparse
 import traceback
 import time
+from copy import copy
 
 p = argparse.ArgumentParser(description="invariant gen game server")
 p.add_argument('--log', type=str, help='an optional log file to store all user actions. Entries are stored in JSON format.')
 
 args = p.parse_args();
-
-print args
 
 logF = None;
 if args.log:
@@ -26,9 +38,87 @@ def log(action):
     action['ip'] = request.remote_addr;
     if (logF):
         logF.write(dumps(action) + '\n')
+    else:
+        print dumps(action) + '\n'
 
 MYDIR=dirname(abspath(realpath(__file__)))
 z3s = Solver()
+
+def _tryUnroll(loop, bbs, min_un, max_un, bad_envs, good_env):
+    # Lets first try to find a terminating loop between min and max iterations
+    term_vals = get_loop_header_values(loop, bbs, min_un, max_un, bad_envs, good_env, True)
+    if (term_vals != []):
+      return (term_vals, True)
+
+    # Couldn't find a terminating loop between 0 and 6 iteration. Lets find
+    # a loop that has at LEAST min iterations
+    term_vals = get_loop_header_values(loop, bbs, min_un, max_un, bad_envs, good_env, False)
+    return (term_vals, False)
+
+def findNegatingTrace(loop, bbs, nunrolls, invs):
+    vals, terminates = _tryUnroll(loop, bbs, 0, nunrolls, None, None)
+    traceVs = list(livevars(bbs)[loop.loop_paths[0][0]])
+    vals = [ { x : env[x] for x in traceVs } for env in vals ]
+    hold_for_data = []
+
+    def diversity(vals):
+        lsts = [ [ vals[i][k] for i in xrange(len(vals)) ] for k in vals[0].keys() ]
+        return average([len(set(lst)) for lst in lsts])
+        #return average([len(set(lst)) / 1.0 * len(lst) for lst in lsts])
+
+    for inv in invs:
+        hold_for_data.extend(instantiateAndEval(inv, vals, traceVs, ["a", "b", "c"]))
+
+    print "The following invariants hold for initial trace: ", hold_for_data
+    res = [ ]
+    for s in powerset(hold_for_data):
+        inv = ast_or(s)
+        ctrex = loop_vc_pre_ctrex(loop, inv, bbs)
+        trace, terminates = _tryUnroll(loop, bbs, 0, nunrolls, None, ctrex)
+        if (ctrex and len(trace) > 0):
+            print "Ctrexample for ", inv, " is ", trace
+            res.append((diversity(trace), len(s), list(s), ctrex, (trace, terminates)))
+
+    res.sort(key=lambda x:  x[0]);
+    if (len(res) > 0):
+        return res[-1][4]
+    else:
+        return (None, False)
+
+def loadBoogieFile(fname, multiround):
+    bbs = get_bbs(fname)
+    loop = unique(loops(bbs), "Cannot handle program with multiple loops:" + fname)
+    header_vals, terminates = _tryUnroll(loop, bbs, 0, 4, None, None)
+    # Assume we have no tests with dead loops
+    assert(header_vals != [])
+    #header_vals, terminates = findNegatingTrace(loop, bbs, 4,
+    #  [ parseExprAst(inv)[0] for inv in ["x<y", "x<=y", "x==c", "x==y", "x==0"] ])
+
+    # See if there is a .hint files
+    hint = None
+    try:
+        hint = open(fname[:-4] + '.hint').read()
+    except: pass
+
+    # The variables to trace are all live variables at the loop header
+    vs = list(livevars(bbs)[loop.loop_paths[0][0]])
+
+    return { 'variables': vs,
+             'data': [[[ str(row[v]) for v in vs  ]  for row in header_vals], [], []],
+             'exploration_state' : [ ([ str(header_vals[0][v]) for v in vs  ], len(header_vals), terminates) ],
+             'hint': hint,
+             'goal' : { "verify" : True },
+             'support_pos_ex' : True,
+             'support_neg_ex' : True,
+             'support_ind_ex' : True,
+             'multiround'     : multiround,
+             'program' : bbs,
+             'loop' : loop
+    }
+
+def loadBoogies(dirN, multiround = False):
+    return { name[:-4] : loadBoogieFile(dirN + '/' + name, multiround) for name in listdir(dirN)
+                if name.endswith('.bpl') }
 
 def readTrace(fname):
     rows = []
@@ -53,9 +143,13 @@ def readTrace(fname):
     except: pass
 
     return { 'variables': vs,
-             'data': [[ row.get(n, None) for n in vs  ]  for row in rows ],
+             'data': [[[ row.get(n, None) for n in vs  ]  for row in rows ], [], []],
              'hint': hint,
-             'goal' : goal
+             'goal' : goal,
+             'support_pos_ex' : False,
+             'support_neg_ex' : False,
+             'support_ind_ex' : False,
+             'multiround'     : False,
     }
 
 def loadTraces(dirN):
@@ -70,6 +164,7 @@ traces = {
     "intro-benchmarks": introTraces,
     "test-benchmarks": testTraces,
     "pruned-intro-benchmarks": prunedIntroTraces,
+    "desugared-boogie-benchmarks" : loadBoogies(MYDIR + '/../desugared-boogie-benchmarks', False),
     "old-dilig-traces": {
       '15-c': {
           'variables': ['n', 'k', 'j'],
@@ -143,31 +238,137 @@ app = Server(__name__, static_folder='static/', static_url_path='')
 api = rpc(app, '/api')
 
 @api.method("App.listData")
+@pp_exc
 def listData(levelSet):
     res = traces[levelSet].keys();
     res.sort()
     return res
 
-@api.method("App.getData")
-def getData(levelSet, traceId):
+@api.method("App.loadLvl")
+@pp_exc
+def loadLvl(levelSet, traceId):
     if (levelSet not in traces):
         raise Exception("Unkonwn level set " + levelSet)
 
     if (traceId not in traces[levelSet]):
         raise Exception("Unkonwn trace " + traceId + " in levels " + levelSet)
 
-    log({"type": "load_data", "data":  traces[levelSet][traceId]})
-    return traces[levelSet][traceId]
+    lvl = traces[levelSet][traceId]
+    if ('program' in lvl):
+      # This is a boogie level - don't return the program/loop and other book keeping
+      lvl = {
+             'variables': lvl['variables'],
+             'data': lvl['data'],
+             'exploration_state': lvl['exploration_state'],
+             'hint': lvl['hint'],
+             'goal' : lvl['goal'],
+             'support_pos_ex' : lvl['support_pos_ex'],
+             'support_neg_ex' : lvl['support_neg_ex'],
+             'support_ind_ex' : lvl['support_ind_ex'],
+             'multiround'     : lvl['multiround'],
+      }
+  
+    log({"type": "load_data", "data": lvl}) 
+    return lvl
+
+def _to_dict(vs, vals):
+    return { vs[i]: vals[i] for i in xrange(0, len(vs)) }
+
+def _from_dict(vs, vals):
+    if type(vals) == tuple:
+        return ( _from_dict(vs, vals[0]), _from_dict(vs, vals[1]) )
+    else:
+        return [ vals[vs[i]].as_long() if vs[i] in vals else None for i in xrange(0, len(vs)) ]
+
+@api.method("App.instantiate")
+@pp_exc
+def instantiate(invs, traceVars, trace):
+    res = []
+    z3Invs = []
+    boogieInvs = [ (x[1], esprimaToBoogie(x[0], {})) for x in invs]
+    vals = map(lambda x:    _to_dict(traceVars, x), trace)
+
+    for (constVars, bInv) in boogieInvs:
+        for instInv in instantiateAndEval(bInv, vals, traceVars, constVars):
+            instZ3Inv = expr_to_z3(instInv, AllIntTypeEnv())
+            implied = False
+            z3Inv = None
+
+            for z3Inv in z3Invs:
+                if implies(z3Inv, instZ3Inv):
+                    implied = True;
+                    break
+
+            if (implied):   continue
+            res.append(instInv)
+            z3Invs.append(instZ3Inv)
+
+    print "Instantiated: ", res, " from ", invs
+    return map(lambda x: str(x), res)
+    
+@api.method("App.getPositiveExamples")
+@pp_exc
+def getPositiveExamples(levelSet, levelId, cur_expl_state, overfittedInvs, num):
+    if (levelSet not in traces):
+        raise Exception("Unkonwn level set " + str(levelSet))
+
+    if (levelId not in traces[levelSet]):
+        raise Exception("Unkonwn trace " + str(levelId) + " in levels " + str(levelSet))
+
+    lvl = traces[levelSet][levelId]
+
+    if ('program' not in lvl):
+      # Not a boogie level - error
+      raise Exception("Level " + str(levelId) + " " + str(levelSet) + " not a dynamic boogie level.")
+
+    bbs = lvl['program']
+    loop = lvl["loop"]
+    found = []
+    need = num
+    heads = set([tuple(x[0]) for x in cur_expl_state])
+    overfitBoogieInvs = [esprimaToBoogie(x, {}) for x in overfittedInvs]
+    negatedVals, terminates = findNegatingTrace(loop, bbs, num, overfitBoogieInvs)
+    print "Negated vals: ", negatedVals
+
+    if (negatedVals):
+        cur_expl_state.insert(0, (_from_dict(lvl['variables'], negatedVals[0]), 0, False))
+
+    print cur_expl_state
+
+    for (ind, (loop_head, nunrolls, is_finished)) in enumerate(cur_expl_state):
+        if is_finished: continue
+        if need <= 0:   break
+
+        print "Getting values from ", ind
+
+        good_env = _to_dict(lvl['variables'], loop_head)
+        # Lets first try to find terminating executions:
+        new_vals, terminating = _tryUnroll(loop, bbs, nunrolls+1, nunrolls+1+need, None, good_env)
+        new_vals = new_vals[nunrolls+1:]
+        cur_expl_state[ind] = (loop_head, nunrolls + len(new_vals), terminating)
+    
+        found.extend(new_vals)
+        need -= len(new_vals)
+
+    while need > 0:
+        bad_envs = [ _to_dict(lvl['variables'], row) for (row,_,_) in cur_expl_state ]
+        new_vals, terminating = _tryUnroll(loop, bbs, 0, need, bad_envs, None)
+        found.extend(new_vals)
+        need -= len(new_vals)
+        cur_expl_state.append((_from_dict(lvl['variables'], new_vals[0]), len(new_vals)-1, terminating))
+
+    # De-z3-ify the numbers
+    js_found = [ _from_dict(lvl["variables"], env) for env in found]
+    log({"type": "getPositiveExamples", "data": (cur_expl_state, js_found)})
+    return (copy(cur_expl_state), js_found)
 
 def implies(inv1, inv2):
-    print "Are implies ", inv1, inv2
     s = Solver();
     s.add(inv1)
     s.add(Not(inv2))
     return unsat == s.check();
 
 def equivalent(inv1, inv2):
-    print "Are equivalent: ", inv1, inv2
     s = Solver();
     s.push();
     s.add(inv1)
@@ -195,6 +396,7 @@ def tautology(inv):
     return (unsat == s.check())
 
 @api.method("App.equivalentPairs")
+@pp_exc
 def equivalentPairs(invL1, invL2):
     try:
       z3InvL1 = list(enumerate([esprimaToZ3(x, {}) for x in invL1]))
@@ -210,6 +412,7 @@ def equivalentPairs(invL1, invL2):
       raise Exception(":(")
 
 @api.method("App.impliedPairs")
+@pp_exc
 def impliedPairs(invL1, invL2):
     try:
       z3InvL1 = list(enumerate([esprimaToZ3(x, {}) for x in invL1]))
@@ -225,10 +428,142 @@ def impliedPairs(invL1, invL2):
       raise Exception(":(")
 
 @api.method("App.isTautology")
+@pp_exc
 def isTautology(inv):
     res = (tautology(esprimaToZ3(inv, {})))
     log({"type": "isTautology", "data":  (inv, res)})
     return res
+
+@api.method("App.verifyInvariants")
+@pp_exc
+def verifyInvariants(levelSet, levelId, invs):
+    if (levelSet not in traces):
+        raise Exception("Unkonwn level set " + str(levelSet))
+
+    if (levelId not in traces[levelSet]):
+        raise Exception("Unkonwn trace " + str(levelId) + " in levels " + str(levelSet))
+
+    if (len(invs) == 0):
+        raise Exception("No invariants given")
+
+    lvl = traces[levelSet][levelId]
+
+    if ('program' not in lvl):
+      # Not a boogie level - error
+      raise Exception("Level " + str(levelId) + " " + str(levelSet) + " not a dynamic boogie level.")
+
+    boogie_invs = [ esprimaToBoogie(x, {}) for x in invs ]
+    boogie_inv = ast_and(boogie_invs)
+    bbs = lvl['program']
+    loop = lvl['loop']
+
+    fix = lambda x: _from_dict(lvl['variables'], x)
+    print "Try pre.."
+    pre_ctrex = map(fix, filter(lambda x:    x, [ loop_vc_pre_ctrex(loop, boogie_inv, bbs) ]))
+    print "Try post.."
+    post_ctrex = map(fix, filter(lambda x:    x, [ loop_vc_post_ctrex(loop, boogie_inv, bbs) ]))
+    print "Try ind.."
+    ind_ctrex = map(fix, filter(lambda x:    x, [ loop_vc_ind_ctrex(loop, boogie_inv, bbs) ]))
+    print "Done."
+    res = (pre_ctrex, post_ctrex, ind_ctrex)
+
+    log({"type": "verifyInvariant", "data": res })
+    return res
+
+@api.method("App.checkPreVC")
+@pp_exc
+def checkPreVC(levelSet, levelId, invs):
+    if (levelSet not in traces):
+        raise Exception("Unkonwn level set " + str(levelSet))
+
+    if (levelId not in traces[levelSet]):
+        raise Exception("Unkonwn trace " + str(levelId) + " in levels " + str(levelSet))
+
+    if (len(invs) == 0):
+        raise Exception("No invariants given")
+
+    lvl = traces[levelSet][levelId]
+
+    if ('program' not in lvl):
+      # Not a boogie level - error
+      raise Exception("Level " + str(levelId) + " " + str(levelSet) + " not a dynamic boogie level.")
+
+    boogie_invs = [ esprimaToBoogie(x, {}) for x in invs ]
+    boogie_inv = ast_and(boogie_invs)
+    bbs = lvl['program']
+    loop = lvl['loop']
+
+    fix = lambda x: _from_dict(lvl['variables'], x)
+    print "Try pre.."
+    pre_ctrex = map(fix, filter(lambda x:    x, [ loop_vc_pre_ctrex(loop, boogie_inv, bbs) ]))
+    log({"type": "checkPreVC", "data": pre_ctrex })
+    return pre_ctrex 
+
+# Given a set of candidate loop invariants, and a loop
+# partition them into disjoin sets of influence based on
+# the dependencies between variables in the loop body
+# The soundness of invariants in a given set should be
+# independent of the soundness of invariants in other sets.
+def partitionInvariants(invs, loop, bbs):
+    body_ssa, ssa_env = nd_bb_path_to_ssa([ loop.loop_paths ], bbs, SSAEnv(None, ""))
+    inv_wps = [ wp_nd_ssa_path(body_ssa, bbs,
+                              expr_to_z3(replace(x, ssa_env.replm()), AllIntTypeEnv()),
+                              AllIntTypeEnv())
+                for x in invs ]
+    print "WPs: ", inv_wps
+    infl_vars = [ set(ids(x)) for x in inv_wps ]
+    expr_vars = [ expr_read(x) for x in invs ]
+    influences = { i : set() for i in xrange(len(invs)) }
+
+    print invs
+    print infl_vars
+    print expr_vars
+
+    for i in xrange(len(invs)):
+        for j in xrange(len(invs)):
+            if (i == j):    continue
+            if len(infl_vars[i].intersection(expr_vars[j])) > 0:
+                # Expression j influences the outcome of expression i
+                influences[i].add(j)
+
+    sccs = strongly_connected_components(influences)
+    collapsed_influences = collapse_scc(influences, sccs)
+    check_order = { ind: comp for (comp, ind) in topo_sort(collapsed_influences).iteritems() }
+    print 'Order'
+    for comp_ind in range(len(check_order)):
+        print "Component: ", comp_ind
+        for n in sccs[comp_ind]:
+            print "    ", invs[n]
+
+@api.method("App.checkIndVC")
+@pp_exc
+def checkIndVC(levelSet, levelId, invs):
+    if (levelSet not in traces):
+        raise Exception("Unkonwn level set " + str(levelSet))
+
+    if (levelId not in traces[levelSet]):
+        raise Exception("Unkonwn trace " + str(levelId) + " in levels " + str(levelSet))
+
+    if (len(invs) == 0):
+        raise Exception("No invariants given")
+
+    lvl = traces[levelSet][levelId]
+
+    if ('program' not in lvl):
+      # Not a boogie level - error
+      raise Exception("Level " + str(levelId) + " " + str(levelSet) + " not a dynamic boogie level.")
+
+    boogie_invs = [ esprimaToBoogie(x, {}) for x in invs ]
+    boogie_inv = ast_and(boogie_invs)
+    bbs = lvl['program']
+    loop = lvl['loop']
+    partitionInvariants(boogie_invs, loop, bbs)
+
+    fix = lambda x: _from_dict(lvl['variables'], x)
+    print "Try pre.."
+    ind_ctrex = map(fix, filter(lambda x:    x, [ loop_vc_ind_ctrex(loop, boogie_inv, bbs) ]))
+    log({"type": "checkIndVC", "data": ind_ctrex })
+    return ind_ctrex 
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')

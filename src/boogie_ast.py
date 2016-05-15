@@ -1,5 +1,4 @@
 from boogie_grammar import *
-import boogie_grammar;
 from pyparsing import ParseResults
 
 def _strip(arg):
@@ -202,6 +201,12 @@ def stmt_changed(ast):
         return expr_read(ast.lhs)
     else:
         return set([])
+
+def ast_group_bin(exprs, op, default):
+    return reduce(lambda x,y:   AstBinExpr(x, op, y), exprs, default)
+
+def ast_and(exprs): return ast_group_bin(exprs, "&&", AstTrue())
+def ast_or(exprs): return ast_group_bin(exprs, "||", AstFalse()) 
 
 def parseExprAst(s):
     def act_wrap(cl):

@@ -22,11 +22,13 @@ pip install flask
 pip install flask-jsonrpc
 pip install slimit
 pip install pyparsing
+pip install boto
 
 if [ ! -d $DIR/third_party ] ; then
   mkdir $DIR/third_party
 fi
 
+if [ ! -e $DIR/bin/z3 ]; then
   pushd $DIR/third_party
   git clone https://github.com/Z3Prover/z3.git z3
   cd z3
@@ -35,7 +37,18 @@ fi
   make -j 8
   make install
   popd
+fi
 
 deactivate
+
+which node;
+if [[ $? -ne 0 ]]; then
+  echo "node not found! Please make sure nodejs is installed"
+  exit -1
+fi
+
+npm install
+
+echo 'export PATH=$PATH:$MYDIR/node_modules/.bin/'
 
 echo "To begin developing run source $DIR/bin/activate and then make"

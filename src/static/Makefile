@@ -6,11 +6,16 @@ THIRD_PARTY_DEPS=bootstrap.min.css \
 								 jquery.color-2.1.2.min.js\
 								 esprima.js\
 								 jquery-ui-1.11.4\
-								 doge.jpg\
 								 help-icon.png
 #								 crafty-min.js\
 
-all: $(THIRD_PARTY_DEPS)
+all: $(THIRD_PARTY_DEPS) ts-files
+
+typings:
+	typings install
+
+ts-files: typings
+	tsc
 
 bootstrap.min.css:
 	wget https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css
@@ -39,10 +44,6 @@ esprima.js:
 jquery-ui-1.11.4:
 	wget http://jqueryui.com/resources/download/jquery-ui-1.11.4.zip
 	unzip jquery-ui-1.11.4.zip
-
-
-doge.jpg:
-	wget -O doge.jpg https://pbs.twimg.com/profile_images/378800000822867536/3f5a00acf72df93528b6bb7cd0a4fd0c.jpeg
 
 help-icon.png:
 	wget http://cseweb.ucsd.edu/~r1jha/images/help-icon.png

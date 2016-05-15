@@ -17,43 +17,34 @@
   <!-- our code -->
   <link rel="stylesheet" href="inv.css">
   <link rel="stylesheet" href="arrow.css">
-  <script src="traceWindow.js"></script>
-  <script src="msgWindow.js"></script>
-  <script src="stickyWindow.js"></script>
-  <script src="progressWindow.js"></script>
-  <script src="scoreWindow.js"></script>
-  <script src="logic.js"></script>
-  <script src="gameLogic.js"></script>
-  <script src="eval.js"></script>
-  <script src="goal.js"></script>
-  <script src="pp.js"></script>
-  <script src="util.js"></script>
-  <script src="powerups.js"></script>
+  <script src="build/ts/stickyWindow.js"></script>
+  <script src="build/ts/progressWindow.js"></script>
+  <script src="build/ts/scoreWindow.js"></script>
+  <script src="build/ts/logic.js"></script>
+  <script src="build/ts/traceWindow.js"></script>
+  <script src="build/ts/gameLogic.js"></script>
+  <script src="build/ts/level.js"></script>
+  <script src="build/ts/eval.js"></script>
+  <script src="build/ts/pp.js"></script>
+  <script src="build/ts/util.js"></script>
+  <script src="build/ts/powerups.js"></script>
 
   <script>
     var curLvl;
     var curLvlSet;
+    var curL = null;
     var lvls = null;
     var tracesW = null, progW = null, scoreW = null;
     var gameLogic = null;
     var stepTimeout = 5000;
+    var curScript = null;
+
+    disableBackspaceNav();
 
     function loadTrace(traceId) {
-      res = rpc.call('App.getData', [ curLvlSet, traceId ], function(res) {
-        data = res;
-        curGoal = data.goal;
-        goalSatisfied(curGoal, jsfound, function(newProgress) {progress = newProgress});
-
-        gameLogic.loadLvl(data)
-        //$('#hint').html(data.hint)
-
-        if (showNext(curGoal)) {
-          $('#next-lvl').show();
-        }
-        else {
-          $('#next-lvl').hide();
-        }
-      }, log)
+      Level.load(curLvlSet, traceId, function(lvl) {
+        gameLogic.loadLvl(lvl)
+      })
     }
 
     function nextLvl() {
@@ -61,31 +52,30 @@
     }
 
     function loadLvl(lvl) {
-      jsfound = []
-      /*
-      $('#' + lvls[curLvl]).removeClass('bold');
-      $('#' + lvls[curLvl]).parent().css("background-color", "rgb(125,242,127)");
-      */
-      $('#lvl_' + lvls[curLvl]).removeClass('bold');
-      $('#lvl_' + lvls[curLvl]).removeClass('currentLevel');
-      $('#lvl_' + lvls[curLvl]).parent().addClass('completedLevel');
-
-      curLvl = lvl;
-      /*
-      $('#' + lvls[curLvl]).addClass('bold');
-      $('#' + lvls[curLvl]).parent().css("background-color", "#f29408");//addClass('current');
-      */
-      $('#lvl_' + lvls[curLvl]).addClass('bold');
-      $('#lvl_' + lvls[curLvl]).parent().addClass('currentLevel');
-
       if (lvl == lvls.length) {
-        return doneScreen();
-      }
-      else {
+        doneScreen();
+      } else {
+        if (typeof(lvls[curLvl]) == "string") {
+          $('#lvl_' + lvls[curLvl]).removeClass('bold');
+          $('#lvl_' + lvls[curLvl]).removeClass('currentLevel');
+          $('#lvl_' + lvls[curLvl]).parent().addClass('completedLevel');
+        }
+
+        curLvl = lvl;
+        if (typeof(lvls[lvl]) == "string") {
+          $('#lvl_' + lvls[curLvl]).addClass('bold');
+          $('#lvl_' + lvls[curLvl]).parent().addClass('currentLevel');
+        }
+
         if (lvl == lvls.length - 1) {
           $('#next-lvl').html('Finish');
         }
-        loadTrace(lvls[curLvl]);
+
+        if (typeof(lvls[lvl]) == "string") {
+          loadTrace(lvls[curLvl]);
+        } else {
+          gameLogic.loadLvl(lvls[curLvl])
+        }
       }
     }
 
@@ -110,8 +100,11 @@
 
     function doneScreen() {
       //loadLvlSet("test-benchmarks")
-      $("#final-score").html("<p style='color: white; vertical-align: bottom'>WOW! Much Points! You got " + gameLogic.score()  + " points!</p>");
-      $("#doge").fadeIn();
+      $(".overlay").html("<h1 class='good'> Good job! You finished all levels! <br> Your score is: " +
+        gameLogic.score  + "!</h1><br>" +
+        "<h2> Please submit the screencast of your work! </h2>"
+      );
+      $(".overlay").fadeIn(1000);
     }
 
     function labelRemover(lbl) {
@@ -121,38 +114,6 @@
     var tutorialScript = [
       {
         setup: function (cs) {
-                   curL = label($('#score-div-row'), "Try and get as many points as you can!", "left")
-                   $('body').focus();
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-                 }
-      },
-      {
-        setup: function (cs) {
-                   curL = label($('#hint-col'), "When a 'Next Level' button appears here,<br> you can advance.", "left");
-                   $('body').focus();
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-               }
-      },
-      {
-        setup: function (cs) {
-                   if($('#btn-hint').is(':hidden')) {
-                     curL = label($('#hint'), "These are hints you can use to win this level", "up");
-                   }
-                   else {
-                     curL = label($('#btn-hint'), "Click here to get hints", "up");
-                   }
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-                 }
-      },
-      {
-        setup: function (cs) {
-                   curL = label($('div .pwup :last'), "And you have powerups! <br> Hover over icons for more", "up")
-                   $('body').focus();
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-                 }
-      },
-      {
-        setup: function (cs) {
                   curL = label($('#help'), "Click here if you need any help later", "left")
                   $('body').focus();
                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
@@ -160,6 +121,7 @@
       },
       { setup: function (cs) {
                    $('#formula-entry').focus();
+                   curScript = null;
                }
       },
     ]
@@ -169,31 +131,24 @@
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
       progW = new ProgressWindow($('#discovered-invariants-div'));
       scoreW = new ScoreWindow($('#score-div'));
-      traceW = new TraceWindow($('#data-display'));
+      traceW = new PositiveTracesWindow($('#data-display'));
       stickyW = new StickyWindow($('#sticky'))
-      gameLogic = new GameLogic(traceW, progW, scoreW, stickyW);
+      gameLogic = new StaticGameLogic(traceW, progW, scoreW, stickyW);
 
-      $('#hints').hide();
       $('#next-lvl').hide();
-      $('#hint-col').show();
-      $('#hint').html('');
 
       gameLogic.onLvlPassed(function() {
         $('#next-lvl').show();
+        curL = label({ of: $('#next-lvl'), at: "right center"},
+              "Click Here! (50c bonus!)", "left")
       });
 
       $('#next-lvl').click(function() {
         $('#next-lvl').hide();
-        $('#hint').html('');
-        $('#hints').hide();
-        $('#btn-hint').show();
-        nextLvl();
-      })
+        if (curL)
+          removeLabel(curL);
 
-      $('#btn-hint').click(function() {
-        $(this).hide();
-        $('#hints').show();
-        $('#hint').html(data.hint);
+        nextLvl();
       })
 
       $('#help').click(function() {
@@ -207,18 +162,28 @@
       })
 
       $('#arrows').click(function() {
-        Script(tutorialScript);
+        if (curScript == null) {
+          curScript = new Script(tutorialScript);
+        }
       })
 
       $('#operator').click(function() {
         $('#ops').slideToggle(200);
       })
 
+      //loadLvlSet("pruned-intro-benchmarks");
       loadLvlSet("pruned-intro-benchmarks");
 
       gameLogic.onLvlLoaded(function () {
-        curScript = Script(tutorialScript)
+        curScript = new Script(tutorialScript)
         gameLogic.onLvlLoaded(function (){})
+      })
+
+      gameLogic.onUserInput(function () {
+        if (curScript) {
+          curScript.cancel()
+          curScript = null
+        }
       })
     })
 
@@ -240,11 +205,6 @@
         <div class='row-md-6'>
 
           <div class='col-md-8' id='hint-col'>
-            <button id='btn-hint' class='btn-show-hint'>Show Hint</button>
-            <div class='col-md-6' id='hints'>
-              Hint:<br><span id='hint'></span>
-            </div>
-
             <span id='next_lvl_span'>
               <button id='next-lvl' class='btn-next'>Next Level</button>
             </span>
@@ -303,19 +263,8 @@
         <div class='row good centered positioned' id='discovered-invariants-div'>
         </div>
       </div>
-
-
-
     </div>
-
-
-
   </div>
-
-  <div id="doge" style="display: none;" class="wow">
-    <img src="doge.jpg"/>
-    <div id="final-score" class="wow"> </div>
-  </div>
-
+  <div class='overlay text-center' style='display: none;'></div> 
 </body>
 </html>
