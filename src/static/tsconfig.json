@@ -17,6 +17,7 @@
   ],
   "filesGlob": [
     "ts/*.ts",
+    "typings/browser/**",
     "!typings/main/**",
     "!typings/main.d.ts"
   ],
@@ -45,7 +46,12 @@
     "ts/scoreWindow.ts",
     "ts/stickyWindow.ts",
     "ts/traceWindow.ts",
-    "ts/util.ts"
+    "ts/util.ts",
+    "typings/browser/ambient/esprima/index.d.ts",
+    "typings/browser/ambient/estree/index.d.ts",
+    "typings/browser/ambient/jquery-jsonrpcclient/index.d.ts",
+    "typings/browser/ambient/jquery/index.d.ts",
+    "typings/browser/ambient/jqueryui/index.d.ts"
   ],
   "atom": {
     "rewriteTsconfig": true
