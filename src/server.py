@@ -143,7 +143,7 @@ def readTrace(fname):
     except: pass
 
     return { 'variables': vs,
-             'data': [[[ row.get(n, None) for n in vs  ]  for row in rows ], None, None],
+             'data': [[[ row.get(n, None) for n in vs  ]  for row in rows ], [], []],
              'hint': hint,
              'goal' : goal,
              'support_pos_ex' : False,
