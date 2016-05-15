@@ -3,7 +3,7 @@ from flask import request
 from flask_jsonrpc import JSONRPC as rpc
 from os.path import *
 from os import listdir
-from json import load, dumps 
+from json import load, dumps
 from z3 import *
 from js import invJSToZ3, addAllIntEnv, esprimaToZ3, esprimaToBoogie
 from boogie_ast import parseAst, AstBinExpr, AstTrue, AstUnExpr, parseExprAst,\
@@ -362,10 +362,12 @@ def getPositiveExamples(levelSet, levelId, cur_expl_state, overfittedInvs, num):
     log({"type": "getPositiveExamples", "data": (cur_expl_state, js_found)})
     return (copy(cur_expl_state), js_found)
 
+# inv1 ==> inv2
 def implies(inv1, inv2):
     s = Solver();
     s.add(inv1)
     s.add(Not(inv2))
+    print(str(inv1) + " ==> " + str(inv2) + " = " + str(unsat == s.check()))
     return unsat == s.check();
 
 def equivalent(inv1, inv2):
@@ -418,6 +420,7 @@ def impliedPairs(invL1, invL2):
       z3InvL1 = list(enumerate([esprimaToZ3(x, {}) for x in invL1]))
       z3InvL2 = list(enumerate([esprimaToZ3(x, {}) for x in invL2]))
 
+      # x[0] ==> y[0]
       res = [(x,y) for x in z3InvL1 for y in z3InvL2 if implies(x[1], y[1])]
       res = [(x[0], y[0]) for x,y in res]
       log({"type": "impliedPairs", "data":  (invL1, invL2, res)})
