@@ -622,8 +622,7 @@ class MultiroundGameLogic extends BaseGameLogic {
                                   invs = invs.filter( (item, ind) => invs.indexOf(item) == ind )
                                   var newLvl = new Level(lvl.id,
                                     lvl.variables, [data[1], [], []], data[0], lvl.goal,
-                                    lvl.hint,
-invs)
+                                    lvl.hint,invs)
                                   // TODO: CB for new level unlocked
                                   gl.lvlPassedF = true;
                                   gl.lvlPassed();
@@ -636,6 +635,247 @@ invs)
                 } else {
                 }
               });
+            }
+          });
+        });
+      }
+
+    } catch (err) {
+      this.tracesW.delayedError(<string>interpretError(err));
+    }
+  }
+}
+
+abstract class TwoPlayerBaseGameLogic implements IGameLogic {
+  curLvl: Level = null;
+  lvlPassedCb: voidCb = null;
+  lvlLoadedCb: voidCb = null;
+  userInputCb: (inv: invariantT) => void = null;
+  commitCb: voidCb = null;
+  pwupSuggestion: IPowerupSuggestion = null;
+  score:  number = 0;
+  player: number = null;
+
+  constructor(public playerNum: number,
+              public tracesW: ITracesWindow,
+              public progressW: IProgressWindow,
+              public scoreW: TwoPlayerScoreWindow,
+              public stickyW: TwoPlayerStickyWindow) {
+    this.clear();
+    this.player = playerNum;
+    let gl = this;
+    this.tracesW.onChanged(function () {
+      gl.userInput(false);
+    });
+
+    this.tracesW.onCommit(function () {
+      gl.tracesW.msg("Trying out...");
+      gl.tracesW.disable();
+      gl.userInput(true);
+      gl.tracesW.enable();
+    });
+
+    this.onUserInput(() => {});
+    this.onLvlLoaded(() => {});
+    this.onLvlPassed(() => {});
+    this.onUserInput((x) => {});
+  }
+
+  clear(): void {
+    this.tracesW.clearError();
+    this.progressW.clear();
+    this.stickyW.clear();
+    // Leave score intact - don't clear score window
+    this.curLvl = null;
+  }
+
+  loadLvl(lvl: Level): void {
+    this.clear();
+    this.curLvl = lvl;
+    this.tracesW.setVariables(lvl);
+    this.tracesW.addData(lvl.data);
+    this.pwupSuggestion.clear(lvl);
+    this.setPowerups(this.pwupSuggestion.getPwups());
+    if (this.lvlLoadedCb)
+      this.lvlLoadedCb();
+  }
+
+  protected computeScore(inv: string, s: number): number {
+    let pwups = this.pwupSuggestion.getPwups();
+    let hold = pwups.filter((pwup) => pwup.holds(inv));
+    let newScore = hold.reduce((score, pwup) => pwup.transform(score), s);
+    hold.forEach((pwup) => pwup.highlight(() => 0));
+    return newScore;
+  }
+
+  protected setPowerups(new_pwups: IPowerup[]): void {
+    let pwups = {};
+    for (let i in new_pwups) {
+      pwups[new_pwups[i].id] = new_pwups[i];
+    }
+
+    this.stickyW.set(new_pwups);
+  }
+
+  abstract userInput(commit: boolean): void
+  abstract goalSatisfied(cb: (sat: boolean, feedback: any) => void): void;
+  onUserInput(cb: (inv: invariantT) => void): void { this.userInputCb = cb; };
+  onLvlPassed(cb: () => void): void { this.lvlPassedCb = cb; };
+  onLvlLoaded(cb: () => void): void { this.lvlLoadedCb = cb; };
+  onCommit(cb: () => void): void { this.commitCb = cb; };
+}
+
+class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
+  foundJSInv: string[] = [];
+  foundInv: string[] = [];
+  lvlPassedF: boolean = false;
+  player: number = null;
+
+  constructor(public playerNum: number,
+              public tracesW: ITracesWindow,
+              public progressW: IProgressWindow,
+              public scoreW: TwoPlayerScoreWindow,
+              public stickyW: TwoPlayerStickyWindow) {
+    super(playerNum, tracesW, progressW, scoreW, stickyW);
+    this.pwupSuggestion = new TwoPlayerPowerupSuggestionFullHistory(playerNum, 5, "lfu");
+  }
+
+  clear(): void {
+    super.clear();
+    this.foundJSInv = [];
+    this.foundInv = [];
+    this.lvlPassedF = false;
+  }
+
+  goalSatisfied(cb: (sat: boolean, feedback?: any) => void): void {
+    let goal = this.curLvl.goal;
+    if (goal == null) {
+      cb(true);
+    } else if (goal.manual) {
+      cb(false);
+    } else  if (goal.find) {
+      let numFound = 0;
+      for (let i = 0; i < goal.find.length; i++) {
+        let found = false;
+        for (let j = 0; j < goal.find[i].length; j++) {
+          if ($.inArray(goal.find[i][j], this.foundJSInv) !== -1) {
+            found = true;
+            break;
+          }
+        }
+
+        if (found)
+          numFound ++;
+
+      }
+
+      cb(numFound === goal.find.length,
+         { "find": { "found": numFound, "total": goal.find.length } });
+    } else  if (goal.equivalent) {
+      equivalentPairs(goal.equivalent, this.foundJSInv, function(pairs) {
+        let numFound = 0;
+        let equiv = [];
+        for (let i = 0; i < pairs.length; i++) {
+          if (-1 === $.inArray(pairs[i][0], equiv))
+            equiv.push(pairs[i][0]);
+        }
+
+        cb(equiv.length === goal.equivalent.length,
+           { "equivalent": { "found": equiv.length , "total": goal.equivalent.length } });
+      });
+    } else if (goal.max_score) {
+      cb(true, { "max_score" : { "found" : this.foundJSInv.length } });
+    } else if (goal.none) {
+      cb(false);
+    } else if (goal.hasOwnProperty("atleast")) {
+      cb(this.foundJSInv.length >= goal.atleast);
+    } else {
+      error("Unknown goal " + JSON.stringify(goal));
+    }
+  }
+
+  userInput(commit: boolean): void {
+    this.tracesW.disableSubmit();
+    this.tracesW.clearError();
+    this.progressW.clearMarks();
+
+    let inv = invPP(this.tracesW.curExp().trim());
+    let jsInv = invToJS(inv);
+
+    this.userInputCb(inv);
+
+    try {
+      let parsedInv = esprima.parse(jsInv);
+    } catch (err) {
+      this.tracesW.delayedError(inv + " is not a valid expression.");
+      return;
+    }
+
+    if (inv.length === 0) {
+      this.tracesW.evalResult({ clear: true });
+      return;
+    }
+
+    try {
+      let doProceed = true;
+      let pos_res = invEval(jsInv, this.curLvl.variables, this.curLvl.data[0]);
+      let res: [any[], any[], [any, any][]] = [pos_res, [], []];
+      this.tracesW.evalResult({ data: res });
+
+      if (!evalResultBool(res))
+        return;
+
+      let redundant = this.progressW.contains(inv);
+      if (redundant) {
+        this.progressW.markInvariant(inv, "duplicate");
+        this.tracesW.immediateError("Duplicate Invariant!");
+        return;
+      }
+
+      let all = pos_res.length;
+      let hold = pos_res.filter(function (x) { return x; }).length;
+
+      if (hold < all)
+        this.tracesW.error("Holds for " + hold + "/" + all + " cases.");
+      else {
+        this.tracesW.enableSubmit();
+        if (!commit) {
+          this.tracesW.msg("<span class='good'>Press Enter...</span>");
+          return;
+        }
+
+        let gl = this;
+        isTautology(invToJS(inv), function(res) {
+          if (res) {
+            gl.tracesW.error("This is a always true...");
+            return;
+          }
+
+          impliedBy(gl.foundJSInv, jsInv, function (x: number) {
+            if (x !== null) {
+              gl.progressW.markInvariant(gl.foundInv[x], "implies");
+              gl.tracesW.immediateError("This is weaker than a found expression!");
+            } else {
+              let addScore = gl.computeScore(jsInv, 1);
+
+              gl.pwupSuggestion.invariantTried(jsInv);
+              setTimeout(() => gl.setPowerups(gl.pwupSuggestion.getPwups()), 1000); // TODO: Remove hack
+
+              gl.score += addScore;
+              gl.scoreW.add(addScore);
+              gl.foundInv.push(inv);
+              gl.foundJSInv.push(jsInv);
+              gl.progressW.addInvariant(inv);
+              gl.tracesW.setExp("");
+              if (!gl.lvlPassedF) {
+                gl.goalSatisfied((sat, feedback) => {
+                  let lvl = gl.curLvl;
+                  if (sat) {
+                    gl.lvlPassedF = true;
+                    gl.lvlPassedCb();
+                  }
+                });
+              }
             }
           });
         });

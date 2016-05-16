@@ -95,7 +95,7 @@ class Label {
 
     let ctr = 0;
     let lbl = this;
-    
+
     this.timer = setInterval(function () {
       let v = (ctr % 2 == 0 ? arrow_div_pos : arrow_div_pos1)
       lbl.pos.my = v;
@@ -218,11 +218,11 @@ class KillSwitch {
   constructor(public parent:  HTMLElement) {
     this.container = $('<div class="kill-switch" style="position: absolute;"></div>')
     let pOff = $(this.parent).offset();
-    let pW =  $(this.parent).width(); 
+    let pW =  $(this.parent).width();
     das.position(this.container[0], {
       my: 'right center',
       of: this.parent,
-      at: 'right-40 bottom' 
+      at: 'right-40 bottom'
     })
     $('body').append(this.container)
 
@@ -275,7 +275,7 @@ class DynamicAttachments {
     $(target).position(spec)
   }
 
-  reflowAll(): void { 
+  reflowAll(): void {
     for (var i in this.objs) {
       $(this.objs[i][0]).position(this.objs[i][1])
     }
@@ -296,11 +296,11 @@ function disableBackspaceNav() {
       if (d.tagName.toUpperCase() === 'INPUT') {
         let di = <HTMLInputElement>d;
         if (di.type.toUpperCase() === 'TEXT' ||
-            di.type.toUpperCase() === 'PASSWORD' || 
-            di.type.toUpperCase() === 'FILE' || 
-            di.type.toUpperCase() === 'SEARCH' || 
-            di.type.toUpperCase() === 'EMAIL' || 
-            di.type.toUpperCase() === 'NUMBER' || 
+            di.type.toUpperCase() === 'PASSWORD' ||
+            di.type.toUpperCase() === 'FILE' ||
+            di.type.toUpperCase() === 'SEARCH' ||
+            di.type.toUpperCase() === 'EMAIL' ||
+            di.type.toUpperCase() === 'NUMBER' ||
             di.type.toUpperCase() === 'DATE' ) {
           doPrevent = di.readOnly || di.disabled;
         } else {

@@ -5,9 +5,9 @@ class Level {
     public goal:  any,
     public hint:  string) {
   }
-  static load(lvlSet: string, id: string, cb: (lvl: Level)=>void) {
-    rpc.call('App.loadLvl', [lvlSet, id], function(data) {
-      cb(new Level(id, data.variables, data.data, data.goal, data.hint))
-    }, log)
+  static load(lvlSet: string, id: string, cb: (lvl: Level) => void) {
+    rpc.call("App.loadLvl", [lvlSet, id], function(data) {
+      cb(new Level(id, data.variables, data.data, data.goal, data.hint));
+    }, log);
   }
 }
