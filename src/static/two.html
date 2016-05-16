@@ -18,9 +18,9 @@
   <link rel="stylesheet" href="inv.css">
   <link rel="stylesheet" href="arrow.css">
   <script src="traceWindow.js"></script>
-  <script src="stickyWindow.js"></script>
   <script src="gameLogic.js"></script>
   <script src="powerups.js"></script>
+  <script src="build/ts/stickyWindow.js"></script>
   <script src="build/ts/progressWindow.js"></script>
   <script src="build/ts/scoreWindow.js"></script>
   <script src="build/ts/curvedarrow.js"></script>
@@ -524,13 +524,13 @@
       progW = new TwoPlayerProgressWindow(1, $('#discovered-invariants-div'));
       scoreW = new TwoPlayerScoreWindow(1, $('#score-div'));
       traceW = new TraceWindow(1, $('#data-display'));
-      stickyW = new StickyWindow(1, $('#sticky'))
+      stickyW = new TwoPlayerStickyWindow(1, $('#sticky'))
       gameLogic = new GameLogic(1, traceW, progW, scoreW, stickyW);
 
       progW2 = new TwoPlayerProgressWindow(2, $('#discovered-invariants-div2'));
       scoreW2 = new TwoPlayerScoreWindow(2, $('#score-div2'));
       traceW2 = new TraceWindow(2, $('#data-display2'));
-      stickyW2 = new StickyWindow(2, $('#sticky2'))
+      stickyW2 = new TwoPlayerStickyWindow(2, $('#sticky2'))
       gameLogic2 = new GameLogic(2, traceW2, progW2, scoreW2, stickyW2);
 
       $('#hints').hide();
