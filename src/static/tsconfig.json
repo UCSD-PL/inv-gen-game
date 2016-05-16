@@ -36,6 +36,8 @@
     "placeOpenBraceOnNewLineForControlBlocks": false
   },
   "files": [
+    "ts/bonus.ts",
+    "ts/curvedarrow.ts",
     "ts/eval.ts",
     "ts/gameLogic.ts",
     "ts/level.ts",

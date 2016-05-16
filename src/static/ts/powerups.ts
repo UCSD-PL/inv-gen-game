@@ -13,7 +13,7 @@ interface IPowerup {
 }
 
 class BasePowerup implements IPowerup {
-  element: JQuery; 
+  element: JQuery;
 
   constructor(public id: string,
               public html: string,
