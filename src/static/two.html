@@ -60,6 +60,168 @@
 
     var allowSwitch = true;
 
+    disableBackspaceNav();
+
+    function loadTrace(traceId) {
+      Level.load(curLvlSet, traceId, function(lvl) {
+        gameLogic.loadLvl(lvl)
+      })
+    }
+
+    function loadTrace2(traceId) {
+      Level.load(curLvlSet2, traceId, function(lvl) {
+        gameLogic2.loadLvl(lvl)
+      })
+    }
+
+    function nextLvl() {
+      lvlPassed[curLvl] = true;
+      player1Done = false;
+      loadLvl(curLvl + 1);
+    }
+
+    function nextLvl2() {
+      lvlPassed2[curLvl2] = true;
+      player2Done = false;
+      loadLvl2(curLvl2 + 1);
+    }
+
+    function loadLvl(lvl) {
+      if (lvl == lvls.length) {
+        doneScreen();
+      } else {
+        if (typeof(lvls[curLvl]) == "string") {
+          $('#lvl_' + lvls[curLvl]).removeClass('bold');
+          $('#lvl_' + lvls[curLvl]).removeClass('currentLevel');
+          $('#lvl_' + lvls[curLvl]).parent().addClass('completedLevel');
+        }
+
+        curLvl = lvl;
+        if (typeof(lvls[lvl]) == "string") {
+          $('#lvl_' + lvls[curLvl]).addClass('bold');
+          $('#lvl_' + lvls[curLvl]).parent().addClass('currentLevel');
+        }
+
+        if (lvl == lvls.length - 1) {
+          $('#next-lvl').html('Finish');
+        }
+
+        if (typeof(lvls[lvl]) == "string") {
+          loadTrace(lvls[curLvl]);
+        } else {
+          gameLogic.loadLvl(lvls[curLvl])
+        }
+      }
+    }
+
+    function loadLvl2(lvl) {
+      if (lvl == lvls2.length) {
+        doneScreen();
+      } else {
+        if (typeof(lvls2[curLvl2]) == "string") {
+          $('#lvl2_' + lvls2[curLvl2]).removeClass('bold');
+          $('#lvl2_' + lvls2[curLvl2]).removeClass('currentLevel');
+          $('#lvl2_' + lvls2[curLvl2]).parent().addClass('completedLevel');
+        }
+
+        curLvl2 = lvl;
+        if (typeof(lvls2[lvl]) == "string") {
+          $('#lvl2_' + lvls2[curLvl2]).addClass('bold');
+          $('#lvl2_' + lvls2[curLvl2]).parent().addClass('currentLevel');
+        }
+
+        if (lvl == lvls2.length - 1) {
+          $('#next-lvl2').html('Finish');
+        }
+
+        if (typeof(lvls2[lvl]) == "string") {
+          loadTrace2(lvls2[curLvl2]);
+        } else {
+          gameLogic2.loadLvl(lvls2[curLvl2])
+        }
+      }
+    }
+
+    function loadLvlSet(lvlset) {
+      curLvlSet = lvlset;
+
+      res = rpc.call('App.listData', [lvlset], function(res) {
+        lvls = res;
+        lvlPassed = new Array(res.length);
+        for (var i = 0; i < res.length; ++i) { lvlPassed[i] = false; }
+        hstr = '<ul class="levels">';
+        for (var i in res) {
+          hstr += '<li class="level pending">' + '<a class="loadLvl" id="lvl_' + res[i] + '" >' + i + '</a>' + '</li>';
+        }
+        hstr += '</ul>';
+        $('#traces-menu').html(hstr);
+
+        $('.loadLvl').click(function (evt) {
+          loadLvl(lvls.indexOf(this.id.substring(4)));
+          loadLvl2(lvls2.indexOf(this.id.substring(4)));
+        });
+        curLvl = -1;
+        nextLvl();
+      }, log)
+    }
+
+    function loadLvlSet2(lvlset) {
+      curLvlSet2 = lvlset;
+
+      res = rpc.call('App.listData', [lvlset], function(res) {
+        lvls2 = res;
+        lvlPassed2 = new Array(res.length);
+        for (var i = 0; i < res.length; ++i) { lvlPassed2[i] = false; }
+        hstr = '<ul class="levels">';
+        for (var i in res) {
+          hstr += '<li class="level pending">' + '<a class="loadLvl" id="lvl2_' + res[i] + '" >' + i + '</a>' + '</li>';
+        }
+        hstr += '</ul>';
+        $('#traces-menu2').html(hstr);
+
+        $('.loadLvl').click(function (evt) {
+          loadLvl(lvls.indexOf(this.id.substring(4)));
+          loadLvl2(lvls2.indexOf(this.id.substring(4)));
+        });
+        curLvl2 = -1;
+        nextLvl2();
+      }, log)
+    }
+
+    function doneScreen() {
+      /*
+      //loadLvlSet("test-benchmarks")
+      $(".overlay").html("<h1 class='good'> Good job! You finished all levels! <br> Your score is: " +
+        gameLogic.score  + "!</h1><br>" +
+        "<h2> Please submit the screencast of your work! </h2>"
+      );
+      $(".overlay").fadeIn(1000);
+      */
+      var score1 = gameLogic.score;
+      var score2 = gameLogic2.score;
+      var result = "<p style='color: white; vertical-align: bottom'>\
+                    WOW! Such game! Much Points!\
+                    <br>"
+
+      if(score1 > score2) {
+        result += "Winner: Player 1"
+      }
+      else if(score2 > score1) {
+        result += "Winner: Player 2"
+      }
+      else {
+        result += "It's a tie!"
+      }
+
+      $("#final-score").html(result);
+      $("#doge").fadeIn();
+    }
+
+    function labelRemover(lbl) {
+      return function () { removeLabel(lbl); }
+    }
+
+    /*
     function loadTrace(traceId) {
       res = rpc.call('App.getData', [ curLvlSet, traceId ], function(res) {
         data = res;
@@ -86,7 +248,6 @@
         }
       }, log)
     }
-
 
     function loadTrace2(traceId) {
       res = rpc.call('App.getData', [ curLvlSet2, traceId ], function(res) {
@@ -190,12 +351,13 @@
       }
     }
 
+
     function loadLvlSet(lvlset) {
       curLvlSet = lvlset;
       res = rpc.call('App.listData', [lvlset], function(res) {
         lvls = res;
 
-        /* Keep track of which levels were cleared */
+        // Keep track of which levels were cleared
         lvlPassed = new Array(res.length);
         for (var i = 0; i < res.length; ++i) { lvlPassed[i] = false; }
 
@@ -225,7 +387,7 @@
       res = rpc.call('App.listData', [lvlset], function(res) {
         lvls2 = res;
 
-        /* Keep track of which levels were cleared */
+        // Keep track of which levels were cleared
         lvlPassed2 = new Array(res.length);
         for (var i = 0; i < res.length; ++i) { lvlPassed2[i] = false; }
 
@@ -250,6 +412,7 @@
       }, log)
     }
 
+
     function doneScreen() {
       var score1 = gameLogic.score();
       var score2 = gameLogic2.score();
@@ -270,10 +433,8 @@
       $("#final-score").html(result);
       $("#doge").fadeIn();
     }
+    */
 
-    function labelRemover(lbl) {
-      return function () { removeLabel(lbl) }
-    }
 
     var tutorialScript = [
       {
