@@ -110,13 +110,21 @@ abstract class BaseTracesWinow implements ITracesWindow {
   }
 
   onChanged(cb: () => void) { this.changedCb = cb; }
+
   onCommit (cb: () => void) { this.commitCb = cb; }
+
   onMoreExamples(cb: () => void) { this.moreExCb = cb; }
+
   enableSubmit(): void { this.okToSubmit = true; }
+
   disableSubmit(): void { this.okToSubmit = false; }
+
   disable(): void { $("#formula-entry").attr("disabled", "disabled"); }
+
   enable(): void { $("#formula-entry").removeAttr("disabled"); }
+
   private reflowCb(): void { das.reflowAll(); }
+
   protected setResultCell(row: JQuery, datum: any): void {
     let cell = row.children(".temp_expr_eval");
     cell.html(JSON.stringify(datum));
@@ -335,4 +343,163 @@ class CounterExampleTracesWindow extends BaseTracesWinow {
     }
     das.reflowAll();
   }
+}
+
+class TwoPlayerTracesWindow extends BaseTracesWinow {
+  player: number;
+
+  constructor (public playerNum: number, public parent: HTMLElement) {
+    super(parent);
+    this.player = playerNum;
+
+    $(this.parent).removeClass("tracesWindow");
+
+    if (this.player === 1) {
+      $(this.parent).addClass("tracesWindow1");
+    }
+    else if (this.player === 2) {
+      $(this.parent).addClass("tracesWindow2");
+    }
+  }
+
+  getPlayer(): number {
+    return this.player;
+  }
+
+  changed(cb) {
+    this.changedCb = cb;
+  }
+
+  commit(cb) {
+    this.commitCb = cb;
+  }
+
+  setVariables(lvl: Level): void {
+    let hstr = "<table id='lvl_table" + this.player + "' class='table table-stripped'><thead><tr>";
+    for (let i in lvl.variables) {
+      hstr += "<th>" + lvl.variables[i] + "</th>";
+    }
+    if (this.player === 1) {
+      hstr += "<th><input id='formula-entry' type='text'><span id='errormsg'>&nbsp</span></th>";
+    }
+    else if (this.player === 2) {
+      hstr += "<th><input id='formula-entry2' type='text'><span id='errormsg'>&nbsp</span></th>";
+    }
+
+    hstr += "</tr></thead><tbody></tbody></table>";
+    $(this.parent).html(hstr);
+
+    if (this.player === 1) {
+      $("#formula-entry").focus();
+      let tW = this;
+      $("#formula-entry").keyup(function (keyEv) {
+        let curInv = invPP(tW.curExp());
+        if (keyEv.keyCode === 13 && tW.okToSubmit) {
+          tW.commitCb();
+        } else if (curInv !== tW.ppInv) {
+          tW.ppInv = curInv;
+          tW.changedCb();
+        }
+      });
+    }
+    else if (this.player === 2) {
+      $("#formula-entry2").focus();
+      let tW = this;
+      $("#formula-entry2").keyup(function (keyEv) {
+        let curInv = invPP(tW.curExp());
+        if (keyEv.keyCode === 13 && tW.okToSubmit) {
+          tW.commitCb();
+        } else if (curInv !== tW.ppInv) {
+          tW.ppInv = curInv;
+          tW.changedCb();
+        }
+      });
+    }
+
+    this.dataMap = [[], [], []];
+    this.data = [[], [], []];
+    das.reflowAll();
+  }
+
+  addData(data: dataT) {
+    assert (data[1].length === 0 && data[2].length === 0);
+    let classes = [ "true", "false", "inductive" ];
+    let id = $("table#lvl_table" + this.player + " tr.traces-row").length;
+    let lbls = [];
+
+    for (let i in data[0]) {
+      let data_id = this.data[0].length;
+      let curRow = $(
+          "<tr class='traces-row' id='" + id + "'>" + // this.player + id???
+            data[0][i].map(el =>
+              "<td class='" + classes[0]  + "'>" + el + "</td>").join("") +
+            "<td class='temp_expr_eval'>&nbsp</td>" +
+          "</tr>");
+      this.data[0].push(data[0][i]);
+      $("table#lvl_table" + this.player + " tbody").append(curRow);
+      this.dataMap[0][data_id] = curRow;
+      id ++;
+    }
+    das.reflowAll();
+  }
+
+  evalResult(res: resT) {
+    if (res.hasOwnProperty("data")) {
+      let resD = <resDataT>res;
+
+      for (let type in resD.data) {
+        for (let i in resD.data[type]) {
+          let datum = resD.data[type][i];
+          let row = this.dataMap[type][i];
+          this.setResultCell(row, datum);
+        }
+      }
+    }
+    else if (res.hasOwnProperty("clear")) {
+      $(".temp_expr_eval").html("");
+      $(".traces-row td.temp_expr_eval").removeClass("true");
+      $(".traces-row td.temp_expr_eval").removeClass("false");
+    }
+    das.reflowAll();
+  }
+
+  curExp(): string {
+    let v = null;
+    if (this.player === 1) {
+      v = $("#formula-entry").val();
+    }
+    else if (this.player === 2) {
+      v = $("#formula-entry2").val();
+    }
+    return (v === undefined ? "" : v);
+  }
+
+  setExp(exp: string) {
+    if (this.player === 1) {
+      $("#formula-entry").val(exp);
+    }
+    else if (this.player === 2) {
+      $("#formula-entry2").val(exp);
+    }
+    this.changedCb();
+  }
+
+  disable(): void {
+    if (this.player === 1) {
+      $("#formula-entry").attr("disabled", "disabled");
+    }
+    else if (this.player === 2) {
+      $("#formula-entry2").attr("disabled", "disabled");
+    }
+  }
+
+  enable(): void {
+    if (this.player === 1) {
+      $("#formula-entry").removeAttr("disabled");
+    }
+    else if (this.player === 2) {
+      $("#formula-entry2").removeAttr("disabled");
+    }
+  }
+
 }

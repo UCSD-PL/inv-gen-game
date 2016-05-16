@@ -178,8 +178,7 @@ function TraceWindow(player, div, data) {
     }
   }
 
-  if (data  !== undefined)
-  {
+  if (data  !== undefined) {
     this.loadData(data)
   }
 
