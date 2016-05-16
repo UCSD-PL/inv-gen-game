@@ -6,7 +6,7 @@ function ProgressWindow(player, div) {
   progW.element = div;
   var invUL = null;
 
-  $(div).addClass('.progessWindow')
+  $(div).addClass('.progressWindow')
   if (player == 1) {
     $(div).html("Discovered invariants<br>" +
       "<ul id='good-invariants' style='font-family: monospace; list-style-type: none; padding: 0px; text-align: center;'></ul>");
