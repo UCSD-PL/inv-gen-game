@@ -448,7 +448,6 @@ class CounterexampleGameLogic extends BaseGameLogic implements IDynGameLogic {
   }
 }
 
-
 class TutorialCounterexampleGameLogic extends CounterexampleGameLogic {
   invSoundCb: (inv: invariantT, cb: (res: invSoundnessResT) => void) => void = null;
   onInvSound(cb: (inv: invariantT, cb: (res: invSoundnessResT) => void) => void) {
