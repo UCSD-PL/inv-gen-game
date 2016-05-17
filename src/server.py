@@ -518,7 +518,8 @@ def getInfluenceGraph(invs, loop, bbs):
 
     return influences;
 
-
+# TODO: This supersedes checkPre and checkInd. Remove those.
+# TODO: Make this incremental
 def checkInvs_impl(bbs, loop, invs):
     # 0. First get the overfitted invariants out of the way. We can check overfitted-ness
     #    individually for each invariant.

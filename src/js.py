@@ -76,7 +76,7 @@ def esprimaToZ3Expr(astn, typeEnv):
     try:
       return {
         '==': lambda x,y: x == y,
-        '!=': lambda x,y: x != y,
+        '!==': lambda x,y: x != y,
         '<': lambda x,y: x < y,
         '>': lambda x,y: x > y,
         '<=': lambda x,y: x <= y,
