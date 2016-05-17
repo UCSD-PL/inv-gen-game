@@ -396,6 +396,8 @@ class TwoPlayerTracesWindow extends BaseTracesWinow {
         let curInv = invPP(tW.curExp());
         if (keyEv.keyCode === 13 && tW.okToSubmit) {
           tW.commitCb();
+          setTimeout(function() {$("#btn-switch").click(); }, 2000);
+          $("#formula-entry2").focus();
         } else if (curInv !== tW.ppInv) {
           tW.ppInv = curInv;
           tW.changedCb();
@@ -409,6 +411,8 @@ class TwoPlayerTracesWindow extends BaseTracesWinow {
         let curInv = invPP(tW.curExp());
         if (keyEv.keyCode === 13 && tW.okToSubmit) {
           tW.commitCb();
+          setTimeout(function() {$("#btn-switch2").click(); }, 2000);
+          $("#formula-entry").focus();
         } else if (curInv !== tW.ppInv) {
           tW.ppInv = curInv;
           tW.changedCb();
