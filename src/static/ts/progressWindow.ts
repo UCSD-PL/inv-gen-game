@@ -73,3 +73,34 @@ class ProgressWindow implements IProgressWindow {
     return this.invMap.hasOwnProperty(invariant);
   }
 }
+
+class IgnoredInvProgressWindow extends ProgressWindow {
+  ignoredContainer: HTMLElement;
+  constructor(public parent:  HTMLDivElement) {
+    super(parent);
+    $(this.parent).html("<div class='progressWindow box good centered positioned'>" +
+                      "Accepted expressions<br>" +
+                      "<ul id='good-invariants'></ul>"+
+                   "</div>" +
+                   "<div class='ignoreWindow box warn centered positioned'>" +
+                      "Ignored expressions<br>" +
+                      "<ul id='ignored-invariants'></ul>" +
+                   "</div>");
+    this.container = $(this.parent).children("div")[0]
+    this.ignoredContainer = $(this.parent).children("div")[1]
+  };
+
+  addIgnoredInvariant(inv: invariantT) {
+    let invUL: HTMLElement = $(this.ignoredContainer).children("ul")[0]
+    $(invUL).append("<li class='ignored-invariant' id='ign_" +
+      this.ctr + "'>" + invToHTML(inv) + "</li>")
+    this.invMap[inv] = $('#ign_' + this.ctr)[0]
+    this.ctr++;
+  }
+
+  clear(): void {
+    super.clear();
+    let invUL: HTMLElement = $(this.ignoredContainer).children("ul")[0]
+    $(invUL).html('')
+  }
+}

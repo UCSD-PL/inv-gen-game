@@ -122,6 +122,13 @@
   border-color: rgb(204, 102, 0);
 }
 
+.ignoreWindow ul {
+  font-family:  monospace;
+  list-style-type: none;
+  padding:  0px;
+  text-align: center;
+}
+
 .tracesWindow {
   border-color: #f29408;
   border-radius: 25px;
