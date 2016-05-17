@@ -102,10 +102,12 @@ class TwoPlayerProgressWindow extends ProgressWindow {
     let invUl = null;
 
     if (this.player === 1) {
-      $(this.container).children("#good-invariants")[0];
+      // invUl = $(this.container).children("#good-invariants")[0];
+      invUl = $("#good-invariants");
     }
     else if (this.player === 2) {
-      $(this.container).children("#good-invariants2")[0];
+      // invUl = $(this.container).children("#good-invariants2")[0];
+      invUl = $("#good-invariants2");
     }
 
     $(invUl).append("<li class='good-invariant' id='good_" + this.player +
@@ -140,10 +142,10 @@ class TwoPlayerProgressWindow extends ProgressWindow {
   clear(): void {
     let invUL: HTMLElement = null;
     if (this.player === 1) {
-      $(this.container).children("#good-invariants")[0];
+      invUL = $(this.container).children("#good-invariants")[0];
     }
     else if (this.player === 2) {
-      $(this.container).children("#good-invariants2")[0];
+      invUL = $(this.container).children("#good-invariants2")[0];
     }
     $(invUL).html("");
     this.invMap = {};
