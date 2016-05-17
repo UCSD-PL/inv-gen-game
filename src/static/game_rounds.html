@@ -1,0 +1,319 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- third party libraries -->
+  <script src="jquery-1.12.0.min.js"></script>
+  <script src="jquery.jsonrpcclient.js"></script>
+  <script src="jquery.color-2.1.2.min.js"></script>
+  <script src="jquery-ui-1.11.4/jquery-ui.js"></script>
+  <script src="esprima.js"></script>
+  <link rel="stylesheet" href="bootstrap.min.css">
+  <link rel="stylesheet" href="bootstrap-theme.min.css">
+  <script src="bootstrap.min.js"></script>
+
+  <!-- our code -->
+  <link rel="stylesheet" href="inv.css">
+  <link rel="stylesheet" href="arrow.css">
+  <script src="build/ts/stickyWindow.js"></script>
+  <script src="build/ts/progressWindow.js"></script>
+  <script src="build/ts/scoreWindow.js"></script>
+  <script src="build/ts/logic.js"></script>
+  <script src="build/ts/traceWindow.js"></script>
+  <script src="build/ts/gameLogic.js"></script>
+  <script src="build/ts/level.js"></script>
+  <script src="build/ts/eval.js"></script>
+  <script src="build/ts/pp.js"></script>
+  <script src="build/ts/util.js"></script>
+  <script src="build/ts/powerups.js"></script>
+
+  <script>
+    var curLvl;
+    var curLvlSet;
+    var curL = null;
+    var lvls = null;
+    var tracesW = null, progW = null, scoreW = null;
+    var gameLogic = null;
+    var stepTimeout = 5000;
+    var curScript = null;
+
+    disableBackspaceNav();
+
+    function loadTrace(traceId) {
+      PrepopulatedDynamicLevel.load(curLvlSet, traceId, function(lvl) {
+        gameLogic.loadLvl(lvl)
+      })
+    }
+
+    function nextLvl() {
+      loadLvl(curLvl + 1);
+    }
+
+    function loadLvl(lvl) {
+      if (lvl == lvls.length) {
+        doneScreen();
+      } else {
+        $('#lvl_' + curLvl).removeClass('bold');
+        $('#lvl_' + curLvl).removeClass('currentLevel');
+        $('#lvl_' + curLvl).parent().addClass('completedLevel');
+        curLvl = lvl;
+        $('#lvl_' + curLvl).addClass('bold');
+        $('#lvl_' + curLvl).parent().addClass('currentLevel');
+
+        if (lvl == lvls.length - 1) {
+          $('#next-lvl').html('Finish');
+        }
+
+        if (typeof(lvls[lvl]) == "string") {
+          loadTrace(lvls[curLvl]);
+        } else {
+          gameLogic.loadLvl(lvls[curLvl])
+        }
+      }
+    }
+
+    function loadLvlSet(lvlset) {
+      curLvlSet = lvlset;
+      res = rpc.call('App.listData', [lvlset], function(res) {
+        lvls = res;
+        hstr = '<ul class="levels">';
+        hstr += '<li class="level pending">' + '<a class="loadLvl" id="lvl_' + 0 + '" >' + 0 + '</a>' + '</li>';
+        hstr += '<li class="level pending" id="lvl_dots">' + '...' + '</li>';
+        /*
+        for (var i in res) {
+          hstr += '<li class="level pending">' + '<a class="loadLvl" id="lvl_' + i + '" >' + i + '</a>' + '</li>';
+        }
+        */
+        hstr += '</ul>';
+        $('#traces-menu').html(hstr);
+
+        $('.loadLvl').click(function (evt) {
+          loadLvl(lvls[this.id.substring(4)]);
+        });
+        curLvl = -1;
+        nextLvl();
+      }, log)
+    }
+
+    function doneScreen() {
+      //loadLvlSet("test-benchmarks")
+      $(".overlay").html("<h1 class='good'> Good job! You finished all levels! <br> Your score is: " +
+        gameLogic.score  + "!</h1><br>" +
+        "<h2> Please submit the screencast of your work! </h2>"
+      );
+      $(".overlay").fadeIn(1000);
+    }
+
+    function labelRemover(lbl) {
+      return function () { removeLabel(lbl) }
+    }
+
+    var tutorialScript = [
+      {
+        setup: function (cs) {
+                  curL = label($('#help'), "Click here if you need any help later", "left")
+                  $('body').focus();
+                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+        }
+      },
+      { setup: function (cs) {
+                   $('#formula-entry').focus();
+                   curScript = null;
+               }
+      },
+    ]
+
+    $(document).ready(function() {
+      rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
+      progW = new IgnoredInvProgressWindow($('#discovered-invariants-div'));
+      scoreW = new ScoreWindow($('#score-div'));
+      traceW = new PositiveTracesWindow($('#data-display'));
+      stickyW = new StickyWindow($('#sticky'))
+      gameLogic = new MultiroundGameLogic(traceW, progW, scoreW, stickyW);
+
+      $('#next-lvl').hide();
+
+      function insertNewSublvl(lvlSet, lvl, overfitted, all_invs) {
+            // Create next sub-level
+            rpc.call("App.getPositiveExamples", [ lvlSet, 
+              lvl.id, lvl.exploration_state,
+              overfitted.map(esprima.parse), 5], (data) => {
+                let templates = all_invs.map(abstractLiterals)
+                rpc.call("App.instantiate", [templates, lvl.variables, data[1]],
+                (invs) => {
+                  // Filter out redundant invariants
+                  invs = invs.map((inv) => inv.substring(1, inv.length - 1))
+                  invs = invs.filter( (item, ind) => invs.indexOf(item) == ind )
+
+                  checkInvs(curLvlSet, lvl.id, invs, (res) => {
+                    var overfit = res[0].map((x) => invs[x[0]])
+                    var nonind = res[1].map((x) => invs[x[0]])
+                    var sound = res[2].map((i) => invs[i])
+
+                    var newLvl = new PrepopulatedDynamicLevel(lvl.id, lvl.variables,
+                      [data[1], [], []], lvl.goal, lvl.hint, data[0], [overfit, nonind, sound])
+                    
+                    lvls.splice(curLvl + 1, 0, newLvl)
+                    $("#lvl_dots").before('<li class="level pending">' + '<a class="loadLvl" id="lvl_' + (curLvl + 1) + '" >' + (curLvl + 1) + '</a>' + '</li>');
+                    $('#next-lvl').show();
+                    curL = label({ of: $('#next-lvl'), at: "right center"},
+                          "Click Here! (50c bonus!)", "left")
+                  })
+                }, log)
+            }, log)
+      }
+
+      gameLogic.onLvlPassed(function() {
+        var lvl = gameLogic.curLvl;
+        if (gameLogic.soundInvs.length > 0) {
+          counterexamples(curLvlSet, lvl.id, gameLogic.soundInvs, (res) => {
+            var pos=res[0],neg=res[1],ind = res[2]
+            var verified = pos.length == 0 && neg.length == 0 && ind.length == 0;
+            if (verified) {
+              // Advance to boogie next level
+              if (curLvl < lvls.length - 1) {
+                $("#lvl_dots").before('<li class="level pending">' + '<a class="loadLvl" id="lvl_' + (curLvl + 1) + '" >' + (curLvl + 1) + '</a>' + '</li>');
+              }
+              $('#next-lvl').show();
+              curL = label({ of: $('#next-lvl'), at: "right center"},
+                    "Click Here! (50c bonus!)", "left")
+            } else {
+              insertNewSublvl(curLvlSet, lvl, gameLogic.overfittedInvs, gameLogic.foundJSInv)
+            }
+          })
+        } else {
+          insertNewSublvl(curLvlSet, lvl, gameLogic.overfittedInvs, gameLogic.foundJSInv)
+        }
+      });
+
+      $('#next-lvl').click(function() {
+        $('#next-lvl').hide();
+        if (curL)
+          removeLabel(curL);
+
+        nextLvl();
+      })
+
+      $('#help').click(function() {
+        $('#help-content').slideToggle(200);
+        $('#ops').hide();
+      })
+
+      $('#replay').click(function() {
+        var win = window.open('tutorial_new.html', '_blank');
+        win.focus();
+      })
+
+      $('#arrows').click(function() {
+        if (curScript == null) {
+          curScript = new Script(tutorialScript);
+        }
+      })
+
+      $('#operator').click(function() {
+        $('#ops').slideToggle(200);
+      })
+
+      //loadLvlSet("pruned-intro-benchmarks");
+      loadLvlSet("desugared-boogie-benchmarks");
+      //checkInvs("desugared-boogie-benchmarks", "01", [ "x>0", "y>0", "count>=0" ], (res) => console.log(res) );
+      //checkInvs("desugared-boogie-benchmarks", "01", ["y<9", "x<9", "count<4", "y>=0", "x>=0", "count>=0", "y>0", "x>0", "x==y"], (res) => console.log(res) );
+
+
+      gameLogic.onLvlLoaded(function () {
+        curScript = new Script(tutorialScript)
+        gameLogic.onLvlLoaded(function (){})
+      })
+
+      gameLogic.onUserInput(function () {
+        if (curScript) {
+          curScript.cancel()
+          curScript = null
+        }
+      })
+                             
+    })
+
+  </script>
+</head>
+<body>
+  <div class='container'>
+    <div class='row'>
+      <div class='col-md-1' id='left'>
+        <p style='font-weight: bold; text-align: center; padding-top: 13px;'>Level</p>
+        <div  id='traces-menu'> </div>
+      </div>
+      <div class='col-md-1 box stickyWindow' id='sticky'>
+      </div>
+
+      <div class='col-md-6' id='middle'>
+        <div class='row' id='data-display' style="font-family:monospace;">
+        </div>
+        <div class='row-md-6'>
+
+          <div class='col-md-8' id='hint-col'>
+            <span id='next_lvl_span'>
+              <button id='next-lvl' class='btn-next'>Next Level</button>
+            </span>
+          </div>
+
+          <div class='row'>
+            <div class='col-md-6 gap'>
+              <img id='help' src="help-icon.png" class='help-icon' data-toggle="tooltip" title="Click to toggle help options"/>
+              <div id='help-content' class='helpContentWindow box'>
+                <span id='replay' class='helpContent' data-toggle="tooltip" title="Click to play the tutorial again">Replay tutorial</span>
+                <br>
+                <span id='arrows' class='helpContent' data-toggle="tooltip" title="Click to view the layout introduction">Understand screen layout</span>
+                <br>
+                <span id='operator' class='helpContent' data-toggle="tooltip" title="Click to toggle the list of operators">Available operators</span>
+                <div id='ops' style="display: none;">
+                  <table class='opTable'>
+                    <tr>
+                      <td class="centered" data-toggle="tooltip" title="The addition operator. Example: i + j returns the sum of i and j">+</td>
+                      <td class="centered" data-toggle="tooltip" title="The subtraction operator. Example: i - j subtracts j from i">-</td>
+                      <td class="centered" data-toggle="tooltip" title="The multiplication operator. Example: 3 * x multiplies x by 3">*</td>
+                      <td class="centered" data-toggle="tooltip" title="The division operator. Example: j / x divides j by x">/</td>
+                    </tr>
+                    <tr>
+                      <td class="centered" data-toggle="tooltip" title="The modulo operator. Example: i % 2 returns the remainder of divisin i by 2">%</td>
+                      <td class="centered" data-toggle="tooltip" title="The equality operator. Example: i = 2 checks if i is equal to 2">=</td>
+                      <td class="centered" data-toggle="tooltip" title="The non-equality operator. Example: i != 2 checks if i is not equal to 2">!=</td>
+                      <td class="centered" data-toggle="tooltip" title="The less than operator. Example: i < j checks if i is less than j"><</td>
+                    </tr>
+                    <tr>
+                      <td class="centered" data-toggle="tooltip" title="The less than or equal operator. Example: i <= j checks if i is less than or equal to j"><=</td>
+                      <td class="centered" data-toggle="tooltip" title="The greater than operator. Example: i > j checks if i is greater than j">></td>
+                      <td class="centered" data-toggle="tooltip" title="The greater than or equal operator. Example: i >= j checks if i is greater than or equal to j">>=</td>
+                      <td class="centered" data-toggle="tooltip" title="The negation operator. Example: !(i = 3) returns the negation of the condition that i is 3">!</td>
+                    </tr>
+                    <tr>
+                      <td class="centered" data-toggle="tooltip" title="The conjunction operator. Example: (i=2) &amp;&amp; (j>0) will return true only if both i=2 and j>0">&amp;&amp;</td>
+                      <td class="centered" data-toggle="tooltip" title="The disjunction operator. Example: (i=2) || (j>0) will return true if even one of the two conditions is true">||</td>
+                      <td class="centered" data-toggle="tooltip" title="The implication operator. Example: i => j checks if i implies j">=></td>
+                      <td class="centered" data-toggle="tooltip" title="The equivalence operator. Example: i <=> j checks if i is logically equivalent to j"><=></td>
+                    </tr>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class='col-md-3' >
+        <div id='score-div-row' class='row positioned box progressWindow'>
+          <div class='col-md-2'>Score: </div>
+          <div id='score-div' class='col-md-7 col-md-offset-3'>
+          </div>
+        </div>
+        <div class='row good centered positioned' id='discovered-invariants-div'>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class='overlay text-center' style='display: none;'></div> 
+</body>
+</html>
