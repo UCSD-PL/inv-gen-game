@@ -2,6 +2,10 @@ type voidCb = () => void
 type boolCb = (res: boolean) => void
 type invSoundnessResT = { ctrex: [ any[], any[], any[] ]}
 declare var curLvlSet: string; // TODO: Remove hack
+declare var progW: any;
+declare var progW2: any;
+declare var traceW: any;
+declare var traceW2: any;
 
 interface IGameLogic {
   clear(): void;
@@ -729,7 +733,6 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
   foundJSInv: string[] = [];
   foundInv: string[] = [];
   lvlPassedF: boolean = false;
-  player: number = null;
 
   constructor(public playerNum: number,
               public tracesW: ITracesWindow,
@@ -738,6 +741,7 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
               public stickyW: TwoPlayerStickyWindow) {
     super(playerNum, tracesW, progressW, scoreW, stickyW);
     this.pwupSuggestion = new TwoPlayerPowerupSuggestionFullHistory(playerNum, 5, "lfu");
+    // this.tracesW = tracesW;
   }
 
   clear(): void {
@@ -799,6 +803,12 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
     this.tracesW.clearError();
     this.progressW.clearMarks();
 
+    traceW.clearError();
+    traceW2.clearError();
+
+    progW.clearMarks();
+    progW2.clearMarks();
+
     let inv = invPP(this.tracesW.curExp().trim());
     let jsInv = invToJS(inv);
 
@@ -829,44 +839,137 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
       if (redundant) {
         this.progressW.markInvariant(inv, "duplicate");
         this.tracesW.immediateError("Duplicate Invariant!");
+        doProceed = false;
         return;
       }
+
+
+      if (this.player === 1) {
+        if (progW2.contains(inv)) {
+          progW2.markInvariant(inv, "duplicate");
+          traceW.immediateError("Duplicate Invariant!");
+          doProceed = false;
+          return;
+        }
+
+        let player2Invs: string[] = getAllPlayer2Inv();
+
+        equivalentPairs([inv], player2Invs, function(x: any) {
+          if (x != null && player2Invs.length !== 0 && typeof player2Invs[x] !== "undefined") {
+            console.log(inv + " <=> " + player2Invs[x]);
+            console.log(this.player);
+            console.log(this.tracesW);
+            progW2.markInvariant(player2Invs[x], "duplicate");
+            traceW.immediateError("Duplicate Invariant!");
+            traceW.disableSubmit();
+            doProceed = false;
+            return;
+          }
+          else {
+            impliedBy(player2Invs, inv, function(x: any) {
+              if (x !== null) {
+                console.log(player2Invs[x] + " ==> " + inv);
+                console.log(this.player);
+                console.log(this.tracesW);
+                progW2.markInvariant(player2Invs[x], "implies");
+                traceW.immediateError("Implied by opponent's invariant!");
+                traceW.disableSubmit();
+                doProceed = false;
+                return;
+              }
+            });
+          }
+        });
+      }
+
+      else if (this.player === 2) {
+        if (progW.contains(inv)) {
+          progW.markInvariant(inv, "duplicate");
+          traceW2.immediateError("Duplicate Invariant!");
+          doProceed = false;
+          return;
+        }
+
+        let player1Invs: string[] = getAllPlayer1Inv();
+
+        equivalentPairs([inv], player1Invs, function(x) {
+          if (x != null && player1Invs.length !== 0 && typeof player1Invs[x] !== "undefined") {
+            console.log(inv + " <=> " + player1Invs[x]);
+            console.log(this.player);
+            console.log(this.tracesW);
+            progW.markInvariant(player1Invs[x], "duplicate");
+            traceW2.immediateError("Duplicate Invariant!");
+            traceW2.disableSubmit();
+            doProceed = false;
+            return;
+          }
+
+          else {
+            impliedBy(player1Invs, inv, function(x: any) {
+              if (x !== null) {
+                console.log(player1Invs[x] + " ==> " + inv);
+                console.log(this.player);
+                console.log(this.tracesW);
+                progW.markInvariant(player1Invs[x], "implies");
+                traceW2.immediateError("Implied by opponent's invariant!");
+                traceW2.disableSubmit();
+                doProceed = false;
+                return;
+              }
+            });
+          }
+        });
+      }
+
 
       let all = pos_res.length;
       let hold = pos_res.filter(function (x) { return x; }).length;
 
-      if (hold < all)
+      if (hold < all) {
         this.tracesW.error("Holds for " + hold + "/" + all + " cases.");
+        doProceed = false;
+      }
       else {
-        this.tracesW.enableSubmit();
-        if (!commit) {
-          this.tracesW.msg("<span class='good'>Press Enter...</span>");
-          return;
-        }
-
         let gl = this;
         isTautology(invToJS(inv), function(res) {
           if (res) {
             gl.tracesW.error("This is a always true...");
+            gl.tracesW.disableSubmit();
+            doProceed = false;
             return;
           }
 
           impliedBy(gl.foundJSInv, jsInv, function (x: number) {
             if (x !== null) {
               gl.progressW.markInvariant(gl.foundInv[x], "implies");
-              gl.tracesW.immediateError("This is weaker than a found expression!");
-            } else {
-              let addScore = gl.computeScore(jsInv, 1);
+              gl.tracesW.immediateError("Implied by existing invariant!");
+              doProceed = false;
+            }
+            else {
+              if (doProceed === true) {
+                gl.tracesW.enableSubmit();
+                if (!commit) {
+                  gl.tracesW.msg("Press Enter...");
+                  return;
+                }
 
-              gl.pwupSuggestion.invariantTried(jsInv);
-              setTimeout(() => gl.setPowerups(gl.pwupSuggestion.getPwups()), 1000); // TODO: Remove hack
+                let addScore = gl.computeScore(jsInv, 1);
 
-              gl.score += addScore;
-              gl.scoreW.add(addScore);
-              gl.foundInv.push(inv);
-              gl.foundJSInv.push(jsInv);
-              gl.progressW.addInvariant(inv);
-              gl.tracesW.setExp("");
+                gl.pwupSuggestion.invariantTried(jsInv);
+                setTimeout(() => gl.setPowerups(gl.pwupSuggestion.getPwups()), 1000); // TODO: Remove hack
+
+                gl.score += addScore;
+                gl.scoreW.add(addScore);
+                gl.foundInv.push(inv);
+                gl.foundJSInv.push(jsInv);
+                gl.progressW.addInvariant(inv);
+                gl.tracesW.setExp("");
+
+                getBonus(this.player, function(pt) {
+                  gl.scoreW.add(pt);
+                });
+              }
+
               if (!gl.lvlPassedF) {
                 gl.goalSatisfied((sat, feedback) => {
                   let lvl = gl.curLvl;

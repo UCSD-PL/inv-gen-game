@@ -128,24 +128,30 @@ class TwoPlayerProgressWindow extends ProgressWindow {
 
       if (state === "checking") {
       } else if (state === "duplicate") {
-        invDiv.addClass("error");
+        invDiv.addClass("bold");
       } else if (state === "tautology") {
       } else if (state === "implies") {
-        invDiv.addClass("error");
+        invDiv.addClass("bold");
       } else if (state === "counterexampled") {
-        invDiv.addClass("error");
+        invDiv.addClass("bold");
       } else if (state === "ok") {
-        invDiv.removeClass("error");
+        invDiv.removeClass("bold");
       }
   }
 
+  clearMarks(): void {
+    for (let i in this.invMap) {
+      $(this.invMap[i]).removeClass("bold");
+    }
+  }
+
   clear(): void {
-    let invUL: HTMLElement = null;
+    let invUL = null;
     if (this.player === 1) {
-      invUL = $(this.container).children("#good-invariants")[0];
+      invUL = $("#good-invariants");
     }
     else if (this.player === 2) {
-      invUL = $(this.container).children("#good-invariants2")[0];
+      invUL = $("#good-invariants2");
     }
     $(invUL).html("");
     this.invMap = {};

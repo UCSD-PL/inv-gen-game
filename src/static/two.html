@@ -722,9 +722,6 @@
         curLvlCompleted = curLvl;
         player1Done = true;
 
-        //console.log("Invariants by Player 1:");
-        //console.log(gameLogic.getFoundJSInv());
-
         if(player1Done || player2Done) {
           $('#next-lvl').show();
           $('#next-lvl2').show();
@@ -734,9 +731,6 @@
       gameLogic2.onLvlPassed(function() {
         curLvlCompleted2 = curLvl2;
         player2Done = true;
-
-        //console.log("Invariants by Player 2:");
-        //console.log(gameLogic2.getFoundJSInv());
 
         if(player1Done || player2Done) {
           $('#next-lvl').show();
@@ -818,13 +812,7 @@
       loadLvlSet("pruned-intro-benchmarks");
       loadLvlSet2("pruned-intro-benchmarks");
 
-      //Script(tutorialScript);
-
-      /*
-      var foundJSInv = gameLogic.getFoundJSInv();
-      var foundJSInv2 = gameLogic2.getFoundJSInv();
-      addBonus(foundJSInv, foundJSInv2, tracesW, tracesW2, scoreW, scoreW2, player);
-      */
+      // Script(tutorialScript);
     })
 
   </script>
@@ -878,10 +866,12 @@
 
         <div class='row-md-8'>
           <div class='col-md-8' id='hint-col'>
+            <!--
             <button id='btn-hint' class='btn-show-hint1'>Show Hint</button>
             <div class='col-md-4' id='hints'>
               Hint:<br><span id='hint'></span>
             </div>
+          -->
 
             <span id='next_lvl_span'>
               <button id='next-lvl' class='btn-next-game'>Next Level</button>
@@ -889,10 +879,12 @@
           </div>
 
           <div class='col-md-8' id='hint-col2'>
+            <!--
             <button id='btn-hint2' class='btn-show-hint2'>Show Hint</button>
             <div class='col-md-4' id='hints2'>
               Hint:<br><span id='hint2'></span>
             </div>
+          -->
 
             <span id='next_lvl_span2'>
               <button id='next-lvl2' class='btn-next-game'>Next Level</button>
