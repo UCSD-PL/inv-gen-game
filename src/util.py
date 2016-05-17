@@ -22,3 +22,13 @@ def powerset(s):
 
 def average(vals):
     return sum(vals) / (1.0 * len(vals))
+
+def split(pred, itr):
+    yes,no = [], []
+    for i in itr:
+        if (pred(i)):
+            yes.append(i);
+        else:
+            no.append(i);
+
+    return (yes, no)

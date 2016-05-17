@@ -475,13 +475,13 @@ class TutorialCounterexampleGameLogic extends CounterexampleGameLogic {
 class MultiroundGameLogic extends BaseGameLogic {
   foundJSInv: string[] = [];
   foundInv: string[] = [];
-  soundInvs: string[] = [];
-  overfittedInvs: string[] = [];
-  nonindInvs: string[] = [];
   lvlPassedF: boolean = false;
+  nonindInvs: invariantT[] = [];
+  overfittedInvs: invariantT[] = [];
+  soundInvs: invariantT[] = [];
 
   constructor(public tracesW: ITracesWindow,
-              public progressW: IProgressWindow,
+              public progressW: IgnoredInvProgressWindow,
               public scoreW: ScoreWindow,
               public stickyW: StickyWindow) {
     super(tracesW, progressW, scoreW, stickyW);
@@ -492,31 +492,27 @@ class MultiroundGameLogic extends BaseGameLogic {
     super.clear();
     this.foundJSInv = [];
     this.foundInv = [];
-    this.nonindInvs= [];
-    this.overfittedInvs = [];
     this.soundInvs = [];
+    this.overfittedInvs = [];
+    this.nonindInvs = [];
     this.lvlPassedF = false;
   }
 
-  invSound(inv: invariantT, cb: (sound: boolean, res:invSoundnessResT)=>void): void {
-    let invs = this.soundInvs.concat([inv])
-    let gl = this;
-    pre_vc_ctrex(curLvlSet, this.curLvl.id, invs, function(pos_res) {
-      if (pos_res.length != 0) {
-        cb(false, { ctrex: [pos_res, [], []] })
-      } else {
-        ind_vc_ctrex(curLvlSet, gl.curLvl.id, invs, function(ind_res) {
-          cb(ind_res.length == 0, { ctrex: [ [], [], ind_res ] })
-        })
-      }
-    })
-  }
-
   goalSatisfied(cb:(sat: boolean, feedback: any)=>void):void {
-    if (this.soundInvs.length > 0) {
-      counterexamples(curLvlSet, this.curLvl.id, this.soundInvs, (res:dataT) => {
-        var pos=res[0],neg=res[1],ind = res[2]
-        cb(pos.length == 0 && neg.length == 0 && ind.length == 0, res)
+    if (this.foundJSInv.length > 0) {
+      checkInvs(curLvlSet, this.curLvl.id, this.foundJSInv, ([overfitted, nonind, sound]) => {
+        if (sound.length > 0) {
+          this.soundInvs = sound.map((v) => this.foundJSInv[v])
+          this.overfittedInvs = overfitted.map((v) => this.foundJSInv[v[0]])
+          this.nonindInvs = nonind.map((v) => this.foundJSInv[v[0]])
+          counterexamples(curLvlSet, this.curLvl.id, this.soundInvs, (res:dataT) => {
+            let pos=res[0],neg=res[1],ind = res[2]
+            cb((pos.length == 0 && neg.length == 0 && ind.length == 0) ||
+                this.foundJSInv.length >= 4, res)
+          })
+        } else {
+            cb(this.foundJSInv.length >= 4, null)
+        }
       })
     } else {
       cb(false, [ [], [], [] ])
@@ -587,56 +583,22 @@ class MultiroundGameLogic extends BaseGameLogic {
               gl.pwupSuggestion.invariantTried(jsInv);
               gl.setPowerups(gl.pwupSuggestion.getPwups());
 
-              gl.invSound(jsInv, function (sound, res) {
-                if (res.ctrex[0].length != 0) {
-                  gl.overfittedInvs.push(jsInv)
-                } else if (res.ctrex[2].length != 0) {
-                  gl.nonindInvs.push(jsInv)
-                } else {
-                  gl.soundInvs.push(jsInv)
-                } 
-
-                if (sound) {
-                  var addScore = gl.computeScore(jsInv, 1)
-                  gl.score += addScore;
-                  gl.scoreW.add(addScore);
-                  gl.foundInv.push(inv)
-                  gl.foundJSInv.push(jsInv)
-                  gl.progressW.addInvariant(inv);
-                  gl.tracesW.setExp("");
-                  if (!gl.lvlPassedF) {
-                    gl.goalSatisfied((sat, feedback) => {
-                        var lvl = gl.curLvl
-                        if (sat) {
-                          gl.lvlPassedF = true;
-                          gl.lvlPassedCb();
-                        } else {
-                            let lvl = gl.curLvl;
-                            rpc.call("App.getPositiveExamples", [ curLvlSet, 
-                              lvl.id, /* lvl.exploration_state, */
-                              gl.overfittedInvs.map(esprima.parse), 5], (data) => {
-                                /*
-                                let templates = foundJSInv.map(abstractLiterals)
-                                rpc.call("App.instantiate", [templates, lvl.variables, data[1]],
-                                (invs) => {
-                                  invs = invs.map((inv) => inv.substring(1, inv.length - 1))
-                                  invs = invs.filter( (item, ind) => invs.indexOf(item) == ind )
-                                  var newLvl = new Level(lvl.id,
-                                    lvl.variables, [data[1], [], []], data[0], lvl.goal,
-                                    lvl.hint,
-invs)
-                                  // TODO: CB for new level unlocked
-                                  gl.lvlPassedF = true;
-                                  gl.lvlPassed();
-                                })
-                                */
-                            }, log)
-                        }
-                      });
-                  }
-                } else {
-                }
-              })
+              var addScore = gl.computeScore(jsInv, 1)
+              gl.score += addScore;
+              gl.scoreW.add(addScore);
+              gl.foundInv.push(inv)
+              gl.foundJSInv.push(jsInv)
+              gl.progressW.addInvariant(inv);
+              gl.tracesW.setExp("");
+              if (!gl.lvlPassedF) {
+                gl.goalSatisfied((sat, feedback) => {
+                    var lvl = gl.curLvl
+                    if (sat) {
+                      gl.lvlPassedF = true;
+                      gl.lvlPassedCb();
+                    }
+                  });
+              }
             }
           })
         })
@@ -645,5 +607,36 @@ invs)
     } catch (err) {
       this.tracesW.delayedError(<string>interpretError(err))
     }
+  }
+
+  addIgnoredInvariants(invs: invariantT[]): void {
+    for (let ind in invs) {
+      let inv = invs[ind]
+      this.foundInv.push(invPP(inv))
+      this.foundJSInv.push(inv)
+      this.progressW.addIgnoredInvariant(inv);
+    }
+  }
+
+  addSoundInvariants(invs: invariantT[]): void {
+    for (let ind in invs) {
+      let inv = invs[ind]
+      this.foundInv.push(invPP(inv))
+      this.foundJSInv.push(inv)
+      this.progressW.addInvariant(inv);
+    }
+  }
+
+  loadLvl(lvl: PrepopulatedDynamicLevel): void {
+    let loadedCb = this.lvlLoadedCb;
+    this.lvlLoadedCb = null;
+    super.loadLvl(lvl);
+    let [ overfitted, nonind, sound ] = lvl.startingInvs
+    this.addIgnoredInvariants(overfitted.concat(nonind));
+    this.addSoundInvariants(sound);
+
+    this.lvlLoadedCb = loadedCb;
+    if (this.lvlLoadedCb)
+      this.lvlLoadedCb();
   }
 }

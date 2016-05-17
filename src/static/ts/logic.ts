@@ -57,3 +57,7 @@ function pre_vc_ctrex(lvlSet: string, lvlId: string, invs: string[], cb: (res: [
 function ind_vc_ctrex(lvlSet: string, lvlId: string, invs: string[], cb: (res: [number[]]) => void) {
   return rpc.call("App.checkIndVC", [ lvlSet, lvlId, invs.map(esprima.parse) ], cb, log)
 }
+
+function checkInvs(lvlSet: string, lvlId: string, invs: string[], cb: (res: [ [number, any][], [number, any][], number[] ]) => void) {
+  return rpc.call("App.checkInvs", [ lvlSet, lvlId, invs.map(esprima.parse) ], cb, log)
+}

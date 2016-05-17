@@ -11,7 +11,7 @@ from boogie_ast import parseAst, AstBinExpr, AstTrue, AstUnExpr, parseExprAst,\
 from boogie_bb import get_bbs
 from boogie_loops import loops, get_loop_header_values, \
   loop_vc_pre_ctrex, loop_vc_post_ctrex, loop_vc_ind_ctrex
-from util import unique, pp_exc, powerset, average
+from util import unique, pp_exc, powerset, average, split
 from boogie_analysis import livevars
 from boogie_eval import instantiateAndEval
 from boogie_z3 import expr_to_z3, AllIntTypeEnv, ids
@@ -499,25 +499,15 @@ def checkPreVC(levelSet, levelId, invs):
     log({"type": "checkPreVC", "data": pre_ctrex })
     return pre_ctrex 
 
-# Given a set of candidate loop invariants, and a loop
-# partition them into disjoin sets of influence based on
-# the dependencies between variables in the loop body
-# The soundness of invariants in a given set should be
-# independent of the soundness of invariants in other sets.
-def partitionInvariants(invs, loop, bbs):
+def getInfluenceGraph(invs, loop, bbs):
     body_ssa, ssa_env = nd_bb_path_to_ssa([ loop.loop_paths ], bbs, SSAEnv(None, ""))
     inv_wps = [ wp_nd_ssa_path(body_ssa, bbs,
                               expr_to_z3(replace(x, ssa_env.replm()), AllIntTypeEnv()),
                               AllIntTypeEnv())
                 for x in invs ]
-    print "WPs: ", inv_wps
     infl_vars = [ set(ids(x)) for x in inv_wps ]
     expr_vars = [ expr_read(x) for x in invs ]
     influences = { i : set() for i in xrange(len(invs)) }
-
-    print invs
-    print infl_vars
-    print expr_vars
 
     for i in xrange(len(invs)):
         for j in xrange(len(invs)):
@@ -526,14 +516,103 @@ def partitionInvariants(invs, loop, bbs):
                 # Expression j influences the outcome of expression i
                 influences[i].add(j)
 
-    sccs = strongly_connected_components(influences)
-    collapsed_influences = collapse_scc(influences, sccs)
-    check_order = { ind: comp for (comp, ind) in topo_sort(collapsed_influences).iteritems() }
-    print 'Order'
-    for comp_ind in range(len(check_order)):
-        print "Component: ", comp_ind
-        for n in sccs[comp_ind]:
-            print "    ", invs[n]
+    return influences;
+
+
+def checkInvs_impl(bbs, loop, invs):
+    # 0. First get the overfitted invariants out of the way. We can check overfitted-ness
+    #    individually for each invariant.
+    pre_ctrexs = map(lambda inv:    (inv, loop_vc_pre_ctrex(loop, inv, bbs)), invs)
+    overfitted, rest = split(lambda ((inv, ctrex)): ctrex != None, pre_ctrexs)
+    rest = map(lambda x:    x[0], rest)
+
+    # 1. Build an influences graph of the left-over invariants
+    inflGraph = getInfluenceGraph(rest, loop, bbs)
+    print "invs: ", invs 
+    print "Overfitted: ", map(lambda x: x[0], overfitted)
+
+    print "rest: ", rest
+    print "inflGraph: ", inflGraph
+
+    # 2. Build a collapsed version of the graph
+    sccs = strongly_connected_components(inflGraph) 
+    print "sccs: ", sccs;
+
+    # 3. Sort collapsed graph topologically
+    collapsedInflGraph = collapse_scc(inflGraph, sccs)
+    print "collapsed infl graph: ", collapsedInflGraph
+
+    # 5. For each collapsed s.c.c in topo order (single invariants can be viewed as a s.c.c with 1 elmnt.)
+    check_order = topo_sort(collapsedInflGraph)
+    print "Check order ind: comp: ", check_order
+
+    sound_invs = set()
+    nonind_ctrex = { }
+    # TODO: Opportunities for optimization: Some elements can be viewed
+    # in parallel. To do so - modified bfs on the influences graph
+    for scc in map(lambda i:    sccs[i], check_order):
+        # 5.1 For all possible subsets of s.c.c.
+        for subset in powerset(scc):
+            if (len(subset) == 0):  continue
+            # TODO: Opportunity for optimization: If you find a sound invariant in a s.c.c, can you break up the s.c.c
+            #       And re-sort just the s.c.c topologically? Thus reduce the complexity?
+            # TODO: Should we order the possible subsets in increasing size?
+            inv_subs = [ rest[x] for x in subset ]
+            conj = ast_and(list(sound_invs) + inv_subs)
+            ind_ctrex = loop_vc_ind_ctrex(loop, conj, bbs)
+            # If conjunction is inductive:
+            print conj, ind_ctrex
+            if (not ind_ctrex):
+                # Add all invariants in conj. in sound set.
+                print inv_subs, "is inductive"
+                for inv in inv_subs:
+                    sound_invs.add(inv)
+            else:
+                if (len(inv_subs) == 1):
+                    nonind_ctrex[inv_subs[0]] = ind_ctrex
+
+    # 6. Label remainder as non-inductive
+    nonind_invs = [ ]
+    overfitted_set = set([ x[0] for x in overfitted ])
+
+    for inv in invs:
+        if inv not in overfitted_set and inv not in sound_invs:
+            nonind_invs.append((inv, nonind_ctrex[inv]))
+
+    return overfitted, nonind_invs, sound_invs
+    
+@api.method("App.checkInvs")
+@pp_exc
+def checkInvs(levelSet, levelId, invs):
+    """ See checkInvs_impl
+    """
+    if (levelSet not in traces):
+        raise Exception("Unkonwn level set " + str(levelSet))
+
+    if (levelId not in traces[levelSet]):
+        raise Exception("Unkonwn trace " + str(levelId) + " in levels " + str(levelSet))
+
+    if (len(invs) == 0):
+        raise Exception("No invariants given")
+
+    lvl = traces[levelSet][levelId]
+
+    if ('program' not in lvl):
+      # Not a boogie level - error
+      raise Exception("Level " + str(levelId) + " " + str(levelSet) + " not a dynamic boogie level.")
+
+    bbs = lvl['program']
+    loop = lvl['loop']
+    boogie_invs = [ esprimaToBoogie(x, {}) for x in invs ]
+    overfitted, nonind, sound = checkInvs_impl(bbs, loop, boogie_invs)
+
+    fix = lambda x: _from_dict(lvl['variables'], x)
+    overfitted = map(lambda x:  (boogie_invs.index(x[0]), fix(x[1])), overfitted)
+    nonind = map(lambda x:  (boogie_invs.index(x[0]), (fix(x[1][0]), fix(x[1][1]))), nonind)
+    sound = map(lambda x:   boogie_invs.index(x), sound)
+    print (overfitted, nonind, sound)
+
+    return (overfitted, nonind, sound)
 
 @api.method("App.checkIndVC")
 @pp_exc
@@ -557,7 +636,6 @@ def checkIndVC(levelSet, levelId, invs):
     boogie_inv = ast_and(boogie_invs)
     bbs = lvl['program']
     loop = lvl['loop']
-    partitionInvariants(boogie_invs, loop, bbs)
 
     fix = lambda x: _from_dict(lvl['variables'], x)
     print "Try pre.."

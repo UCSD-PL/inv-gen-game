@@ -195,7 +195,7 @@ function replace(inv:(string|ESTree.Node), replF): ESTree.Node {
 
     if (nd.type == "BinaryExpression") {
       let be = <ESTree.BinaryExpression>nd;
-      return replF(<ESTree.LogicalExpression>{ "type": "LogicalExpression",
+      return replF(<ESTree.BinaryExpression>{ "type": "BinaryExpression",
                      "operator": be.operator,
                      "left": args[0],
                      "right": args[1],
