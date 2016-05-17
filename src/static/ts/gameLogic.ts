@@ -479,6 +479,9 @@ class MultiroundGameLogic extends BaseGameLogic {
   nonindInvs: invariantT[] = [];
   overfittedInvs: invariantT[] = [];
   soundInvs: invariantT[] = [];
+  allData: { [ lvlid: string ] : dataT } = { };
+  allOverfitted: { [ lvlid: string ] : invariantT } =  { };
+  allNonind: { [ lvlid: string ] : invariantT } =  { };
 
   constructor(public tracesW: ITracesWindow,
               public progressW: IgnoredInvProgressWindow,
@@ -632,8 +635,18 @@ class MultiroundGameLogic extends BaseGameLogic {
     this.lvlLoadedCb = null;
     super.loadLvl(lvl);
     let [ overfitted, nonind, sound ] = lvl.startingInvs
-    this.addIgnoredInvariants(overfitted.concat(nonind));
+    this.addIgnoredInvariants(overfitted.map(x=>x[0]).concat(nonind.map(x=>x[0])));
     this.addSoundInvariants(sound);
+
+    if (!this.allData.hasOwnProperty(lvl.id))
+      this.allData[lvl.id] = [ [], [], [] ];
+
+    for (let i in [0,1,2])
+      this.allData[lvl.id][i]  = this.allData[lvl.id][i].concat(lvl.data[i])
+
+    for (var i in overfitted) {
+      this.allData[lvl.id][0].push(overfitted[i][1])
+    }
 
     this.lvlLoadedCb = loadedCb;
     if (this.lvlLoadedCb)

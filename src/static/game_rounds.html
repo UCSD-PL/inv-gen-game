@@ -141,26 +141,86 @@
               lvl.id, lvl.exploration_state,
               overfitted.map(esprima.parse), 5], (data) => {
                 let templates = all_invs.map(abstractLiterals)
-                rpc.call("App.instantiate", [templates, lvl.variables, data[1]],
-                (invs) => {
-                  // Filter out redundant invariants
-                  invs = invs.map((inv) => inv.substring(1, inv.length - 1))
-                  invs = invs.filter( (item, ind) => invs.indexOf(item) == ind )
+                rpc.call("App.instantiate", [templates, lvl.variables,
+                                             data[1]], (inv_newdata) => {
+                  rpc.call("App.instantiate", [templates, lvl.variables,
+                                               gameLogic.allData[lvl.id][0].concat(data[1])],
+                  (invs) => {
+                    // Filter out redundant invariants
+                    invs = invs.map((inv) => inv.substring(1, inv.length - 1))
+                    invs = invs.filter( (item, ind) => invs.indexOf(item) == ind )
 
-                  checkInvs(curLvlSet, lvl.id, invs, (res) => {
-                    var overfit = res[0].map((x) => invs[x[0]])
-                    var nonind = res[1].map((x) => invs[x[0]])
-                    var sound = res[2].map((i) => invs[i])
+                    checkInvs(curLvlSet, lvl.id, invs, (res) => {
+                      var overfit = res[0].map((x) => [invs[x[0]], x[1]])
+                      var nonind = res[1].map((x) => [invs[x[0]], x[1]])
+                      var sound = res[2].map((i) => invs[i])
 
-                    var newLvl = new PrepopulatedDynamicLevel(lvl.id, lvl.variables,
-                      [data[1], [], []], lvl.goal, lvl.hint, data[0], [overfit, nonind, sound])
-                    
-                    lvls.splice(curLvl + 1, 0, newLvl)
-                    $("#lvl_dots").before('<li class="level pending">' + '<a class="loadLvl" id="lvl_' + (curLvl + 1) + '" >' + (curLvl + 1) + '</a>' + '</li>');
-                    $('#next-lvl').show();
-                    curL = label({ of: $('#next-lvl'), at: "right center"},
-                          "Click Here! (50c bonus!)", "left")
-                  })
+                      // Add counterexamples to overfit as data.
+                      var inv_needing_negation = [ ]
+                      for (var i in inv_newdata) {
+                        var inv = inv_newdata[i]
+                        if (!(inv in invs)) {
+                          assert(!(inv in sound))
+                          inv_needing_negation.push(inv)
+                        }
+                      }
+
+                      // Need to include some rows from other traces, to prevent
+                      // the user from instantiating some of these invariants. Since we
+                      // we want to minimize the # of additional rows, want to solve an instance
+                      // of set cover here
+                      var s = { }
+                      var ord = [ ]
+                      for (var i in gameLogic.allData[lvl.id][0]) {
+                        var row = gameLogic.allData[lvl.id][0][i]
+                        s[i] = { }
+                        var cnt = 0;
+                        for (var j in inv_needing_negation) {
+                          var inv = inv_needing_negation[j]
+                          if (invEval(inv, lvl.variables, [ row ])[0] === false) {
+                            s[i][j] = true;
+                            cnt ++ ;
+                          }
+                        }
+
+                        ord.push([cnt, i]);
+                      }
+                      
+                      // s is map from data rows ot invariants negated
+                      // Start adding rows greedily, based on # of invariants negated
+                      ord.sort((a,b) => b[0]-a[0]);
+                      var covered = { }
+                      var numCovered = 0
+                      var extraRows = []
+                      for (var i in ord) {
+                        var coveredByThis= 0
+                        for (var j in s[ord[i][1]]) {
+                          if (!covered.hasOwnProperty(j)) {
+                            covered[j] = 1;
+                            coveredByThis ++;
+                          }
+                        }
+
+                        if (coveredByThis > 0) {
+                          extraRows.push(gameLogic.allData[lvl.id][0][ord[i][1]])
+                          numCovered+= coveredByThis;
+                        }
+
+                        if (numCovered == inv_needing_negation.length)
+                          break;
+                      }
+                      
+                      var newLvl = new PrepopulatedDynamicLevel(lvl.id, lvl.variables,
+                        [data[1].concat(extraRows), [], []], lvl.goal, lvl.hint, data[0],
+                        [overfit, nonind, sound])
+                      
+                      lvls.splice(curLvl + 1, 0, newLvl)
+                      $("#lvl_dots").before('<li class="level pending">' + '<a class="loadLvl" id="lvl_' + (curLvl + 1) + '" >' + (curLvl + 1) + '</a>' + '</li>');
+                      $('#next-lvl').show();
+                      curL = label({ of: $('#next-lvl'), at: "right center"},
+                            "Click Here! (50c bonus!)", "left")
+                    })
+                  }, log)
                 }, log)
             }, log)
       }

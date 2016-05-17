@@ -36,7 +36,7 @@ class PrepopulatedDynamicLevel extends DynamicLevel {
     goal:  any,
     hint:  string,
     exploration_state: any,
-    public startingInvs: [invariantT[], invariantT[], invariantT[]]) {
+    public startingInvs: [[invariantT, any[]][], [invariantT, [any[], any[]]][], invariantT[]]) {
     super(id, variables, data, goal, hint, exploration_state);
   }
 
