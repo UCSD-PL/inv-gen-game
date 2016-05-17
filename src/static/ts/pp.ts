@@ -1,16 +1,30 @@
-function invPP(inv: string) : string {
-  var eqFixed = inv.replace(/===/g, '=').replace(/==/g, '=').replace(/\s/g, '')
-  var mulFixed = eqFixed.replace(/([0-9])([a-zA-Z])/g, (s,g1,g2) =>  g1 + '*' + g2)
-  var mulFixed1 = mulFixed.replace(/([a-zA-Z])([0-9])/g, (s,g1,g2) =>  g1 + '*' + g2)
-  var caseFixed = mulFixed1.toLowerCase()
-  return caseFixed
+function invPP(inv: string): string {
+  let eqFixed: string = inv.replace(/===/g, "=").replace(/==/g, "=").replace(/\s/g, "");
+  let mulFixed: string = eqFixed.replace(/([0-9])([a-zA-Z])/g, (s, g1, g2) =>  g1 + "*" + g2);
+  let mulFixed1: string = mulFixed.replace(/([a-zA-Z])([0-9])/g, (s, g1, g2) =>  g1 + "*" + g2);
+  let caseFixed: string = mulFixed1.toLowerCase();
+  return caseFixed;
 }
 
-function invToHTML(inv: string): string{
+function ppToInv(pp: string): string {
+  return pp.replace(/=/g, "==").replace(/\s/g, "");
+}
+
+function invToHTML(inv: string): string {
   return inv
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
-    .replace(/<=/g, "&lt=;")
-    .replace(/>=/g, "&gt=;")
-    .replace(/&&/g, "&amp;&amp;")
+    .replace(/<=/g, "&lt;=")
+    .replace(/>=/g, "&gt;=")
+    .replace(/&&/g, "&amp;&amp;");
+}
+
+function htmlToInv(html: string): string {
+  let h1: string = html.replace("=", "==");
+  return h1
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/<==/g, "<=")
+    .replace(/>==/g, ">=")
+    .replace(/&amp;&amp;/g, "&&");
 }

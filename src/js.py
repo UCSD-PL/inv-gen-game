@@ -49,6 +49,7 @@ def jsToZ3Expr(astn, typeEnv):
         '-': lambda x,y: x - y,
         '*': lambda x,y: x * y,
         '/': lambda x,y: x / y,
+        '%': lambda x,y: x % y,
       }[astn.op](ln, rn)
     except:
       raise Exception("Don't know how to parse " + astn.to_ecma())
