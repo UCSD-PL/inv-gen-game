@@ -362,12 +362,10 @@ def getPositiveExamples(levelSet, levelId, cur_expl_state, overfittedInvs, num):
     log({"type": "getPositiveExamples", "data": (cur_expl_state, js_found)})
     return (copy(cur_expl_state), js_found)
 
-# inv1 ==> inv2
 def implies(inv1, inv2):
     s = Solver();
     s.add(inv1)
     s.add(Not(inv2))
-    print(str(inv1) + " ==> " + str(inv2) + " = " + str(unsat == s.check()))
     return unsat == s.check();
 
 def equivalent(inv1, inv2):

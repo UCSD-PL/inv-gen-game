@@ -91,13 +91,22 @@
         if (typeof(lvls[curLvl]) == "string") {
           $('#lvl_' + lvls[curLvl]).removeClass('bold');
           $('#lvl_' + lvls[curLvl]).removeClass('currentLevel');
-          $('#lvl_' + lvls[curLvl]).parent().addClass('completedLevel');
+          //$('#lvl_' + lvls[curLvl]).parent().removeClass('currentLevel');
+          if (lvlPassed[curLvl] != false) {
+            //$('#lvl_' + lvls[curLvl]).parent().addClass('completedLevel');
+            $('#lvl_' + lvls[curLvl]).addClass('completedLevel');
+          }
+          else {
+            //$('#lvl_' + lvls[curLvl]).parent().addClass('pending');
+            $('#lvl_' + lvls[curLvl]).addClass('pending');
+          }
         }
 
         curLvl = lvl;
         if (typeof(lvls[lvl]) == "string") {
           $('#lvl_' + lvls[curLvl]).addClass('bold');
-          $('#lvl_' + lvls[curLvl]).parent().addClass('currentLevel');
+          $('#lvl_' + lvls[curLvl]).addClass('currentLevel');
+          //$('#lvl_' + lvls[curLvl]).parent().addClass('currentLevel');
         }
 
         if (lvl == lvls.length - 1) {
@@ -119,13 +128,22 @@
         if (typeof(lvls2[curLvl2]) == "string") {
           $('#lvl2_' + lvls2[curLvl2]).removeClass('bold');
           $('#lvl2_' + lvls2[curLvl2]).removeClass('currentLevel');
-          $('#lvl2_' + lvls2[curLvl2]).parent().addClass('completedLevel');
+          //$('#lvl2_' + lvls2[curLvl2]).parent().removeClass('currentLevel');
+          if (lvlPassed2[curLvl2] != false) {
+            //$('#lvl2_' + lvls2[curLvl2]).parent().addClass('completedLevel');
+            $('#lvl2_' + lvls2[curLvl2]).addClass('completedLevel');
+          }
+          else {
+            //$('#lvl2_' + lvls2[curLvl2]).parent().addClass('pending');
+            $('#lvl2_' + lvls2[curLvl2]).addClass('pending');
+          }
         }
 
         curLvl2 = lvl;
         if (typeof(lvls2[lvl]) == "string") {
           $('#lvl2_' + lvls2[curLvl2]).addClass('bold');
-          $('#lvl2_' + lvls2[curLvl2]).parent().addClass('currentLevel');
+          //$('#lvl2_' + lvls2[curLvl2]).parent().addClass('currentLevel');
+          $('#lvl2_' + lvls2[curLvl2]).addClass('currentLevel');
         }
 
         if (lvl == lvls2.length - 1) {
@@ -135,7 +153,7 @@
         if (typeof(lvls2[lvl]) == "string") {
           loadTrace2(lvls2[curLvl2]);
         } else {
-          gameLogic2.loadLvl(lvls2[curLvl2])
+          gameLogic2.loadLvl(lvls2[curLvl2]);
         }
       }
     }
@@ -149,7 +167,8 @@
         for (var i = 0; i < res.length; ++i) { lvlPassed[i] = false; }
         hstr = '<ul class="levels">';
         for (var i in res) {
-          hstr += '<li class="level pending">' + '<a class="loadLvl" id="lvl_' + res[i] + '" >' + i + '</a>' + '</li>';
+          // hstr += '<li class="level pending">' + '<a class="loadLvl" id="lvl_' + res[i] + '" >' + i + '</a>' + '</li>';
+          hstr += '<li class="level pending" id="lvl_' + res[i] + '" >' + i + '</li>';
         }
         hstr += '</ul>';
         $('#traces-menu').html(hstr);
@@ -172,7 +191,8 @@
         for (var i = 0; i < res.length; ++i) { lvlPassed2[i] = false; }
         hstr = '<ul class="levels">';
         for (var i in res) {
-          hstr += '<li class="level pending">' + '<a class="loadLvl" id="lvl2_' + res[i] + '" >' + i + '</a>' + '</li>';
+          // hstr += '<li class="level pending">' + '<a class="loadLvl" id="lvl2_' + res[i] + '" >' + i + '</a>' + '</li>';
+          hstr += '<li class="level pending" id="lvl2_' + res[i] + '" >' + i + '</a>' + '</li>';
         }
         hstr += '</ul>';
         $('#traces-menu2').html(hstr);
@@ -187,19 +207,11 @@
     }
 
     function doneScreen() {
-      /*
-      //loadLvlSet("test-benchmarks")
-      $(".overlay").html("<h1 class='good'> Good job! You finished all levels! <br> Your score is: " +
-        gameLogic.score  + "!</h1><br>" +
-        "<h2> Please submit the screencast of your work! </h2>"
-      );
-      $(".overlay").fadeIn(1000);
-      */
       var score1 = gameLogic.score;
       var score2 = gameLogic2.score;
-      var result = "<p style='color: white; vertical-align: bottom'>\
-                    WOW! Such game! Much Points!\
-                    <br>"
+
+      var result = "<br>Player 1: " + score1 + " points<br>Player 2: " + score2
+                    + " points<br><br>";
 
       if(score1 > score2) {
         result += "Winner: Player 1"
@@ -208,11 +220,14 @@
         result += "Winner: Player 2"
       }
       else {
-        result += "It's a tie!"
+        result += "It's a tie"
       }
 
-      $("#final-score").html(result);
-      $("#doge").fadeIn();
+      $(".overlay").html("<h1 class='good'>Good job!<br>" +
+        result  + "!</h1><br>" +
+        "<h2> Please submit the screencast of your work! </h2>"
+      );
+      $(".overlay").fadeIn(1000);
     }
 
     function labelRemover(lbl) {
@@ -615,8 +630,11 @@
           $('#next-lvl').show();
       }
       else {
-        $('#next-lvl').hide();
+        //$('#next-lvl').hide();
       }
+
+      $('#next-lvl').show();
+      $('#next-lvl2').show();
 
       if(player1Done || player2Done) {
         $('#next-lvl').show();
@@ -639,8 +657,11 @@
           $('#next-lvl2').show();
       }
       else {
-        $('#next-lvl2').hide();
+        //$('#next-lvl2').hide();
       }
+
+      $('#next-lvl').show();
+      $('#next-lvl2').show();
 
       if(player1Done || player2Done) {
         $('#next-lvl').show();
@@ -694,12 +715,12 @@
       gameLogic2 = new TwoPlayerGameLogic(2, traceW2, progW2, scoreW2, stickyW2);
 
       $('#hints').hide();
-      $('#next-lvl').hide();
+      //$('#next-lvl').hide();
       $('#hint-col').show();
       $('#hint').html('');
 
       $('#hints2').hide();
-      $('#next-lvl2').hide();
+      //$('#next-lvl2').hide();
       $('#hint-col2').show();
       $('#hint2').html('');
 
@@ -737,12 +758,12 @@
       });
 
       $('#next-lvl').click(function() {
-        $('#next-lvl').hide();
+        //$('#next-lvl').hide();
         $('#hint').html('');
         $('#hints').hide();
         $('#btn-hint').show();
 
-        $('#next-lvl2').hide();
+        //$('#next-lvl2').hide();
         $('#hint2').html('');
         $('#hints2').hide();
         $('#btn-hint2').show();
@@ -752,12 +773,12 @@
       })
 
       $('#next-lvl2').click(function() {
-        $('#next-lvl').hide();
+        //$('#next-lvl').hide();
         $('#hint').html('');
         $('#hints').hide();
         $('#btn-hint').show();
 
-        $('#next-lvl2').hide();
+        //$('#next-lvl2').hide();
         $('#hint2').html('');
         $('#hints2').hide();
         $('#btn-hint2').show();
@@ -864,26 +885,12 @@
 
         <div class='row-md-8'>
           <div class='col-md-8' id='hint-col'>
-            <!--
-            <button id='btn-hint' class='btn-show-hint1'>Show Hint</button>
-            <div class='col-md-4' id='hints'>
-              Hint:<br><span id='hint'></span>
-            </div>
-          -->
-
             <span id='next_lvl_span'>
               <button id='next-lvl' class='btn-next-game'>Next Level</button>
             </span>
           </div>
 
           <div class='col-md-8' id='hint-col2'>
-            <!--
-            <button id='btn-hint2' class='btn-show-hint2'>Show Hint</button>
-            <div class='col-md-4' id='hints2'>
-              Hint:<br><span id='hint2'></span>
-            </div>
-          -->
-
             <span id='next_lvl_span2'>
               <button id='next-lvl2' class='btn-next-game'>Next Level</button>
             </span>
@@ -1010,14 +1017,7 @@
     </div>
   </div>
 
-  <div id="doge" style="display: none;" class="wow">
-    <img src="doge.jpg"/>
-    <div id="final-score" class="wow"> </div>
-  </div>
-
-  <div id="doge2" style="display: none;" class="wow">
-    <img src="doge.jpg"/>
-    <div id="final-score2" class="wow"> </div>
+  <div class='overlay text-center' style='display: none;'>
   </div>
 
 </body>
