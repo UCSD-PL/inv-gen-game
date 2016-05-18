@@ -6,6 +6,7 @@ declare var progW: any;
 declare var progW2: any;
 declare var traceW: any;
 declare var traceW2: any;
+declare var allowBonus: boolean;
 
 interface IGameLogic {
   clear(): void;
@@ -964,9 +965,11 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
                 gl.progressW.addInvariant(inv);
                 gl.tracesW.setExp("");
 
-                getBonus(this.player, function(pt) {
-                  gl.scoreW.add(pt);
-                });
+                if (allowBonus) {
+                  getBonus(this.player, function(pt) {
+                    gl.scoreW.add(pt);
+                  });
+                }
               }
 
               if (!gl.lvlPassedF) {

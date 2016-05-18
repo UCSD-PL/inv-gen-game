@@ -87,11 +87,11 @@ class TwoPlayerProgressWindow extends ProgressWindow {
     $(this.parent).addClass("progressWindow");
 
     if (this.player === 1) {
-      $(this.parent).html("Accepted expressions<br>" +
+      $(this.parent).html("Invariants<br>" +
         "<ul id='good-invariants' style='font-family: monospace; list-style-type: none; padding: 0px; text-align: center;'></ul>");
     }
     else if (this.player === 2) {
-      $(this.parent).html("Accepted expressions<br>" +
+      $(this.parent).html("Invariants<br>" +
         "<ul id='good-invariants2' style='font-family: monospace; list-style-type: none; padding: 0px; text-align: center;'></ul>");
     }
 
