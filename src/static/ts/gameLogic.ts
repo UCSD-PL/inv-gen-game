@@ -854,32 +854,31 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
 
         let player2Invs: string[] = getAllPlayer2Inv();
 
-        equivalentPairs([inv], player2Invs, function(x: any) {
-          if (x != null && player2Invs.length !== 0 && typeof player2Invs[x] !== "undefined") {
-            console.log(inv + " <=> " + player2Invs[x]);
-            console.log(this.player);
-            console.log(this.tracesW);
-            progW2.markInvariant(player2Invs[x], "duplicate");
-            traceW.immediateError("Duplicate Invariant!");
-            traceW.disableSubmit();
-            doProceed = false;
-            return;
-          }
-          else {
-            impliedBy(player2Invs, inv, function(x: any) {
-              if (x !== null) {
-                console.log(player2Invs[x] + " ==> " + inv);
-                console.log(this.player);
-                console.log(this.tracesW);
-                progW2.markInvariant(player2Invs[x], "implies");
-                traceW.immediateError("Implied by opponent's invariant!");
-                traceW.disableSubmit();
-                doProceed = false;
-                return;
-              }
-            });
-          }
-        });
+        if (player2Invs.length !== 0) {
+          equivalentPairs([jsInv], player2Invs, function(x: any) {
+            if (x != null && typeof player2Invs[x] !== "undefined") {
+              console.log(jsInv + " <=> " + player2Invs[x]);
+              progW2.markInvariant(player2Invs[x], "duplicate");
+              traceW.immediateError("Duplicate Invariant!");
+              traceW.disableSubmit();
+              doProceed = false;
+              return;
+            }
+            else {
+              impliedBy(player2Invs, jsInv, function(x: any) {
+                if (x !== null) {
+                  console.log(player2Invs[x] + " ==> " + jsInv);
+                  progW2.markInvariant(player2Invs[x], "implies");
+                  traceW.immediateError("Implied by opponent's invariant!");
+                  traceW.disableSubmit();
+                  doProceed = false;
+                  return;
+                }
+              });
+            }
+
+          });
+        }
       }
 
       else if (this.player === 2) {
@@ -892,33 +891,32 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
 
         let player1Invs: string[] = getAllPlayer1Inv();
 
-        equivalentPairs([inv], player1Invs, function(x) {
-          if (x != null && player1Invs.length !== 0 && typeof player1Invs[x] !== "undefined") {
-            console.log(inv + " <=> " + player1Invs[x]);
-            console.log(this.player);
-            console.log(this.tracesW);
-            progW.markInvariant(player1Invs[x], "duplicate");
-            traceW2.immediateError("Duplicate Invariant!");
-            traceW2.disableSubmit();
-            doProceed = false;
-            return;
-          }
+        if (player1Invs.length !== 0) {
 
-          else {
-            impliedBy(player1Invs, inv, function(x: any) {
-              if (x !== null) {
-                console.log(player1Invs[x] + " ==> " + inv);
-                console.log(this.player);
-                console.log(this.tracesW);
-                progW.markInvariant(player1Invs[x], "implies");
-                traceW2.immediateError("Implied by opponent's invariant!");
-                traceW2.disableSubmit();
-                doProceed = false;
-                return;
-              }
-            });
-          }
-        });
+          equivalentPairs([jsInv], player1Invs, function(x) {
+            if (x != null && typeof player1Invs[x] !== "undefined") {
+              console.log(jsInv + " <=> " + player1Invs[x]);
+              progW.markInvariant(player1Invs[x], "duplicate");
+              traceW2.immediateError("Duplicate Invariant!");
+              traceW2.disableSubmit();
+              doProceed = false;
+              return;
+            }
+
+            else {
+              impliedBy(player1Invs, jsInv, function(x: any) {
+                if (x !== null) {
+                  console.log(player1Invs[x] + " ==> " + jsInv);
+                  progW.markInvariant(player1Invs[x], "implies");
+                  traceW2.immediateError("Implied by opponent's invariant!");
+                  traceW2.disableSubmit();
+                  doProceed = false;
+                  return;
+                }
+              });
+            }
+          });
+        }
       }
 
 
@@ -931,7 +929,7 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
       }
       else {
         let gl = this;
-        isTautology(invToJS(inv), function(res) {
+        isTautology(jsInv, function(res) {
           if (res) {
             gl.tracesW.error("This is a always true...");
             gl.tracesW.disableSubmit();
@@ -943,6 +941,7 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
             if (x !== null) {
               gl.progressW.markInvariant(gl.foundInv[x], "implies");
               gl.tracesW.immediateError("Implied by existing invariant!");
+              console.log(gl.foundInv[x] + " ==> " + jsInv);
               doProceed = false;
             }
             else {

@@ -22,6 +22,7 @@ from graph import strongly_connected_components, collapse_scc, topo_sort
 import argparse
 import traceback
 import time
+import sys
 from copy import copy
 
 p = argparse.ArgumentParser(description="invariant gen game server")
@@ -267,8 +268,8 @@ def loadLvl(levelSet, traceId):
              'support_ind_ex' : lvl['support_ind_ex'],
              'multiround'     : lvl['multiround'],
       }
-  
-    log({"type": "load_data", "data": lvl}) 
+
+    log({"type": "load_data", "data": lvl})
     return lvl
 
 def _to_dict(vs, vals):
@@ -305,7 +306,7 @@ def instantiate(invs, traceVars, trace):
 
     print "Instantiated: ", res, " from ", invs
     return map(lambda x: str(x), res)
-    
+
 @api.method("App.getPositiveExamples")
 @pp_exc
 def getPositiveExamples(levelSet, levelId, cur_expl_state, overfittedInvs, num):
@@ -346,7 +347,7 @@ def getPositiveExamples(levelSet, levelId, cur_expl_state, overfittedInvs, num):
         new_vals, terminating = _tryUnroll(loop, bbs, nunrolls+1, nunrolls+1+need, None, good_env)
         new_vals = new_vals[nunrolls+1:]
         cur_expl_state[ind] = (loop_head, nunrolls + len(new_vals), terminating)
-    
+
         found.extend(new_vals)
         need -= len(new_vals)
 
@@ -407,6 +408,7 @@ def equivalentPairs(invL1, invL2):
       log({"type": "equivalentPairs", "data":  (invL1, invL2, res)})
       return res
     except:
+      e1, e2, e = sys.exc_info()
       traceback.print_exc();
       traceback.print_tb(e);
       raise Exception(":(")
@@ -424,6 +426,7 @@ def impliedPairs(invL1, invL2):
       log({"type": "impliedPairs", "data":  (invL1, invL2, res)})
       return res
     except:
+      e1, e2, e = sys.exc_info()
       traceback.print_exc();
       traceback.print_tb(e);
       raise Exception(":(")
@@ -498,7 +501,7 @@ def checkPreVC(levelSet, levelId, invs):
     print "Try pre.."
     pre_ctrex = map(fix, filter(lambda x:    x, [ loop_vc_pre_ctrex(loop, boogie_inv, bbs) ]))
     log({"type": "checkPreVC", "data": pre_ctrex })
-    return pre_ctrex 
+    return pre_ctrex
 
 # Given a set of candidate loop invariants, and a loop
 # partition them into disjoin sets of influence based on
@@ -564,7 +567,7 @@ def checkIndVC(levelSet, levelId, invs):
     print "Try pre.."
     ind_ctrex = map(fix, filter(lambda x:    x, [ loop_vc_ind_ctrex(loop, boogie_inv, bbs) ]))
     log({"type": "checkIndVC", "data": ind_ctrex })
-    return ind_ctrex 
+    return ind_ctrex
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
