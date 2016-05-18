@@ -157,14 +157,10 @@ class PowerupSuggestionFullHistory implements IPowerupSuggestion {
               public type: string) {
     this.all_pwups = [
       new VarOnlyPowerup(2),
-      new UseXVarsPwup(1,2),
-      new UseXVarsPwup(2,2),
-      new UseXVarsPwup(3,2),
-      new UseXVarsPwup(4,2),
-      new UseOpsPwup(["<=", ">=", "<", ">"], "<>", "inequality"),
+      new UseOpsPwup(["<=", ">=", "<", ">", "!=="], "<>", "inequality"),
       new UseOpsPwup(["=="], "=", "equality"),
-      new UseOpsPwup(["*"], "*", "multiplication"),
-      new UseOpsPwup(["+"], "+", "addition"),
+      new UseOpsPwup(["*", "/"], "*/", "multiplication or division"),
+      new UseOpsPwup(["+", "-"], "&plusmn;", "addition or subtraction"),
     ]
 
     for (var i in this.all_pwups) {
