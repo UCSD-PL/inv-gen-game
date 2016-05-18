@@ -278,9 +278,6 @@
 
       //loadLvlSet("pruned-intro-benchmarks");
       loadLvlSet("desugared-boogie-benchmarks");
-      //checkInvs("desugared-boogie-benchmarks", "01", [ "x>0", "y>0", "count>=0" ], (res) => console.log(res) );
-      //checkInvs("desugared-boogie-benchmarks", "01", ["y<9", "x<9", "count<4", "y>=0", "x>=0", "count>=0", "y>0", "x>0", "x==y"], (res) => console.log(res) );
-
 
       gameLogic.onLvlLoaded(function () {
         curScript = new Script(tutorialScript)

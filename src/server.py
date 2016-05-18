@@ -615,6 +615,18 @@ def checkInvs(levelSet, levelId, invs):
 
     return (overfitted, nonind, sound)
 
+@api.method("App.simplifyInv")
+@pp_exc
+def simplifyInv(inv):
+    print inv
+    z3_inv = esprimaToZ3(inv, {});
+    simpl_z3_inv = simplify(z3_inv);
+    print simpl_z3_inv
+    return str(simpl_z3_inv);
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0')
+
 @api.method("App.checkIndVC")
 @pp_exc
 def checkIndVC(levelSet, levelId, invs):
