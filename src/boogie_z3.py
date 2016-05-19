@@ -87,8 +87,67 @@ def ids(z3expr):
         tmp = { str(x): x for x in reduce(lambda x,y: x+y, map(ids, z3expr.children()), []) }
         return list(tmp.keys())
 
+def z3_expr_to_boogie(expr):
+    d = expr.decl();
+    if (d.arity() == 0):
+        #Literals and Identifiers
+        if (isinstance(expr.sort(), BoolSortRef)):
+            if (is_true(expr)):
+                return AstTrue()
+            elif (is_false(expr)):
+                return AstFalse()
+            else:
+                return AstId(d.name())
+        else:
+            assert isinstance(expr.sort(), ArithSortRef), "For now only handle bools and ints"
+            if (is_int_value(expr)):
+                return AstNumber(int(str(expr)))
+            else:
+                return AstId(d.name())
+    elif (d.arity() == 1):
+        # Unary operators 
+        arg = z3_expr_to_boogie(expr.children()[0])
+        boogie_op = {
+            '-': '-',
+            'not': '!',
+        }[d.name()]
+        return AstUnExpr(boogie_op, arg);
+    elif (d.arity() == 2):
+        # Binary operators
+        boogie_op = {
+            "+": "+",
+            "-": "-",
+            "*": "*",
+            "/": "*",
+            "%": "%",
+            "==": "==",
+            "!=": "!=",
+            "<": "<",
+            ">": ">",
+            "<=": "<=",
+            ">=": ">=",
+            "and": "&&",
+            "or": "||",
+        }[d.name()]
+        lhs = z3_expr_to_boogie(expr.children()[0])
+        rhs = z3_expr_to_boogie(expr.children()[1])
+        return AstBinExpr(lhs, boogie_op, rhs)
+    else:
+        raise Exception("Can't translate z3 expression " + str(expr) +
+            " to boogie.") 
+
 def counterex(pred):
     s = Solver()
     s.add(pred)
     res = s.check()
     return None if unsat == res else s.model()
+
+if (__name__ == "__main__"):
+    a = z3_expr_to_boogie(Int('a') + Int("b"))
+    print a
+    a = z3_expr_to_boogie(Int('a') * 2)
+    print a
+    a = z3_expr_to_boogie(Or((Bool('x'), Bool('y'))))
+    print a
+    a = z3_expr_to_boogie(And(Or(Bool('x'), True), ((Int('a') - 1) >= Int('b'))))
+    print a
