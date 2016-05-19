@@ -578,6 +578,18 @@ class MultiroundGameLogic extends BaseGameLogic {
             return
           }
 
+          // Def:
+          //    The syntactic archetype of an invariant is the result
+          //    of calling abstractLiterals(simplify(inv)).
+          //
+          //    We are assuming that simplify is nondeterministing (abstractLiterals is).
+          //    A syntactic archetype denotes a family of invariants.
+
+          // We want to check if the new invariant is implied by:
+          //    1) a known sound invariant
+          //    2) a known 'ignored' inv from the same syntactic family (i.e. same ast up to constants)
+          let implCandidattes = [].concat(gl.soundInvs);
+
           impliedBy(gl.foundJSInv, jsInv, function (x: number) {
             if (x !== null) {
               gl.progressW.markInvariant(gl.foundInv[x], "implies")
@@ -635,6 +647,8 @@ class MultiroundGameLogic extends BaseGameLogic {
     this.lvlLoadedCb = null;
     super.loadLvl(lvl);
     let [ overfitted, nonind, sound ] = lvl.startingInvs
+    this.overfittedInvs = this.overfittedInvs.concat(overfitted.map(x=>x[0]))
+    this.nonindInvs = this.nonindInvs.concat(nonind.map(x=>x[0]))
     this.addIgnoredInvariants(overfitted.map(x=>x[0]).concat(nonind.map(x=>x[0])));
     this.addSoundInvariants(sound);
 

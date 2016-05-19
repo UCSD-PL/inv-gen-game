@@ -5,7 +5,7 @@ from os.path import *
 from os import listdir
 from json import load, dumps 
 from z3 import *
-from js import invJSToZ3, addAllIntEnv, esprimaToZ3, esprimaToBoogie
+from js import invJSToZ3, addAllIntEnv, esprimaToZ3, esprimaToBoogie, boogieToEsprima
 from boogie_ast import parseAst, AstBinExpr, AstTrue, AstUnExpr, parseExprAst,\
     ast_and, ast_or, replace, expr_read
 from boogie_bb import get_bbs
@@ -14,7 +14,7 @@ from boogie_loops import loops, get_loop_header_values, \
 from util import unique, pp_exc, powerset, average, split
 from boogie_analysis import livevars
 from boogie_eval import instantiateAndEval
-from boogie_z3 import expr_to_z3, AllIntTypeEnv, ids
+from boogie_z3 import expr_to_z3, AllIntTypeEnv, ids, z3_expr_to_boogie
 from boogie_paths import sp_nd_ssa_path, nd_bb_path_to_ssa, wp_nd_ssa_path
 from boogie_ssa import SSAEnv
 from graph import strongly_connected_components, collapse_scc, topo_sort
@@ -621,8 +621,10 @@ def simplifyInv(inv):
     print inv
     z3_inv = esprimaToZ3(inv, {});
     simpl_z3_inv = simplify(z3_inv);
-    print simpl_z3_inv
-    return str(simpl_z3_inv);
+    print z3_inv, simpl_z3_inv
+    print z3_expr_to_boogie(simpl_z3_inv)
+    print boogieToEsprima(z3_expr_to_boogie(simpl_z3_inv))
+    return boogieToEsprima(z3_expr_to_boogie(simpl_z3_inv));
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')

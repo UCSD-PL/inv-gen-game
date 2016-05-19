@@ -238,3 +238,34 @@ function abstractLiterals(inv:string|ESTree.Node): [ESTree.Node, string[]] {
   })
   return [ newInv, newVars ]
 }
+
+function esprimaToStr(nd: ESTree.Node): string {
+  return estree_reduce<string>(nd,  (nd: ESTree.Node, args: string[]): string => {
+    if (nd.type == "Program") {
+      return args[0]
+    }
+
+    if (nd.type == "BinaryExpression") {
+      let be = <ESTree.BinaryExpression>nd;
+      return "(" + args[0] + be.operator + args[1] + ")"
+    }
+
+    if (nd.type == "LogicalExpression") {
+      let le = <ESTree.LogicalExpression>nd;
+      return "(" + args[0] + le.operator + args[1] + ")"
+    }
+
+    if (nd.type == "UnaryExpression") {
+      let ue = <ESTree.UnaryExpression>nd;
+      return "(" + ue.operator + args[0] + ")"
+    }
+
+    if (nd.type == "Literal") {
+      return "" + (<ESTree.Literal>nd).value
+    }
+
+    if (nd.type == "Identifier") {
+      return (<ESTree.Identifier>nd).name
+    }
+  })
+}

@@ -319,3 +319,27 @@ function disableBackspaceNav() {
     }
   });
 }
+
+function shape_eq(o1: any, o2: any) {
+  if (typeof(o1) != typeof(o2))
+    return false;
+
+  if (typeof(o1) == "number" || typeof(o1) == "boolean" || typeof(o1) == "string") {
+    return o1 === o2
+  }
+
+  if (typeof(o1) == "object") {
+    for (var i in o1) {
+      if (!o1.hasOwnProperty(i))  continue;
+      if (!o2.hasOwnProperty(i))  continue;
+      if (!shape_eq(o1[i], o2[i]))  return false;
+    }
+
+    for (var i in o2) {
+      if (o2.hasOwnProperty(i) && !o1.hasOwnProperty(i))  return false;
+    }
+
+    return true;
+  }
+  assert(false, "Unexpected objects being compared: " + o1 + " and " + o2);
+}
