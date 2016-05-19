@@ -454,140 +454,14 @@
     var tutorialScript = [
       {
         setup: function (cs) {
-                 curL = label($('#score-div'),
-                              "This is Player 1's score",
-                              "left")
-                 $('body').focus();
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+                 cs.nextStepOnKeyOrTimeout(1000, () => {}, 0);
                }
       },
       {
         setup: function (cs) {
-                 curL = label($('#discovered-invariants-div'),
-                            "The invariants Player 1<br>finds will appear here",
-                            "left")
-                 $('body').focus();
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-               }
-      },
-      {
-        setup: function (cs) {
-                 curL = label($('#score-div2'),
-                            "This is Player 2's score",
-                            "left")
-                 $('body').focus();
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-               }
-      },
-      {
-        setup: function (cs) {
-                 curL = label($('#discovered-invariants-div2'),
-                            "The invariants Player 2<br>finds will appear here",
-                            "left")
-                 $('body').focus();
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-               }
-      },
-      {
-        setup: function (cs) {
-                if(player == 1) {
-                 curL = label($('#sticky :last'),
-                          "And you have powerups!<br>Hover over icons for more",
-                          "up")
-                }
-                else {
-                  curL = label($('#sticky2 :last'),
-                           "And you have powerups!<br>Hover over icons for more",
-                           "up")
-                }
-                 $('body').focus();
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-               }
-      },
-      {
-        setup: function (cs) {
-                if(player == 1) {
-                 if($('#btn-hint').is(':hidden')) {
-                   curL = label($('#hint'),
-                            "These are hints you can<br>use to win this level",
-                            "up");
-                 }
-                 else {
-                   curL = label($('#btn-hint'),
-                            "Click here to get hints",
-                            "up");
-                 }
-               }
-               else {
-                 if($('#btn-hint2').is(':hidden')) {
-                   curL = label($('#hint2'),
-                            "These are hints you can<br>use to win this level",
-                            "up");
-                 }
-                 else {
-                   curL = label($('#btn-hint2'),
-                            "Click here to get hints",
-                            "up");
-                 }
-               }
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-               }
-      },
-      {
-        setup: function (cs) {
-                if(player == 1) {
-                 curL = label($('#btn-switch'),
-                              "To pass up your turn, click here",
-                              "left");
-                }
-                else {
-                  curL = label($('#btn-switch2'),
-                               "To pass up your turn, click here",
-                               "left");
-                }
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-               }
-      },
-      {
-        setup: function (cs) {
-                if(player == 1) {
-                 if($('#next-lvl').is(':hidden')) {
-                   curL = label($('#hint-col'),
-                          "When a 'Next Level'<br>\
-                          button appears here,<br>\
-                          click it to advance",
-                          "left");
-                 }
-                 else {
-                   curL = label($('#next-lvl'),
-                            "Click the 'Next Level' button to advance.",
-                            "left");
-                 }
-               }
-
-               else {
-                 if($('#next-lvl2').is(':hidden')) {
-                   curL = label($('#hint-col2'),
-                          "When a 'Next Level'<br>\
-                          button appears here,<br>\
-                          click it to advance",
-                          "left");
-                 }
-                 else {
-                   curL = label($('#next-lvl2'),
-                            "Click the 'Next Level' button to advance.",
-                            "left");
-                 }2
-               }
-                 $('body').focus();
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
-               }
-      },
-      {
-        setup: function (cs) {
-                 curL = label($('#help'),
+                 var curL = label($('#help'),
                             "Click here if you need any help later",
-                            "up")
+                            "right")
                  $('body').focus();
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
                }
@@ -631,9 +505,6 @@
       if(curLvlCompleted == curLvl) {
           $('#next-lvl').show();
       }
-      else {
-        //$('#next-lvl').hide();
-      }
 
       $('#next-lvl').show();
       $('#next-lvl2').show();
@@ -657,9 +528,6 @@
 
       if(curLvlCompleted2 == curLvl2) {
           $('#next-lvl2').show();
-      }
-      else {
-        //$('#next-lvl2').hide();
       }
 
       $('#next-lvl').show();
@@ -807,13 +675,8 @@
       })
 
       $('#replay').click(function() {
-        var win = window.open('tutorial.html', '_blank');
+        var win = window.open('tutorial_twop.html', '_blank');
         win.focus();
-      })
-
-      $('#arrows').click(function() {
-        $('#help-content').slideUp(200);
-        Script(tutorialScript);
       })
 
       $('#operator').click(function() {
@@ -833,7 +696,7 @@
       loadLvlSet("pruned-intro-benchmarks");
       loadLvlSet2("pruned-intro-benchmarks");
 
-      // Script(tutorialScript);
+      var curScript = new Script(tutorialScript);
     })
 
   </script>
@@ -906,11 +769,6 @@
                 <span id='replay' class='helpContent' data-toggle="tooltip"
                       title="Click to play the tutorial again">
                       Replay tutorial
-                </span>
-                <br>
-                <span id='arrows' class='helpContent' data-toggle="tooltip"
-                      title="Click to view the layout introduction">
-                      Understand screen layout
                 </span>
                 <br>
                 <span id='operator' class='helpContent' data-toggle="tooltip"
