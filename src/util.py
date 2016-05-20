@@ -13,7 +13,7 @@ def pp_exc(f):
             return f(*args, **kwargs)
         except Exception,e:
             traceback.print_exception(*exc_info())
-            raise e
+            raise
     return decorated
 
 def powerset(s):
