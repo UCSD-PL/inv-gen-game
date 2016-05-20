@@ -6,8 +6,8 @@ function invPP(inv: string) : string {
   return caseFixed
 }
 
-function invToHTML(inv: string): string{
-  return inv
+function invToHTML(inv: invariantT): string{
+  return esprimaToStr(inv)
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/<=/g, "&lt=;")

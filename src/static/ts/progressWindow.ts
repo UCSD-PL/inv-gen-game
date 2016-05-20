@@ -1,11 +1,10 @@
-type invariantT = string;  
 interface IProgressWindow {
-  addInvariant(invariant: invariantT): void;
-  removeInvariant(invariant: invariantT): void;
-  markInvariant(invariant: invariantT, state: string): void;
+  addInvariant(key: string, invariant: invariantT): void;
+  removeInvariant(key: string): void;
+  markInvariant(key: string, state: string): void;
   clearMarks(): void;
   clear(): void;
-  contains(invariant: invariantT):  boolean;
+  contains(key: string):  boolean;
 }
 
 class ProgressWindow implements IProgressWindow {
@@ -21,25 +20,25 @@ class ProgressWindow implements IProgressWindow {
     this.container = $(this.parent).children("div")[0]
   };
 
-  addInvariant(invariant: invariantT) : void {
+  addInvariant(key: string, invariant: invariantT) : void {
     let invUl = $(this.container).children("#good-invariants")[0]
     $(invUl).append("<li class='good-invariant' id='good_" +
       this.ctr + "'>" + invToHTML(invariant) + "</li>")
-    this.invMap[invariant] = $('#good_' + this.ctr)[0]
+    this.invMap[key] = $('#good_' + this.ctr)[0]
     this.ctr ++;
   }
 
-  removeInvariant(invariant: invariantT): void {
-    $(this.invMap[invariant]).remove();
-    delete this.invMap[invariant]
+  removeInvariant(key: string): void {
+    $(this.invMap[key]).remove();
+    delete this.invMap[key]
   }
 
   
-  markInvariant(invariant: invariantT, state: string): void {
-    let invDiv = $(this.invMap[invariant]);
+  markInvariant(key: string, state: string): void {
+    let invDiv = $(this.invMap[key]);
 
     if (invDiv == undefined) {
-      console.log("Unknown invariant " + invariant);
+      console.log("Unknown invariant " + key);
       return
     }
 
@@ -69,8 +68,8 @@ class ProgressWindow implements IProgressWindow {
     this.ctr = 0
   }
 
-  contains(invariant: invariantT):  boolean {
-    return this.invMap.hasOwnProperty(invariant);
+  contains(key: string):  boolean {
+    return this.invMap.hasOwnProperty(key);
   }
 }
 
@@ -90,11 +89,11 @@ class IgnoredInvProgressWindow extends ProgressWindow {
     this.ignoredContainer = $(this.parent).children("div")[1]
   };
 
-  addIgnoredInvariant(inv: invariantT) {
+  addIgnoredInvariant(key: string, inv: invariantT) {
     let invUL: HTMLElement = $(this.ignoredContainer).children("ul")[0]
     $(invUL).append("<li class='ignored-invariant' id='ign_" +
       this.ctr + "'>" + invToHTML(inv) + "</li>")
-    this.invMap[inv] = $('#ign_' + this.ctr)[0]
+    this.invMap[key] = $('#ign_' + this.ctr)[0]
     this.ctr++;
   }
 

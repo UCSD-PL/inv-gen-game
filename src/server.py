@@ -18,6 +18,8 @@ from boogie_z3 import expr_to_z3, AllIntTypeEnv, ids, z3_expr_to_boogie
 from boogie_paths import sp_nd_ssa_path, nd_bb_path_to_ssa, wp_nd_ssa_path
 from boogie_ssa import SSAEnv
 from graph import strongly_connected_components, collapse_scc, topo_sort
+from logic import implies, equivalent, tautology
+from sys import exc_info
 
 import argparse
 import traceback
@@ -40,6 +42,19 @@ def log(action):
         logF.write(dumps(action) + '\n')
     else:
         print dumps(action) + '\n'
+
+def log_d(f):
+    def decorated(*args, **kwargs):
+        try:
+            res = f(*args, **kwargs)
+            log({ "method": f.__name__, "args": args, "kwargs": kwargs, "res": res })
+            return res;
+        except Exception,e:
+            log({ "method": f.__name__, "args": args, "kwargs": kwargs,
+                  "exception": ''.join(traceback.format_exception(*exc_info()))})
+            raise
+    return decorated
+
 
 MYDIR=dirname(abspath(realpath(__file__)))
 z3s = Solver()
@@ -239,6 +254,7 @@ api = rpc(app, '/api')
 
 @api.method("App.listData")
 @pp_exc
+@log_d
 def listData(levelSet):
     res = traces[levelSet].keys();
     res.sort()
@@ -246,6 +262,7 @@ def listData(levelSet):
 
 @api.method("App.loadLvl")
 @pp_exc
+@log_d
 def loadLvl(levelSet, traceId):
     if (levelSet not in traces):
         raise Exception("Unkonwn level set " + levelSet)
@@ -268,7 +285,6 @@ def loadLvl(levelSet, traceId):
              'multiround'     : lvl['multiround'],
       }
   
-    log({"type": "load_data", "data": lvl}) 
     return lvl
 
 def _to_dict(vs, vals):
@@ -303,11 +319,11 @@ def instantiate(invs, traceVars, trace):
             res.append(instInv)
             z3Invs.append(instZ3Inv)
 
-    print "Instantiated: ", res, " from ", invs
-    return map(lambda x: str(x), res)
+    return map(lambda x: boogieToEsprima(x), res)
     
 @api.method("App.getPositiveExamples")
 @pp_exc
+@log_d
 def getPositiveExamples(levelSet, levelId, cur_expl_state, overfittedInvs, num):
     if (levelSet not in traces):
         raise Exception("Unkonwn level set " + str(levelSet))
@@ -359,83 +375,42 @@ def getPositiveExamples(levelSet, levelId, cur_expl_state, overfittedInvs, num):
 
     # De-z3-ify the numbers
     js_found = [ _from_dict(lvl["variables"], env) for env in found]
-    log({"type": "getPositiveExamples", "data": (cur_expl_state, js_found)})
     return (copy(cur_expl_state), js_found)
-
-def implies(inv1, inv2):
-    s = Solver();
-    s.add(inv1)
-    s.add(Not(inv2))
-    return unsat == s.check();
-
-def equivalent(inv1, inv2):
-    s = Solver();
-    s.push();
-    s.add(inv1)
-    s.add(Not(inv2))
-    impl = s.check();
-    s.pop();
-
-    if (impl != unsat):
-      return False;
-
-    s.push();
-    s.add(Not(inv1))
-    s.add(inv2)
-    impl = s.check();
-    s.pop();
-
-    if (impl != unsat):
-      return False;
-
-    return True
-
-def tautology(inv):
-    s = Solver();
-    s.add(Not(inv))
-    return (unsat == s.check())
 
 @api.method("App.equivalentPairs")
 @pp_exc
+@log_d
 def equivalentPairs(invL1, invL2):
-    try:
-      z3InvL1 = list(enumerate([esprimaToZ3(x, {}) for x in invL1]))
-      z3InvL2 = list(enumerate([esprimaToZ3(x, {}) for x in invL2]))
+    z3InvL1 = [esprimaToZ3(x, {}) for x in invL1]
+    z3InvL2 = [esprimaToZ3(x, {}) for x in invL2]
 
-      res = [(x,y) for x in z3InvL1 for y in z3InvL2 if equivalent(x[1], y[1])]
-      res = [(x[0], y[0]) for x,y in res]
-      log({"type": "equivalentPairs", "data":  (invL1, invL2, res)})
-      return res
-    except:
-      traceback.print_exc();
-      traceback.print_tb(e);
-      raise Exception(":(")
+    res = [(x,y) for x in z3InvL1 for y in z3InvL2 if equivalent(x, y)]
+    res = [(boogieToEsprima(z3_expr_to_boogie(x)),
+            boogieToEsprima(z3_expr_to_boogie(y))) for (x,y) in res]
+    return res
 
 @api.method("App.impliedPairs")
 @pp_exc
+@log_d
 def impliedPairs(invL1, invL2):
-    try:
-      z3InvL1 = list(enumerate([esprimaToZ3(x, {}) for x in invL1]))
-      z3InvL2 = list(enumerate([esprimaToZ3(x, {}) for x in invL2]))
+    z3InvL1 = [esprimaToZ3(x, {}) for x in invL1]
+    z3InvL2 = [esprimaToZ3(x, {}) for x in invL2]
 
-      res = [(x,y) for x in z3InvL1 for y in z3InvL2 if implies(x[1], y[1])]
-      res = [(x[0], y[0]) for x,y in res]
-      log({"type": "impliedPairs", "data":  (invL1, invL2, res)})
-      return res
-    except:
-      traceback.print_exc();
-      traceback.print_tb(e);
-      raise Exception(":(")
+    res = [(x,y) for x in z3InvL1 for y in z3InvL2 if implies(x, y)]
+    res = [(boogieToEsprima(z3_expr_to_boogie(x)),
+            boogieToEsprima(z3_expr_to_boogie(y))) for (x,y) in res]
+    return res
 
 @api.method("App.isTautology")
 @pp_exc
+@log_d
 def isTautology(inv):
     res = (tautology(esprimaToZ3(inv, {})))
-    log({"type": "isTautology", "data":  (inv, res)})
     return res
 
 @api.method("App.verifyInvariants")
 @pp_exc
+@log_d
 def verifyInvariants(levelSet, levelId, invs):
     if (levelSet not in traces):
         raise Exception("Unkonwn level set " + str(levelSet))
@@ -453,51 +428,26 @@ def verifyInvariants(levelSet, levelId, invs):
       raise Exception("Level " + str(levelId) + " " + str(levelSet) + " not a dynamic boogie level.")
 
     boogie_invs = [ esprimaToBoogie(x, {}) for x in invs ]
-    boogie_inv = ast_and(boogie_invs)
     bbs = lvl['program']
     loop = lvl['loop']
 
+    # Lets use checkInvs_impl to determine which invariants are sound/overfitted/inductive
+    print boogie_invs
+    overfitted, nonind, sound = checkInvs_impl(bbs, loop, boogie_invs)
+
+    # Finally see if the sound invariants imply the postcondition. Don't forget to
+    # convert any counterexamples from {x:1, y:2} to [1,2]
     fix = lambda x: _from_dict(lvl['variables'], x)
-    print "Try pre.."
-    pre_ctrex = map(fix, filter(lambda x:    x, [ loop_vc_pre_ctrex(loop, boogie_inv, bbs) ]))
-    print "Try post.."
+    boogie_inv = ast_and(sound)
     post_ctrex = map(fix, filter(lambda x:    x, [ loop_vc_post_ctrex(loop, boogie_inv, bbs) ]))
-    print "Try ind.."
-    ind_ctrex = map(fix, filter(lambda x:    x, [ loop_vc_ind_ctrex(loop, boogie_inv, bbs) ]))
-    print "Done."
-    res = (pre_ctrex, post_ctrex, ind_ctrex)
-
-    log({"type": "verifyInvariant", "data": res })
+    
+    # Convert all invariants from Boogie to esprima expressions, and counterexamples to arrays
+    # from dictionaries
+    overfitted = [ (boogieToEsprima(inv), fix(ctrex)) for (inv, ctrex) in overfitted ]
+    nonind = [ (boogieToEsprima(inv), map(fix, ctrex)) for (inv, ctrex) in nonind ]
+    sound = [ boogieToEsprima(inv) for inv in sound ]
+    res = (overfitted, nonind, sound, post_ctrex)
     return res
-
-@api.method("App.checkPreVC")
-@pp_exc
-def checkPreVC(levelSet, levelId, invs):
-    if (levelSet not in traces):
-        raise Exception("Unkonwn level set " + str(levelSet))
-
-    if (levelId not in traces[levelSet]):
-        raise Exception("Unkonwn trace " + str(levelId) + " in levels " + str(levelSet))
-
-    if (len(invs) == 0):
-        raise Exception("No invariants given")
-
-    lvl = traces[levelSet][levelId]
-
-    if ('program' not in lvl):
-      # Not a boogie level - error
-      raise Exception("Level " + str(levelId) + " " + str(levelSet) + " not a dynamic boogie level.")
-
-    boogie_invs = [ esprimaToBoogie(x, {}) for x in invs ]
-    boogie_inv = ast_and(boogie_invs)
-    bbs = lvl['program']
-    loop = lvl['loop']
-
-    fix = lambda x: _from_dict(lvl['variables'], x)
-    print "Try pre.."
-    pre_ctrex = map(fix, filter(lambda x:    x, [ loop_vc_pre_ctrex(loop, boogie_inv, bbs) ]))
-    log({"type": "checkPreVC", "data": pre_ctrex })
-    return pre_ctrex 
 
 def getInfluenceGraph(invs, loop, bbs):
     body_ssa, ssa_env = nd_bb_path_to_ssa([ loop.loop_paths ], bbs, SSAEnv(None, ""))
@@ -518,7 +468,6 @@ def getInfluenceGraph(invs, loop, bbs):
 
     return influences;
 
-# TODO: This supersedes checkPre and checkInd. Remove those.
 # TODO: Make this incremental
 def checkInvs_impl(bbs, loop, invs):
     # 0. First get the overfitted invariants out of the way. We can check overfitted-ness
@@ -584,6 +533,7 @@ def checkInvs_impl(bbs, loop, invs):
     
 @api.method("App.checkInvs")
 @pp_exc
+@log_d
 def checkInvs(levelSet, levelId, invs):
     """ See checkInvs_impl
     """
@@ -602,61 +552,27 @@ def checkInvs(levelSet, levelId, invs):
       # Not a boogie level - error
       raise Exception("Level " + str(levelId) + " " + str(levelSet) + " not a dynamic boogie level.")
 
+    print invs
     bbs = lvl['program']
     loop = lvl['loop']
     boogie_invs = [ esprimaToBoogie(x, {}) for x in invs ]
     overfitted, nonind, sound = checkInvs_impl(bbs, loop, boogie_invs)
 
     fix = lambda x: _from_dict(lvl['variables'], x)
-    overfitted = map(lambda x:  (boogie_invs.index(x[0]), fix(x[1])), overfitted)
-    nonind = map(lambda x:  (boogie_invs.index(x[0]), (fix(x[1][0]), fix(x[1][1]))), nonind)
-    sound = map(lambda x:   boogie_invs.index(x), sound)
+    overfitted = map(lambda x:  (boogieToEsprima(x[0]), fix(x[1])), overfitted)
+    nonind = map(lambda x:  (boogieToEsprima(x[0]), (fix(x[1][0]), fix(x[1][1]))), nonind)
+    sound = map(lambda x:   boogieToEsprima(x), sound)
     print (overfitted, nonind, sound)
 
     return (overfitted, nonind, sound)
 
 @api.method("App.simplifyInv")
 @pp_exc
+@log_d
 def simplifyInv(inv):
-    print inv
     z3_inv = esprimaToZ3(inv, {});
-    simpl_z3_inv = simplify(z3_inv);
-    print z3_inv, simpl_z3_inv
-    print z3_expr_to_boogie(simpl_z3_inv)
-    print boogieToEsprima(z3_expr_to_boogie(simpl_z3_inv))
+    simpl_z3_inv = simplify(z3_inv, arith_lhs=True);
     return boogieToEsprima(z3_expr_to_boogie(simpl_z3_inv));
-
-if __name__ == "__main__":
-    app.run(host='0.0.0.0')
-
-@api.method("App.checkIndVC")
-@pp_exc
-def checkIndVC(levelSet, levelId, invs):
-    if (levelSet not in traces):
-        raise Exception("Unkonwn level set " + str(levelSet))
-
-    if (levelId not in traces[levelSet]):
-        raise Exception("Unkonwn trace " + str(levelId) + " in levels " + str(levelSet))
-
-    if (len(invs) == 0):
-        raise Exception("No invariants given")
-
-    lvl = traces[levelSet][levelId]
-
-    if ('program' not in lvl):
-      # Not a boogie level - error
-      raise Exception("Level " + str(levelId) + " " + str(levelSet) + " not a dynamic boogie level.")
-
-    boogie_invs = [ esprimaToBoogie(x, {}) for x in invs ]
-    boogie_inv = ast_and(boogie_invs)
-    bbs = lvl['program']
-    loop = lvl['loop']
-
-    fix = lambda x: _from_dict(lvl['variables'], x)
-    print "Try pre.."
-    ind_ctrex = map(fix, filter(lambda x:    x, [ loop_vc_ind_ctrex(loop, boogie_inv, bbs) ]))
-    log({"type": "checkIndVC", "data": ind_ctrex })
-    return ind_ctrex 
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')

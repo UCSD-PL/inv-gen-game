@@ -139,7 +139,7 @@
             // Create next sub-level
             rpc.call("App.getPositiveExamples", [ lvlSet, 
               lvl.id, lvl.exploration_state,
-              overfitted.map(esprima.parse), 5], (data) => {
+              overfitted, 5], (data) => {
                 let templates = all_invs.map(abstractLiterals)
                 rpc.call("App.instantiate", [templates, lvl.variables,
                                              data[1]], (inv_newdata) => {
@@ -147,13 +147,18 @@
                                                gameLogic.allData[lvl.id][0].concat(data[1])],
                   (invs) => {
                     // Filter out redundant invariants
-                    invs = invs.map((inv) => inv.substring(1, inv.length - 1))
-                    invs = invs.filter( (item, ind) => invs.indexOf(item) == ind )
+                    var s = { }
+                    invs.forEach((inv)=>s[esprimaToStr(inv)] = inv)
+                    invs = [ ]
+                    for (var id in s) {
+                      if (!s.hasOwnProperty(id)) continue;
+                      invs.push(s[id])
+                    }
 
                     checkInvs(curLvlSet, lvl.id, invs, (res) => {
-                      var overfit = res[0].map((x) => [invs[x[0]], x[1]])
-                      var nonind = res[1].map((x) => [invs[x[0]], x[1]])
-                      var sound = res[2].map((i) => invs[i])
+                      var overfit = res[0]
+                      var nonind = res[1]
+                      var sound = res[2]
 
                       // Add counterexamples to overfit as data.
                       var inv_needing_negation = [ ]
@@ -165,6 +170,9 @@
                         }
                       }
 
+
+                      var str_inv_needing_negation = inv_needing_negation.map(esprimaToStr);
+
                       // Need to include some rows from other traces, to prevent
                       // the user from instantiating some of these invariants. Since we
                       // we want to minimize the # of additional rows, want to solve an instance
@@ -175,8 +183,8 @@
                         var row = gameLogic.allData[lvl.id][0][i]
                         s[i] = { }
                         var cnt = 0;
-                        for (var j in inv_needing_negation) {
-                          var inv = inv_needing_negation[j]
+                        for (var j in str_inv_needing_negation) {
+                          var inv = str_inv_needing_negation[j]
                           if (invEval(inv, lvl.variables, [ row ])[0] === false) {
                             s[i][j] = true;
                             cnt ++ ;
@@ -228,9 +236,9 @@
       gameLogic.onLvlPassed(function() {
         var lvl = gameLogic.curLvl;
         if (gameLogic.soundInvs.length > 0) {
-          counterexamples(curLvlSet, lvl.id, gameLogic.soundInvs, (res) => {
-            var pos=res[0],neg=res[1],ind = res[2]
-            var verified = pos.length == 0 && neg.length == 0 && ind.length == 0;
+          counterexamples(curLvlSet, lvl.id, gameLogic.soundInvs.map((x)=>x.canonForm), (res) => {
+            var overfit=res[0],nonind=res[1],sound = res[2], post = res[3]
+            var verified = overfit.length == 0 && nonind.length == 0 && post.length == 0;
             if (verified) {
               // Advance to boogie next level
               if (curLvl < lvls.length - 1) {
@@ -240,11 +248,11 @@
               curL = label({ of: $('#next-lvl'), at: "right center"},
                     "Click Here! (50c bonus!)", "left")
             } else {
-              insertNewSublvl(curLvlSet, lvl, gameLogic.overfittedInvs, gameLogic.foundJSInv)
+              insertNewSublvl(curLvlSet, lvl, gameLogic.overfittedInvs.map((x)=>x.canonForm), gameLogic.foundJSInv.map((x)=>x.rawInv))
             }
           })
         } else {
-          insertNewSublvl(curLvlSet, lvl, gameLogic.overfittedInvs, gameLogic.foundJSInv)
+          insertNewSublvl(curLvlSet, lvl, gameLogic.overfittedInvs.map((x)=>x.canonForm), gameLogic.foundJSInv.map((x)=>x.rawInv))
         }
       });
 
