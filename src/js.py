@@ -201,16 +201,16 @@ def boogieToEsprimaExpr(expr):
             '*':    ('*', 'BinaryExpression'),
             '/':    ('/', 'BinaryExpression'),
             '%':    ('%', 'BinaryExpression'),
-            '<':    ('<', 'LogicalExpression'),
-            '>':    ('>', 'LogicalExpression'),
-            '<=':    ('<=', 'LogicalExpression'),
-            '>=':    ('>=', 'LogicalExpression'),
-            '==':    ('==', 'LogicalExpression'),
-            '!==':    ('!==', 'LogicalExpression'),
+            '<':    ('<', 'BinaryExpression'),
+            '>':    ('>', 'BinaryExpression'),
+            '<=':    ('<=', 'BinaryExpression'),
+            '>=':    ('>=', 'BinaryExpression'),
+            '==':    ('==', 'BinaryExpression'),
+            '!==':    ('!==', 'BinaryExpression'),
             '&&':    ('&&', 'LogicalExpression'),
             '||':    ('||', 'LogicalExpression'),
         }[expr.op]
-        return { "type": "BinaryExpression", "operator": espr_op, "left": lhs, "right": rhs }
+        return { "type": typ, "operator": espr_op, "left": lhs, "right": rhs }
     else:
         raise Exception("Unknown expression " + str(expr))
 
