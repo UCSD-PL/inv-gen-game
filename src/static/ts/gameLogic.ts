@@ -148,28 +148,13 @@ class StaticGameLogic extends BaseGameLogic implements IGameLogic {
     let goal = this.curLvl.goal;
     if (goal == null) {
       cb(true)
-    } else if (goal.manual) {
-      cb(false)
-    } else  if (goal.find) {
-      var numFound = 0;
-      for (var i=0; i < goal.find.length; i++) {
-        var found = false;
-        for (var j=0; j < goal.find[i].length; j++) {
-          if ($.inArray(goal.find[i][j], this.foundJSInv) != -1) {
-            found = true;
-            break;
-          }
-        }
-
-        if (found)
-          numFound ++;
-
-      }
-
-      cb(numFound == goal.find.length,
-         { "find": { "found": numFound, "total": goal.find.length } })
     } else  if (goal.equivalent) {
-      equivalentPairs(goal.equivalent, this.foundJSInv.map((x)=>x.canonForm), function(pairs) {
+      assert(goal.equivalent.length > 0);
+      let eq_exp:(string[]|ESTree.Node[]) = goal.equivalent
+      if (typeof(eq_exp[0]) == "string") {
+        eq_exp = (<string[]>eq_exp).map(esprima.parse);
+      }
+      equivalentPairs(<ESTree.Node[]>eq_exp, this.foundJSInv.map((x)=>x.canonForm), function(pairs) {
         var numFound = 0;
         var equiv = []
         for (var i=0; i < pairs.length; i++) {
@@ -180,12 +165,10 @@ class StaticGameLogic extends BaseGameLogic implements IGameLogic {
         cb(equiv.length == goal.equivalent.length,
            { "equivalent": { "found": equiv.length , "total": goal.equivalent.length } })
       })
-    } else if (goal.max_score) {
-      cb(true, { "max_score" : { "found" : this.foundJSInv.length } })
-    } else if (goal.none) {
-      cb(false)
     } else if (goal.hasOwnProperty('atleast')) {
       cb(this.foundJSInv.length >= goal.atleast)
+    } else if (goal.hasOwnProperty("none")) {
+      cb(false)
     } else {
       error("Unknown goal " + JSON.stringify(goal));
     }
@@ -330,7 +313,7 @@ class CounterexampleGameLogic extends BaseGameLogic implements IDynGameLogic {
       } else {
         let ind = overfitted.map((x)=>esprimaToStr(x[0])).indexOf(inv.id)
         if (ind >= 0) {
-          cb(false, { ctrex: [ overfitted[ind][1], [], [] ] })
+          cb(false, { ctrex: [ [ overfitted[ind][1] ], [], [] ] })
         } else {
           let ind = nonind.map((x)=>esprimaToStr(x[0])).indexOf(inv.id)
           assert(ind >= 0);
@@ -435,7 +418,7 @@ class CounterexampleGameLogic extends BaseGameLogic implements IDynGameLogic {
                 gl.invSound(ui, function (sound, res) {
                   if (res.ctrex[0].length != 0) {
                     gl.overfittedInvs.push(ui)
-                  } else if (res.ctrex[1].length != 0) {
+                  } else if (res.ctrex[2].length != 0) {
                     gl.nonindInvs.push(ui)
                   } else {
                     gl.soundInvs.push(ui)

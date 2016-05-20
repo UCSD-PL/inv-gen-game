@@ -1,1 +1,1 @@
-{ "manual" : { } }
+{ "equivalent" : [ "i+j==ret" ] }
