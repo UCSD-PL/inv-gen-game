@@ -114,23 +114,38 @@ def z3_expr_to_boogie(expr):
         return AstUnExpr(boogie_op, arg);
     elif (d.arity() == 2):
         # Binary operators
-        boogie_op = {
-            "+": "+",
-            "-": "-",
-            "*": "*",
-            "/": "*",
-            "%": "%",
-            "=": "==",
-            "!=": "!=",
-            "<": "<",
-            ">": ">",
-            "<=": "<=",
-            ">=": ">=",
-            "and": "&&",
-            "or": "||",
+        boogie_op, assoc = {
+            "+": ("+","left"),
+            "-": ("-","left"),
+            "*": ("*","left"),
+            "/": ("*","left"),
+            "%": ("%","none"),
+            "=": ("==","none"),
+            "!=":("!=","none"),
+            "<": ("<","none"),
+            ">": (">","none"),
+            "<=": ("<=","none"),
+            ">=": (">=","none"),
+            "and": ("&&","left"),
+            "or": ("||","left"),
         }[d.name()]
-        lhs = z3_expr_to_boogie(expr.children()[0])
-        rhs = z3_expr_to_boogie(expr.children()[1])
+
+        c = expr.children();
+        while (len(c) > 2):
+            if (assoc == "none"):
+                raise Exception("Error: Expression " + str(expr) + " has " +\
+                    len(c) + " children: " + c + " but root operator " + \
+                    d.name() + " is non-associative.")
+            
+            if (assoc == "left"):
+                lhs = z3_expr_to_boogie(c[0]) if (not isinstance(c[0], AstNode)) else c[0]
+                rhs = z3_expr_to_boogie(c[1])
+                c[0:2] = [ AstBinExpr(lhs, boogie_op, rhs) ]
+            else:
+                raise Exception("NYI")
+
+        lhs = z3_expr_to_boogie(c[0]) if (not isinstance(c[0], AstNode)) else c[0]
+        rhs = z3_expr_to_boogie(c[1])
         return AstBinExpr(lhs, boogie_op, rhs)
     else:
         raise Exception("Can't translate z3 expression " + str(expr) +
