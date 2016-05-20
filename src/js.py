@@ -64,6 +64,8 @@ def esprimaToZ3Expr(astn, typeEnv):
   if (astn["type"] == "UnaryExpression"):
     arg = esprimaToZ3Expr(astn["argument"], typeEnv)
     try:
+      if (astn["operator"] == "+"):
+        return arg;
       return {
         '-': lambda x:  -x,
         '!': lambda x:  Not(x)
@@ -113,6 +115,9 @@ def esprimaToBoogieExprAst(astn, typeEnv):
   if (astn["type"] == "UnaryExpression"):
     arg = esprimaToBoogieExprAst(astn["argument"], typeEnv)
     try:
+      if (astn["operator"] == "+"):
+        return arg;
+
       return AstUnExpr({
         '-': '-',
         '!': '!'
