@@ -664,6 +664,7 @@ class MultiroundGameLogic extends BaseGameLogic {
       simplify(jsStr, (simplInv:invariantT) => {
         let ui = new UserInvariant(jsStr, jsStr, simplInv)
         this.foundJSInv.push(ui);
+        this.invMap[ui.id] = ui;
         queue.push(ui);
         this.progressW.addIgnoredInvariant(ui.id, ui.rawInv);
       })
