@@ -3,8 +3,7 @@ declare var rpc: JsonRpcClient;
 type cbT = (result: any) => void
 
 function equivalentPairs(invL1: invariantT[], invL2: invariantT[], cb: cbT): void {
-  rpc.call("App.equivalentPairs",
-    [ invL1, invL2 ], cb, log)
+  rpc.call("App.equivalentPairs", [ invL1, invL2 ], cb, log)
 }
 
 function equivalent(inv1:invariantT, inv2:invariantT, cb:(res:boolean)=>void): void {
@@ -23,15 +22,6 @@ function implied(invL1:invariantT[], inv:invariantT , cb:(res:boolean)=>void): v
 function impliedBy(invL1:invariantT[], inv:invariantT, cb:(res:ESTree.Node[])=>void): void {
   impliedPairs(invL1, [inv], function (res) {
     cb(res.map((([inv1,inv2])=>inv1)))
-  });
-}
-
-function equivalentToAny(invL1:invariantT[], inv:invariantT, cb:(res:number|void)=>void): void {
-  equivalentPairs(invL1, [inv], function (res) {
-    if (res.length > 0)
-      cb(res[0][0]);
-    else
-      cb(null);
   });
 }
 
