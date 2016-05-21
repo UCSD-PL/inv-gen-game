@@ -51,7 +51,7 @@
 
     function addSuccessfulInvariant(inv) {
       jsfound.push(invToJS(inv))
-      progW.addInvariant(inv);
+      progW.addInvariant(inv, esprima.parse(inv));
     }
 
     function updateUI() {

@@ -118,6 +118,7 @@
                }
       },
       // UI tutorial -----------------------------------------------------
+/*
       { setup: function (cs) {
                   $(".overlay").fadeOut(fadeDelay, function () {
                     var lvl = {
@@ -133,7 +134,7 @@
                     }
 
                     curLvl = lvl;
-                    tracesW = new PositiveTracesWindow($('#data-display'));
+                    tracesW = new CounterExampleTracesWindow($('#data-display'));
                     tracesW.setVariables(lvl)
                     tracesW.onChanged(function() {
                       if (errorTimer) {
@@ -267,6 +268,14 @@
                  })
                }
       },
+      { setup: function (cs) {
+                 $('.ignoreWindow').show(() => {
+                   curL = label({ of: $(".ignoreWindow"), at: "left+10 bottom" },
+                                "More on ignored exspressions later... <br>(press spacebar)", "up");
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+                 })
+               }
+      },
       // Tutorial Levels for UI-----------------------------------------------
       { setup: function (cs) {
                   $('.overlay').html("<h1>Lets warm up with a couple of levels!</h1>")
@@ -334,6 +343,128 @@
                  gameLogic.loadLvl(lvl)
                }
       },
+      */
+      // Ignored Invariants tutorial ------------------------------------------
+      { setup: function (cs) {
+                 // TODO: Remove
+                 tracesW = new CounterExampleTracesWindow($('#data-display'));
+                 // TODO: Erase
+                 $('#sticky').addClass("box stickyWindow");
+                 stickyW = new StickyWindow($('#sticky'));
+                 // TODO: Erase
+                 $('#score-div-row').add('#discovered-invariants-div').add('.ignoreWindow').fadeIn(()=>0)
+                 // ======================== 
+                 // TODO: Uncomment
+                 // removeLabel(curL);
+                 $('#next-lvl').hide();
+                  $('.overlay').html("<h1>Good job!<br>Lets go back to our tutorial.</h1>")
+                  $('.overlay').fadeIn(fadeDelay, function () {
+                    cs.nextStepOnKeyOrTimeout(stepTimeout, ()=>0, 32)
+                  })
+               }
+      },
+      { setup: function (cs) {
+                 $(".overlay").fadeOut(fadeDelay, function () {
+                 gameLogic = new MultiroundGameLogic(tracesW, progW, scoreW, stickyW);
+                 gameLogic.goalSatisfied = function(cb) {
+                   cb(false, { ctrex: [ [], [], [] ] })
+                 }
+                 gameLogic.onLvlPassed(()=>
+                    $('#next-lvl').fadeIn(fadeDelay, ()=> {
+                      curL = label({ of: $('#next-lvl'), at: "right center" },
+                                   "Click Here! (15c bonus!)", "left")
+                    }))
+                 var lvl = new PrepopulatedDynamicLevel("tutorial_example",
+                   [ "i", "n" ],
+                   [ [ [ 0, 2 ], [ 1, 2 ], [ 2, 2 ] ], [ ], [] ],
+                   { none: true },
+                   "How are i and n related?",
+                   [ ],
+                   [ [ [ esprima.parse("i<4"), [ 3, 4 ] ] ], [], [] ])
+                   gameLogic.loadLvl(lvl)
+                   curL = label({ of: $(".ignoreWindow"), at: "left bottom" },
+                                "Notice the 'ignored invariant'", "up")
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+                 })
+               }
+      },
+      { setup: function (cs) {
+                 curL = label({ of: $(".ignoreWindow"), at: "left bottom" },
+                                "It prevents you from trying some stuff", "up")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#formula-entry"), "Try i<4.", "left")
+                 nextStepOnGLInvariant(cs, "i<4", labelRemover(curL), gameLogic);
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#formula-entry"), "It didn't work!", "left")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#formula-entry"), "How about i<5?", "left")
+                 nextStepOnGLInvariant(cs, "i<5", labelRemover(curL), gameLogic);
+               }
+      },
+      { setup: function (cs) {
+                 curL = label("#formula-entry", "Press Enter...", "left")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, ()=> { removeLabel(curL);}, 13)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#formula-entry"), "Also no!", "left")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label({ of: $(".ignoreWindow"), at: "left bottom" },
+                                "It ignores this invariant..", "up")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label({ of: $(".ignoreWindow"), at: "left bottom" },
+                                "And anything similar and weaker. (e.g. i<5)", "up")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#formula-entry"), "Now try i<3.", "left")
+                 nextStepOnGLInvariant(cs, "i<3", labelRemover(curL), gameLogic);
+               }
+      },
+      { setup: function (cs) {
+                 curL = label("#formula-entry", "Press Enter...", "left")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, ()=> { removeLabel(curL);}, 13)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#discovered-invariants-div div.progressWindow"),
+                              "This one worked!", "left")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, ()=> { removeLabel(curL);}, 32)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#discovered-invariants-div div.progressWindow"),
+                                "Even though it <br> looks like i<4", "left")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, ()=> { removeLabel(curL);}, 32)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#discovered-invariants-div div.progressWindow"),
+                                "Its stronger!", "left")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, ()=> { removeLabel(curL);}, 32)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label({ of: $(".ignoreWindow"), at: "left bottom" },
+                                "We will use these to guide you<br> away from dead ends.", "up")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
       // Conclusion ----------------------------------------------------------
       { setup: function (cs) {
                   $('#data-display table').add('#score-div-row').add('#discovered-invariants-div')
@@ -372,7 +503,7 @@
                  $('#next-lvl').html("Start Playing")
                  $('#next-lvl').off("click")
                  $('#next-lvl').click(function() {
-                   window.location.replace('game_static.html');
+                   window.location.replace('game_rounds.html');
                  })
                  $('#next-lvl').fadeIn(fadeDelay, function() {
                    curL = label({ of: $("#next-lvl"), at: "left center"},
@@ -389,8 +520,9 @@
     $(document).ready(function() {
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
 
-      progW = new ProgressWindow($('#discovered-invariants-div'));
+      progW = new IgnoredInvProgressWindow($('#discovered-invariants-div'));
       $('#discovered-invariants-div').hide();
+      $('.ignoreWindow').hide();
       scoreW = new ScoreWindow($('#score-div'));
       $('#score-div-row').hide();
       $('#next-lvl').hide();
