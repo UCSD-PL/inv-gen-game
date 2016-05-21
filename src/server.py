@@ -85,14 +85,23 @@ def findNegatingTrace(loop, bbs, nunrolls, invs):
         hold_for_data.extend(instantiateAndEval(inv, vals, traceVs, ["a", "b", "c"]))
 
     print "The following invariants hold for initial trace: ", hold_for_data
+    hold_for_data = list(set(hold_for_data))
+    print "The following remain after clearing duplicates: ", hold_for_data
     res = [ ]
+    no_ctrex = set([])
     for s in powerset(hold_for_data):
+        if (s.issubset(no_ctrex)):
+            continue
+        #print "Looking for ctrex for: ", s, " with no_ctrex: ", no_ctrex
         inv = ast_or(s)
         ctrex = loop_vc_pre_ctrex(loop, inv, bbs)
-        trace, terminates = _tryUnroll(loop, bbs, 0, nunrolls, None, ctrex)
-        if (ctrex and len(trace) > 0):
-            print "Ctrexample for ", inv, " is ", trace
-            res.append((diversity(trace), len(s), list(s), ctrex, (trace, terminates)))
+        if (ctrex):
+            trace, terminates = _tryUnroll(loop, bbs, 0, nunrolls, None, ctrex)
+            if (len(trace) > 0):
+                # print "Ctrexample for ", inv, " is ", trace
+                res.append((diversity(trace), len(s), list(s), ctrex, (trace, terminates)))
+        else:
+            no_ctrex = no_ctrex.union(s)
 
     res.sort(key=lambda x:  x[0]);
     if (len(res) > 0):
@@ -478,48 +487,63 @@ def checkInvs_impl(bbs, loop, invs):
 
     # 1. Build an influences graph of the left-over invariants
     inflGraph = getInfluenceGraph(rest, loop, bbs)
-    print "invs: ", invs 
-    print "Overfitted: ", map(lambda x: x[0], overfitted)
-
-    print "rest: ", rest
-    print "inflGraph: ", inflGraph
-
     # 2. Build a collapsed version of the graph
     sccs = strongly_connected_components(inflGraph) 
-    print "sccs: ", sccs;
 
     # 3. Sort collapsed graph topologically
     collapsedInflGraph = collapse_scc(inflGraph, sccs)
-    print "collapsed infl graph: ", collapsedInflGraph
 
     # 5. For each collapsed s.c.c in topo order (single invariants can be viewed as a s.c.c with 1 elmnt.)
     check_order = topo_sort(collapsedInflGraph)
-    print "Check order ind: comp: ", check_order
 
     sound_invs = set()
     nonind_ctrex = { }
+
+    nchecks_worst = 2**len(invs)
+    nchecks_infl_graph = 0
+    nchecks_infl_graph_set_skipping = 0
+    nchecks_best = len(invs);
     # TODO: Opportunities for optimization: Some elements can be viewed
     # in parallel. To do so - modified bfs on the influences graph
     for scc in map(lambda i:    sccs[i], check_order):
         # 5.1 For all possible subsets of s.c.c.
-        for subset in powerset(scc):
+        ps = list(powerset(scc))
+        nchecks_infl_graph += len(ps)
+        sound_inv_inds = set()
+        for subset in ps:
             if (len(subset) == 0):  continue
-            # TODO: Opportunity for optimization: If you find a sound invariant in a s.c.c, can you break up the s.c.c
-            #       And re-sort just the s.c.c topologically? Thus reduce the complexity?
-            # TODO: Should we order the possible subsets in increasing size?
+            # TODO: Opportunity for optimization: If you find a sound invariant
+            # in a s.c.c, can you break up the s.c.c And re-sort just the s.c.c
+            # topologically? Thus reduce the complexity?
+            # THOUGHTS: With the current dependency definition (shared variables)
+            # not likely, as I would expect most s.c.cs to be complete graphs.
+            # TODO: Check if this is true /\
+
+            # OPTIMIZATION: We can ignore any subset that doesn't contain
+            # the currently discovered invariants. This is SAFE since
+            # powerset orders sets in increasing size, thus if some
+            # s doesn't contain a sound invariant i, then s + { i } follows
+            # in the ordering, and if s is sound, the s + { i } is definitely sound.
+            if (not sound_inv_inds.issubset(subset)): 
+                print "Skipping ", subset, " with sound_invs: ", sound_inv_inds
+                continue
+
             inv_subs = [ rest[x] for x in subset ]
             conj = ast_and(list(sound_invs) + inv_subs)
             ind_ctrex = loop_vc_ind_ctrex(loop, conj, bbs)
+            nchecks_infl_graph_set_skipping += 1
             # If conjunction is inductive:
             print conj, ind_ctrex
             if (not ind_ctrex):
                 # Add all invariants in conj. in sound set.
                 print inv_subs, "is inductive"
-                for inv in inv_subs:
-                    sound_invs.add(inv)
+                sound_invs = sound_invs.union(inv_subs);
+                sound_inv_inds = sound_inv_inds.union(subset);
             else:
-                if (len(inv_subs) == 1):
-                    nonind_ctrex[inv_subs[0]] = ind_ctrex
+                d = subset.difference(sound_inv_inds)
+                if (len(d) == 1):
+                    # TODO: Is this part sound?
+                    nonind_ctrex[rest[list(d)[0]]] = ind_ctrex
 
     # 6. Label remainder as non-inductive
     nonind_invs = [ ]
@@ -528,6 +552,9 @@ def checkInvs_impl(bbs, loop, invs):
     for inv in invs:
         if inv not in overfitted_set and inv not in sound_invs:
             nonind_invs.append((inv, nonind_ctrex[inv]))
+
+    print "NChecks: Worst: ", nchecks_worst, "InflGraph: ", nchecks_infl_graph,\
+          "InflGraph+SetSkip:", nchecks_infl_graph_set_skipping, "Best:", nchecks_best 
 
     return overfitted, nonind_invs, sound_invs
     
