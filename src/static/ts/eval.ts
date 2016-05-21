@@ -40,7 +40,7 @@ function invEval(inv:string, variables: string[], data: any[][]): any[] {
   for (var row in data) {
     let s = inv
     for (var v in vars) {
-      s = s.replace(new RegExp(vars[v][0], 'g'), data[row][vars[v][1]])
+      s = s.replace(new RegExp(vars[v][0], 'g'), '(' + data[row][vars[v][1]] + ')')
     }
     let res = eval(s)
     holds_arr.push(res)
