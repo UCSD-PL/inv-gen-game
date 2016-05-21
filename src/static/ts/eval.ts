@@ -257,7 +257,10 @@ function esprimaToStr(nd: ESTree.Node): string {
 
     if (nd.type == "UnaryExpression") {
       let ue = <ESTree.UnaryExpression>nd;
-      return "(" + ue.operator + args[0] + ")"
+      let s = args[0]
+      if (ue.operator == '-' && s[0] == '-')
+        s = '(' + s + ')'
+      return "(" + ue.operator + s + ")"
     }
 
     if (nd.type == "Literal") {
