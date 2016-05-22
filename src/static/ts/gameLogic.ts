@@ -752,8 +752,25 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
     this.lvlPassedF = false;
   }
 
+  showNext(lvl): boolean {
+    let goal = lvl.goal;
+    if (goal == null) {
+      return true;
+    }
+    else if (goal.manual) {
+      return true;
+    }
+    return false;
+  }
+
   goalSatisfied(cb: (sat: boolean, feedback?: any) => void): void {
     let goal = this.curLvl.goal;
+
+    let player1Invs: string[] = getAllPlayer1Inv();
+    let player2Invs: string[] = getAllPlayer2Inv();
+
+    let allInvs = player1Invs.concat(player2Invs);
+
     if (goal == null) {
       cb(true);
     } else if (goal.manual) {
@@ -763,7 +780,9 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
       for (let i = 0; i < goal.find.length; i++) {
         let found = false;
         for (let j = 0; j < goal.find[i].length; j++) {
-          if ($.inArray(goal.find[i][j], this.foundJSInv) !== -1) {
+          // check for the union of both players' invariants
+          // if ($.inArray(goal.find[i][j], this.foundJSInv) !== -1) {
+          if ($.inArray(goal.find[i][j], allInvs) !== -1) {
             found = true;
             break;
           }
@@ -777,7 +796,9 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
       cb(numFound === goal.find.length,
          { "find": { "found": numFound, "total": goal.find.length } });
     } else  if (goal.equivalent) {
-      equivalentPairs(goal.equivalent, this.foundJSInv, function(pairs) {
+      // check for the union of both players' invariants
+      // equivalentPairs(goal.equivalent, this.foundJSInv, function(pairs) {
+      equivalentPairs(goal.equivalent, allInvs, function(pairs) {
         let numFound = 0;
         let equiv = [];
         for (let i = 0; i < pairs.length; i++) {
@@ -793,7 +814,9 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
     } else if (goal.none) {
       cb(false);
     } else if (goal.hasOwnProperty("atleast")) {
-      cb(this.foundJSInv.length >= goal.atleast);
+      // check for the union of both players' invariants
+      // cb(this.foundJSInv.length >= goal.atleast);
+      cb(allInvs.length >= goal.atleast);
     } else {
       error("Unknown goal " + JSON.stringify(goal));
     }
@@ -858,7 +881,7 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
         if (player2Invs.length !== 0) {
           equivalentPairs([jsInv], player2Invs, function(x: any) {
             if (x != null && typeof player2Invs[x] !== "undefined") {
-              console.log(jsInv + " <=> " + player2Invs[x]);
+              // console.log(jsInv + " <=> " + player2Invs[x]);
               progW2.markInvariant(player2Invs[x], "duplicate");
               traceW.immediateError("Duplicate Invariant!");
               traceW.disableSubmit();
@@ -868,7 +891,7 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
             else {
               impliedBy(player2Invs, jsInv, function(x: any) {
                 if (x !== null) {
-                  console.log(player2Invs[x] + " ==> " + jsInv);
+                  // console.log(player2Invs[x] + " ==> " + jsInv);
                   progW2.markInvariant(player2Invs[x], "implies");
                   traceW.immediateError("Implied by opponent's invariant!");
                   traceW.disableSubmit();
@@ -896,7 +919,7 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
 
           equivalentPairs([jsInv], player1Invs, function(x) {
             if (x != null && typeof player1Invs[x] !== "undefined") {
-              console.log(jsInv + " <=> " + player1Invs[x]);
+              // console.log(jsInv + " <=> " + player1Invs[x]);
               progW.markInvariant(player1Invs[x], "duplicate");
               traceW2.immediateError("Duplicate Invariant!");
               traceW2.disableSubmit();
@@ -907,7 +930,7 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
             else {
               impliedBy(player1Invs, jsInv, function(x: any) {
                 if (x !== null) {
-                  console.log(player1Invs[x] + " ==> " + jsInv);
+                  // console.log(player1Invs[x] + " ==> " + jsInv);
                   progW.markInvariant(player1Invs[x], "implies");
                   traceW2.immediateError("Implied by opponent's invariant!");
                   traceW2.disableSubmit();
@@ -942,7 +965,7 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
             if (x !== null) {
               gl.progressW.markInvariant(gl.foundInv[x], "implies");
               gl.tracesW.immediateError("Implied by existing invariant!");
-              console.log(gl.foundInv[x] + " ==> " + jsInv);
+              // console.log(gl.foundInv[x] + " ==> " + jsInv);
               doProceed = false;
             }
             else {

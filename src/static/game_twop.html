@@ -64,13 +64,27 @@
 
     function loadTrace(traceId) {
       Level.load(curLvlSet, traceId, function(lvl) {
-        gameLogic.loadLvl(lvl)
+        gameLogic.loadLvl(lvl);
+
+        if(gameLogic.showNext(lvl)) {
+          $('#next-lvl').show();
+        }
+        else {
+          $('#next-lvl').hide();
+        }
       })
     }
 
     function loadTrace2(traceId) {
       Level.load(curLvlSet2, traceId, function(lvl) {
-        gameLogic2.loadLvl(lvl)
+        gameLogic2.loadLvl(lvl);
+
+        if(gameLogic2.showNext(lvl)) {
+          $('#next-lvl2').show();
+        }
+        else {
+          $('#next-lvl2').hide();
+        }
       })
     }
 
@@ -146,6 +160,10 @@
           $('#lvl2_' + lvls2[curLvl2]).addClass('bold');
           //$('#lvl2_' + lvls2[curLvl2]).parent().addClass('currentLevel');
           $('#lvl2_' + lvls2[curLvl2]).addClass('currentLevel');
+        }
+
+        if(gameLogic2.showNext(lvls2[curLvl2])) {
+          $('#next-lvl2').show();
         }
 
         if (lvl == lvls2.length - 1) {
@@ -506,8 +524,8 @@
           $('#next-lvl').show();
       }
 
-      $('#next-lvl').show();
-      $('#next-lvl2').show();
+      //$('#next-lvl').show();
+      //$('#next-lvl2').show();
 
       if(player1Done || player2Done) {
         $('#next-lvl').show();
@@ -530,8 +548,8 @@
           $('#next-lvl2').show();
       }
 
-      $('#next-lvl').show();
-      $('#next-lvl2').show();
+      //$('#next-lvl').show();
+      //$('#next-lvl2').show();
 
       if(player1Done || player2Done) {
         $('#next-lvl').show();
@@ -585,12 +603,12 @@
       gameLogic2 = new TwoPlayerGameLogic(2, traceW2, progW2, scoreW2, stickyW2);
 
       $('#hints').hide();
-      //$('#next-lvl').hide();
+      $('#next-lvl').hide();
       $('#hint-col').show();
       $('#hint').html('');
 
       $('#hints2').hide();
-      //$('#next-lvl2').hide();
+      $('#next-lvl2').hide();
       $('#hint-col2').show();
       $('#hint2').html('');
 
@@ -628,12 +646,12 @@
       });
 
       $('#next-lvl').click(function() {
-        //$('#next-lvl').hide();
+        $('#next-lvl').hide();
         $('#hint').html('');
         $('#hints').hide();
         $('#btn-hint').show();
 
-        //$('#next-lvl2').hide();
+        $('#next-lvl2').hide();
         $('#hint2').html('');
         $('#hints2').hide();
         $('#btn-hint2').show();
@@ -643,12 +661,12 @@
       })
 
       $('#next-lvl2').click(function() {
-        //$('#next-lvl').hide();
+        $('#next-lvl').hide();
         $('#hint').html('');
         $('#hints').hide();
         $('#btn-hint').show();
 
-        //$('#next-lvl2').hide();
+        $('#next-lvl2').hide();
         $('#hint2').html('');
         $('#hints2').hide();
         $('#btn-hint2').show();
