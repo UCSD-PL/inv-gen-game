@@ -83,6 +83,8 @@ function showImplication(player, src, dst) {
 
 function getBonus(player, fn) {
 
+  let bonus: number = 5;
+
   if (player === 1) {
     let newInv: string = getLastPlayer1Inv();
     let player2Invs = getAllPlayer2Inv();
@@ -93,7 +95,7 @@ function getBonus(player, fn) {
       if (x != null) {
         for (let i: number = 0; i < x.length; i++) {
           if (x[i][0] === 0) {
-            increment += 1;
+            increment += bonus;
           }
         }
         for (let i: number = 0; i < x.length; i++) {
@@ -123,13 +125,12 @@ function getBonus(player, fn) {
       if (x != null) {
         for (let i: number = 0; i < x.length; i++) {
           if (x[i][0] === 0) {
-            increment += 1;
+            increment += bonus;
           }
         }
         for (let i: number = 0; i < x.length; i++) {
           if (x[i][0] === 0) {
             // console.log(newInv + " ==> " + player1Invs[x[i][1]]);
-
             let src = $("#good-invariants2").children().last();
             let dst = $("#good-invariants").children().eq(x[i][1]);
             showImplication(player, src, dst);
