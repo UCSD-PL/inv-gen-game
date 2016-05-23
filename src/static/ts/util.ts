@@ -1,6 +1,6 @@
 type directionT = "up" | "down" | "left" | "right"
 function log(arg: any): void { console.log(arg); }
-function error(arg: any): void { log (arg); }
+function error(arg: any): void { log(arg); }
 function assert(c: boolean, msg?: any): void {
   if (msg === undefined)
     msg = "Oh-oh";
@@ -14,25 +14,25 @@ function fst<T1, T2>(x: [T1, T2]): T1 { return x[0]; }
 function snd<T1, T2>(x: [T1, T2]): T2 { return x[1]; }
 
 function shuffle<T>(arr: T[]): void {
-    let j: number = null;
-    for (let i: number = 0; i < arr.length; i++) {
-        j = Math.floor(Math.random() * arr.length);
-        let x = arr[i];
-        arr[i] = arr[j];
-        arr[j] = x;
-    }
+  let j: number = null;
+  for (let i: number = 0; i < arr.length; i++) {
+    j = Math.floor(Math.random() * arr.length);
+    let x = arr[i];
+    arr[i] = arr[j];
+    arr[j] = x;
+  }
 };
 
 class Label {
   public pos: JQueryUI.JQueryPositionOptions;
-  public elem:  JQuery;
+  public elem: JQuery;
   public timer: any;
 
   constructor(pos_arg: (JQueryUI.JQueryPositionOptions | HTMLElement),
-              public txt: string,
-              public direction: directionT,
-              public pulseWidth = 5,
-              public pulse = 500) {
+    public txt: string,
+    public direction: directionT,
+    public pulseWidth = 5,
+    public pulse = 500) {
 
     if (pos_arg.hasOwnProperty("of")) {
       this.pos = <JQueryUI.JQueryPositionOptions>pos_arg;
@@ -52,7 +52,7 @@ class Label {
     }
 
     let clazz: string = "", text_pos: string = "", arrow_pos: string = "",
-        arrow_div_pos: string = "", arrow_div_pos1: string = "";
+      arrow_div_pos: string = "", arrow_div_pos1: string = "";
 
     if (direction === "up") {
       clazz = "arrow_up";
@@ -96,11 +96,11 @@ class Label {
     let ctr = 0;
     let lbl = this;
 
-    this.timer = setInterval(function () {
+    this.timer = setInterval(function() {
       let v = (ctr % 2 === 0 ? arrow_div_pos : arrow_div_pos1);
       lbl.pos.my = v;
       $(div).position(lbl.pos);
-      ctr ++;
+      ctr++;
     }, this.pulse / 2);
     this.elem = div;
   }
@@ -115,8 +115,8 @@ function removeLabel(l: Label) {
 }
 
 function label(arg: (JQueryUI.JQueryPositionOptions | HTMLElement),
-               txt: string,
-               direction: directionT) {
+  txt: string,
+  direction: directionT) {
   return new Label(arg, txt, direction);
 }
 
@@ -137,44 +137,44 @@ class Script {
   }
 
   nextStepOnKeyOrTimeout(timeout: number,
-                         destructor: () => any,
-                         keyCode: number = null) {
+    destructor: () => any,
+    keyCode: number = null) {
     let s = this;
     if (timeout > 0) {
-     this.timeoutId = setTimeout(function() {
-       destructor();
-       $("body").off("keyup");
-       $("body").off("keypress");
-       s.nextStep();
-     }, timeout);
+      this.timeoutId = setTimeout(function() {
+        destructor();
+        $("body").off("keyup");
+        $("body").off("keypress");
+        s.nextStep();
+      }, timeout);
     }
 
-    this.cancelCb = function () {
-     if (timeout > 0)
-       clearTimeout(this.timeoutId);
-     $("body").off("keyup");
-     $("body").off("keypress");
-     destructor();
-   };
+    this.cancelCb = function() {
+      if (timeout > 0)
+        clearTimeout(this.timeoutId);
+      $("body").off("keyup");
+      $("body").off("keypress");
+      destructor();
+    };
 
-    $("body").keypress(function (ev) {
-     if (keyCode === null || ev.which === keyCode) {
-       ev.stopPropagation();
-       return false;
-     }
-   });
+    $("body").keypress(function(ev) {
+      if (keyCode === null || ev.which === keyCode) {
+        ev.stopPropagation();
+        return false;
+      }
+    });
 
-    $("body").keyup(function (ev) {
-     if (keyCode === null || ev.which === keyCode) {
-       $("body").off("keyup");
-       $("body").off("keypress");
-       destructor();
-       if (timeout > 0)
-         clearTimeout(this.timeoutId);
-       s.nextStep();
-       ev.stopPropagation();
-       return false;
-     }
+    $("body").keyup(function(ev) {
+      if (keyCode === null || ev.which === keyCode) {
+        $("body").off("keyup");
+        $("body").off("keypress");
+        destructor();
+        if (timeout > 0)
+          clearTimeout(this.timeoutId);
+        s.nextStep();
+        ev.stopPropagation();
+        return false;
+      }
     });
   }
   cancel(): void {
@@ -197,7 +197,7 @@ function union(s1: any, s2: any): any {
 function setlen(s: any): number {
   let l = 0;
   for (let i in s) {
-    if (s.hasOwnProperty(i))  l++;
+    if (s.hasOwnProperty(i)) l++;
   }
   return l;
 }
@@ -215,10 +215,10 @@ class KillSwitch {
   onFlipCb: (i: number) => any = (i) => 0;
   container: JQuery;
 
-  constructor(public parent:  HTMLElement) {
+  constructor(public parent: HTMLElement) {
     this.container = $("<div class='kill-switch' style='position: absolute;'></div>");
     let pOff = $(this.parent).offset();
-    let pW =  $(this.parent).width();
+    let pW = $(this.parent).width();
     das.position(this.container[0], {
       my: "right center",
       of: this.parent,
@@ -227,7 +227,7 @@ class KillSwitch {
     $("body").append(this.container);
 
     let ks = this;
-    this.container.click(function () {
+    this.container.click(function() {
       if (ks.pos === 0) {
         ks.pos = 1;
       } else {
@@ -282,26 +282,26 @@ class DynamicAttachments {
   }
 
   remove(elmt: HTMLElement): void {
-    this.objs = this.objs.filter( (item) => item[0] !== elmt );
+    this.objs = this.objs.filter((item) => item[0] !== elmt);
   }
 }
 
 let das = new DynamicAttachments();
 
 function disableBackspaceNav() {
-  $(document).unbind("keydown").bind("keydown", function (event) {
+  $(document).unbind("keydown").bind("keydown", function(event) {
     let doPrevent = false;
     if (event.keyCode === 8) {
       let d = event.srcElement || event.target;
       if (d.tagName.toUpperCase() === "INPUT") {
         let di = <HTMLInputElement>d;
         if (di.type.toUpperCase() === "TEXT" ||
-            di.type.toUpperCase() === "PASSWORD" ||
-            di.type.toUpperCase() === "FILE" ||
-            di.type.toUpperCase() === "SEARCH" ||
-            di.type.toUpperCase() === "EMAIL" ||
-            di.type.toUpperCase() === "NUMBER" ||
-            di.type.toUpperCase() === "DATE" ) {
+          di.type.toUpperCase() === "PASSWORD" ||
+          di.type.toUpperCase() === "FILE" ||
+          di.type.toUpperCase() === "SEARCH" ||
+          di.type.toUpperCase() === "EMAIL" ||
+          di.type.toUpperCase() === "NUMBER" ||
+          di.type.toUpperCase() === "DATE") {
           doPrevent = di.readOnly || di.disabled;
         } else {
           doPrevent = true;
@@ -314,7 +314,7 @@ function disableBackspaceNav() {
       }
 
       if (doPrevent) {
-          event.preventDefault();
+        event.preventDefault();
       }
     }
   });

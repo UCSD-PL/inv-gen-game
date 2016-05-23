@@ -1,5 +1,5 @@
 class StickyWindow {
-  constructor(public parent:  HTMLElement) {
+  constructor(public parent: HTMLElement) {
     $(this.parent).addClass("box");
     $(this.parent).addClass("stickyWindow");
     $(this.parent).addClass("col-md-1");

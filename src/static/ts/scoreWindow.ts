@@ -12,9 +12,11 @@ class ScoreWindow {
     $(this.parent).html("<span>" + this.score + "</span>");
     let addSpan = $("<span class='scoreText scoreFloat'>+" + num + "</span>");
     $(this.parent).append(addSpan);
-    addSpan.hide({ effect: "puff", easing: "swing", duration: 1000, complete: function() {
+    addSpan.hide({
+      effect: "puff", easing: "swing", duration: 1000, complete: function() {
       $(addSpan).remove();
-    }});
+    }
+    });
   }
 
   clear(): void {
@@ -58,8 +60,10 @@ class TwoPlayerScoreWindow extends ScoreWindow {
 
     $(this.parent).append(addSpan);
 
-    addSpan.hide({ effect: "puff", easing: "swing", duration: 1000, complete: function() {
+    addSpan.hide({
+      effect: "puff", easing: "swing", duration: 1000, complete: function() {
       $(addSpan).remove();
-    }});
+    }
+    });
   }
 }

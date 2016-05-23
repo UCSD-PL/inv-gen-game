@@ -1,6 +1,6 @@
 type voidCb = () => void
 type boolCb = (res: boolean) => void
-type invSoundnessResT = { ctrex: [ any[], any[], any[] ]}
+type invSoundnessResT = { ctrex: [any[], any[], any[]] }
 declare var curLvlSet: string; // TODO: Remove hack
 declare var progW: any;
 declare var progW2: any;
@@ -43,29 +43,29 @@ abstract class BaseGameLogic implements IGameLogic {
   userInputCb: (inv: invariantT) => void = null;
   commitCb: voidCb = null;
   pwupSuggestion: IPowerupSuggestion = null;
-  score:  number = 0;
+  score: number = 0;
 
   constructor(public tracesW: ITracesWindow,
-              public progressW: IProgressWindow,
-              public scoreW: ScoreWindow,
-              public stickyW: StickyWindow) {
+    public progressW: IProgressWindow,
+    public scoreW: ScoreWindow,
+    public stickyW: StickyWindow) {
     this.clear();
     let gl = this;
-    this.tracesW.onChanged(function () {
+    this.tracesW.onChanged(function() {
       gl.userInput(false);
     });
 
-    this.tracesW.onCommit(function () {
+    this.tracesW.onCommit(function() {
       gl.tracesW.msg("Trying out...");
       gl.tracesW.disable();
       gl.userInput(true);
       gl.tracesW.enable();
     });
 
-    this.onUserInput(() => {});
-    this.onLvlLoaded(() => {});
-    this.onLvlPassed(() => {});
-    this.onUserInput((x) => {});
+    this.onUserInput(() => { });
+    this.onLvlLoaded(() => { });
+    this.onLvlPassed(() => { });
+    this.onUserInput((x) => { });
   }
 
   clear(): void {
@@ -118,9 +118,9 @@ class StaticGameLogic extends BaseGameLogic implements IGameLogic {
   lvlPassedF: boolean = false;
 
   constructor(public tracesW: ITracesWindow,
-              public progressW: IProgressWindow,
-              public scoreW: ScoreWindow,
-              public stickyW: StickyWindow) {
+    public progressW: IProgressWindow,
+    public scoreW: ScoreWindow,
+    public stickyW: StickyWindow) {
     super(tracesW, progressW, scoreW, stickyW);
     this.pwupSuggestion = new PowerupSuggestionFullHistory(5, "lfu");
   }
@@ -138,7 +138,7 @@ class StaticGameLogic extends BaseGameLogic implements IGameLogic {
       cb(true);
     } else if (goal.manual) {
       cb(false);
-    } else  if (goal.find) {
+    } else if (goal.find) {
       let numFound = 0;
       for (let i = 0; i < goal.find.length; i++) {
         let found = false;
@@ -150,13 +150,13 @@ class StaticGameLogic extends BaseGameLogic implements IGameLogic {
         }
 
         if (found)
-          numFound ++;
+          numFound++;
 
       }
 
       cb(numFound === goal.find.length,
-         { "find": { "found": numFound, "total": goal.find.length } });
-    } else  if (goal.equivalent) {
+        { "find": { "found": numFound, "total": goal.find.length } });
+    } else if (goal.equivalent) {
       equivalentPairs(goal.equivalent, this.foundJSInv, function(pairs) {
         let numFound = 0;
         let equiv = [];
@@ -166,10 +166,10 @@ class StaticGameLogic extends BaseGameLogic implements IGameLogic {
         }
 
         cb(equiv.length === goal.equivalent.length,
-           { "equivalent": { "found": equiv.length , "total": goal.equivalent.length } });
+          { "equivalent": { "found": equiv.length, "total": goal.equivalent.length } });
       });
     } else if (goal.max_score) {
-      cb(true, { "max_score" : { "found" : this.foundJSInv.length } });
+      cb(true, { "max_score": { "found": this.foundJSInv.length } });
     } else if (goal.none) {
       cb(false);
     } else if (goal.hasOwnProperty("atleast")) {
@@ -217,7 +217,7 @@ class StaticGameLogic extends BaseGameLogic implements IGameLogic {
       }
 
       let all = pos_res.length;
-      let hold = pos_res.filter(function (x) { return x; }).length;
+      let hold = pos_res.filter(function(x) { return x; }).length;
 
       if (hold < all)
         this.tracesW.error("Holds for " + hold + "/" + all + " cases.");
@@ -235,7 +235,7 @@ class StaticGameLogic extends BaseGameLogic implements IGameLogic {
             return;
           }
 
-          impliedBy(gl.foundJSInv, jsInv, function (x: number) {
+          impliedBy(gl.foundJSInv, jsInv, function(x: number) {
             if (x !== null) {
               gl.progressW.markInvariant(gl.foundInv[x], "implies");
               gl.tracesW.immediateError("This is weaker than a found expression!");
@@ -280,9 +280,9 @@ class CounterexampleGameLogic extends BaseGameLogic implements IDynGameLogic {
   lvlPassedF: boolean = false;
 
   constructor(public tracesW: CounterExampleTracesWindow,
-              public progressW: IProgressWindow,
-              public scoreW: ScoreWindow,
-              public stickyW: StickyWindow) {
+    public progressW: IProgressWindow,
+    public scoreW: ScoreWindow,
+    public stickyW: StickyWindow) {
     super(tracesW, progressW, scoreW, stickyW);
     this.pwupSuggestion = new PowerupSuggestionFullHistory(5, "lfu");
   }
@@ -316,7 +316,7 @@ class CounterexampleGameLogic extends BaseGameLogic implements IDynGameLogic {
         cb(false, { ctrex: [pos_res, [], []] });
       } else {
         ind_vc_ctrex(curLvlSet, gl.curLvl.id, invs, function(ind_res) {
-          cb(ind_res.length === 0, { ctrex: [ [], [], ind_res ] });
+          cb(ind_res.length === 0, { ctrex: [[], [], ind_res] });
         });
       }
     });
@@ -329,7 +329,7 @@ class CounterexampleGameLogic extends BaseGameLogic implements IDynGameLogic {
         cb(pos.length === 0 && neg.length === 0 && ind.length === 0, res);
       });
     } else {
-      cb(false, [ [], [], [] ]);
+      cb(false, [[], [], []]);
     }
   }
 
@@ -376,10 +376,10 @@ class CounterexampleGameLogic extends BaseGameLogic implements IDynGameLogic {
       }
 
       let all = pos_res.length + neg_res.length + ind_res.length;
-      let hold_pos = pos_res.filter(function (x) { return x; }).length;
-      let hold_neg = neg_res.filter(function (x) { return !x; }).length;
+      let hold_pos = pos_res.filter(function(x) { return x; }).length;
+      let hold_neg = neg_res.filter(function(x) { return !x; }).length;
       let ind_choices = this.tracesW.switches.map(x => x.pos);
-      let hold_ind = zip(ind_choices, ind_res).filter(function (x) {
+      let hold_ind = zip(ind_choices, ind_res).filter(function(x) {
         if (x[0] === 0)
           return !x[1][0];
         else
@@ -403,7 +403,7 @@ class CounterexampleGameLogic extends BaseGameLogic implements IDynGameLogic {
             return;
           }
 
-          impliedBy(gl.foundJSInv, jsInv, function (x: number) {
+          impliedBy(gl.foundJSInv, jsInv, function(x: number) {
             if (x !== null) {
               gl.progressW.markInvariant(gl.foundInv[x], "implies");
               gl.tracesW.immediateError("This is weaker than a found expression!");
@@ -411,7 +411,7 @@ class CounterexampleGameLogic extends BaseGameLogic implements IDynGameLogic {
               gl.pwupSuggestion.invariantTried(jsInv);
               gl.setPowerups(gl.pwupSuggestion.getPwups());
 
-              gl.invSound(jsInv, function (sound, res) {
+              gl.invSound(jsInv, function(sound, res) {
                 if (res.ctrex[0].length !== 0) {
                   gl.overfittedInvs.push(jsInv);
                 } else if (res.ctrex[2].length !== 0) {
@@ -430,12 +430,12 @@ class CounterexampleGameLogic extends BaseGameLogic implements IDynGameLogic {
                   gl.tracesW.setExp("");
                   if (!gl.lvlPassedF) {
                     gl.goalSatisfied((sat, feedback) => {
-                        let lvl = gl.curLvl;
-                        if (sat) {
-                          gl.lvlPassedF = true;
-                          gl.lvlPassedCb();
-                        }
-                      });
+                      let lvl = gl.curLvl;
+                      if (sat) {
+                        gl.lvlPassedF = true;
+                        gl.lvlPassedCb();
+                      }
+                    });
                   }
                 } else {
                   gl.addData(res.ctrex);
@@ -485,9 +485,9 @@ class MultiroundGameLogic extends BaseGameLogic {
   lvlPassedF: boolean = false;
 
   constructor(public tracesW: ITracesWindow,
-              public progressW: IProgressWindow,
-              public scoreW: ScoreWindow,
-              public stickyW: StickyWindow) {
+    public progressW: IProgressWindow,
+    public scoreW: ScoreWindow,
+    public stickyW: StickyWindow) {
     super(tracesW, progressW, scoreW, stickyW);
     this.pwupSuggestion = new PowerupSuggestionFullHistory(5, "lfu");
   }
@@ -510,7 +510,7 @@ class MultiroundGameLogic extends BaseGameLogic {
         cb(false, { ctrex: [pos_res, [], []] });
       } else {
         ind_vc_ctrex(curLvlSet, gl.curLvl.id, invs, function(ind_res) {
-          cb(ind_res.length === 0, { ctrex: [ [], [], ind_res ] });
+          cb(ind_res.length === 0, { ctrex: [[], [], ind_res] });
         });
       }
     });
@@ -523,7 +523,7 @@ class MultiroundGameLogic extends BaseGameLogic {
         cb(pos.length === 0 && neg.length === 0 && ind.length === 0, res);
       });
     } else {
-      cb(false, [ [], [], [] ]);
+      cb(false, [[], [], []]);
     }
   }
 
@@ -551,7 +551,7 @@ class MultiroundGameLogic extends BaseGameLogic {
 
     try {
       let pos_res = invEval(jsInv, this.curLvl.variables, this.curLvl.data[0]);
-      let res: [any[], any[], [any, any][]] = [pos_res, [], [] ];
+      let res: [any[], any[], [any, any][]] = [pos_res, [], []];
       this.tracesW.evalResult({ data: res });
 
       if (!evalResultBool(res))
@@ -565,7 +565,7 @@ class MultiroundGameLogic extends BaseGameLogic {
       }
 
       let all = pos_res.length;
-      let hold = pos_res.filter(function (x) { return x; }).length;
+      let hold = pos_res.filter(function(x) { return x; }).length;
 
       if (hold < all)
         this.tracesW.error("Holds for " + hold + "/" + all + " cases.");
@@ -583,7 +583,7 @@ class MultiroundGameLogic extends BaseGameLogic {
             return;
           }
 
-          impliedBy(gl.foundJSInv, jsInv, function (x: number) {
+          impliedBy(gl.foundJSInv, jsInv, function(x: number) {
             if (x !== null) {
               gl.progressW.markInvariant(gl.foundInv[x], "implies");
               gl.tracesW.immediateError("This is weaker than a found expression!");
@@ -591,7 +591,7 @@ class MultiroundGameLogic extends BaseGameLogic {
               gl.pwupSuggestion.invariantTried(jsInv);
               gl.setPowerups(gl.pwupSuggestion.getPwups());
 
-              gl.invSound(jsInv, function (sound, res) {
+              gl.invSound(jsInv, function(sound, res) {
                 if (res.ctrex[0].length !== 0) {
                   gl.overfittedInvs.push(jsInv);
                 } else if (res.ctrex[2].length !== 0) {
@@ -610,32 +610,32 @@ class MultiroundGameLogic extends BaseGameLogic {
                   gl.tracesW.setExp("");
                   if (!gl.lvlPassedF) {
                     gl.goalSatisfied((sat, feedback) => {
+                      let lvl = gl.curLvl;
+                      if (sat) {
+                        gl.lvlPassedF = true;
+                        gl.lvlPassedCb();
+                      } else {
                         let lvl = gl.curLvl;
-                        if (sat) {
-                          gl.lvlPassedF = true;
-                          gl.lvlPassedCb();
-                        } else {
-                            let lvl = gl.curLvl;
-                            rpc.call("App.getPositiveExamples", [ curLvlSet,
-                              lvl.id, /* lvl.exploration_state, */
-                              gl.overfittedInvs.map(esprima.parse), 5], (data) => {
-                                /*
-                                let templates = foundJSInv.map(abstractLiterals)
-                                rpc.call("App.instantiate", [templates, lvl.variables, data[1]],
-                                (invs) => {
-                                  invs = invs.map((inv) => inv.substring(1, inv.length - 1))
-                                  invs = invs.filter( (item, ind) => invs.indexOf(item) == ind )
-                                  var newLvl = new Level(lvl.id,
-                                    lvl.variables, [data[1], [], []], data[0], lvl.goal,
-                                    lvl.hint,invs)
-                                  // TODO: CB for new level unlocked
-                                  gl.lvlPassedF = true;
-                                  gl.lvlPassed();
-                                })
-                                */
-                            }, log);
-                        }
-                      });
+                        rpc.call("App.getPositiveExamples", [curLvlSet,
+                          lvl.id, /* lvl.exploration_state, */
+                          gl.overfittedInvs.map(esprima.parse), 5], (data) => {
+                            /*
+                            let templates = foundJSInv.map(abstractLiterals)
+                            rpc.call("App.instantiate", [templates, lvl.variables, data[1]],
+                            (invs) => {
+                              invs = invs.map((inv) => inv.substring(1, inv.length - 1))
+                              invs = invs.filter( (item, ind) => invs.indexOf(item) == ind )
+                              var newLvl = new Level(lvl.id,
+                                lvl.variables, [data[1], [], []], data[0], lvl.goal,
+                                lvl.hint,invs)
+                              // TODO: CB for new level unlocked
+                              gl.lvlPassedF = true;
+                              gl.lvlPassed();
+                            })
+                            */
+                          }, log);
+                      }
+                    });
                   }
                 } else {
                 }
@@ -658,32 +658,32 @@ abstract class TwoPlayerBaseGameLogic implements IGameLogic {
   userInputCb: (inv: invariantT) => void = null;
   commitCb: voidCb = null;
   pwupSuggestion: IPowerupSuggestion = null;
-  score:  number = 0;
+  score: number = 0;
   player: number = null;
 
   constructor(public playerNum: number,
-              public tracesW: ITracesWindow,
-              public progressW: IProgressWindow,
-              public scoreW: TwoPlayerScoreWindow,
-              public stickyW: TwoPlayerStickyWindow) {
+    public tracesW: ITracesWindow,
+    public progressW: IProgressWindow,
+    public scoreW: TwoPlayerScoreWindow,
+    public stickyW: TwoPlayerStickyWindow) {
     this.clear();
     this.player = playerNum;
     let gl = this;
-    this.tracesW.onChanged(function () {
+    this.tracesW.onChanged(function() {
       gl.userInput(false);
     });
 
-    this.tracesW.onCommit(function () {
+    this.tracesW.onCommit(function() {
       gl.tracesW.msg("Trying out...");
       gl.tracesW.disable();
       gl.userInput(true);
       gl.tracesW.enable();
     });
 
-    this.onUserInput(() => {});
-    this.onLvlLoaded(() => {});
-    this.onLvlPassed(() => {});
-    this.onUserInput((x) => {});
+    this.onUserInput(() => { });
+    this.onLvlLoaded(() => { });
+    this.onLvlPassed(() => { });
+    this.onUserInput((x) => { });
   }
 
   clear(): void {
@@ -736,10 +736,10 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
   lvlPassedF: boolean = false;
 
   constructor(public playerNum: number,
-              public tracesW: ITracesWindow,
-              public progressW: IProgressWindow,
-              public scoreW: TwoPlayerScoreWindow,
-              public stickyW: TwoPlayerStickyWindow) {
+    public tracesW: ITracesWindow,
+    public progressW: IProgressWindow,
+    public scoreW: TwoPlayerScoreWindow,
+    public stickyW: TwoPlayerStickyWindow) {
     super(playerNum, tracesW, progressW, scoreW, stickyW);
     this.pwupSuggestion = new TwoPlayerPowerupSuggestionFullHistory(playerNum, 5, "lfu");
     // this.tracesW = tracesW;
@@ -775,7 +775,7 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
       cb(true);
     } else if (goal.manual) {
       cb(false);
-    } else  if (goal.find) {
+    } else if (goal.find) {
       let numFound = 0;
       for (let i = 0; i < goal.find.length; i++) {
         let found = false;
@@ -789,13 +789,13 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
         }
 
         if (found)
-          numFound ++;
+          numFound++;
 
       }
 
       cb(numFound === goal.find.length,
-         { "find": { "found": numFound, "total": goal.find.length } });
-    } else  if (goal.equivalent) {
+        { "find": { "found": numFound, "total": goal.find.length } });
+    } else if (goal.equivalent) {
       // check for the union of both players' invariants
       // equivalentPairs(goal.equivalent, this.foundJSInv, function(pairs) {
       equivalentPairs(goal.equivalent, allInvs, function(pairs) {
@@ -807,10 +807,10 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
         }
 
         cb(equiv.length === goal.equivalent.length,
-           { "equivalent": { "found": equiv.length , "total": goal.equivalent.length } });
+          { "equivalent": { "found": equiv.length, "total": goal.equivalent.length } });
       });
     } else if (goal.max_score) {
-      cb(true, { "max_score" : { "found" : this.foundJSInv.length } });
+      cb(true, { "max_score": { "found": this.foundJSInv.length } });
     } else if (goal.none) {
       cb(false);
     } else if (goal.hasOwnProperty("atleast")) {
@@ -945,7 +945,7 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
 
 
       let all = pos_res.length;
-      let hold = pos_res.filter(function (x) { return x; }).length;
+      let hold = pos_res.filter(function(x) { return x; }).length;
 
       if (hold < all) {
         this.tracesW.error("Holds for " + hold + "/" + all + " cases.");
@@ -961,7 +961,7 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
             return;
           }
 
-          impliedBy(gl.foundJSInv, jsInv, function (x: number) {
+          impliedBy(gl.foundJSInv, jsInv, function(x: number) {
             if (x !== null) {
               gl.progressW.markInvariant(gl.foundInv[x], "implies");
               gl.tracesW.immediateError("Implied by existing invariant!");

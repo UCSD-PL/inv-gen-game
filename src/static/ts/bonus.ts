@@ -5,7 +5,7 @@ function getAllPlayer1Inv() {
   let player1Invs: string[] = [];
 
   if (player1HTML.length > 0) {
-    for (let  i: number = 0; i < player1HTML.length; i++) {
+    for (let i: number = 0; i < player1HTML.length; i++) {
       let html: string = player1HTML[i].innerText;
       let inv: string = htmlToInv(html);
       player1Invs.push(inv);
@@ -54,27 +54,27 @@ function showImplication(player, src, dst) {
   let midX: number = (srcX + dstX) / 2 + 200;
   let midY: number = (srcY + dstY) / 2;
 
-  $(function(){
+  $(function() {
     if (player === 1) {
       $(document.body).curvedArrow({
-          p0x: srcX,
-          p0y: srcY,
-          p1x: midX,
-          p1y: midY,
-          p2x: dstX,
-          p2y: dstY,
-          strokeStyle: "rgba(255,128,128,0.5)"
+        p0x: srcX,
+        p0y: srcY,
+        p1x: midX,
+        p1y: midY,
+        p2x: dstX,
+        p2y: dstY,
+        strokeStyle: "rgba(255,128,128,0.5)"
       });
     }
     else {
       $(document.body).curvedArrow({
-          p0x: srcX,
-          p0y: srcY,
-          p1x: midX,
-          p1y: midY,
-          p2x: dstX,
-          p2y: dstY,
-          strokeStyle: "rgba(128,128,255,0.5)"
+        p0x: srcX,
+        p0y: srcY,
+        p1x: midX,
+        p1y: midY,
+        p2x: dstX,
+        p2y: dstY,
+        strokeStyle: "rgba(128,128,255,0.5)"
       });
     }
   });
@@ -107,7 +107,7 @@ function getBonus(player, fn) {
           }
         }
         if (increment !== 0) {
-          setTimeout(function(){fn(increment); $(".curved_arrow").delay(1000).fadeOut(1000); }, 1000);
+          setTimeout(function() { fn(increment); $(".curved_arrow").delay(1000).fadeOut(1000); }, 1000);
         }
       }
     });
@@ -138,7 +138,7 @@ function getBonus(player, fn) {
           }
         }
         if (increment !== 0) {
-          setTimeout(function(){fn(increment); $(".curved_arrow").delay(1000).fadeOut(1000); }, 1000);
+          setTimeout(function() { fn(increment); $(".curved_arrow").delay(1000).fadeOut(1000); }, 1000);
         }
       }
     });

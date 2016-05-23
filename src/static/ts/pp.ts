@@ -1,7 +1,7 @@
 function invPP(inv: string): string {
   let eqFixed: string = inv.replace(/===/g, "=").replace(/==/g, "=").replace(/\s/g, "");
-  let mulFixed: string = eqFixed.replace(/([0-9])([a-zA-Z])/g, (s, g1, g2) =>  g1 + "*" + g2);
-  let mulFixed1: string = mulFixed.replace(/([a-zA-Z])([0-9])/g, (s, g1, g2) =>  g1 + "*" + g2);
+  let mulFixed: string = eqFixed.replace(/([0-9])([a-zA-Z])/g, (s, g1, g2) => g1 + "*" + g2);
+  let mulFixed1: string = mulFixed.replace(/([a-zA-Z])([0-9])/g, (s, g1, g2) => g1 + "*" + g2);
   let caseFixed: string = mulFixed1.toLowerCase();
   return caseFixed;
 }
