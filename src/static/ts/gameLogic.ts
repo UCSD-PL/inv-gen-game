@@ -211,7 +211,7 @@ class StaticGameLogic extends BaseGameLogic implements IGameLogic {
         let redundant = this.progressW.contains(ui.id)
         if (redundant) {
           this.progressW.markInvariant(ui.id, "duplicate")
-          this.tracesW.immediateError("Duplicate Invariant!")
+          this.tracesW.immediateError("Duplicate Expression!")
           return
         }
 
@@ -375,7 +375,7 @@ class CounterexampleGameLogic extends BaseGameLogic implements IDynGameLogic {
         let redundant = this.progressW.contains(ui.id)
         if (redundant) {
           this.progressW.markInvariant(ui.id, "duplicate")
-          this.tracesW.immediateError("Duplicate Invariant!")
+          this.tracesW.immediateError("Duplicate Expression!")
           return
         }
 
@@ -568,7 +568,7 @@ class MultiroundGameLogic extends BaseGameLogic {
         let redundant = this.progressW.contains(ui.id)
         if (redundant) {
           this.progressW.markInvariant(ui.id, "duplicate")
-          this.tracesW.immediateError("Duplicate Invariant!")
+          this.tracesW.immediateError("Duplicate Expression!")
           return
         }
 

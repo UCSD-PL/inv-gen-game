@@ -118,7 +118,6 @@
                }
       },
       // UI tutorial -----------------------------------------------------
-/*
       { setup: function (cs) {
                   $(".overlay").fadeOut(fadeDelay, function () {
                     var lvl = {
@@ -269,6 +268,30 @@
                }
       },
       { setup: function (cs) {
+                 $("#formula-entry").val("")
+                 curL = label($("#formula-entry"), "Try i >= 0 again.", "left")
+                 nextStepOnInvariant(cs, "i>=0", labelRemover(curL));
+               }
+      },
+      { setup: function (cs) {
+                 $('#errormsg').html("<div class='error'> Duplicate Expression! </div>");
+                 curL = label({ of: $("#good_0"), at: "left+10 bottom" },
+                                "Can't use same expression twice", "up")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#formula-entry"), "How about i>=-1?", "left")
+                 nextStepOnInvariant(cs, "i>=-1", labelRemover(curL));
+               }
+      },
+      { setup: function (cs) {
+                 curL = label({ of: $("#good_0"), at: "left+10 bottom" },
+                              "Can't use a weaker<br> expression than <br> found one either.", "up");
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
                  $('.ignoreWindow').show(() => {
                    curL = label({ of: $(".ignoreWindow"), at: "left+10 bottom" },
                                 "More on ignored exspressions later... <br>(press spacebar)", "up");
@@ -343,19 +366,9 @@
                  gameLogic.loadLvl(lvl)
                }
       },
-      */
       // Ignored Invariants tutorial ------------------------------------------
       { setup: function (cs) {
-                 // TODO: Remove
-                 tracesW = new CounterExampleTracesWindow($('#data-display'));
-                 // TODO: Erase
-                 $('#sticky').addClass("box stickyWindow");
-                 stickyW = new StickyWindow($('#sticky'));
-                 // TODO: Erase
-                 $('#score-div-row').add('#discovered-invariants-div').add('.ignoreWindow').fadeIn(()=>0)
-                 // ======================== 
-                 // TODO: Uncomment
-                 // removeLabel(curL);
+                  removeLabel(curL);
                  $('#next-lvl').hide();
                   $('.overlay').html("<h1>Good job!<br>Lets go back to our tutorial.</h1>")
                   $('.overlay').fadeIn(fadeDelay, function () {
@@ -383,7 +396,7 @@
                    [ [ [ esprima.parse("i<4"), [ 3, 4 ] ] ], [], [] ])
                    gameLogic.loadLvl(lvl)
                    curL = label({ of: $(".ignoreWindow"), at: "left bottom" },
-                                "Notice the 'ignored invariant'", "up")
+                                "Notice the 'ignored expression'", "up")
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                  })
                }
@@ -421,7 +434,7 @@
       },
       { setup: function (cs) {
                  curL = label({ of: $(".ignoreWindow"), at: "left bottom" },
-                                "It ignores this invariant..", "up")
+                                "It ignores this expression..", "up")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
@@ -457,12 +470,6 @@
                  curL = label($("#discovered-invariants-div div.progressWindow"),
                                 "Its stronger!", "left")
                  cs.nextStepOnKeyOrTimeout(stepTimeout, ()=> { removeLabel(curL);}, 32)
-               }
-      },
-      { setup: function (cs) {
-                 curL = label({ of: $(".ignoreWindow"), at: "left bottom" },
-                                "We will use these to guide you<br> away from dead ends.", "up")
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       // Conclusion ----------------------------------------------------------
