@@ -605,6 +605,7 @@ class MultiroundGameLogic extends BaseGameLogic {
             let unsoundCandidates = gl.nonindInvs.concat(gl.overfittedInvs)
               .filter((uinv) => uinv.archetypeId == ui.archetypeId).map((x)=>x.canonForm)
             let allCandidates = soundCandidattes.concat(unsoundCandidates)
+              .concat(gl.foundJSInv.map((x)=>x.canonForm))
 
             impliedBy(allCandidates, ui.canonForm, function (x: ESTree.Node[]) {
               if (x.length > 0) {
@@ -646,7 +647,7 @@ class MultiroundGameLogic extends BaseGameLogic {
       let jsStr = esprimaToStr(inv);
       simplify(jsStr, (simplInv:invariantT) => {
         let ui = new UserInvariant(jsStr, jsStr, simplInv)
-        this.foundJSInv.push(ui);
+        //this.foundJSInv.push(ui);
         this.invMap[ui.id] = ui;
         queue.push(ui);
         this.progressW.addIgnoredInvariant(ui.id, ui.rawInv);

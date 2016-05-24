@@ -380,6 +380,8 @@ def getPositiveExamples(levelSet, levelId, cur_expl_state, overfittedInvs, num):
         new_vals, terminating = _tryUnroll(loop, bbs, 0, need, bad_envs, None)
         found.extend(new_vals)
         need -= len(new_vals)
+        if (len(new_vals) == 0):
+            break
         cur_expl_state.append((_from_dict(lvl['variables'], new_vals[0]), len(new_vals)-1, terminating))
 
     # De-z3-ify the numbers

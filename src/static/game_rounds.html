@@ -141,10 +141,11 @@
               lvl.id, lvl.exploration_state,
               overfitted, 5], (data) => {
                 let templates = all_invs.map(abstractLiterals)
+                let newData = (data[1].length > 0 ? data[1] : gameLogic.curLvl.data[0]);
                 rpc.call("App.instantiate", [templates, lvl.variables,
-                                             data[1]], (inv_newdata) => {
+                                             newData], (inv_newdata) => {
                   rpc.call("App.instantiate", [templates, lvl.variables,
-                                               gameLogic.allData[lvl.id][0].concat(data[1])],
+                                               gameLogic.allData[lvl.id][0].concat(newData)],
                   (invs) => {
                     // Filter out redundant invariants
                     var s = { }
@@ -219,7 +220,7 @@
                       }
                       
                       var newLvl = new PrepopulatedDynamicLevel(lvl.id, lvl.variables,
-                        [data[1].concat(extraRows), [], []], lvl.goal, lvl.hint, data[0],
+                        [newData.concat(extraRows), [], []], lvl.goal, lvl.hint, data[0],
                         [overfit, nonind, sound])
                       
                       lvls.splice(curLvl + 1, 0, newLvl)
