@@ -62,10 +62,6 @@
         $('#lvl_' + curLvl).addClass('bold');
         $('#lvl_' + curLvl).parent().addClass('currentLevel');
 
-        if (lvl == lvls.length - 1) {
-          $('#next-lvl').html('Finish');
-        }
-
         if (typeof(lvls[lvl]) == "string") {
           loadTrace(lvls[curLvl]);
         } else {
@@ -217,6 +213,7 @@
                         lvls.splice(curLvl + 1, 0, newLvl)
                         $("#lvl_dots").before('<li class="level pending">' + '<a class="loadLvl" id="lvl_' + (curLvl + 1) + '" >' + (curLvl + 1) + '</a>' + '</li>');
                         $('#next-lvl').show();
+
                         curL = label({ of: $('#next-lvl'), at: "right center"},
                               "Click Here! (50c bonus!)", "left")
                       })
@@ -236,6 +233,12 @@
               if (curLvl < lvls.length - 1) {
                 $("#lvl_dots").before('<li class="level pending">' + '<a class="loadLvl" id="lvl_' + (curLvl + 1) + '" >' + (curLvl + 1) + '</a>' + '</li>');
               }
+
+              if (curLvl == lvls.length - 1) {
+                $('#next-lvl').html('Finish');
+
+              }
+
               $('#next-lvl').show();
               curL = label({ of: $('#next-lvl'), at: "right center"},
                     "Click Here! (50c bonus!)", "left")

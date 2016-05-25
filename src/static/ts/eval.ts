@@ -226,8 +226,8 @@ function replace(inv:(string|ESTree.Node), replF): ESTree.Node {
 }
 
 function generalizeConsts(inv:string|ESTree.Node): [ESTree.Node, string[], string[]] {
-  var symConsts: string[] = [];
-  var newInv: ESTree.Node = replace(inv, (node) => {
+  let symConsts: string[] = [];
+  let newInv: ESTree.Node = replace(inv, (node) => {
     if (node.type == "Literal") {
       var newId = "a" + symConsts.length
       symConsts.push(newId)
@@ -239,9 +239,9 @@ function generalizeConsts(inv:string|ESTree.Node): [ESTree.Node, string[], strin
 }
 
 function generalizeInv(inv:string|ESTree.Node): [ESTree.Node, string[], string[]] {
-  var symConsts: string[] = [];
-  var symVars: string[] = [];
-  var newInv: ESTree.Node = replace(inv, (node) => {
+  let symConsts: string[] = [];
+  let symVars: string[] = [];
+  let newInv: ESTree.Node = replace(inv, (node) => {
     if (node.type == "Literal") {
       var newId = "a" + symConsts.length
       symConsts.push(newId)
