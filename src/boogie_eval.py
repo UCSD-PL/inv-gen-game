@@ -4,12 +4,17 @@ from boogie_paths import get_path_vars
 from itertools import permutations
 from z3 import *
 
-def env_to_expr(env, suff = ""):
-    s = "&&".join([("(%s%s==%s)" %(k, suff, str(v))) for (k,v) in env.iteritems()])
-    if (s == ""):
+def strval_to_boogie(v):
+    if (v == "true"):
         return AstTrue()
-    return parseExprAst(s)[0]
+    elif (v == "false"):
+        return AstFalse()
+    else:
+        return AstNumber(int(v))
 
+def env_to_expr(env, suff = ""):
+    return ast_and([ AstBinExpr(AstId(k + suff), "==", strval_to_boogie(v))
+        for (k,v) in env.iteritems() ])
 
 def evalPred(boogie_expr, env, consts = []):
     s = Solver()
