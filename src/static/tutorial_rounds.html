@@ -36,6 +36,7 @@
     var curL, curL1;
     var tempCb = null;
     var stepTimeout = -1;
+    var pwups = []
 
     disableBackspaceNav();
 
@@ -292,9 +293,62 @@
                }
       },
       { setup: function (cs) {
+                 pwups = [ new VarOnlyPowerup(2),
+                               new UseOpsPwup(["<=", ">=", "<", ">", "!=="], "<>", "inequality"),
+                               new UseOpsPwup(["+", "-"], "&plusmn;", "addition or subtraction") ]
+                 $('#sticky').addClass("box stickyWindow");
+                 stickyW = new StickyWindow($('#sticky'));
+                 $('#sticky').hide();
+                 stickyW.set(pwups);
+                 $('#sticky').fadeIn(fadeDelay, () => {
+                   curL = label({ of: $("#sticky"), at: "left center" },
+                                "Some expressions give you <br> more points!", "right");
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+                 })
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#formula-entry"), "Try i<=n", "left")
+                 nextStepOnInvariant(cs, "i<=n", labelRemover(curL));
+               }
+      },
+      { setup: function (cs) {
+                 tracesW.msg("Press Enter...")
+                 curL = label($("#formula-entry"), "Press enter...", "left")
+                 cs.nextStepOnKeyOrTimeout(-1, labelRemover(curL), 13)
+               }
+      },
+      { setup: function (cs) {
+                 tracesW.msg("")
+                 curL = label({ of: $(pwups[0].element), at: "left center+20" },
+                              "This doubles your points <br> since you used only <br> variables", "right")
+                 pwups[0].highlight(() => 
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+                 );
+               }
+      },
+      { setup: function (cs) {
+                 tracesW.msg("")
+                 curL = label({ of: $(pwups[1].element), at: "left center+20" },
+                              "This doubles your points <br> since you used <br> inequality", "right")
+                 pwups[1].highlight(() => 
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+                 );
+               }
+      },
+      { setup: function (cs) {
+                 curL = label({ of: $("#score-div-row"), at: "right center" },
+                              "So you get 4pts.", "left")
+                 scoreW.add(4)
+                 var inv = invPP(tracesW.curExp().trim());
+                 addSuccessfulInvariant(inv);
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
                  $('.ignoreWindow').show(() => {
                    curL = label({ of: $(".ignoreWindow"), at: "left+10 bottom" },
-                                "More on ignored exspressions later... <br>(press spacebar)", "up");
+                                "More on these later... <br>(press spacebar)", "up");
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                  })
                }
