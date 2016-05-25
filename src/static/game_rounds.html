@@ -142,93 +142,86 @@
               overfitted, 5], (data) => {
                 let templates = all_invs.map(generalizeInv)
                 let newData = (data[1].length > 0 ? data[1] : gameLogic.curLvl.data[0]);
-                instantiate(templates, lvl.variables, newData, (inv_newdata) => {
-                  instantiate(templates, lvl.variables, gameLogic.allData[lvl.id][0].concat(newData),
+                instantiate(templates, lvl.variables, gameLogic.allData[lvl.id][0].concat(newData),
                   (invs) => {
-                    // Filter out redundant invariants
-                    var s = { }
-                    invs.forEach((inv)=>s[esprimaToStr(inv)] = inv)
-                    invs = [ ]
-                    for (var id in s) {
-                      if (!s.hasOwnProperty(id)) continue;
-                      invs.push(s[id])
-                    }
+                    let uniq_invs = unique(invs, esprimaToStr);
+                    let constTemplates = invs.map(generalizeConsts)
+                    instantiate(constTemplates, lvl.variables, newData, (inv_newdata) => {
+                      // Filter out redundant invariants
+                      checkInvs(curLvlSet, lvl.id, uniq_invs, (res) => {
+                        var overfit = res[0]
+                        var nonind = res[1]
+                        var sound = res[2]
 
-                    checkInvs(curLvlSet, lvl.id, invs, (res) => {
-                      var overfit = res[0]
-                      var nonind = res[1]
-                      var sound = res[2]
-
-                      // Add counterexamples to overfit as data.
-                      var inv_needing_negation = [ ]
-                      for (var i in inv_newdata) {
-                        var inv = inv_newdata[i]
-                        if (!(inv in invs)) {
-                          assert(!(inv in sound))
-                          inv_needing_negation.push(inv)
-                        }
-                      }
-
-
-                      var str_inv_needing_negation = inv_needing_negation.map(esprimaToStr);
-
-                      // Need to include some rows from other traces, to prevent
-                      // the user from instantiating some of these invariants. Since we
-                      // we want to minimize the # of additional rows, want to solve an instance
-                      // of set cover here
-                      var s = { }
-                      var ord = [ ]
-                      for (var i in gameLogic.allData[lvl.id][0]) {
-                        var row = gameLogic.allData[lvl.id][0][i]
-                        s[i] = { }
-                        var cnt = 0;
-                        for (var j in str_inv_needing_negation) {
-                          var inv = str_inv_needing_negation[j]
-                          if (invEval(inv, lvl.variables, [ row ])[0] === false) {
-                            s[i][j] = true;
-                            cnt ++ ;
+                        // Add counterexamples to overfit as data.
+                        var inv_needing_negation = [ ]
+                        for (var i in inv_newdata) {
+                          var inv = inv_newdata[i]
+                          if (!(inv in invs)) {
+                            assert(!(inv in sound))
+                            inv_needing_negation.push(inv)
                           }
                         }
 
-                        ord.push([cnt, i]);
-                      }
-                      
-                      // s is map from data rows ot invariants negated
-                      // Start adding rows greedily, based on # of invariants negated
-                      ord.sort((a,b) => b[0]-a[0]);
-                      var covered = { }
-                      var numCovered = 0
-                      var extraRows = []
-                      for (var i in ord) {
-                        var coveredByThis= 0
-                        for (var j in s[ord[i][1]]) {
-                          if (!covered.hasOwnProperty(j)) {
-                            covered[j] = 1;
-                            coveredByThis ++;
+                        var str_inv_needing_negation = inv_needing_negation.map(esprimaToStr);
+
+                        // Need to include some rows from other traces, to prevent
+                        // the user from instantiating some of these invariants. Since we
+                        // we want to minimize the # of additional rows, want to solve an instance
+                        // of set cover here
+                        var s = { }
+                        var ord = [ ]
+                        for (var i in gameLogic.allData[lvl.id][0]) {
+                          var row = gameLogic.allData[lvl.id][0][i]
+                          s[i] = { }
+                          var cnt = 0;
+                          for (var j in str_inv_needing_negation) {
+                            var inv = str_inv_needing_negation[j]
+                            if (invEval(inv, lvl.variables, [ row ])[0] === false) {
+                              s[i][j] = true;
+                              cnt ++ ;
+                            }
                           }
-                        }
 
-                        if (coveredByThis > 0) {
-                          extraRows.push(gameLogic.allData[lvl.id][0][ord[i][1]])
-                          numCovered+= coveredByThis;
+                          ord.push([cnt, i]);
                         }
+                        
+                        // s is map from data rows ot invariants negated
+                        // Start adding rows greedily, based on # of invariants negated
+                        ord.sort((a,b) => b[0]-a[0]);
+                        var covered = { }
+                        var numCovered = 0
+                        var extraRows = []
+                        for (var i in ord) {
+                          var coveredByThis= 0
+                          for (var j in s[ord[i][1]]) {
+                            if (!covered.hasOwnProperty(j)) {
+                              covered[j] = 1;
+                              coveredByThis ++;
+                            }
+                          }
 
-                        if (numCovered == inv_needing_negation.length)
-                          break;
-                      }
-                      
-                      var newLvl = new PrepopulatedDynamicLevel(lvl.id, lvl.variables,
-                        [newData.concat(extraRows), [], []], lvl.goal, lvl.hint, data[0],
-                        [overfit, nonind, sound])
-                      
-                      lvls.splice(curLvl + 1, 0, newLvl)
-                      $("#lvl_dots").before('<li class="level pending">' + '<a class="loadLvl" id="lvl_' + (curLvl + 1) + '" >' + (curLvl + 1) + '</a>' + '</li>');
-                      $('#next-lvl').show();
-                      curL = label({ of: $('#next-lvl'), at: "right center"},
-                            "Click Here! (50c bonus!)", "left")
-                    })
+                          if (coveredByThis > 0) {
+                            extraRows.push(gameLogic.allData[lvl.id][0][ord[i][1]])
+                            numCovered+= coveredByThis;
+                          }
+
+                          if (numCovered == inv_needing_negation.length)
+                            break;
+                        }
+                        
+                        var newLvl = new PrepopulatedDynamicLevel(lvl.id, lvl.variables,
+                          [newData.concat(extraRows), [], []], lvl.goal, lvl.hint, data[0],
+                          [overfit, nonind, sound])
+                        
+                        lvls.splice(curLvl + 1, 0, newLvl)
+                        $("#lvl_dots").before('<li class="level pending">' + '<a class="loadLvl" id="lvl_' + (curLvl + 1) + '" >' + (curLvl + 1) + '</a>' + '</li>');
+                        $('#next-lvl').show();
+                        curL = label({ of: $('#next-lvl'), at: "right center"},
+                              "Click Here! (50c bonus!)", "left")
+                      })
+                    }, log)
                   }, log)
-                }, log)
             }, log)
       }
 
