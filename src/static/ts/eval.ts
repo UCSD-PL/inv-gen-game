@@ -24,6 +24,12 @@ function invToJS(inv:string): string {
   return inv.replace(/[^<>]=[^>]/g, function (v) { return v[0] + '==' + v[2]; })
 }
 
+function holds(inv:string, variables: string[], data: any[][]): boolean {
+  let res = invEval(inv, variables, data);
+  return evalResultBool(res) &&
+         res.filter((x)=>!(x === true)).length == 0;
+}
+
 function invEval(inv:string, variables: string[], data: any[][]): any[] {
   // Sort variable names in order of decreasing length
   let vars:[string, number][] = variables.map(function(val, ind, _) { return <[string, number]>[val, ind]; })

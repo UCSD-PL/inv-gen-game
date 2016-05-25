@@ -359,3 +359,13 @@ function unique<T>(l:T[], id:(x:T)=>string): T[] {
 
   return res;
 }
+
+function isin<T>(needle:T, hay:T[], id:(x:T)=>string): boolean {
+  let key = id(needle)
+  for (var i in hay) {
+    if (id(hay[i]) == key)
+      return true;
+  }
+
+  return false;
+}

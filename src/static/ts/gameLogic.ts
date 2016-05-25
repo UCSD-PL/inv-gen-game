@@ -489,8 +489,8 @@ class MultiroundGameLogic extends BaseGameLogic {
   soundInvs: UserInvariant[] = [];
 
   allData: { [ lvlid: string ] : dataT } = { };
-  allOverfitted: { [ lvlid: string ] : invariantT } =  { };
-  allNonind: { [ lvlid: string ] : invariantT } =  { };
+  allOverfitted: { [ lvlid: string ] : UserInvariant[] } =  { };
+  allNonind: { [ lvlid: string ] : invariantT[] } =  { };
 
   constructor(public tracesW: ITracesWindow,
               public progressW: IgnoredInvProgressWindow,
@@ -517,6 +517,9 @@ class MultiroundGameLogic extends BaseGameLogic {
           if (sound.length > 0) {
             this.soundInvs = sound.map((x) => this.invMap[esprimaToStr(x)])
             this.overfittedInvs = overfitted.map((v) => this.invMap[esprimaToStr(v[0])])
+            this.allOverfitted[this.curLvl.id] = unique(
+              this.allOverfitted[this.curLvl.id].concat(this.overfittedInvs),
+              (x:UserInvariant) => x.id);
             this.nonindInvs = nonind.map((v) => this.invMap[esprimaToStr(v[0])])
             counterexamples(curLvlSet, this.curLvl.id, this.soundInvs.map((x)=>x.canonForm), (res) => {
               let overfitted=res[0],nonind=res[1],sound=res[2], post_ctrex=res[3]
@@ -647,7 +650,6 @@ class MultiroundGameLogic extends BaseGameLogic {
       let jsStr = esprimaToStr(inv);
       simplify(jsStr, (simplInv:invariantT) => {
         let ui = new UserInvariant(jsStr, jsStr, simplInv)
-        //this.foundJSInv.push(ui);
         this.invMap[ui.id] = ui;
         queue.push(ui);
         this.progressW.addIgnoredInvariant(ui.id, ui.rawInv);
@@ -677,14 +679,18 @@ class MultiroundGameLogic extends BaseGameLogic {
     this.addIgnoredInvariants(nonind.map(x=>x[0]), this.nonindInvs);
     this.addSoundInvariants(sound);
 
-    if (!this.allData.hasOwnProperty(lvl.id))
+    if (!this.allData.hasOwnProperty(lvl.id)) {
       this.allData[lvl.id] = [ [], [], [] ];
+      this.allOverfitted[lvl.id] = [ ];
+    }
 
     for (let i in [0,1,2])
       this.allData[lvl.id][i]  = this.allData[lvl.id][i].concat(lvl.data[i])
 
     for (var i in overfitted) {
       this.allData[lvl.id][0].push(overfitted[i][1])
+      let s = esprimaToStr(overfitted[i][0]);
+      this.allOverfitted[lvl.id].push(new UserInvariant(s, s, overfitted[i][0]));
     }
 
     this.lvlLoadedCb = loadedCb;

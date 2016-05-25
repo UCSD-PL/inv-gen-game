@@ -150,14 +150,15 @@
                         var sound = res[2]
 
                         // Add counterexamples to overfit as data.
-                        var inv_needing_negation = [ ]
-                        for (var i in inv_newdata) {
-                          var inv = inv_newdata[i]
-                          if (!(inv in invs)) {
-                            assert(!(inv in sound))
-                            inv_needing_negation.push(inv)
-                          }
-                        }
+                        var inv_needing_negation = inv_newdata.filter((inv)=> {
+                          assert(isin(inv, invs, esprimaToStr) || !(isin(inv, sound, esprimaToStr)))
+                          return !isin(inv, invs, esprimaToStr);
+                        })
+
+                        inv_needing_negation = inv_needing_negation.concat(
+                               overfitted.filter((inv)=>holds(esprimaToStr(inv),
+                                                              lvl.variables,
+                                                              newData)))
 
                         var str_inv_needing_negation = inv_needing_negation.map(esprimaToStr);
 
@@ -243,11 +244,11 @@
               curL = label({ of: $('#next-lvl'), at: "right center"},
                     "Click Here! (50c bonus!)", "left")
             } else {
-              insertNewSublvl(curLvlSet, lvl, gameLogic.overfittedInvs.map((x)=>x.canonForm), gameLogic.foundJSInv.map((x)=>x.rawInv))
+              insertNewSublvl(curLvlSet, lvl, gameLogic.allOverfitted[lvl.id].map((x)=>x.canonForm), gameLogic.foundJSInv.map((x)=>x.rawInv))
             }
           })
         } else {
-          insertNewSublvl(curLvlSet, lvl, gameLogic.overfittedInvs.map((x)=>x.canonForm), gameLogic.foundJSInv.map((x)=>x.rawInv))
+          insertNewSublvl(curLvlSet, lvl, gameLogic.allOverfitted[lvl.id].map((x)=>x.canonForm), gameLogic.foundJSInv.map((x)=>x.rawInv))
         }
       });
 
