@@ -225,18 +225,25 @@ function replace(inv:(string|ESTree.Node), replF): ESTree.Node {
   })
 }
 
-function abstractLiterals(inv:string|ESTree.Node): [ESTree.Node, string[]] {
-  var newVars: string[] = [];
+function generalizeInv(inv:string|ESTree.Node): [ESTree.Node, string[], string[]] {
+  var symConsts: string[] = [];
+  var symVars: string[] = [];
   var newInv: ESTree.Node = replace(inv, (node) => {
     if (node.type == "Literal") {
-      var newId = "a" + newVars.length
-      newVars.push(newId)
+      var newId = "a" + symConsts.length
+      symConsts.push(newId)
+      return { "type": "Identifier", "name": newId }
+    }
+
+    if (node.type == "Identifier") {
+      var newId = "x" + symVars.length
+      symVars.push(newId)
       return { "type": "Identifier", "name": newId }
     }
 
     return node
   })
-  return [ newInv, newVars ]
+  return [ newInv, symConsts, symVars ]
 }
 
 function esprimaToStr(nd: ESTree.Node): string {

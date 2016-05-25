@@ -47,3 +47,13 @@ function checkInvs(lvlSet: string, lvlId: string, invs: invariantT[],
                               ESTree.Node[] ]) => void) {
   return rpc.call("App.checkInvs", [ lvlSet, lvlId, invs ], cb, log)
 }
+
+function instantiate(templates: templateT[],
+                     lvlVars: string[], // TODO: Should eventually not need this argument. Convert 
+                     data: [ any[] ],   //       data to a dictionary containing variable names.
+                     cb: (invs: invariantT)=>void): void {
+  let uniq_templates = unique(templates, (x)=> esprimaToStr(x[0]))
+  console.log("Instantiating " + templates.length + " templates " + 
+              uniq_templates.length + " unique ones.");
+  rpc.call("App.instantiate", [uniq_templates, lvlVars, data], cb, log);
+}

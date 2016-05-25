@@ -2,7 +2,7 @@ type voidCb = ()=>void
 type boolCb = (res: boolean)=>void
 type invSoundnessResT = { ctrex: [ any[], any[], any[] ]}
 type invariantT = ESTree.Node;
-type templateT = [ invariantT, string[] ]
+type templateT = [ invariantT, string[], string[] ]
 
 declare var curLvlSet: string; // TODO: Remove hack
 
@@ -16,7 +16,7 @@ class UserInvariant {
               public rawJS: string,
               public canonForm: invariantT) {
     this.rawInv = esprima.parse(rawJS);
-    this.archetype = abstractLiterals(canonForm);
+    this.archetype = generalizeInv(canonForm);
     this.archetypeId = esprimaToStr(this.archetype[0]);
     this.id = esprimaToStr(this.canonForm);
   }

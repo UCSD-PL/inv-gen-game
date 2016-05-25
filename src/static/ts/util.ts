@@ -343,3 +343,19 @@ function shape_eq(o1: any, o2: any) {
   }
   assert(false, "Unexpected objects being compared: " + o1 + " and " + o2);
 }
+
+function unique<T>(l:T[], id:(x:T)=>string): T[] {
+  let dict: { [ key: string ] : T } = { }
+  for (var x in l) {
+    dict[id(l[x])] = l[x];
+  }
+
+  let res : T[] = [];
+
+  for (var key in dict) {
+    if (!dict.hasOwnProperty(key))  continue;
+    res.push(dict[key])
+  }
+
+  return res;
+}

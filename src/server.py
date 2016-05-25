@@ -20,6 +20,9 @@ from boogie_ssa import SSAEnv
 from graph import strongly_connected_components, collapse_scc, topo_sort
 from logic import implies, equivalent, tautology
 from sys import exc_info
+from cProfile import Profile
+from pstats import Stats
+from StringIO import StringIO
 
 import argparse
 import traceback
@@ -55,6 +58,23 @@ def log_d(f):
             raise
     return decorated
 
+def prof_d(f):
+    def decorated(*args, **kwargs):
+        try:
+            pr = Profile()
+            pr.enable()
+            res = f(*args, **kwargs)
+            pr.disable()
+            return res;
+        except Exception,e:
+            raise
+        finally:
+            # Print results
+            s = StringIO()
+            ps = Stats(pr, stream=s).sort_stats('cumulative')
+            ps.print_stats()
+            print s.getvalue()
+    return decorated
 
 MYDIR=dirname(abspath(realpath(__file__)))
 z3s = Solver()
@@ -307,14 +327,16 @@ def _from_dict(vs, vals):
 
 @api.method("App.instantiate")
 @pp_exc
+@log_d
+@prof_d
 def instantiate(invs, traceVars, trace):
     res = []
     z3Invs = []
-    boogieInvs = [ (x[1], esprimaToBoogie(x[0], {})) for x in invs]
+    templates = [ (esprimaToBoogie(x[0], {}), x[1], x[2]) for x in invs]
     vals = map(lambda x:    _to_dict(traceVars, x), trace)
 
-    for (constVars, bInv) in boogieInvs:
-        for instInv in instantiateAndEval(bInv, vals, traceVars, constVars):
+    for (bInv, symConsts, symVars) in templates:
+        for instInv in instantiateAndEval(bInv, vals, symVars, symConsts):
             instZ3Inv = expr_to_z3(instInv, AllIntTypeEnv())
             implied = False
             z3Inv = None
@@ -527,7 +549,6 @@ def checkInvs_impl(bbs, loop, invs):
             # s doesn't contain a sound invariant i, then s + { i } follows
             # in the ordering, and if s is sound, the s + { i } is definitely sound.
             if (not sound_inv_inds.issubset(subset)): 
-                print "Skipping ", subset, " with sound_invs: ", sound_inv_inds
                 continue
 
             inv_subs = [ rest[x] for x in subset ]
