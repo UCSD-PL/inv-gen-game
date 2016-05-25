@@ -328,7 +328,6 @@ def _from_dict(vs, vals):
 @api.method("App.instantiate")
 @pp_exc
 @log_d
-@prof_d
 def instantiate(invs, traceVars, trace):
     res = []
     z3Invs = []
