@@ -380,12 +380,6 @@
       { setup: function (cs) {
                  $('#container').click()
                  curL = label({ of: $("#sticky"), at: "left+10 bottom" },
-                              "You get extra points for some expressions! (Press Spacebar..)", "up");
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
-               }
-      },
-      { setup: function (cs) {
-                 curL = label({ of: $("#sticky"), at: "left+10 bottom" },
                               "Hover over each powerup for details!", "up");
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
