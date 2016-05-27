@@ -51,33 +51,41 @@ class Label {
       }
     }
 
-    let clazz: string = "", text_pos: string = "", arrow_pos: string = "",
-        arrow_div_pos: string = "", arrow_div_pos1: string = "";
+    type posArr = [ string, number ,string, number]
+    function _strPos(s: posArr): string {
+      return s[0] + (s[1] > 0 ? '+' : '') + (s[1] != 0 ? s[1] : "") + " " +
+             s[2] + (s[3] > 0 ? '+' : '') + (s[3] != 0 ? s[3] : "");
+    }
+
+    let clazz: string = "", text_pos: string = "", arrow_pos: string = "";
+
+    let vec: [number, number] = [0,0], arr_off: [number, number] = [0,0];
+
 
     if (direction == "up") {
       clazz = "arrow_up"
       text_pos = "top:  30px;"
       arrow_pos = "left:  20px; top:  20px;"
-      arrow_div_pos = "left-10 top"
-      arrow_div_pos1 = "left-10 top+" + pulseWidth
+      arr_off = [ 0, 10 ]
+      vec = [ 0, pulseWidth ]
     } else if (direction == "down") {
       clazz = "arrow_down"
       text_pos = "top:  0px;"
       arrow_pos = "left:  20px; top:  40px;"
-      arrow_div_pos = "center bottom"
-      arrow_div_pos1 = "center bottom-" + pulseWidth
+      arr_off = [ 0, -10 ]
+      vec = [ 0, -pulseWidth ]
     } else if (direction == "left") {
       clazz = "arrow_left"
       text_pos = "left:  30px; top: -10px;"
       arrow_pos = "left:  0px; top:  0px;"
-      arrow_div_pos = "left top-7"
-      arrow_div_pos1 = "left+" + pulseWidth + " top-7"
+      arr_off = [ 10, -5 ]
+      vec = [ pulseWidth, 0 ]
     } else if (direction == "right") {
       clazz = "arrow_right"
       text_pos = "float:  left;"
       arrow_pos = "float: right;"
-      arrow_div_pos = "right center"
-      arrow_div_pos1 = "right-" + pulseWidth +" center"
+      arr_off = [ -15, -5 ]
+      vec = [ -pulseWidth, 0 ]
     }
 
     let div = $("<div class='absolute'><div class=" + clazz +
@@ -86,10 +94,13 @@ class Label {
 
     $('body').append(div);
 
-    let arrowDiv = $(div).children('div')[0]
-    let apos = $(arrowDiv).position();
+    this.pos.collision = "none none"
 
-    this.pos.my = arrow_div_pos
+    let arrowDiv = $(div).children('div')[0]
+    let aPos = $(arrowDiv).position()
+
+    let aPosOff : posArr = [ "left", - aPos.left + arr_off[0], "top", - aPos.top + arr_off[1] ]
+    this.pos.my = _strPos(aPosOff)
     $(div).position(this.pos)
     this.pos.using = (css, dummy) => $(div).animate(css, pulse / 2);
 
@@ -97,8 +108,8 @@ class Label {
     let lbl = this;
     
     this.timer = setInterval(function () {
-      let v = (ctr % 2 == 0 ? arrow_div_pos : arrow_div_pos1)
-      lbl.pos.my = v;
+      let v: posArr = (ctr % 2 == 0 ? aPosOff : [ aPosOff[0], aPosOff[1] + vec[0], aPosOff[2], aPosOff[3] + vec[1]])
+      lbl.pos.my = _strPos(v);
       $(div).position(lbl.pos)
       ctr ++;
     }, this.pulse / 2)
