@@ -115,7 +115,7 @@ abstract class BaseGameLogic implements IGameLogic {
       pwups[new_pwups[i].id] = new_pwups[i]
     }
 
-    this.stickyW.set(new_pwups);
+    this.stickyW.setPowerups(new_pwups);
   }
 
   abstract userInput(commit: boolean): void
