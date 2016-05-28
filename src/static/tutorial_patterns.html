@@ -303,7 +303,7 @@
                  stickyW.setPowerups(pwups);
                  $('#sticky').fadeIn(fadeDelay, () => {
                    curL = label({ of: $("#sticky"), at: "left center" },
-                                "Some expressions give you <br> more points!", "right");
+                                "Some expressions<br>give you more points!", "right");
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                  })
                }
@@ -321,8 +321,8 @@
       },
       { setup: function (cs) {
                  tracesW.msg("")
-                 curL = label({ of: $(pwups[0].element), at: "left center+20" },
-                              "This doubles your points <br> since you used only <br> variables", "right")
+                 curL = label({ of: $(pwups[0].element), at: "left center" },
+                              "Double added points <br> since you used only <br> variables", "right")
                  pwups[0].highlight(() => 
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                  );
@@ -330,8 +330,8 @@
       },
       { setup: function (cs) {
                  tracesW.msg("")
-                 curL = label({ of: $(pwups[1].element), at: "left center+20" },
-                              "This doubles your points <br> since you used <br> inequality", "right")
+                 curL = label({ of: $(pwups[1].element), at: "left center" },
+                              "Double added points <br> since you used <br> inequality", "right")
                  pwups[1].highlight(() => 
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                  );
@@ -339,7 +339,7 @@
       },
       { setup: function (cs) {
                  curL = label({ of: $("#score-div-row"), at: "right center" },
-                              "So you get 4pts.", "left")
+                              "So you get +4pts.<br>(instead of just +1)", "left")
                  scoreW.add(4)
                  var inv = invPP(tracesW.curExp().trim());
                  addSuccessfulInvariant(inv);
@@ -347,11 +347,14 @@
                }
       },
       { setup: function (cs) {
-                 $('.ignoreWindow').show(() => {
-                   curL = label({ of: $(".ignoreWindow"), at: "left+10 bottom" },
-                                "More on these later... <br>(press spacebar)", "up");
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
-                 })
+                 pwups = [ new UseOpsPwup(["+", "-"], "&plusmn;", "addition or subtraction"),
+                           new UseOpsPwup(["*", "/"], "*/", "multiplication or division"),
+                           new UseOpsPwup(["=="], "=", "equality"), 
+                         ]
+                 stickyW.setPowerups(pwups);
+                 curL = label({ of: $("#sticky"), at: "left center" },
+                              "Bonuses change<br>based on what you try.", "right");
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       // Tutorial Levels for UI-----------------------------------------------
@@ -366,7 +369,7 @@
                  $(".overlay").fadeOut(fadeDelay, function () {
                    $('#sticky').addClass("box stickyWindow");
                    stickyW = new StickyWindow($('#sticky'));
-                   gameLogic = new PatternGameLogic(tracesW, progW, scoreW, stickyW);
+                   gameLogic = new StaticGameLogic(tracesW, progW, scoreW, stickyW, 3);
                    var lvl = new Level("tutorial_lvl_1",
                      [ "j", "n" ],
                      [ [ [ 0, 3 ], [ 1, 3 ], [ 2, 3 ], [ 3, 3 ] ], [], [] ],
@@ -381,7 +384,7 @@
       { setup: function (cs) {
                  $('#container').click()
                  curL = label({ of: $("#sticky"), at: "left+10 bottom" },
-                              "Hover over each powerup for details!", "up");
+                              "Hover over each bonus for details!", "up");
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
@@ -415,46 +418,12 @@
                  gameLogic.loadLvl(lvl)
                }
       },
-      // Ignored Invariants tutorial ------------------------------------------
-      { setup: function (cs) {
-                  removeLabel(curL);
-                 $('#next-lvl').hide();
-                  $('.overlay').html("<h1>Good job!<br>Lets go back to our tutorial.</h1>")
-                  $('.overlay').fadeIn(fadeDelay, function () {
-                    cs.nextStepOnKeyOrTimeout(stepTimeout, ()=>0, 32)
-                  })
-               }
-      },
-      { setup: function (cs) {
-                 $(".overlay").fadeOut(fadeDelay, function () {
-                 gameLogic = new PatternGameLogic(tracesW, progW, scoreW, stickyW);
-                 gameLogic.goalSatisfied = function(cb) {
-                   cb(false, { ctrex: [ [], [], [] ] })
-                 }
-                 gameLogic.onLvlPassed(()=>
-                    $('#next-lvl').fadeIn(fadeDelay, ()=> {
-                      curL = label({ of: $('#next-lvl'), at: "right center" },
-                                   "Click Here! (15c bonus!)", "left")
-                    }))
-                 var lvl = new DynamicLevel("tutorial_example",
-                   [ "i", "n" ],
-                   [ [ [ 0, 2 ], [ 1, 2 ], [ 2, 2 ] ], [ ], [] ],
-                   { none: true },
-                   "How are i and n related?",
-                   [ ],
-                   [ [ [ esprima.parse("i<4"), [ 3, 4 ] ] ], [], [] ])
-                   gameLogic.loadLvl(lvl)
-                   curL = label({ of: $(".ignoreWindow"), at: "left bottom" },
-                                "Notice the 'ignored expression'", "up")
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
-                 })
-               }
-      },
       // Conclusion ----------------------------------------------------------
       { setup: function (cs) {
                   $('#data-display table').add('#score-div-row').add('#discovered-invariants-div')
                   .add('#sticky').add('.kill-switch')
                   .fadeOut(fadeDelay, function () {
+                    removeLabel(curL);
                     cs.nextStep()
                   })
                }
@@ -488,7 +457,7 @@
                  $('#next-lvl').html("Start Playing")
                  $('#next-lvl').off("click")
                  $('#next-lvl').click(function() {
-                   window.location.replace('game_rounds.html');
+                   window.location.replace('game_patterns.html');
                  })
                  $('#next-lvl').fadeIn(fadeDelay, function() {
                    curL = label({ of: $("#next-lvl"), at: "left center"},
@@ -527,7 +496,9 @@
 </body>
   <div class='container'>
     <div class='row'>
-      <div class='col-md-2' id='sticky'>
+      <div class='col-md-1' id='dummy'>
+      </div>
+      <div class='col-md-1' id='sticky'>
       </div>
       <div class='col-md-6' id='middle'>
         <div class='row' id='data-display' style="font-family:monospace;">

@@ -133,9 +133,10 @@ class StaticGameLogic extends BaseGameLogic implements IGameLogic {
   constructor(public tracesW: ITracesWindow,
               public progressW: IProgressWindow,
               public scoreW: ScoreWindow,
-              public stickyW: StickyWindow) {
+              public stickyW: StickyWindow,
+              numBonuses: number = 5) {
     super(tracesW, progressW, scoreW, stickyW);
-    this.pwupSuggestion = new PowerupSuggestionFullHistory(5, "lfu");
+    this.pwupSuggestion = new PowerupSuggestionFullHistory(numBonuses, "lfu");
   }
 
   clear(): void {
