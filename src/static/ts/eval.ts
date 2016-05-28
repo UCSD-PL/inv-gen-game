@@ -1,8 +1,12 @@
 type strset = { [ ind: string ]: boolean }
 var notDefRe = /(.*) is not defined/;
 
-class InvException{
-  constructor(public name: string, public msg: string) { }
+class InvException extends Error{
+  constructor(public name: string, public message: string) { super(message); }
+}
+
+class ImmediateErrorException extends InvException {
+  constructor(public name: string, public message: string) { super(name, message); }
 }
 
 function interpretError(err: Error): (string|Error) {
@@ -15,6 +19,8 @@ function interpretError(err: Error): (string|Error) {
     return "Not a valid expression."
   } else if (err.name == 'NOT_BOOL') {
     return "Expression should evaluate to true or false, not " + err.message + " for example."
+  } else if (err.name == "UnsupportedError") {
+    return (<InvException>err).message;
   }
 
   return err

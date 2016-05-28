@@ -792,9 +792,13 @@ class PatternGameLogic extends BaseGameLogic {
     }
 
     try {
+      if (jsInv.search("\\^") >= 0) {
+        throw new ImmediateErrorException("UnsupportedError", "^ not supported. Try * instead.");
+      }
       let pos_res = invEval(jsInv, this.curLvl.variables, this.curLvl.data[0])
       let res: [any[], any[], [any, any][]] = [pos_res, [], [] ]
       this.tracesW.evalResult({ data: res })
+
 
       if (!evalResultBool(res))
         return;
@@ -828,14 +832,7 @@ class PatternGameLogic extends BaseGameLogic {
               return
             }
 
-            let soundCandidattes = gl.soundInvs.map((x)=>x.canonForm);
-            /*
-            let unsoundCandidates = gl.nonindInvs.concat(gl.overfittedInvs)
-              .filter((uinv) => uinv.archetypeId == ui.archetypeId).map((x)=>x.canonForm)
-            let allCandidates = soundCandidattes.concat(unsoundCandidates)
-              .concat(gl.foundJSInv.map((x)=>x.canonForm))
-            */
-            let allCandidates = soundCandidattes;
+            let allCandidates = gl.foundJSInv.map((x)=>x.canonForm);
 
             impliedBy(allCandidates, ui.canonForm, function (x: ESTree.Node[]) {
               if (x.length > 0) {
@@ -864,7 +861,11 @@ class PatternGameLogic extends BaseGameLogic {
         }
       })
     } catch (err) {
-      this.tracesW.delayedError(<string>interpretError(err))
+      if (err instanceof ImmediateErrorException) {
+        this.tracesW.immediateError(<string>interpretError(err))
+      } else {
+        this.tracesW.delayedError(<string>interpretError(err))
+      }
     }
   }
 
