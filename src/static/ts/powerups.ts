@@ -36,18 +36,26 @@ class BasePowerup implements IPowerup {
 }
 
 class MultiplierPowerup extends BasePowerup {
-  constructor(id: string,
-              html: string,
-              holds: holdsT,
-              mult: number,
-              applies: appliesT,
-              tip: string) {
+  constructor(public id: string,
+              public html: string,
+              public holds: holdsT,
+              public mult: number,
+              public applies: appliesT,
+              public tip: string) {
     super(id + "x" + mult,
           "<div class='pwup box'>" + html + "<div class='pwup-mul'>" + mult + "X</div></div>",
           holds,
           (x)=>x*mult,
           applies,
           tip)
+  }
+
+  highlight(cb: ()=>any): void {
+    this.element.effect("highlight", { color: "#008000" }, 500, ()=>0);
+    let mulSpan = $("<span class='scoreText scoreFloat'>x" + this.mult + "</span>") 
+    $(this.element).append(mulSpan);
+    $(mulSpan).position({ "my": "right center", "at": "left-10 center", "of": this.element });
+    mulSpan.hide({ effect: "puff", easing:"swing", duration:1000, complete: () => { mulSpan.remove(); cb(); }})
   }
 }
 

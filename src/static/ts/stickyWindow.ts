@@ -17,7 +17,7 @@ class StickyWindow extends BaseContainer<IPowerup> {
     $(this.parent).addClass("box")
     $(this.parent).addClass("stickyWindow");
     $(this.parent).addClass("col-md-1");
-    $(this.parent).html("<div><p style='text-align: center; font-weight: bold; margin-top: 8px'>Powerups</p><br></div>");
+    $(this.parent).html("<div><p style='text-align: center; font-weight: bold; margin-top: 8px'>Bonus</p><br></div>");
   }
 }
 
@@ -26,12 +26,12 @@ class WideStickyWindow extends StickyWindow {
     $(this.parent).addClass("box")
     $(this.parent).addClass("stickyWindow");
     $(this.parent).addClass("col-md-2");
-    $(this.parent).html("<p style='text-align: center; font-weight: bold; margin-top: 8px'>Powerups</p><br><div class='row'></div>");
+    $(this.parent).html("<p style='text-align: center; font-weight: bold; margin-top: 8px'>Bonus</p><br><div class='row'></div>");
   }
 
   addElement(key: string, pwup: IPowerup, rep: JQuery): HTMLElement {
     let div = $(this.parent).children("div")[0]
-    let newDiv = $("<div class='col-md-6'></div>")
+    let newDiv = $("<div class='col-md-4'></div>")
     $(newDiv).append(pwup.element);
     $(div).append(newDiv);
     return pwup.element[0];
