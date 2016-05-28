@@ -698,3 +698,189 @@ class MultiroundGameLogic extends BaseGameLogic {
       this.lvlLoadedCb();
   }
 }
+
+
+class PatternGameLogic extends BaseGameLogic {
+  foundJSInv: UserInvariant[] = [];
+  invMap: { [ id: string ] : UserInvariant } = {};
+  lvlPassedF: boolean = false;
+  nonindInvs: UserInvariant[] = [];
+  overfittedInvs: UserInvariant[] = [];
+  soundInvs: UserInvariant[] = [];
+
+  allData: { [ lvlid: string ] : dataT } = { };
+  allNonind: { [ lvlid: string ] : invariantT[] } =  { };
+
+  constructor(public tracesW: ITracesWindow,
+              public progressW: IProgressWindow,
+              public scoreW: ScoreWindow,
+              public stickyW: StickyWindow) {
+    super(tracesW, progressW, scoreW, stickyW);
+    this.pwupSuggestion = new PowerupSuggestionFullHistory(3, "lfu");
+  }
+
+  clear(): void {
+    super.clear();
+    this.foundJSInv = [];
+    this.invMap = {};
+    this.soundInvs = [];
+    this.overfittedInvs = [];
+    this.nonindInvs = [];
+    this.lvlPassedF = false;
+  }
+
+  protected computeScore(inv: invariantT, s: number): number {
+    let pwups = this.pwupSuggestion.getPwups();
+    let hold: IPowerup[] = pwups.filter((pwup)=> pwup.holds(inv))
+    let newScore = hold.reduce((score, pwup) => pwup.transform(score), s)
+    for (var i in hold) {
+      if (i == ""+(hold.length - 1)) {
+        hold[i].highlight(()=>{
+          this.pwupSuggestion.invariantTried(inv);
+          this.setPowerups(this.pwupSuggestion.getPwups());
+        });
+      } else {
+        hold[i].highlight(()=>0);
+      }
+    }
+    return newScore;
+  }
+
+  goalSatisfied(cb:(sat: boolean, feedback: any)=>void):void {
+    if (this.foundJSInv.length > 0) {
+      checkInvs(curLvlSet, this.curLvl.id, this.foundJSInv.map((x)=>x.canonForm),
+        ([overfitted, nonind, sound]) => {
+          if (sound.length > 0) {
+            this.soundInvs = sound.map((x) => this.invMap[esprimaToStr(x)])
+            this.overfittedInvs = overfitted.map((v) => this.invMap[esprimaToStr(v[0])])
+            this.nonindInvs = nonind.map((v) => this.invMap[esprimaToStr(v[0])])
+            counterexamples(curLvlSet, this.curLvl.id, this.soundInvs.map((x)=>x.canonForm), (res) => {
+              let overfitted=res[0],nonind=res[1],sound=res[2], post_ctrex=res[3]
+              cb((overfitted.length == 0 && nonind.length == 0 && post_ctrex.length == 0) ||
+                  this.foundJSInv.length >= 10, res)
+            })
+          } else {
+              cb(this.foundJSInv.length >= 10, null)
+          }
+        })
+    } else {
+      cb(false, [ [], [], [] ])
+    }
+  }
+
+  userInput(commit: boolean): void {
+    this.tracesW.disableSubmit();
+    this.tracesW.clearError();
+    this.progressW.clearMarks();
+
+    let inv = invPP(this.tracesW.curExp().trim());
+    let jsInv = invToJS(inv)
+
+    this.userInputCb(inv);
+
+    try {
+      let parsedInv = esprima.parse(jsInv);
+    } catch (err) {
+      this.tracesW.delayedError(inv + " is not a valid expression.");
+      return;
+    }
+
+    if (inv.length == 0) {
+      this.tracesW.evalResult({ clear: true })
+      return;
+    }
+
+    try {
+      let pos_res = invEval(jsInv, this.curLvl.variables, this.curLvl.data[0])
+      let res: [any[], any[], [any, any][]] = [pos_res, [], [] ]
+      this.tracesW.evalResult({ data: res })
+
+      if (!evalResultBool(res))
+        return;
+
+      simplify(jsInv, (simplInv: ESTree.Node) => { 
+        let ui: UserInvariant = new UserInvariant(inv, jsInv, simplInv)
+
+        let redundant = this.progressW.contains(ui.id)
+        if (redundant) {
+          this.progressW.markInvariant(ui.id, "duplicate")
+          this.tracesW.immediateError("Duplicate Expression!")
+          return
+        }
+
+        let all = pos_res.length
+        let hold = pos_res.filter(function (x) { return x; }).length
+
+        if (hold < all)
+          this.tracesW.error("Holds for " + hold + "/" + all + " cases.")
+        else {
+          this.tracesW.enableSubmit();
+          if (!commit) {
+            this.tracesW.msg("<span class='good'>Press Enter...</span>");
+            return;
+          }
+
+          let gl = this;
+          isTautology(ui.rawInv, function(res) {
+            if (res) {
+              gl.tracesW.error("This is a always true...")
+              return
+            }
+
+            let soundCandidattes = gl.soundInvs.map((x)=>x.canonForm);
+            /*
+            let unsoundCandidates = gl.nonindInvs.concat(gl.overfittedInvs)
+              .filter((uinv) => uinv.archetypeId == ui.archetypeId).map((x)=>x.canonForm)
+            let allCandidates = soundCandidattes.concat(unsoundCandidates)
+              .concat(gl.foundJSInv.map((x)=>x.canonForm))
+            */
+            let allCandidates = soundCandidattes;
+
+            impliedBy(allCandidates, ui.canonForm, function (x: ESTree.Node[]) {
+              if (x.length > 0) {
+                gl.progressW.markInvariant(esprimaToStr(x[0]), "implies")
+                gl.tracesW.immediateError("This is weaker than a found expression!")
+              } else {
+                var addScore = gl.computeScore(ui.rawInv, 1)
+                gl.score += addScore;
+                gl.scoreW.add(addScore);
+                gl.foundJSInv.push(ui)
+                gl.invMap[ui.id] = ui;
+                gl.progressW.addInvariant(ui.id, ui.rawInv);
+                gl.tracesW.setExp("");
+                if (!gl.lvlPassedF) {
+                  gl.goalSatisfied((sat, feedback) => {
+                      var lvl = gl.curLvl
+                      if (sat) {
+                        gl.lvlPassedF = true;
+                        gl.lvlPassedCb();
+                      }
+                    });
+                }
+              }
+            })
+          })
+        }
+      })
+    } catch (err) {
+      this.tracesW.delayedError(<string>interpretError(err))
+    }
+  }
+
+  loadLvl(lvl: DynamicLevel): void {
+    let loadedCb = this.lvlLoadedCb;
+    this.lvlLoadedCb = null;
+    super.loadLvl(lvl);
+
+    if (!this.allData.hasOwnProperty(lvl.id)) {
+      this.allData[lvl.id] = [ [], [], [] ];
+    }
+
+    for (let i in [0,1,2])
+      this.allData[lvl.id][i]  = this.allData[lvl.id][i].concat(lvl.data[i])
+
+    this.lvlLoadedCb = loadedCb;
+    if (this.lvlLoadedCb)
+      this.lvlLoadedCb();
+  }
+}
