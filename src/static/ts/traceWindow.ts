@@ -119,7 +119,12 @@ abstract class BaseTracesWinow implements ITracesWindow {
   private reflowCb(): void { das.reflowAll(); }
   protected setResultCell(row: JQuery, datum: any): void {
     let cell = row.children('.temp_expr_eval')
-    cell.html(JSON.stringify(datum))
+    if (typeof(datum) != 'number' || (!isNaN(datum)) && datum !== Infinity && datum !== -Infinity) {
+      cell.html(JSON.stringify(datum))
+    } else {
+      // TODO: Hack - assuming all NaNs come from division by 0
+      cell.html("<span class='error'>Error! Did you divide by 0? Try * instead?</span>")
+    }
     cell.removeClass('true false greyed')
     if (typeof(datum) == "boolean")
       cell.addClass(datum ? 'true' : 'false')

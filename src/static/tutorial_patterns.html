@@ -302,8 +302,8 @@
                  $('#sticky').hide();
                  stickyW.setPowerups(pwups);
                  $('#sticky').fadeIn(fadeDelay, () => {
-                   curL = label({ of: $("#sticky"), at: "left center" },
-                                "Some expressions<br>give you more points!", "right");
+                   curL = label({ of: $("#sticky"), at: "center bottom" },
+                                "Some expressions<br>give you more points!", "up");
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                  })
                }
@@ -321,8 +321,8 @@
       },
       { setup: function (cs) {
                  tracesW.msg("")
-                 curL = label({ of: $(pwups[0].element), at: "left center" },
-                              "Double added points <br> since you used only <br> variables", "right")
+                 curL = label({ of: $("#sticky"), at: "center bottom" },
+                              "Double added points <br> since you used only <br> variables", "up")
                  pwups[0].highlight(() => 
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                  );
@@ -330,8 +330,8 @@
       },
       { setup: function (cs) {
                  tracesW.msg("")
-                 curL = label({ of: $(pwups[1].element), at: "left center" },
-                              "Double added points <br> since you used <br> inequality", "right")
+                 curL = label({ of: $("#sticky"), at: "center bottom" },
+                              "Double added points <br> since you used <br> inequality", "up")
                  pwups[1].highlight(() => 
                    cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                  );
@@ -352,8 +352,8 @@
                            new UseOpsPwup(["=="], "=", "equality"), 
                          ]
                  stickyW.setPowerups(pwups);
-                 curL = label({ of: $("#sticky"), at: "left center" },
-                              "Bonuses change<br>based on what you try.", "right");
+                 curL = label({ of: $("#sticky"), at: "center bottom" },
+                              "Bonuses change<br>based on what you try.", "up");
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
@@ -429,8 +429,8 @@
                }
       },
       { setup: function (cs) {
-                  $('#data-display').html('<div stype="display: none"><h1>Final words:</h1>' +
-                    '<h3><p>You can use all of the following operators:</p>' +
+                  $('#data-display').html('<div stype="display: none">' +
+                    '<h2><p>You can use all of the following operators:</p></h2><h3>' +
                     '<table class="table table-stripped"><thead><tr><th>Operator</th><th>Description</th><th>Examples</th></tr></thead>' +
                     '<tbody>' +
                     [ ['+', 'Integer Addition', '3+4=7, i+1'],
