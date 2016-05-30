@@ -363,3 +363,7 @@ th {
   text-decoration: none;
   border-radius: 25px;
 }
+
+a {
+  cursor: pointer;
+}
