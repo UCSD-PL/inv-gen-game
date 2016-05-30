@@ -776,15 +776,9 @@ class PatternGameLogic extends BaseGameLogic {
 
     let inv = invPP(this.tracesW.curExp().trim());
     let jsInv = invToJS(inv)
+    let parsedInv: ESTree.Node = null;
 
     this.userInputCb(inv);
-
-    try {
-      let parsedInv = esprima.parse(jsInv);
-    } catch (err) {
-      this.tracesW.delayedError(inv + " is not a valid expression.");
-      return;
-    }
 
     if (inv.length == 0) {
       this.tracesW.evalResult({ clear: true })
@@ -792,9 +786,23 @@ class PatternGameLogic extends BaseGameLogic {
     }
 
     try {
+      parsedInv = esprima.parse(jsInv);
+    } catch (err) {
+      //this.tracesW.delayedError(inv + " is not a valid expression.");
+      return;
+    }
+
+    let undefined_ids = difference(identifiers(parsedInv), toStrset(this.curLvl.variables));
+    if (!isEmpty(undefined_ids)) {
+      this.tracesW.delayedError(any_mem(undefined_ids) + " is not defined.");
+      return;
+    }
+
+    try {
       if (jsInv.search("\\^") >= 0) {
         throw new ImmediateErrorException("UnsupportedError", "^ not supported. Try * instead.");
       }
+
       let pos_res = invEval(jsInv, this.curLvl.variables, this.curLvl.data[0])
       let res: [any[], any[], [any, any][]] = [pos_res, [], [] ]
       this.tracesW.evalResult({ data: res })
