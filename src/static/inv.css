@@ -354,3 +354,12 @@ th {
 .greyed {
   background-color: rgba(207, 207, 207, .5);
 }
+
+.btn-quit {
+  color: #ffffff;
+  font-size: 20px;
+  background: #157d00;
+  padding: 10px 20px 10px 20px;
+  text-decoration: none;
+  border-radius: 25px;
+}

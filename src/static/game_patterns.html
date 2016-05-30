@@ -54,6 +54,7 @@
 
     function loadLvl(lvl) {
       if (lvl == lvls.length) {
+        curLvl = lvl;
         doneScreen();
       } else {
         curLvl = lvl;
@@ -77,8 +78,9 @@
 
     function doneScreen() {
       //loadLvlSet("test-benchmarks")
-      $(".overlay").html("<h1 class='good'> Good job! You finished all levels! <br> Your score is: " +
-        gameLogic.score  + "!</h1><br>" +
+      var lvlStr = (curLvl == lvls.length ? "all" : "" + curLvl + "/" + lvls.length)
+      $(".overlay").html("<h1 class='good'> Good job! You finished " + lvlStr +
+        " levels! <br> Your score is: " + gameLogic.score  + "!</h1><br>" +
         "<h2> Please submit the screencast of your work! </h2>"
       );
       $(".overlay").fadeIn(1000);
@@ -142,6 +144,8 @@
         $('#help-content').slideToggle(200);
         $('#ops').hide();
       })
+
+      $('.btn-quit').click(doneScreen);
 
       $('#replay').click(function() {
         var win = window.open('tutorial_new.html', '_blank');
@@ -246,6 +250,9 @@
           </div>
         </div>
         <div class='row good centered positioned' id='discovered-invariants-div'>
+        </div>
+        <div class='row ' id='quit-div'>
+          <button id='next-lvl' class='btn-quit'>Quit</button>
         </div>
       </div>
     </div>
