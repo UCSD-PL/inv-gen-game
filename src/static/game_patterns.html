@@ -297,30 +297,45 @@
                     <span class='bold'>i != 3</span>  
                 </div>
                 <div id="lt_ex" style='display: none'>
-                    Less than. i &lt j is true if i is less than j. E.g.
-                    <span class='bold'>4 &lt 5</span>,
-                    <span class='bold'>i &lt 3</span>  
+                    Less than. i &lt; j is true if i is less than j. E.g.
+                    <span class='bold'>4 &lt; 5</span>,
+                    <span class='bold'>i &lt; 3</span>  
                 </div>
                 <div id="lte_ex" style='display: none'>
-                    Less than or equal. i &lt= j checks if i is less than or equal to j. Example: 
-                    <span class='bold'>4 &lt= 5</span>,
-                    <span class='bold'>4 &lt= 4</span>,
-                    <span class='bold'>i &lt= 3</span>  
+                    Less than or equal. i &lt;= j checks if i is less than or equal to j. Example: 
+                    <span class='bold'>4 &lt;= 5</span>,
+                    <span class='bold'>4 &lt;= 4</span>,
+                    <span class='bold'>i &lt;= 3</span>  
                 </div>
                 <div id="gt_ex" style='display: none'>
-                    Greater than.i &gt j is true if i is greater than j. Examples:
-                    <span class='bold'>5 &gt= 4</span>,
-                    <span class='bold'>i &gt= 3</span>  
+                    Greater than.i &gt; j is true if i is greater than j. Examples:
+                    <span class='bold'>5 &gt; 4</span>,
+                    <span class='bold'>i &gt; 3</span>  
                 </div>
                 <div id="gte_ex" style='display: none'>
-                    Greater than or equal. Example: i &gt= j checks if i is greater than or equal to j
-                    <span class='bold'>5 &gt= 4</span>,
-                    <span class='bold'>4 &gt= 4</span>,
-                    <span class='bold'>i &gt= 3</span>  
+                    Greater than or equal. Example: i &gt;= j checks if i is greater than or equal to j
+                    <span class='bold'>5 &gt;= 4</span>,
+                    <span class='bold'>4 &gt;= 4</span>,
+                    <span class='bold'>i &gt;= 3</span>  
                 </div>
-                <div id="not_ex" style='display: none'>The negation operator. Example: !(i = 3) returns the negation of the condition that i is 3">!</div>
-                <div id="and_ex" style='display: none'>The conjunction operator. Example: (i=2) &amp;&amp; (j>0) will return true only if both i=2 and j>0">&amp;&amp;</div>
-                <div id="or_ex" style='display: none'>The disjunction operator. Example: (i=2) || (j>0) will return true if even one of the two conditions is true">||</div>
+                <div id="not_ex" style='display: none'>
+                    Logical Not. Example: !b is true whenever b is false. Example 
+                    <span class='bold'>!false</span>,
+                    <span class='bold'>!(3=4)</span>,
+                    <span class='bold'>!(i &gt;= 3)</span>  
+                </div>
+                <div id="and_ex" style='display: none'>
+                    Logical And. Example: (i=2) &amp;&amp; (j &gt; 0) is true only if both i=2 and j>0 are true. Example
+                    <span class='bold'>true &amp;&amp; true</span>,
+                    <span class='bold'>(3 &gt; 0) &amp;&amp; (4 &lt;= 5) </span>,
+                    <span class='bold'>(i=2) &amp;&amp; (j &gt; 0 )</span>  
+                </div>
+                <div id="or_ex" style='display: none'>
+                    Logical Or. For example (i=2) || (j&gt;0) is true if at leas one of (i=2) and (j&gt;0) is true.
+                    <span class='bold'>true || false</span>,
+                    <span class='bold'>(3 &gt; 0) || (4 &lt;= 5) </span>,
+                    <span class='bold'>(i=2) || (j &gt; 0)</span>  
+                </div>
                 <div id="impl_ex" style='display: none'>The implication operator. Example: i => j checks if i implies j">=></div>
                 <div id="equiv_ex" style='display: none'>The equivalence operator. Example: i <=> j checks if i is logically equivalent to j"><=></div>
                       
