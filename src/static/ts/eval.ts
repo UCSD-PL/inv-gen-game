@@ -1,4 +1,3 @@
-type strset = { [ ind: string ]: boolean }
 var notDefRe = /(.*) is not defined/;
 
 class InvException extends Error{

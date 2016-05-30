@@ -1,4 +1,48 @@
 type directionT = "up" | "down" | "left" | "right"
+type strset = { [ ind: string ]: boolean }
+
+function toStrset(strs: string[]): strset {
+  let res : strset = {};
+  for (let i in strs) {
+    res[strs[i]] = true;
+  }
+  return res;
+}
+
+function isSubset(s1: strset, s2: strset): boolean {
+  for (let k in s1) {
+    if (!s1.hasOwnProperty(k))  continue;
+    if (!s2.hasOwnProperty(k))  return false;
+  }
+  return true;
+}
+
+function difference(s1: strset, s2: strset): strset {
+  let res:strset = {};
+
+  for (let k in s1) {
+    if (!s1.hasOwnProperty(k))  continue;
+    if (s2.hasOwnProperty(k))  continue;
+    res[k] = true;
+  }
+  return res;
+}
+
+function isEmpty(s: strset): boolean {
+  for (let k in s) {
+    if (!s.hasOwnProperty(k))  continue;
+    return false;
+  }
+  return true;
+}
+
+function any_mem(s: strset): string {
+  for (let k in s) {
+    if (!s.hasOwnProperty(k))  continue;
+    return k;
+  }
+}
+
 function log(arg: any): void { console.log(arg); }
 function error(arg: any): void { log (arg); }
 function assert(c:boolean, msg?:any): void {
