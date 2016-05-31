@@ -13,7 +13,7 @@ class ScoreWindow {
     let addSpan = $("<span class='scoreText scoreFloat'>+" + num + "</span>")
     $(this.parent).append(addSpan)
     addSpan.position({ "my": "left center", "at": "right+10 center", "of": this.parent })
-    addSpan.hide({ effect: "puff", easing:"swing", duration:1000, complete: function() { 
+    addSpan.hide({ effect: "puff", easing:"swing", duration:2000, complete: function() { 
       $(addSpan).remove();
     }})
   }

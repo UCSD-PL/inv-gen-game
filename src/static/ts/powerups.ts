@@ -51,11 +51,11 @@ class MultiplierPowerup extends BasePowerup {
   }
 
   highlight(cb: ()=>any): void {
-    this.element.effect("highlight", { color: "#008000" }, 500, ()=>0);
+    this.element.effect("highlight", { color: "#008000" }, 2000, ()=>0);
     let mulSpan = $("<span class='scoreText scoreFloat'>x" + this.mult + "</span>") 
     $(this.element).append(mulSpan);
     $(mulSpan).position({ "my": "right center", "at": "left-10 center", "of": this.element });
-    mulSpan.hide({ effect: "puff", easing:"swing", duration:1000, complete: () => { mulSpan.remove(); cb(); }})
+    mulSpan.hide({ effect: "puff", easing:"swing", duration:2000, complete: () => { mulSpan.remove(); cb(); }})
   }
 }
 
