@@ -57,6 +57,7 @@
     }
 
     function updateUI() {
+        $('#errormsg').html("")
         var inv = invPP(tracesW.curExp().trim());
         try {
           var parsedInv = esprima.parse();
