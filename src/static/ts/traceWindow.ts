@@ -76,7 +76,7 @@ abstract class BaseTracesWinow implements ITracesWindow {
     for (var i in lvl.variables) {
       hstr += '<th>' + lvl.variables[i] + '</th>';
     }
-    hstr += '<th><input id="formula-entry" type="text"><span id="errormsg">&nbsp</span></th>';
+    hstr += '<th><input id="formula-entry" type="text"><span id="errormsg"><div>&nbsp;</div></span></th>';
     hstr += '</tr></thead><tbody></tbody></table>';
     $(this.parent).html(hstr)
     $('#formula-entry').focus();
