@@ -165,10 +165,11 @@
   position: absolute;
   top:  20px;
   left: 20px;
-  font-size: 20px;
+  font-size: 24px;
   font-weight: bold;
   font-family: "courier";
-  color: black;
+  background-color: rgba(255,255,255,0.5);
+  color: red;
 }
 
 #doge {

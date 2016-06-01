@@ -424,3 +424,12 @@ function isin<T>(needle:T, hay:T[], id:(x:T)=>string): boolean {
 
   return false;
 }
+
+function min(...args: number[]): number {
+  let min = args[0];
+  for (var i in args)
+    if (args[i] < min) {
+      min = args[i];
+    }
+  return min
+}
