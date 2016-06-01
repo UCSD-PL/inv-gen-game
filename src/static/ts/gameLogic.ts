@@ -717,7 +717,7 @@ class PatternGameLogic extends BaseGameLogic {
               public scoreW: ScoreWindow,
               public stickyW: StickyWindow) {
     super(tracesW, progressW, scoreW, stickyW);
-    this.pwupSuggestion = new PowerupSuggestionFullHistory(3, "lfu");
+    this.pwupSuggestion = new PowerupSuggestionFullHistoryVariableMultipliers(3, "lfu");
   }
 
   clear(): void {
@@ -736,6 +736,9 @@ class PatternGameLogic extends BaseGameLogic {
     let newScore = hold.reduce((score, pwup) => pwup.transform(score), s)
     for (var i in hold) {
       if (i == ""+(hold.length - 1)) {
+        /* After the last powerup is done highlighting,
+         * recompute the powerups
+         */
         hold[i].highlight(()=>{
           this.pwupSuggestion.invariantTried(inv);
           this.setPowerups(this.pwupSuggestion.getPwups());
@@ -743,6 +746,10 @@ class PatternGameLogic extends BaseGameLogic {
       } else {
         hold[i].highlight(()=>0);
       }
+    }
+
+    if (hold.length == 0) {
+      this.pwupSuggestion.invariantTried(inv);
     }
     return newScore;
   }

@@ -42,12 +42,12 @@ class MultiplierPowerup extends BasePowerup {
               public mult: number,
               public applies: appliesT,
               public tip: string) {
-    super(id + "x" + mult,
+    super(id + "x",
           "<div class='pwup box'>" + html + "<div class='pwup-mul'>" + mult + "X</div></div>",
           holds,
           (x)=>x*mult,
           applies,
-          tip)
+          mult + "X if you " + tip)
   }
 
   highlight(cb: ()=>any): void {
@@ -56,6 +56,13 @@ class MultiplierPowerup extends BasePowerup {
     $(this.element).append(mulSpan);
     $(mulSpan).position({ "my": "right center", "at": "left-10 center", "of": this.element });
     mulSpan.hide({ effect: "puff", easing:"swing", duration:2000, complete: () => { mulSpan.remove(); cb(); }})
+  }
+
+  setMultiplier(newm: number): void {
+    this.mult = newm;
+    this.tip = newm + "X if you " + this.tip;
+    this.transform = (x)=>x*newm;
+    this.element.children("div").html(newm + "X");
   }
 }
 
@@ -155,11 +162,11 @@ class PowerupSuggestionFullHistory implements IPowerupSuggestion {
   all_pwups: IPowerup[] = [];
   actual: IPowerup[] = [];
   age: { [ind: string]: number } = {};
-  private gen: number = 0;
-  private nUses: { [ind: string]: number } = { };
-  private lastUse: { [ind: string]: number } = { };
-  private sortFreq: [number, IPowerup][] = []; // TODO: Rename
-  private sortLast: [number, IPowerup][] = []; // TODO: Rename
+  protected gen: number = 0;
+  protected nUses: { [ind: string]: number } = { };
+  protected lastUse: { [ind: string]: number } = { };
+  protected sortFreq: [number, IPowerup][] = []; // TODO: Rename
+  protected sortLast: [number, IPowerup][] = []; // TODO: Rename
 
   constructor(public nDisplay: number,
               public type: string) {
@@ -177,7 +184,7 @@ class PowerupSuggestionFullHistory implements IPowerupSuggestion {
     }
   }
 
-  private computeOrders(): void {
+  protected computeOrders(): void {
     let sugg = this;
     if (this.gen > 0)
       this.sortFreq = this.actual.map(function (x, ind)  { return <[number, IPowerup]>[ sugg.nUses[x.id] / sugg.gen, x ]})
@@ -220,6 +227,20 @@ class PowerupSuggestionFullHistory implements IPowerupSuggestion {
     } else {
       assert(this.type == "lfu");
       return this.sortFreq.slice(0, this.nDisplay).map(([fst,snd]:[number, IPowerup])=>snd);
+    }
+  }
+}
+
+class PowerupSuggestionFullHistoryVariableMultipliers extends PowerupSuggestionFullHistory {
+  invariantTried(inv: invariantT): void {
+    super.invariantTried(inv);
+    let age : { [ k: string ] : number } = { }
+
+    for (let pwup of this.all_pwups) {
+      let age : number = this.gen - this.lastUse[pwup.id];
+      let newM : number = 2 * (Math.floor(age / 3) + 1)
+      let mPwup : MultiplierPowerup = <MultiplierPowerup> pwup;
+      mPwup.setMultiplier(newM);
     }
   }
 }
