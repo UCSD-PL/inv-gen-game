@@ -23,12 +23,6 @@ class BasePowerup implements IPowerup {
               public tip: string) {
     this.element = $(html)
     this.element.attr("title", tip)
-    this.element.tooltip({ position: {
-      within: $(".container"), // TODO: Ugly hack refers to external element
-      my: "center top+15",
-      at: "center bottom",
-      collision: "none none",
-    }})
   }
   highlight(cb: ()=>any): void {
     this.element.effect("highlight", { color: "#008000" }, 500, cb);
@@ -64,6 +58,7 @@ class MultiplierPowerup extends BasePowerup {
     this.transform = (x)=>x*newm;
     this.element.find("div.pwup-mul").html(newm + "X");
     this.element.find("div.pwup-mul").effect({ effect: "highlight", color: "red" })
+    this.element.attr("title", this.tip)
   }
 }
 
@@ -75,7 +70,7 @@ class VarOnlyPowerup extends MultiplierPowerup {
       (inv: invariantT) => setlen(literals(inv)) == 0,
       multiplier,
       (lvl)=>true,
-      multiplier + "X if you don't use constants")
+      "don't use constants")
   }
 }
 
@@ -86,7 +81,7 @@ class UseXVarsPwup extends MultiplierPowerup {
       (inv: invariantT) => setlen(identifiers(inv)) == nvars,
       multiplier,
       (lvl)=> lvl.variables.length >= nvars && lvl.variables.length != 1,
-      multiplier + "X if you use " + nvars +  " variable(s)")
+      "you use " + nvars +  " variable(s)")
   }
 }
 
@@ -103,7 +98,7 @@ class UseOpsPwup extends MultiplierPowerup {
       },
       multiplier,
       (lvl)=> true,
-      multiplier + "X if you use " + name)
+      "use " + name)
   }
 }
 
