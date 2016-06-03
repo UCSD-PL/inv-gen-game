@@ -27,6 +27,7 @@ class WideStickyWindow extends StickyWindow {
     $(this.parent).addClass("stickyWindow");
     $(this.parent).addClass("col-md-2");
     $(this.parent).html("<p style='text-align: center; font-weight: bold; margin-top: 8px'>Bonus</p><br><div class='row'></div>");
+    $(this.parent).tooltip();
   }
 
   addElement(key: string, pwup: IPowerup, rep: JQuery): HTMLElement {
