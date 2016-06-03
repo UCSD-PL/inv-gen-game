@@ -765,10 +765,10 @@ class PatternGameLogic extends BaseGameLogic {
             counterexamples(curLvlSet, this.curLvl.id, this.soundInvs.map((x)=>x.canonForm), (res) => {
               let overfitted=res[0],nonind=res[1],sound=res[2], post_ctrex=res[3]
               cb((overfitted.length == 0 && nonind.length == 0 && post_ctrex.length == 0) ||
-                  this.foundJSInv.length >= 10, res)
+                  this.foundJSInv.length >= 8, res)
             })
           } else {
-              cb(this.foundJSInv.length >= 10, null)
+              cb(this.foundJSInv.length >= 8, null)
           }
         })
     } else {
