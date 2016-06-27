@@ -44,7 +44,7 @@ Use Google Chrome to navigate to <a target='_blank' href='http://zoidberg.ucsd.e
 </li>
 
 <li>
-Play through the short tutorial. Note that the tutorial has 6 easy sample levels spread throughout it. <b>You will get 15c bonus for each sample level you pass!</b>
+Play through the short tutorial. Note that the tutorial has 3 easy sample levels spread throughout it.
 </li>
 
 <li>
