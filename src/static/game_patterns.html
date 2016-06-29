@@ -1,0 +1,384 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- third party libraries -->
+  <script src="jquery-1.12.0.min.js"></script>
+  <script src="jquery.jsonrpcclient.js"></script>
+  <script src="jquery.color-2.1.2.min.js"></script>
+  <script src="jquery-ui-1.11.4/jquery-ui.js"></script>
+  <script src="esprima.js"></script>
+  <link rel="stylesheet" href="bootstrap.min.css">
+  <link rel="stylesheet" href="bootstrap-theme.min.css">
+  <script src="bootstrap.min.js"></script>
+
+  <!-- our code -->
+  <link rel="stylesheet" href="inv.css">
+  <link rel="stylesheet" href="arrow.css">
+  <script src="build/ts/container.js"></script>
+  <script src="build/ts/stickyWindow.js"></script>
+  <script src="build/ts/progressWindow.js"></script>
+  <script src="build/ts/scoreWindow.js"></script>
+  <script src="build/ts/logic.js"></script>
+  <script src="build/ts/traceWindow.js"></script>
+  <script src="build/ts/gameLogic.js"></script>
+  <script src="build/ts/level.js"></script>
+  <script src="build/ts/eval.js"></script>
+  <script src="build/ts/pp.js"></script>
+  <script src="build/ts/util.js"></script>
+  <script src="build/ts/powerups.js"></script>
+
+  <script>
+    var curLvl;
+    var curLvlSet;
+    var curL = null;
+    var lvls = null;
+    var tracesW = null, progW = null, scoreW = null;
+    var gameLogic = null;
+    var stepTimeout = 5000;
+    var curScript = null;
+
+    disableBackspaceNav();
+
+    function loadTrace(traceId) {
+      PrepopulatedDynamicLevel.load(curLvlSet, traceId, function(lvl) {
+        gameLogic.loadLvl(lvl)
+      })
+    }
+
+    function nextLvl() {
+      loadLvl(curLvl + 1);
+    }
+
+    function loadLvl(lvl) {
+      if (lvl == lvls.length) {
+        curLvl = lvl;
+        doneScreen();
+      } else {
+        curLvl = lvl;
+
+        if (typeof(lvls[lvl]) == "string") {
+          loadTrace(lvls[curLvl]);
+        } else {
+          gameLogic.loadLvl(lvls[curLvl])
+        }
+      }
+    }
+
+    function loadLvlSet(lvlset) {
+      curLvlSet = lvlset;
+      res = rpc.call('App.listData', [lvlset], function(res) {
+        lvls = res;
+        curLvl = -1;
+        nextLvl();
+      }, log)
+    }
+
+    function doneScreen() {
+      //loadLvlSet("test-benchmarks")
+      var lvlStr = (curLvl == lvls.length ? "all" : "" + curLvl + "/" + lvls.length)
+      $(".overlay").html("<h1 class='good'> Good job! You finished " + lvlStr +
+        " levels! <br> Your score is: " + gameLogic.score  + "!</h1><br>" +
+        "<h2> Please submit the screencast of your work! </h2>"
+      );
+      $(".overlay").fadeIn(1000);
+    }
+
+    function labelRemover(lbl) {
+      return function () { removeLabel(lbl) }
+    }
+
+    var tutorialScript = [
+      {
+        setup: function (cs) {
+                  curL = label($('#help'), "Click here if you need any help later", "left")
+                  $('body').focus();
+                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+        }
+      },
+      { setup: function (cs) {
+                   $('#formula-entry').focus();
+                   curScript = null;
+               }
+      },
+    ]
+
+    $(document).ready(function() {
+      rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
+      progW = new ProgressWindow($('#discovered-invariants-div'));
+      scoreW = new ScoreWindow($('#score-div'));
+      traceW = new PositiveTracesWindow($('#data-display'));
+      //stickyW = new WideStickyWindow($('#sticky'))
+      stickyW = new StickyWindow($('#sticky'))
+      gameLogic = new PatternGameLogic(traceW, progW, scoreW, stickyW);
+
+      $('#next-lvl').hide();
+
+      gameLogic.onLvlPassed(function() {
+        if (curLvl < lvls.length - 1) {
+          $("#lvl_dots").before('<li class="level pending">' + 
+            '<a class="loadLvl" id="lvl_' + (curLvl + 1) + '" >' + (curLvl + 1) + '</a>' + '</li>');
+        }
+
+        if (curLvl == lvls.length - 1) {
+          $('#next-lvl').html('Finish');
+
+        }
+
+        $('#next-lvl').show();
+        curL = label({ of: $('#next-lvl'), at: "right center"},
+              "Click Here! (50c bonus!)", "left")
+      });
+
+      $('#next-lvl').click(function() {
+        $('#next-lvl').hide();
+        if (curL)
+          removeLabel(curL);
+
+        nextLvl();
+      })
+
+      $('#help').click(function() {
+        $('#help-content').slideToggle(200);
+      })
+
+      var openEx = null;
+      function _openEx(idn) {
+        var el = $('#' + idn)[0]
+        if (openEx != null && openEx != el) {
+          $(openEx).slideToggle(200, function () {
+            $(el).slideToggle(200);
+          })
+          openEx = el;
+        } else if (openEx != null) {
+          assert (openEx == el);
+          $(openEx).slideToggle(200);
+          openEx = null;
+        } else {
+          assert (openEx == null);
+          $(el).slideToggle(200);
+          openEx = el;
+        }
+      }
+
+      var ops = [['#plus_op', 'plus_ex'],
+                 ['#minus_op', 'minus_ex'],
+                 ['#mul_op', 'mul_ex'],
+                 ['#div_op', 'div_ex'],
+                 ['#mod_op', 'mod_ex'],
+                 ['#eq_op', 'eq_ex'],
+                 ['#neq_op', 'neq_ex'],
+                 ['#lt_op', 'lt_ex'],
+                 ['#lte_op', 'lte_ex'],
+                 ['#gt_op', 'gt_ex'],
+                 ['#gte_op', 'gte_ex'],
+                 ['#not_op', 'not_ex'],
+                 ['#and_op', 'and_ex'],
+                 ['#or_op', 'or_ex'],
+                 /*['#impl_op', 'impl_ex'],
+                 ['#equiv_op', 'equiv_ex'],*/
+      ]
+      for (var i in ops) {
+        $(ops[i][0]).click(function (lbl) {
+          return function() {_openEx(lbl);}
+        }(ops[i][1]))
+      }
+
+      $('.btn-quit').click(doneScreen);
+
+      $('#replay').click(function() {
+        var win = window.open('tutorial_patterns.html', '_blank');
+        win.focus();
+      })
+
+      $('#arrows').click(function() {
+        if (curScript == null) {
+          curScript = new Script(tutorialScript);
+        }
+      })
+
+      //loadLvlSet("pruned-intro-benchmarks");
+      loadLvlSet("desugared-boogie-benchmarks");
+
+      gameLogic.onLvlLoaded(function () {
+        curScript = new Script(tutorialScript)
+        gameLogic.onLvlLoaded(function (){})
+      })
+
+      gameLogic.onUserInput(function () {
+        if (curScript) {
+          curScript.cancel()
+          curScript = null
+        }
+      })
+    })
+
+  </script>
+</head>
+<body>
+  <div class='container'>
+    <div class='row'>
+      <div class='col-md-1' id='dummy'>
+      </div>
+      <div class='col-md-1 box stickyWindow' id='sticky'>
+      </div>
+
+      <div class='col-md-6' id='middle'>
+        <div class='row' id='data-display' style="font-family:monospace;">
+        </div>
+        <div class='row box' id='op_row'>
+                <span class='centered'> <h4>Available Operators:</h4></span>
+                <div id='ops'>
+                  <table class='opTable'>
+                    <tr>
+                      <td class="centered"><a id='plus_op'>+</a></td>
+                      <td class="centered"><a id='minus_op'>-</a></td>
+                      <td class="centered"><a id='mul_op'>*</a></td>
+                      <td class="centered"><a id='div_op'>/</a></td>
+                      <td class="centered"><a id='mod_op'>%</a></td>
+                      <td class="centered"><a id='eq_op'>=</a></td>
+                      <td class="centered"><a id='neq_op'>!=</a></td>
+                      <td class="centered"><a id='lt_op'>&lt</a></td>
+                      <td class="centered"><a id='lte_op'>&lt=</a></td>
+                      <td class="centered"><a id='gt_op'>&gt</a></td>
+                      <td class="centered"><a id='gte_op'> &gt=</a></td>
+                      <td class="centered"><a id='not_op'>!</a></td>
+                      <td class="centered"><a id='and_op'>&amp;&amp;</a></td>
+                      <td class="centered"><a id='or_op'>||</a></td>
+<!--
+                      <td class="centered"><a id='impl_op'>=&gt</a></td>
+                      <td class="centered"><a id='equiv_op'>&lt=&gt</a></td>
+-->
+                    </tr>
+                  </table>
+                      
+                <h5>
+                <div id="plus_ex" style='display: none'>
+                  Addition. i + j returns the sum of i and j. Examples:
+                    <span class='bold'>3+4</span>,
+                    <span class='bold'>3+4=7</span>,
+                    <span class='bold'>i+1</span>  
+                </div>
+                <div id="minus_ex" style='display: none'>
+                  Subtraction. i - j returns the difference of i and j. Examples:
+                    <span class='bold'>5-4</span>,
+                    <span class='bold'>5-4=1</span>,
+                    <span class='bold'>i-1</span>  
+                </div>
+                <div id="mul_ex" style='display: none'>
+                  Multiplication. Example: 3 * x multiplies x by 3. E.g.
+                    <span class='bold'>5*4</span>,
+                    <span class='bold'>5*4=20</span>,
+                    <span class='bold'>i*3</span>  
+                </div>
+                <div id="div_ex" style='display: none'>
+                  Division. Example: j / x divides j by x. E.g.:
+                    <span class='bold'>10/2</span>,
+                    <span class='bold'>10/2=5</span>,
+                    <span class='bold'>i/3</span>  
+                </div>
+                <div id="mod_ex" style='display: none'>
+                  Modulo. i % 2 for example returns the remainder of division of i by 2. Examples:
+                    <span class='bold'>5 % 3</span>,
+                    <span class='bold'>5 % 3 = 2</span>,
+                    <span class='bold'>i % 3</span>  
+                </div>
+                <div id="eq_ex" style='display: none'>
+                  Equality. Example: i = 2 is true i is equal to 2. E.g. 
+                    <span class='bold'>5 = 5</span>,
+                    <span class='bold'>!(5 = 4)</span>,
+                    <span class='bold'>i = 3</span>  
+                </div>
+                <div id="neq_ex" style='display: none'>
+                  Not-equal operator. Example: i != 2 is true if i is not 2. E.g.
+                    <span class='bold'>5 != 4</span>,
+                    <span class='bold'>i != 3</span>  
+                </div>
+                <div id="lt_ex" style='display: none'>
+                    Less than. i &lt; j is true if i is less than j. E.g.
+                    <span class='bold'>4 &lt; 5</span>,
+                    <span class='bold'>i &lt; 3</span>  
+                </div>
+                <div id="lte_ex" style='display: none'>
+                    Less than or equal. i &lt;= j checks if i is less than or equal to j. Example: 
+                    <span class='bold'>4 &lt;= 5</span>,
+                    <span class='bold'>4 &lt;= 4</span>,
+                    <span class='bold'>i &lt;= 3</span>  
+                </div>
+                <div id="gt_ex" style='display: none'>
+                    Greater than.i &gt; j is true if i is greater than j. Examples:
+                    <span class='bold'>5 &gt; 4</span>,
+                    <span class='bold'>i &gt; 3</span>  
+                </div>
+                <div id="gte_ex" style='display: none'>
+                    Greater than or equal. Example: i &gt;= j checks if i is greater than or equal to j
+                    <span class='bold'>5 &gt;= 4</span>,
+                    <span class='bold'>4 &gt;= 4</span>,
+                    <span class='bold'>i &gt;= 3</span>  
+                </div>
+                <div id="not_ex" style='display: none'>
+                    Logical Not. Example: !b is true whenever b is false. Example 
+                    <span class='bold'>!false</span>,
+                    <span class='bold'>!(3=4)</span>,
+                    <span class='bold'>!(i &gt;= 3)</span>  
+                </div>
+                <div id="and_ex" style='display: none'>
+                    Logical And. Example: (i=2) &amp;&amp; (j &gt; 0) is true only if both i=2 and j>0 are true. Example
+                    <span class='bold'>true &amp;&amp; true</span>,
+                    <span class='bold'>(3 &gt; 0) &amp;&amp; (4 &lt;= 5) </span>,
+                    <span class='bold'>(i=2) &amp;&amp; (j &gt; 0 )</span>  
+                </div>
+                <div id="or_ex" style='display: none'>
+                    Logical Or. For example (i=2) || (j&gt;0) is true if at leas one of (i=2) and (j&gt;0) is true.
+                    <span class='bold'>true || false</span>,
+                    <span class='bold'>(3 &gt; 0) || (4 &lt;= 5) </span>,
+                    <span class='bold'>(i=2) || (j &gt; 0)</span>  
+                </div>
+                <div id="impl_ex" style='display: none'>The implication operator. Example: i => j checks if i implies j">=></div>
+                <div id="equiv_ex" style='display: none'>The equivalence operator. Example: i <=> j checks if i is logically equivalent to j"><=></div>
+                      
+                </h5>
+                </div>
+        </div>
+        <div class='row-md-6'>
+
+          <div class='col-md-8' id='hint-col'>
+            <span id='next_lvl_span'>
+              <button id='next-lvl' class='btn-next'>Next Level</button>
+            </span>
+          </div>
+
+          <div class='row'>
+            <div class='col-md-6 gap'>
+              <img id='help' src="help-icon.png" class='help-icon' data-toggle="tooltip" title="Click to toggle help options"/>
+              <div id='help-content' class='helpContentWindow box'>
+                <span id='replay' class='helpContent' data-toggle="tooltip" title="Click to play the tutorial again">Replay tutorial</span>
+                <br>
+                <span id='arrows' class='helpContent' data-toggle="tooltip" title="Click to view the layout introduction">Understand screen layout</span>
+                <br>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class='col-md-3' >
+        <div id='score-div-row' class='row positioned box progressWindow'>
+          <div class='col-md-2'>Score: </div>
+          <div id='score-div' class='col-md-7 col-md-offset-3'>
+          </div>
+        </div>
+        <div class='row good centered positioned' id='discovered-invariants-div'>
+        </div>
+        <div class='row ' id='quit-div'>
+          <button id='next-lvl' class='btn-quit'>Quit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class='overlay text-center' style='display: none;'></div> 
+</body>
+</html>

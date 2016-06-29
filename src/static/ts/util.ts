@@ -1,4 +1,48 @@
 type directionT = "up" | "down" | "left" | "right"
+type strset = { [ ind: string ]: boolean }
+
+function toStrset(strs: string[]): strset {
+  let res : strset = {};
+  for (let i in strs) {
+    res[strs[i]] = true;
+  }
+  return res;
+}
+
+function isSubset(s1: strset, s2: strset): boolean {
+  for (let k in s1) {
+    if (!s1.hasOwnProperty(k))  continue;
+    if (!s2.hasOwnProperty(k))  return false;
+  }
+  return true;
+}
+
+function difference(s1: strset, s2: strset): strset {
+  let res:strset = {};
+
+  for (let k in s1) {
+    if (!s1.hasOwnProperty(k))  continue;
+    if (s2.hasOwnProperty(k))  continue;
+    res[k] = true;
+  }
+  return res;
+}
+
+function isEmpty(s: strset): boolean {
+  for (let k in s) {
+    if (!s.hasOwnProperty(k))  continue;
+    return false;
+  }
+  return true;
+}
+
+function any_mem(s: strset): string {
+  for (let k in s) {
+    if (!s.hasOwnProperty(k))  continue;
+    return k;
+  }
+}
+
 function log(arg: any): void { console.log(arg); }
 function error(arg: any): void { log(arg); }
 function assert(c: boolean, msg?: any): void {
@@ -51,33 +95,41 @@ class Label {
       }
     }
 
-    let clazz: string = "", text_pos: string = "", arrow_pos: string = "",
-      arrow_div_pos: string = "", arrow_div_pos1: string = "";
+    type posArr = [ string, number ,string, number]
+    function _strPos(s: posArr): string {
+      return s[0] + (s[1] > 0 ? '+' : '') + (s[1] != 0 ? s[1] : "") + " " +
+             s[2] + (s[3] > 0 ? '+' : '') + (s[3] != 0 ? s[3] : "");
+    }
 
-    if (direction === "up") {
-      clazz = "arrow_up";
-      text_pos = "top:  30px;";
-      arrow_pos = "left:  20px; top:  20px;";
-      arrow_div_pos = "left-10 top";
-      arrow_div_pos1 = "left-10 top+" + pulseWidth;
-    } else if (direction === "down") {
-      clazz = "arrow_down";
-      text_pos = "top:  0px;";
-      arrow_pos = "left:  20px; top:  40px;";
-      arrow_div_pos = "center bottom";
-      arrow_div_pos1 = "center bottom-" + pulseWidth;
-    } else if (direction === "left") {
-      clazz = "arrow_left";
-      text_pos = "left:  30px; top: -10px;";
-      arrow_pos = "left:  0px; top:  0px;";
-      arrow_div_pos = "left top-7";
-      arrow_div_pos1 = "left+" + pulseWidth + " top-7";
-    } else if (direction === "right") {
-      clazz = "arrow_right";
-      text_pos = "float:  left;";
-      arrow_pos = "float: right;";
-      arrow_div_pos = "right center";
-      arrow_div_pos1 = "right-" + pulseWidth + " center";
+    let clazz: string = "", text_pos: string = "", arrow_pos: string = "";
+
+    let vec: [number, number] = [0,0], arr_off: [number, number] = [0,0];
+
+
+    if (direction == "up") {
+      clazz = "arrow_up"
+      text_pos = "top:  30px;"
+      arrow_pos = "left:  20px; top:  20px;"
+      arr_off = [ 0, 10 ]
+      vec = [ 0, pulseWidth ]
+    } else if (direction == "down") {
+      clazz = "arrow_down"
+      text_pos = "top:  0px;"
+      arrow_pos = "left:  20px; top:  40px;"
+      arr_off = [ 0, -10 ]
+      vec = [ 0, -pulseWidth ]
+    } else if (direction == "left") {
+      clazz = "arrow_left"
+      text_pos = "left:  30px; top: -10px;"
+      arrow_pos = "left:  0px; top:  0px;"
+      arr_off = [ 10, -5 ]
+      vec = [ pulseWidth, 0 ]
+    } else if (direction == "right") {
+      clazz = "arrow_right"
+      text_pos = "float:  left;"
+      arrow_pos = "float: right;"
+      arr_off = [ -15, -5 ]
+      vec = [ -pulseWidth, 0 ]
     }
 
     let div = $("<div class='absolute'><div class=" + clazz +
@@ -86,22 +138,25 @@ class Label {
 
     $("body").append(div);
 
-    let arrowDiv = $(div).children("div")[0];
-    let apos = $(arrowDiv).position();
+    this.pos.collision = "none none"
 
-    this.pos.my = arrow_div_pos;
-    $(div).position(this.pos);
+    let arrowDiv = $(div).children('div')[0]
+    let aPos = $(arrowDiv).position()
+
+    let aPosOff : posArr = [ "left", - aPos.left + arr_off[0], "top", - aPos.top + arr_off[1] ]
+    this.pos.my = _strPos(aPosOff)
+    $(div).position(this.pos)
     this.pos.using = (css, dummy) => $(div).animate(css, pulse / 2);
 
     let ctr = 0;
     let lbl = this;
-
-    this.timer = setInterval(function() {
-      let v = (ctr % 2 === 0 ? arrow_div_pos : arrow_div_pos1);
-      lbl.pos.my = v;
-      $(div).position(lbl.pos);
-      ctr++;
-    }, this.pulse / 2);
+    
+    this.timer = setInterval(function () {
+      let v: posArr = (ctr % 2 == 0 ? aPosOff : [ aPosOff[0], aPosOff[1] + vec[0], aPosOff[2], aPosOff[3] + vec[1]])
+      lbl.pos.my = _strPos(v);
+      $(div).position(lbl.pos)
+      ctr ++;
+    }, this.pulse / 2)
     this.elem = div;
   }
 
@@ -318,4 +373,63 @@ function disableBackspaceNav() {
       }
     }
   });
+}
+
+function shape_eq(o1: any, o2: any) {
+  if (typeof(o1) != typeof(o2))
+    return false;
+
+  if (typeof(o1) == "number" || typeof(o1) == "boolean" || typeof(o1) == "string") {
+    return o1 === o2
+  }
+
+  if (typeof(o1) == "object") {
+    for (var i in o1) {
+      if (!o1.hasOwnProperty(i))  continue;
+      if (!o2.hasOwnProperty(i))  continue;
+      if (!shape_eq(o1[i], o2[i]))  return false;
+    }
+
+    for (var i in o2) {
+      if (o2.hasOwnProperty(i) && !o1.hasOwnProperty(i))  return false;
+    }
+
+    return true;
+  }
+  assert(false, "Unexpected objects being compared: " + o1 + " and " + o2);
+}
+
+function unique<T>(l:T[], id:(x:T)=>string): T[] {
+  let dict: { [ key: string ] : T } = { }
+  for (var x in l) {
+    dict[id(l[x])] = l[x];
+  }
+
+  let res : T[] = [];
+
+  for (var key in dict) {
+    if (!dict.hasOwnProperty(key))  continue;
+    res.push(dict[key])
+  }
+
+  return res;
+}
+
+function isin<T>(needle:T, hay:T[], id:(x:T)=>string): boolean {
+  let key = id(needle)
+  for (var i in hay) {
+    if (id(hay[i]) == key)
+      return true;
+  }
+
+  return false;
+}
+
+function min(...args: number[]): number {
+  let min = args[0];
+  for (var i in args)
+    if (args[i] < min) {
+      min = args[i];
+    }
+  return min
 }

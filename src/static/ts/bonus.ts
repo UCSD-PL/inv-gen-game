@@ -89,24 +89,24 @@ function getBonus(player, fn) {
     let newInv: string = getLastPlayer1Inv();
     let player2Invs = getAllPlayer2Inv();
 
+    let newInvEs: invariantT = esprima.parse(newInv);
+    let player2InvsEs: invariantT[] = player2Invs.map(esprima.parse);
+
     // allowSwitch = true;
-    impliedPairs([newInv], player2Invs, function(x) {
+    impliedPairs([newInvEs], player2InvsEs, function(x) {
       let increment: number = 0;
       if (x != null) {
         for (let i: number = 0; i < x.length; i++) {
-          if (x[i][0] === 0) {
-            increment += bonus;
-          }
+          increment += bonus;
         }
         for (let i: number = 0; i < x.length; i++) {
-          if (x[i][0] === 0) {
-            // console.log(newInv + " ==> " + player2Invs[x[i][1]]);
-            let src = $("#good-invariants").children().last();
-            let dst = $("#good-invariants2").children().eq(x[i][1]);
-            showImplication(player, src, dst);
+          // console.log(newInv + " ==> " + player2Invs[x[i][1]]);
+          let implInvInd = player2Invs.indexOf(esprimaToStr(x[i][2]));
+          let src = $("#good-invariants").children().last();
+          let dst = $("#good-invariants2").children().eq(implInvInd);
+          showImplication(player, src, dst);
 
-            $("#good-invariants2").children().eq(x[i][1]).addClass("implied");
-          }
+          $("#good-invariants2").children().eq(implInvInd).addClass("implied");
         }
         if (increment !== 0) {
           setTimeout(function() { fn(increment); $(".curved_arrow").delay(1000).fadeOut(1000); }, 1000);
@@ -119,24 +119,24 @@ function getBonus(player, fn) {
     let newInv: string = getLastPlayer2Inv();
     let player1Invs = getAllPlayer1Inv();
 
+    let newInvEs: invariantT = esprima.parse(newInv);
+    let player1InvsEs: invariantT[] = player1Invs.map(esprima.parse);
+
     // allowSwitch = true;
-    impliedPairs([newInv], player1Invs, function(x) {
+    impliedPairs([newInvEs], player1InvsEs, function(x) {
       let increment: number = 0;
       if (x != null) {
         for (let i: number = 0; i < x.length; i++) {
-          if (x[i][0] === 0) {
-            increment += bonus;
-          }
+          increment += bonus;
         }
         for (let i: number = 0; i < x.length; i++) {
-          if (x[i][0] === 0) {
-            // console.log(newInv + " ==> " + player1Invs[x[i][1]]);
-            let src = $("#good-invariants2").children().last();
-            let dst = $("#good-invariants").children().eq(x[i][1]);
-            showImplication(player, src, dst);
+          let implInvInd = player1Invs.indexOf(esprimaToStr(x[i][2]));
+          // console.log(newInv + " ==> " + player1Invs[x[i][1]]);
+          let src = $("#good-invariants2").children().last();
+          let dst = $("#good-invariants").children().eq(implInvInd);
+          showImplication(player, src, dst);
 
-            $("#good-invariants").children().eq(x[i][1]).addClass("implied");
-          }
+          $("#good-invariants").children().eq(implInvInd).addClass("implied");
         }
         if (increment !== 0) {
           setTimeout(function() { fn(increment); $(".curved_arrow").delay(1000).fadeOut(1000); }, 1000);

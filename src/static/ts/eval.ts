@@ -1,8 +1,11 @@
-type strset = { [ind: string]: boolean }
-let notDefRe = /(.*) is not defined/;
+var notDefRe = /(.*) is not defined/;
 
-class InvException {
-  constructor(public name: string, public msg: string) { }
+class InvException extends Error{
+  constructor(public name: string, public message: string) { super(message); }
+}
+
+class ImmediateErrorException extends InvException {
+  constructor(public name: string, public message: string) { super(name, message); }
 }
 
 function interpretError(err: Error): (string|Error) {
@@ -10,11 +13,13 @@ function interpretError(err: Error): (string|Error) {
     if (err.message.match(notDefRe))
       return err.message.match(notDefRe)[1] + " is not defined.";
     else
-      return "Not a valid expression.";
-  } else if (err.name === "SyntaxError") {
-    return "Not a valid expression.";
-  } else if (err.name === "NOT_BOOL") {
-    return "Expression should evaluate to true or false, not " + err.message + " for example.";
+      return "Not a valid expression."
+  } else if (err.name == 'SyntaxError') {
+    return "Not a valid expression."
+  } else if (err.name == 'NOT_BOOL') {
+    return "Expression should evaluate to true or false, not " + err.message + " for example."
+  } else if (err.name == "UnsupportedError") {
+    return (<InvException>err).message;
   }
 
   return err;
@@ -24,7 +29,13 @@ function invToJS(inv: string): string {
   return inv.replace(/[^<>]=[^>]/g, function(v) { return v[0] + "==" + v[2]; });
 }
 
-function invEval(inv: string, variables: string[], data: any[][]): any[] {
+function holds(inv:string, variables: string[], data: any[][]): boolean {
+  let res = invEval(inv, variables, data);
+  return evalResultBool(res) &&
+         res.filter((x)=>!(x === true)).length == 0;
+}
+
+function invEval(inv:string, variables: string[], data: any[][]): any[] {
   // Sort variable names in order of decreasing length
   let vars: [string, number][] = variables.map(function(val, ind, _) { return <[string, number]>[val, ind]; });
   vars.sort(function(e1, e2) {
@@ -37,10 +48,10 @@ function invEval(inv: string, variables: string[], data: any[][]): any[] {
   let holds_arr = [];
 
   // Do substitutions and eval
-  for (let row in data) {
-    let s = inv;
-    for (let v in vars) {
-      s = s.replace(new RegExp(vars[v][0], "g"), data[row][vars[v][1]]);
+  for (var row in data) {
+    let s = inv
+    for (var v in vars) {
+      s = s.replace(new RegExp(vars[v][0], 'g'), '(' + data[row][vars[v][1]] + ')')
     }
     let res = eval(s);
     holds_arr.push(res);
@@ -196,12 +207,11 @@ function replace(inv: (string|ESTree.Node), replF): ESTree.Node {
 
     if (nd.type === "BinaryExpression") {
       let be = <ESTree.BinaryExpression>nd;
-      return replF(<ESTree.LogicalExpression>{
-        "type": "LogicalExpression",
-        "operator": be.operator,
-        "left": args[0],
-        "right": args[1],
-      });
+      return replF(<ESTree.BinaryExpression>{ "type": "BinaryExpression",
+                     "operator": be.operator,
+                     "left": args[0],
+                     "right": args[1],
+                  })
     }
 
     if (nd.type === "LogicalExpression") {
@@ -229,16 +239,70 @@ function replace(inv: (string|ESTree.Node), replF): ESTree.Node {
   });
 }
 
-function abstractLiterals(inv: string|ESTree.Node): [ESTree.Node, string[]] {
-  let newVars: string[] = [];
+function generalizeConsts(inv:string|ESTree.Node): [ESTree.Node, string[], string[]] {
+  let symConsts: string[] = [];
   let newInv: ESTree.Node = replace(inv, (node) => {
-    if (node.type === "Literal") {
-      let newId = "a" + newVars.length;
-      newVars.push(newId);
-      return { "type": "Identifier", "name": newId };
+    if (node.type == "Literal") {
+      var newId = "a" + symConsts.length
+      symConsts.push(newId)
+      return { "type": "Identifier", "name": newId }
+    }
+    return node
+  })
+  return [ newInv, symConsts, [] ]
+}
+
+function generalizeInv(inv:string|ESTree.Node): [ESTree.Node, string[], string[]] {
+  let symConsts: string[] = [];
+  let symVars: string[] = [];
+  let newInv: ESTree.Node = replace(inv, (node) => {
+    if (node.type == "Literal") {
+      var newId = "a" + symConsts.length
+      symConsts.push(newId)
+      return { "type": "Identifier", "name": newId }
     }
 
-    return node;
-  });
-  return [newInv, newVars];
+    if (node.type == "Identifier") {
+      var newId = "x" + symVars.length
+      symVars.push(newId)
+      return { "type": "Identifier", "name": newId }
+    }
+
+    return node
+  })
+  return [ newInv, symConsts, symVars ]
+}
+
+function esprimaToStr(nd: ESTree.Node): string {
+  return estree_reduce<string>(nd,  (nd: ESTree.Node, args: string[]): string => {
+    if (nd.type == "Program") {
+      return args[0]
+    }
+
+    if (nd.type == "BinaryExpression") {
+      let be = <ESTree.BinaryExpression>nd;
+      return "(" + args[0] + be.operator + args[1] + ")"
+    }
+
+    if (nd.type == "LogicalExpression") {
+      let le = <ESTree.LogicalExpression>nd;
+      return "(" + args[0] + le.operator + args[1] + ")"
+    }
+
+    if (nd.type == "UnaryExpression") {
+      let ue = <ESTree.UnaryExpression>nd;
+      let s = args[0]
+      if (ue.operator == '-' && s[0] == '-')
+        s = '(' + s + ')'
+      return "(" + ue.operator + s + ")"
+    }
+
+    if (nd.type == "Literal") {
+      return "" + (<ESTree.Literal>nd).value
+    }
+
+    if (nd.type == "Identifier") {
+      return (<ESTree.Identifier>nd).name
+    }
+  })
 }

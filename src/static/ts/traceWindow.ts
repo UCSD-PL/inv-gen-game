@@ -76,14 +76,14 @@ abstract class BaseTracesWinow implements ITracesWindow {
     for (let i in lvl.variables) {
       hstr += "<th>" + lvl.variables[i] + "</th>";
     }
-    hstr += "<th><input id='formula-entry' type='text'><span id='errormsg'>&nbsp</span></th>";
-    hstr += "</tr></thead><tbody></tbody></table>";
-    $(this.parent).html(hstr);
-    $("#formula-entry").focus();
-    let tW = this;
-    $("#formula-entry").keyup(function (keyEv) {
-      let curInv = invPP(tW.curExp());
-      if (keyEv.keyCode === 13 && tW.okToSubmit) {
+    hstr += '<th><input id="formula-entry" type="text"><span id="errormsg"><div>&nbsp;</div></span></th>';
+    hstr += '</tr></thead><tbody></tbody></table>';
+    $(this.parent).html(hstr)
+    $('#formula-entry').focus();
+    var tW = this;
+    $('#formula-entry').keyup(function (keyEv) {
+      let curInv = invPP(tW.curExp())
+      if (keyEv.keyCode == 13 && tW.okToSubmit) {
         tW.commitCb();
       } else if (curInv !== tW.ppInv) {
         tW.ppInv = curInv;
@@ -126,11 +126,16 @@ abstract class BaseTracesWinow implements ITracesWindow {
   private reflowCb(): void { das.reflowAll(); }
 
   protected setResultCell(row: JQuery, datum: any): void {
-    let cell = row.children(".temp_expr_eval");
-    cell.html(JSON.stringify(datum));
-    cell.removeClass("true false greyed");
-    if (typeof(datum) === "boolean")
-      cell.addClass(datum ? "true" : "false");
+    let cell = row.children('.temp_expr_eval')
+    if (typeof(datum) != 'number' || (!isNaN(datum)) && datum !== Infinity && datum !== -Infinity) {
+      cell.html(JSON.stringify(datum))
+    } else {
+      // TODO: Hack - assuming all NaNs come from division by 0
+      cell.html("<span class='error'>Error! Did you divide by 0? Try * instead?</span>")
+    }
+    cell.removeClass('true false greyed')
+    if (typeof(datum) == "boolean")
+      cell.addClass(datum ? 'true' : 'false')
   }
 
   protected greyRow(row: JQuery): void {

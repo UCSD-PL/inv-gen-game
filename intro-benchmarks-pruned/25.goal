@@ -1,1 +1,1 @@
-{ "manual" : { } }
+{ "equivalent" : [ "k+j>=n", "j<=n" ] }

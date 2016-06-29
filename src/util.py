@@ -13,7 +13,7 @@ def pp_exc(f):
             return f(*args, **kwargs)
         except Exception,e:
             traceback.print_exception(*exc_info())
-            raise e
+            raise
     return decorated
 
 def powerset(s):
@@ -22,3 +22,13 @@ def powerset(s):
 
 def average(vals):
     return sum(vals) / (1.0 * len(vals))
+
+def split(pred, itr):
+    yes,no = [], []
+    for i in itr:
+        if (pred(i)):
+            yes.append(i);
+        else:
+            no.append(i);
+
+    return (yes, no)

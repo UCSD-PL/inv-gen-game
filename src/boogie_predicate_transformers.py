@@ -25,7 +25,7 @@ def wp_stmts(stmts, pred, typeEnv):
     for s in reversed(stmts):
         old_pred = pred 
         pred = wp_stmt(s, pred, typeEnv)
-        print "WP of ", old_pred, " w.r.t. ", s, " is ", pred
+        #print "WP of ", old_pred, " w.r.t. ", s, " is ", pred
     return pred
 
 def sp_stmt(stmt, pred, typeEnv):

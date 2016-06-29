@@ -13,6 +13,7 @@
   <script src="bootstrap.min.js"></script>
   <link rel="stylesheet" href="inv.css">
   <link rel="stylesheet" href="arrow.css">
+  <script src="build/ts/container.js"></script>
   <script src="build/ts/traceWindow.js"></script>
   <script src="build/ts/stickyWindow.js"></script>
   <script src="build/ts/powerups.js"></script>
@@ -51,7 +52,7 @@
 
     function addSuccessfulInvariant(inv) {
       jsfound.push(invToJS(inv))
-      progW.addInvariant(inv);
+      progW.addInvariant(inv, esprima.parse(inv));
     }
 
     function updateUI() {

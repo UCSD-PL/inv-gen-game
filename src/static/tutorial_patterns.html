@@ -37,6 +37,7 @@
     var curL, curL1;
     var tempCb = null;
     var stepTimeout = -1;
+    var pwups = []
 
     disableBackspaceNav();
 
@@ -56,6 +57,7 @@
     }
 
     function updateUI() {
+        $('#errormsg').html("")
         var inv = invPP(tracesW.curExp().trim());
         try {
           var parsedInv = esprima.parse();
@@ -134,7 +136,7 @@
                     }
 
                     curLvl = lvl;
-                    tracesW = new PositiveTracesWindow($('#data-display'));
+                    tracesW = new CounterExampleTracesWindow($('#data-display'));
                     tracesW.setVariables(lvl)
                     tracesW.onChanged(function() {
                       if (errorTimer) {
@@ -268,9 +270,97 @@
                  })
                }
       },
+      { setup: function (cs) {
+                 $("#formula-entry").val("")
+                 curL = label($("#formula-entry"), "Try i >= 0 again.", "left")
+                 nextStepOnInvariant(cs, "i>=0", labelRemover(curL));
+               }
+      },
+      { setup: function (cs) {
+                 $('#errormsg').html("<div class='error'> Duplicate Expression! </div>");
+                 curL = label({ of: $("#good_0"), at: "left+10 bottom" },
+                                "Can't use same expression twice", "up")
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#formula-entry"), "How about i>=-1?", "left")
+                 nextStepOnInvariant(cs, "i>=-1", labelRemover(curL));
+               }
+      },
+      { setup: function (cs) {
+                 curL = label({ of: $("#good_0"), at: "left+10 bottom" },
+                              "Can't use a weaker<br> expression than <br> found one either.", "up");
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 pwups = [ new VarOnlyPowerup(2),
+                               new UseOpsPwup(["<=", ">=", "<", ">", "!=="], "<>", "inequality"),
+                               new UseOpsPwup(["+", "-"], "&plusmn;", "addition or subtraction") ]
+                 $('#sticky').addClass("box stickyWindow");
+                 stickyW = new StickyWindow($('#sticky'));
+                 $('#sticky').hide();
+                 stickyW.setPowerups(pwups);
+                 $('#sticky').fadeIn(fadeDelay, () => {
+                   curL = label({ of: $("#sticky"), at: "center bottom" },
+                                "Some expressions<br>give you more points!", "up");
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+                 })
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#formula-entry"), "Try i<=n", "left")
+                 nextStepOnInvariant(cs, "i<=n", labelRemover(curL));
+               }
+      },
+      { setup: function (cs) {
+                 tracesW.msg("Press Enter...")
+                 curL = label($("#formula-entry"), "Press enter...", "left")
+                 cs.nextStepOnKeyOrTimeout(-1, labelRemover(curL), 13)
+               }
+      },
+      { setup: function (cs) {
+                 tracesW.msg("")
+                 curL = label({ of: $("#sticky"), at: "center bottom" },
+                              "Double added points <br> since you used only <br> variables", "up")
+                 pwups[0].highlight(() => 
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+                 );
+               }
+      },
+      { setup: function (cs) {
+                 tracesW.msg("")
+                 curL = label({ of: $("#sticky"), at: "center bottom" },
+                              "Double added points <br> since you used <br> inequality", "up")
+                 pwups[1].highlight(() => 
+                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+                 );
+               }
+      },
+      { setup: function (cs) {
+                 curL = label({ of: $("#score-div-row"), at: "right center" },
+                              "So you get +4pts.<br>(instead of just +1)", "left")
+                 scoreW.add(4)
+                 var inv = invPP(tracesW.curExp().trim());
+                 addSuccessfulInvariant(inv);
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 pwups = [ new UseOpsPwup(["+", "-"], "&plusmn;", "addition or subtraction"),
+                           new UseOpsPwup(["*", "/"], "*/", "multiplication or division"),
+                           new UseOpsPwup(["=="], "=", "equality"), 
+                         ]
+                 stickyW.setPowerups(pwups);
+                 curL = label({ of: $("#sticky"), at: "center bottom" },
+                              "Bonuses change<br>based on what you try.", "up");
+                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
       // Tutorial Levels for UI-----------------------------------------------
       { setup: function (cs) {
-                  $('.overlay').html("<h1>Let's warm up with a couple of levels!</h1>")
+                  $('.overlay').html("<h1>Lets warm up with a couple of levels!</h1>")
                   $('.overlay').fadeIn(fadeDelay, function () {
                     cs.nextStepOnKeyOrTimeout(stepTimeout, ()=>0, 32)
                   })
@@ -280,7 +370,7 @@
                  $(".overlay").fadeOut(fadeDelay, function () {
                    $('#sticky').addClass("box stickyWindow");
                    stickyW = new StickyWindow($('#sticky'));
-                   gameLogic = new StaticGameLogic(tracesW, progW, scoreW, stickyW);
+                   gameLogic = new StaticGameLogic(tracesW, progW, scoreW, stickyW, 3);
                    var lvl = new Level("tutorial_lvl_1",
                      [ "j", "n" ],
                      [ [ [ 0, 3 ], [ 1, 3 ], [ 2, 3 ], [ 3, 3 ] ], [], [] ],
@@ -295,13 +385,7 @@
       { setup: function (cs) {
                  $('#container').click()
                  curL = label({ of: $("#sticky"), at: "left+10 bottom" },
-                              "You get extra points for some expressions! (Press Spacebar..)", "up");
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
-               }
-      },
-      { setup: function (cs) {
-                 curL = label({ of: $("#sticky"), at: "left+10 bottom" },
-                              "Hover over each powerup for details!", "up");
+                              "Hover over each bonus for details!", "up");
                  cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
@@ -311,7 +395,7 @@
                  gameLogic.onLvlPassed(()=>
                     $('#next-lvl').fadeIn(fadeDelay, ()=> {
                       curL = label({ of: $('#next-lvl'), at: "right center" },
-                                   "Click Here! (15c bonus!)", "left")
+                                   "Click Here!", "left")
                     }))
                }
       },
@@ -340,13 +424,14 @@
                   $('#data-display table').add('#score-div-row').add('#discovered-invariants-div')
                   .add('#sticky').add('.kill-switch')
                   .fadeOut(fadeDelay, function () {
+                    removeLabel(curL);
                     cs.nextStep()
                   })
                }
       },
       { setup: function (cs) {
-                  $('#data-display').html('<div stype="display: none"><h1>Final words:</h1>' +
-                    '<h3><p>You can use all of the following operators:</p>' +
+                  $('#data-display').html('<div stype="display: none">' +
+                    '<h2><p>You can use all of the following operators:</p></h2><h3>' +
                     '<table class="table table-stripped"><thead><tr><th>Operator</th><th>Description</th><th>Examples</th></tr></thead>' +
                     '<tbody>' +
                     [ ['+', 'Integer Addition', '3+4=7, i+1'],
@@ -373,7 +458,7 @@
                  $('#next-lvl').html("Start Playing")
                  $('#next-lvl').off("click")
                  $('#next-lvl').click(function() {
-                   window.location.replace('game_static.html');
+                   window.location.replace('game_patterns.html');
                  })
                  $('#next-lvl').fadeIn(fadeDelay, function() {
                    curL = label({ of: $("#next-lvl"), at: "left center"},
@@ -392,6 +477,7 @@
 
       progW = new ProgressWindow($('#discovered-invariants-div'));
       $('#discovered-invariants-div').hide();
+      $('.ignoreWindow').hide();
       scoreW = new ScoreWindow($('#score-div'));
       $('#score-div-row').hide();
       $('#next-lvl').hide();
@@ -411,7 +497,7 @@
 </body>
   <div class='container'>
     <div class='row'>
-      <div class='col-md-1' id='left'>
+      <div class='col-md-1' id='dummy'>
       </div>
       <div class='col-md-1' id='sticky'>
       </div>

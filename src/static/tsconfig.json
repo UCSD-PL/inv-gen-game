@@ -36,6 +36,7 @@
     "placeOpenBraceOnNewLineForControlBlocks": false
   },
   "files": [
+    "ts/container.ts",
     "ts/bonus.ts",
     "ts/curvedarrow.ts",
     "ts/eval.ts",

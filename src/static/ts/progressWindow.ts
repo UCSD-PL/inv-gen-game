@@ -1,12 +1,10 @@
-type invariantT = string;
-
 interface IProgressWindow {
-  addInvariant(invariant: invariantT): void;
-  removeInvariant(invariant: invariantT): void;
-  markInvariant(invariant: invariantT, state: string): void;
+  addInvariant(key: string, invariant: invariantT): void;
+  removeInvariant(key: string): void;
+  markInvariant(key: string, state: string): void;
   clearMarks(): void;
   clear(): void;
-  contains(invariant: invariantT):  boolean;
+  contains(key: string):  boolean;
 }
 
 class ProgressWindow implements IProgressWindow {
@@ -22,25 +20,26 @@ class ProgressWindow implements IProgressWindow {
     this.container = $(this.parent).children("div")[0];
   };
 
-  addInvariant(invariant: invariantT): void {
-    let invUl = $(this.container).children("#good-invariants")[0];
+  addInvariant(key: string, invariant: invariantT) : void {
+    let invUl = $(this.container).children("#good-invariants")[0]
     $(invUl).append("<li class='good-invariant' id='good_" +
-      this.ctr + "'>" + invToHTML(invariant) + "</li>");
-    this.invMap[invariant] = $("#good_" + this.ctr)[0];
+      this.ctr + "'>" + invToHTML(invariant) + "</li>")
+    this.invMap[key] = $('#good_' + this.ctr)[0]
     this.ctr ++;
   }
 
-  removeInvariant(invariant: invariantT): void {
-    $(this.invMap[invariant]).remove();
-    delete this.invMap[invariant];
+  removeInvariant(key: string): void {
+    $(this.invMap[key]).remove();
+    delete this.invMap[key]
   }
 
-  markInvariant(invariant: invariantT, state: string): void {
-    let invDiv = $(this.invMap[invariant]);
+  
+  markInvariant(key: string, state: string): void {
+    let invDiv = $(this.invMap[key]);
 
-    if (invDiv === undefined) {
-      console.log("Unknown invariant " + invariant);
-      return;
+    if (invDiv == undefined) {
+      console.log("Unknown invariant " + key);
+      return
     }
 
       if (state === "checking") {
@@ -69,8 +68,39 @@ class ProgressWindow implements IProgressWindow {
     this.ctr = 0;
   }
 
-  contains(invariant: invariantT): boolean {
-    return this.invMap.hasOwnProperty(invariant);
+  contains(key: string):  boolean {
+    return this.invMap.hasOwnProperty(key);
+  }
+}
+
+class IgnoredInvProgressWindow extends ProgressWindow {
+  ignoredContainer: HTMLElement;
+  constructor(public parent:  HTMLDivElement) {
+    super(parent);
+    $(this.parent).html("<div class='progressWindow box good centered positioned'>" +
+                      "Accepted expressions<br>" +
+                      "<ul id='good-invariants'></ul>"+
+                   "</div>" +
+                   "<div class='ignoreWindow box warn centered positioned'>" +
+                      "Ignored expressions<br>" +
+                      "<ul id='ignored-invariants'></ul>" +
+                   "</div>");
+    this.container = $(this.parent).children("div")[0]
+    this.ignoredContainer = $(this.parent).children("div")[1]
+  };
+
+  addIgnoredInvariant(key: string, inv: invariantT) {
+    let invUL: HTMLElement = $(this.ignoredContainer).children("ul")[0]
+    $(invUL).append("<li class='ignored-invariant' id='ign_" +
+      this.ctr + "'>" + invToHTML(inv) + "</li>")
+    this.invMap[key] = $('#ign_' + this.ctr)[0]
+    this.ctr++;
+  }
+
+  clear(): void {
+    super.clear();
+    let invUL: HTMLElement = $(this.ignoredContainer).children("ul")[0]
+    $(invUL).html('')
   }
 }
 
@@ -98,7 +128,7 @@ class TwoPlayerProgressWindow extends ProgressWindow {
     this.container = $(this.parent).children("div")[0];
   }
 
-  addInvariant(invariant: invariantT): void {
+  addInvariant(key: string, invariant: invariantT): void {
     let invUl = null;
 
     if (this.player === 1) {
@@ -113,16 +143,16 @@ class TwoPlayerProgressWindow extends ProgressWindow {
     $(invUl).append("<li class='good-invariant' id='good_" + this.player +
       this.ctr + "'>" + invToHTML(invariant) + "</li>");
 
-    this.invMap[invariant] = $("#good_" + this.player + this.ctr)[0];
+    this.invMap[key] = $("#good_" + this.player + this.ctr)[0];
     this.ctr ++;
   }
 
-  markInvariant(invariant: invariantT, state: string): void {
-    let invDiv = $(this.invMap[invPP(invariant)]);
+  markInvariant(key: string, state: string): void {
+    let invDiv = $(this.invMap[key]);
     // let invDiv = $(this.invMap[invariant]);
 
     if (invDiv === undefined) {
-      console.log("Unknown invariant " + invariant);
+      console.log("Unknown invariant " + key);
       return;
     }
 

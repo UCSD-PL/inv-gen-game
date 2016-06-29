@@ -65,6 +65,8 @@ def esprimaToZ3Expr(astn, typeEnv):
   if (astn["type"] == "UnaryExpression"):
     arg = esprimaToZ3Expr(astn["argument"], typeEnv)
     try:
+      if (astn["operator"] == "+"):
+        return arg;
       return {
         '-': lambda x:  -x,
         '!': lambda x:  Not(x)
@@ -77,7 +79,7 @@ def esprimaToZ3Expr(astn, typeEnv):
     try:
       return {
         '==': lambda x,y: x == y,
-        '!=': lambda x,y: x != y,
+        '!==': lambda x,y: x != y,
         '<': lambda x,y: x < y,
         '>': lambda x,y: x > y,
         '<=': lambda x,y: x <= y,
@@ -114,6 +116,9 @@ def esprimaToBoogieExprAst(astn, typeEnv):
   if (astn["type"] == "UnaryExpression"):
     arg = esprimaToBoogieExprAst(astn["argument"], typeEnv)
     try:
+      if (astn["operator"] == "+"):
+        return arg;
+
       return AstUnExpr({
         '-': '-',
         '!': '!'
@@ -127,6 +132,7 @@ def esprimaToBoogieExprAst(astn, typeEnv):
       op = {
         '==': '==',
         '!=': '!=',
+        '!==': '!=',
         '<': '<',
         '>': '>',
         '<=': '<=',
@@ -176,6 +182,47 @@ def esprimaToBoogie(inv, typeEnv):
     "expression" not in inv["body"][0]):
     raise Exception("Bad struct")
   return esprimaToBoogieExprAst(inv["body"][0]["expression"], typeEnv)
+
+def boogieToEsprimaExpr(expr):
+    if isinstance(expr, AstNumber):
+        return { "type": "Literal", "value": expr.num, "raw": str(expr.num) }
+    elif isinstance(expr, AstId):
+        return { "type": "Identifier", "name": expr.name }
+    elif isinstance(expr, AstTrue):
+        return { "type": "Literal", "value": True, "raw": "true" }
+    elif isinstance(expr, AstFalse):
+        return { "type": "Literal", "value": False, "raw": "false" }
+    elif isinstance(expr, AstUnExpr):
+        espr_op = {
+            '-':    '-',
+            '!':    '!',
+        }[expr.op]
+        return { "type": "UnaryExpression", "operator": espr_op, "argument": boogieToEsprimaExpr(expr.expr) }
+    elif isinstance(expr, AstBinExpr):
+        lhs = boogieToEsprimaExpr(expr.lhs)
+        rhs = boogieToEsprimaExpr(expr.rhs)
+        espr_op, typ = {
+            '+':    ('+', 'BinaryExpression'),
+            '-':    ('-', 'BinaryExpression'),
+            '*':    ('*', 'BinaryExpression'),
+            '/':    ('/', 'BinaryExpression'),
+            '%':    ('%', 'BinaryExpression'),
+            '<':    ('<', 'BinaryExpression'),
+            '>':    ('>', 'BinaryExpression'),
+            '<=':    ('<=', 'BinaryExpression'),
+            '>=':    ('>=', 'BinaryExpression'),
+            '==':    ('==', 'BinaryExpression'),
+            '!==':    ('!==', 'BinaryExpression'),
+            '&&':    ('&&', 'LogicalExpression'),
+            '||':    ('||', 'LogicalExpression'),
+        }[expr.op]
+        return { "type": typ, "operator": espr_op, "left": lhs, "right": rhs }
+    else:
+        raise Exception("Unknown expression " + str(expr))
+
+def boogieToEsprima(inv):
+  return { "type":"Program", "sourceType": "script", "body": [ 
+    { "type": "ExpressionStatement", "expression": boogieToEsprimaExpr(inv) } ] }
 
 if __name__ == "__main__":
   p = Parser()

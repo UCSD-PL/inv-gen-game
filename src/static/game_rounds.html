@@ -43,7 +43,7 @@
     disableBackspaceNav();
 
     function loadTrace(traceId) {
-      Level.load(curLvlSet, traceId, function(lvl) {
+      PrepopulatedDynamicLevel.load(curLvlSet, traceId, function(lvl) {
         gameLogic.loadLvl(lvl)
       })
     }
@@ -56,21 +56,12 @@
       if (lvl == lvls.length) {
         doneScreen();
       } else {
-        if (typeof(lvls[curLvl]) == "string") {
-          $('#lvl_' + lvls[curLvl]).removeClass('bold');
-          $('#lvl_' + lvls[curLvl]).removeClass('currentLevel');
-          $('#lvl_' + lvls[curLvl]).parent().addClass('completedLevel');
-        }
-
+        $('#lvl_' + curLvl).removeClass('bold');
+        $('#lvl_' + curLvl).removeClass('currentLevel');
+        $('#lvl_' + curLvl).parent().addClass('completedLevel');
         curLvl = lvl;
-        if (typeof(lvls[lvl]) == "string") {
-          $('#lvl_' + lvls[curLvl]).addClass('bold');
-          $('#lvl_' + lvls[curLvl]).parent().addClass('currentLevel');
-        }
-
-        if (lvl == lvls.length - 1) {
-          $('#next-lvl').html('Finish');
-        }
+        $('#lvl_' + curLvl).addClass('bold');
+        $('#lvl_' + curLvl).parent().addClass('currentLevel');
 
         if (typeof(lvls[lvl]) == "string") {
           loadTrace(lvls[curLvl]);
@@ -85,14 +76,18 @@
       res = rpc.call('App.listData', [lvlset], function(res) {
         lvls = res;
         hstr = '<ul class="levels">';
+        hstr += '<li class="level pending">' + '<a class="loadLvl" id="lvl_' + 0 + '" >' + 0 + '</a>' + '</li>';
+        hstr += '<li class="level pending" id="lvl_dots">' + '...' + '</li>';
+        /*
         for (var i in res) {
-          hstr += '<li class="level pending">' + '<a class="loadLvl" id="lvl_' + res[i] + '" >' + i + '</a>' + '</li>';
+          hstr += '<li class="level pending">' + '<a class="loadLvl" id="lvl_' + i + '" >' + i + '</a>' + '</li>';
         }
+        */
         hstr += '</ul>';
         $('#traces-menu').html(hstr);
 
         $('.loadLvl').click(function (evt) {
-          loadLvl(lvls.indexOf(this.id.substring(4)));
+          loadLvl(lvls[this.id.substring(4)]);
         });
         curLvl = -1;
         nextLvl();
@@ -127,21 +122,135 @@
       },
     ]
 
-
     $(document).ready(function() {
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
-      progW = new ProgressWindow($('#discovered-invariants-div'));
+      progW = new IgnoredInvProgressWindow($('#discovered-invariants-div'));
       scoreW = new ScoreWindow($('#score-div'));
-      traceW = new CounterExampleTracesWindow($('#data-display'));
+      traceW = new PositiveTracesWindow($('#data-display'));
       stickyW = new StickyWindow($('#sticky'))
-      gameLogic = new CounterexampleGameLogic(traceW, progW, scoreW, stickyW);
+      gameLogic = new MultiroundGameLogic(traceW, progW, scoreW, stickyW);
 
       $('#next-lvl').hide();
 
+      function insertNewSublvl(lvlSet, lvl, overfitted, all_invs) {
+            // Create next sub-level
+            rpc.call("App.getPositiveExamples", [ lvlSet, 
+              lvl.id, lvl.exploration_state,
+              overfitted, 5], (data) => {
+                let templates = all_invs.map(generalizeInv)
+                let newData = (data[1].length > 0 ? data[1] : gameLogic.curLvl.data[0]);
+                instantiate(templates, lvl.variables, gameLogic.allData[lvl.id][0].concat(newData),
+                  (invs) => {
+                    let uniq_invs = unique(invs, esprimaToStr);
+                    let constTemplates = invs.map(generalizeConsts)
+                    instantiate(constTemplates, lvl.variables, newData, (inv_newdata) => {
+                      // Filter out redundant invariants
+                      checkInvs(curLvlSet, lvl.id, uniq_invs, (res) => {
+                        var overfit = res[0]
+                        var nonind = res[1]
+                        var sound = res[2]
+
+                        // Add counterexamples to overfit as data.
+                        var inv_needing_negation = inv_newdata.filter((inv)=> {
+                          assert(isin(inv, invs, esprimaToStr) || !(isin(inv, sound, esprimaToStr)))
+                          return !isin(inv, invs, esprimaToStr);
+                        })
+
+                        inv_needing_negation = inv_needing_negation.concat(
+                               overfitted.filter((inv)=>holds(esprimaToStr(inv),
+                                                              lvl.variables,
+                                                              newData)))
+
+                        var str_inv_needing_negation = inv_needing_negation.map(esprimaToStr);
+
+                        // Need to include some rows from other traces, to prevent
+                        // the user from instantiating some of these invariants. Since we
+                        // we want to minimize the # of additional rows, want to solve an instance
+                        // of set cover here
+                        var s = { }
+                        var ord = [ ]
+                        for (var i in gameLogic.allData[lvl.id][0]) {
+                          var row = gameLogic.allData[lvl.id][0][i]
+                          s[i] = { }
+                          var cnt = 0;
+                          for (var j in str_inv_needing_negation) {
+                            var inv = str_inv_needing_negation[j]
+                            if (invEval(inv, lvl.variables, [ row ])[0] === false) {
+                              s[i][j] = true;
+                              cnt ++ ;
+                            }
+                          }
+
+                          ord.push([cnt, i]);
+                        }
+                        
+                        // s is map from data rows ot invariants negated
+                        // Start adding rows greedily, based on # of invariants negated
+                        ord.sort((a,b) => b[0]-a[0]);
+                        var covered = { }
+                        var numCovered = 0
+                        var extraRows = []
+                        for (var i in ord) {
+                          var coveredByThis= 0
+                          for (var j in s[ord[i][1]]) {
+                            if (!covered.hasOwnProperty(j)) {
+                              covered[j] = 1;
+                              coveredByThis ++;
+                            }
+                          }
+
+                          if (coveredByThis > 0) {
+                            extraRows.push(gameLogic.allData[lvl.id][0][ord[i][1]])
+                            numCovered+= coveredByThis;
+                          }
+
+                          if (numCovered == inv_needing_negation.length)
+                            break;
+                        }
+                        
+                        var newLvl = new PrepopulatedDynamicLevel(lvl.id, lvl.variables,
+                          [newData.concat(extraRows), [], []], lvl.goal, lvl.hint, data[0],
+                          [overfit, nonind, sound])
+                        
+                        lvls.splice(curLvl + 1, 0, newLvl)
+                        $("#lvl_dots").before('<li class="level pending">' + '<a class="loadLvl" id="lvl_' + (curLvl + 1) + '" >' + (curLvl + 1) + '</a>' + '</li>');
+                        $('#next-lvl').show();
+
+                        curL = label({ of: $('#next-lvl'), at: "right center"},
+                              "Click Here! (50c bonus!)", "left")
+                      })
+                    }, log)
+                  }, log)
+            }, log)
+      }
+
       gameLogic.onLvlPassed(function() {
-        $('#next-lvl').show();
-        curL = label({ of: $('#next-lvl'), at: "right center"},
-              "Click Here! (50c bonus!)", "left")
+        var lvl = gameLogic.curLvl;
+        if (gameLogic.soundInvs.length > 0) {
+          counterexamples(curLvlSet, lvl.id, gameLogic.soundInvs.map((x)=>x.canonForm), (res) => {
+            var overfit=res[0],nonind=res[1],sound = res[2], post = res[3]
+            var verified = overfit.length == 0 && nonind.length == 0 && post.length == 0;
+            if (verified) {
+              // Advance to boogie next level
+              if (curLvl < lvls.length - 1) {
+                $("#lvl_dots").before('<li class="level pending">' + '<a class="loadLvl" id="lvl_' + (curLvl + 1) + '" >' + (curLvl + 1) + '</a>' + '</li>');
+              }
+
+              if (curLvl == lvls.length - 1) {
+                $('#next-lvl').html('Finish');
+
+              }
+
+              $('#next-lvl').show();
+              curL = label({ of: $('#next-lvl'), at: "right center"},
+                    "Click Here! (50c bonus!)", "left")
+            } else {
+              insertNewSublvl(curLvlSet, lvl, gameLogic.allOverfitted[lvl.id].map((x)=>x.canonForm), gameLogic.foundJSInv.map((x)=>x.rawInv))
+            }
+          })
+        } else {
+          insertNewSublvl(curLvlSet, lvl, gameLogic.allOverfitted[lvl.id].map((x)=>x.canonForm), gameLogic.foundJSInv.map((x)=>x.rawInv))
+        }
       });
 
       $('#next-lvl').click(function() {
@@ -158,7 +267,7 @@
       })
 
       $('#replay').click(function() {
-        var win = window.open('tutorial_ctrex.html', '_blank');
+        var win = window.open('tutorial_rounds.html', '_blank');
         win.focus();
       })
 

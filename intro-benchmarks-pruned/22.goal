@@ -1,1 +1,1 @@
-{ "manual" : { } }
+{ "equivalent" : [ "x==n*n" ] }

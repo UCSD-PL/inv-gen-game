@@ -1,12 +1,31 @@
-type voidCb = () => void
-type boolCb = (res: boolean) => void
-type invSoundnessResT = { ctrex: [any[], any[], any[]] }
+type voidCb = ()=>void
+type boolCb = (res: boolean)=>void
+type invSoundnessResT = { ctrex: [ any[], any[], any[] ]}
+type invariantT = ESTree.Node;
+type templateT = [ invariantT, string[], string[] ]
+
 declare var curLvlSet: string; // TODO: Remove hack
 declare var progW: any;
 declare var progW2: any;
 declare var traceW: any;
 declare var traceW2: any;
 declare var allowBonus: boolean;
+
+class UserInvariant {
+  public rawInv: invariantT;
+  public archetype: templateT;
+  public id: string;
+  public archetypeId: string;
+
+  constructor(public rawUserInp: string,
+              public rawJS: string,
+              public canonForm: invariantT) {
+    this.rawInv = esprima.parse(rawJS);
+    this.archetype = generalizeInv(canonForm);
+    this.archetypeId = esprimaToStr(this.archetype[0]);
+    this.id = esprimaToStr(this.canonForm);
+  }
+}
 
 interface IGameLogic {
   clear(): void;
@@ -15,32 +34,32 @@ interface IGameLogic {
   userInput(commit: boolean): void;
   goalSatisfied(cb: (sat: boolean, feedback: any) => void): void;
 
-  onUserInput(cb: (inv: invariantT) => void): void;
-  onLvlPassed(cb: () => void): void;
-  onLvlLoaded(cb: () => void): void;
-  onCommit(cb: () => void): void;
+  onUserInput(cb: (inv:string)=>void): void;
+  onLvlPassed(cb: ()=>void): void;
+  onLvlLoaded(cb: ()=>void): void;
+  onCommit(cb: ()=>void): void;
 }
 
 interface IDynGameLogic extends IGameLogic {
   clear(): void;
   loadLvl(lvl: Level): void;
   addData(data: dataT): void;
-  invSound(inv: invariantT, cb: (sound: boolean, res: invSoundnessResT) => void): void;
+  invSound(inv: UserInvariant, cb: (sound: boolean, res:invSoundnessResT)=>void): void;
 
   userInput(commit: boolean): void;
   goalSatisfied(cb: (sat: boolean, feedback: any) => void): void;
 
-  onUserInput(cb: (inv: invariantT) => void): void;
-  onLvlPassed(cb: () => void): void;
-  onLvlLoaded(cb: () => void): void;
-  onCommit(cb: () => void): void;
+  onUserInput(cb: (inv:string)=>void): void;
+  onLvlPassed(cb: ()=>void): void;
+  onLvlLoaded(cb: ()=>void): void;
+  onCommit(cb: ()=>void): void;
 }
 
 abstract class BaseGameLogic implements IGameLogic {
   curLvl: Level = null;
   lvlPassedCb: voidCb = null;
   lvlLoadedCb: voidCb = null;
-  userInputCb: (inv: invariantT) => void = null;
+  userInputCb: (inv:string)=> void = null;
   commitCb: voidCb = null;
   pwupSuggestion: IPowerupSuggestion = null;
   score: number = 0;
@@ -87,7 +106,7 @@ abstract class BaseGameLogic implements IGameLogic {
       this.lvlLoadedCb();
   }
 
-  protected computeScore(inv: string, s: number): number {
+  protected computeScore(inv: invariantT, s: number): number {
     let pwups = this.pwupSuggestion.getPwups();
     let hold = pwups.filter((pwup) => pwup.holds(inv));
     let newScore = hold.reduce((score, pwup) => pwup.transform(score), s);
@@ -101,79 +120,61 @@ abstract class BaseGameLogic implements IGameLogic {
       pwups[new_pwups[i].id] = new_pwups[i];
     }
 
-    this.stickyW.set(new_pwups);
+    this.stickyW.setPowerups(new_pwups);
   }
 
   abstract userInput(commit: boolean): void
-  abstract goalSatisfied(cb: (sat: boolean, feedback: any) => void): void;
-  onUserInput(cb: (inv: invariantT) => void): void { this.userInputCb = cb; };
-  onLvlPassed(cb: () => void): void { this.lvlPassedCb = cb; };
-  onLvlLoaded(cb: () => void): void { this.lvlLoadedCb = cb; };
-  onCommit(cb: () => void): void { this.commitCb = cb; };
+  abstract goalSatisfied(cb:(sat: boolean, feedback: any)=>void):void;
+  onUserInput(cb: (inv: string)=>void): void { this.userInputCb = cb; };
+  onLvlPassed(cb: ()=>void): void { this.lvlPassedCb = cb; };
+  onLvlLoaded(cb: ()=>void): void { this.lvlLoadedCb = cb; };
+  onCommit(cb: ()=>void): void { this.commitCb = cb; };
 }
 
 class StaticGameLogic extends BaseGameLogic implements IGameLogic {
-  foundJSInv: string[] = [];
-  foundInv: string[] = [];
+  foundJSInv: UserInvariant[] = [];
   lvlPassedF: boolean = false;
 
   constructor(public tracesW: ITracesWindow,
-    public progressW: IProgressWindow,
-    public scoreW: ScoreWindow,
-    public stickyW: StickyWindow) {
+              public progressW: IProgressWindow,
+              public scoreW: ScoreWindow,
+              public stickyW: StickyWindow,
+              numBonuses: number = 5) {
     super(tracesW, progressW, scoreW, stickyW);
-    this.pwupSuggestion = new PowerupSuggestionFullHistory(5, "lfu");
+    this.pwupSuggestion = new PowerupSuggestionFullHistory(numBonuses, "lfu");
   }
 
   clear(): void {
     super.clear();
     this.foundJSInv = [];
-    this.foundInv = [];
     this.lvlPassedF = false;
   }
 
   goalSatisfied(cb: (sat: boolean, feedback?: any) => void): void {
     let goal = this.curLvl.goal;
     if (goal == null) {
-      cb(true);
-    } else if (goal.manual) {
-      cb(false);
-    } else if (goal.find) {
-      let numFound = 0;
-      for (let i = 0; i < goal.find.length; i++) {
-        let found = false;
-        for (let j = 0; j < goal.find[i].length; j++) {
-          if ($.inArray(goal.find[i][j], this.foundJSInv) !== -1) {
-            found = true;
-            break;
-          }
-        }
-
-        if (found)
-          numFound++;
-
+      cb(true)
+    } else  if (goal.equivalent) {
+      assert(goal.equivalent.length > 0);
+      let eq_exp:(string[]|ESTree.Node[]) = goal.equivalent
+      if (typeof(eq_exp[0]) == "string") {
+        eq_exp = (<string[]>eq_exp).map(esprima.parse);
       }
-
-      cb(numFound === goal.find.length,
-        { "find": { "found": numFound, "total": goal.find.length } });
-    } else if (goal.equivalent) {
-      equivalentPairs(goal.equivalent, this.foundJSInv, function(pairs) {
-        let numFound = 0;
-        let equiv = [];
-        for (let i = 0; i < pairs.length; i++) {
-          if (-1 === $.inArray(pairs[i][0], equiv))
-            equiv.push(pairs[i][0]);
+      equivalentPairs(<ESTree.Node[]>eq_exp, this.foundJSInv.map((x)=>x.canonForm), function(pairs) {
+        var numFound = 0;
+        var equiv = []
+        for (var i=0; i < pairs.length; i++) {
+          if (-1 == $.inArray(pairs[i][0], equiv))
+            equiv.push(pairs[i][0])
         }
 
-        cb(equiv.length === goal.equivalent.length,
-          { "equivalent": { "found": equiv.length, "total": goal.equivalent.length } });
-      });
-    } else if (goal.max_score) {
-      cb(true, { "max_score": { "found": this.foundJSInv.length } });
-    } else if (goal.none) {
-      cb(false);
-    } else if (goal.hasOwnProperty("atleast")) {
-      cb(this.foundJSInv.length >= goal.atleast);
+        cb(equiv.length == goal.equivalent.length,
+           { "equivalent": { "found": equiv.length , "total": goal.equivalent.length } })
+      })
+    } else if (goal.hasOwnProperty('atleast')) {
+      cb(this.foundJSInv.length >= goal.atleast)
+    } else if (goal.hasOwnProperty("none")) {
+      cb(false)
     } else {
       error("Unknown goal " + JSON.stringify(goal));
     }
@@ -185,12 +186,13 @@ class StaticGameLogic extends BaseGameLogic implements IGameLogic {
     this.progressW.clearMarks();
 
     let inv = invPP(this.tracesW.curExp().trim());
-    let jsInv = invToJS(inv);
-
     this.userInputCb(inv);
 
+    let jsInv = invToJS(inv)
+    let parsedInv:invariantT = null
+
     try {
-      let parsedInv = esprima.parse(jsInv);
+      parsedInv = esprima.parse(jsInv);
     } catch (err) {
       this.tracesW.delayedError(inv + " is not a valid expression.");
       return;
@@ -209,62 +211,64 @@ class StaticGameLogic extends BaseGameLogic implements IGameLogic {
       if (!evalResultBool(res))
         return;
 
-      let redundant = this.progressW.contains(inv);
-      if (redundant) {
-        this.progressW.markInvariant(inv, "duplicate");
-        this.tracesW.immediateError("Duplicate Invariant!");
-        return;
-      }
+      simplify(jsInv, (simplInv: ESTree.Node) => { 
+        let ui: UserInvariant = new UserInvariant(inv, jsInv, simplInv)
 
-      let all = pos_res.length;
-      let hold = pos_res.filter(function(x) { return x; }).length;
-
-      if (hold < all)
-        this.tracesW.error("Holds for " + hold + "/" + all + " cases.");
-      else {
-        this.tracesW.enableSubmit();
-        if (!commit) {
-          this.tracesW.msg("<span class='good'>Press Enter...</span>");
-          return;
+        let redundant = this.progressW.contains(ui.id)
+        if (redundant) {
+          this.progressW.markInvariant(ui.id, "duplicate")
+          this.tracesW.immediateError("Duplicate Expression!")
+          return
         }
 
-        let gl = this;
-        isTautology(invToJS(inv), function(res) {
-          if (res) {
-            gl.tracesW.error("This is a always true...");
+        let all = pos_res.length
+        let hold = pos_res.filter(function (x) { return x; }).length
+
+        if (hold < all)
+          this.tracesW.error("Holds for " + hold + "/" + all + " cases.")
+        else {
+          this.tracesW.enableSubmit();
+          if (!commit) {
+            this.tracesW.msg("<span class='good'>Press Enter...</span>");
             return;
           }
 
-          impliedBy(gl.foundJSInv, jsInv, function(x: number) {
-            if (x !== null) {
-              gl.progressW.markInvariant(gl.foundInv[x], "implies");
-              gl.tracesW.immediateError("This is weaker than a found expression!");
-            } else {
-              let addScore = gl.computeScore(jsInv, 1);
-
-              gl.pwupSuggestion.invariantTried(jsInv);
-              setTimeout(() => gl.setPowerups(gl.pwupSuggestion.getPwups()), 1000); // TODO: Remove hack
-
-              gl.score += addScore;
-              gl.scoreW.add(addScore);
-              gl.foundInv.push(inv);
-              gl.foundJSInv.push(jsInv);
-              gl.progressW.addInvariant(inv);
-              gl.tracesW.setExp("");
-              if (!gl.lvlPassedF) {
-                gl.goalSatisfied((sat, feedback) => {
-                  let lvl = gl.curLvl;
-                  if (sat) {
-                    gl.lvlPassedF = true;
-                    gl.lvlPassedCb();
-                  }
-                });
-              }
+          let gl = this;
+          isTautology(ui.canonForm, function(res) {
+            if (res) {
+              gl.tracesW.error("This is a always true...")
+              return
             }
-          });
-        });
-      }
 
+            impliedBy(gl.foundJSInv.map(x=>x.canonForm), ui.canonForm, function (x: ESTree.Node[]) {
+              if (x.length > 0) {
+                gl.progressW.markInvariant(esprimaToStr(x[0]), "implies")
+                gl.tracesW.immediateError("This is weaker than a found expression!")
+              } else {
+                var addScore = gl.computeScore(parsedInv, 1)
+
+                gl.pwupSuggestion.invariantTried(parsedInv);
+                setTimeout(() => gl.setPowerups(gl.pwupSuggestion.getPwups()), 1000); // TODO: Remove hack
+
+                gl.score += addScore;
+                gl.scoreW.add(addScore);
+                gl.foundJSInv.push(ui)
+                gl.progressW.addInvariant(ui.id, ui.rawInv);
+                gl.tracesW.setExp("");
+                if (!gl.lvlPassedF) {
+                  gl.goalSatisfied((sat, feedback) => {
+                    var lvl = gl.curLvl
+                    if (sat) {
+                      gl.lvlPassedF = true;
+                      gl.lvlPassedCb();
+                    }
+                  });
+                }
+              }
+            })
+          })
+        }
+      })
     } catch (err) {
       this.tracesW.delayedError(<string>interpretError(err));
     }
@@ -272,11 +276,10 @@ class StaticGameLogic extends BaseGameLogic implements IGameLogic {
 }
 
 class CounterexampleGameLogic extends BaseGameLogic implements IDynGameLogic {
-  foundJSInv: string[] = [];
-  foundInv: string[] = [];
-  soundInvs: string[] = [];
-  overfittedInvs: string[] = [];
-  nonindInvs: string[] = [];
+  foundJSInv: UserInvariant[] = [];
+  soundInvs: UserInvariant[] = [];
+  overfittedInvs: UserInvariant[] = [];
+  nonindInvs: UserInvariant[] = [];
   lvlPassedF: boolean = false;
 
   constructor(public tracesW: CounterExampleTracesWindow,
@@ -293,8 +296,7 @@ class CounterexampleGameLogic extends BaseGameLogic implements IDynGameLogic {
     this.tracesW.clearData(1);
     this.tracesW.clearData(2);
     this.foundJSInv = [];
-    this.foundInv = [];
-    this.nonindInvs = [];
+    this.nonindInvs= [];
     this.overfittedInvs = [];
     this.soundInvs = [];
     this.lvlPassedF = false;
@@ -308,26 +310,31 @@ class CounterexampleGameLogic extends BaseGameLogic implements IDynGameLogic {
     this.tracesW.addData(data);
   }
 
-  invSound(inv: invariantT, cb: (sound: boolean, res: invSoundnessResT) => void): void {
-    let invs = this.soundInvs.concat([inv]);
+  invSound(inv: UserInvariant, cb: (sound: boolean, res:invSoundnessResT)=>void): void {
+    let invs = this.soundInvs.concat([inv])
     let gl = this;
-    pre_vc_ctrex(curLvlSet, this.curLvl.id, invs, function(pos_res) {
-      if (pos_res.length !== 0) {
-        cb(false, { ctrex: [pos_res, [], []] });
+    checkInvs(curLvlSet, this.curLvl.id, invs.map((x)=>x.canonForm), ([overfitted, nonind, sound]) => {
+      if (sound.map((x)=>esprimaToStr(x)).indexOf(inv.id) >= 0) {
+        cb(true, { ctrex: [ [], [], [] ] })
       } else {
-        ind_vc_ctrex(curLvlSet, gl.curLvl.id, invs, function(ind_res) {
-          cb(ind_res.length === 0, { ctrex: [[], [], ind_res] });
-        });
+        let ind = overfitted.map((x)=>esprimaToStr(x[0])).indexOf(inv.id)
+        if (ind >= 0) {
+          cb(false, { ctrex: [ [ overfitted[ind][1] ], [], [] ] })
+        } else {
+          let ind = nonind.map((x)=>esprimaToStr(x[0])).indexOf(inv.id)
+          assert(ind >= 0);
+          cb(false, { ctrex: [ [], [], [ nonind[ind][1] ] ] })
+        }
       }
     });
   }
 
   goalSatisfied(cb: (sat: boolean, feedback: any) => void): void {
     if (this.soundInvs.length > 0) {
-      counterexamples(curLvlSet, this.curLvl.id, this.soundInvs, (res: dataT) => {
-        let pos = res[0], neg = res[1], ind = res[2];
-        cb(pos.length === 0 && neg.length === 0 && ind.length === 0, res);
-      });
+      counterexamples(curLvlSet, this.curLvl.id, this.soundInvs.map((x)=>x.canonForm), (res) => {
+        let overfitted=res[0],nonind=res[1],sound=res[2], post_ctrex=res[3]
+        cb(overfitted.length == 0 && nonind.length == 0 && post_ctrex.length == 0, res)
+      })
     } else {
       cb(false, [[], [], []]);
     }
@@ -368,85 +375,87 @@ class CounterexampleGameLogic extends BaseGameLogic implements IDynGameLogic {
       if (!evalResultBool(res))
         return;
 
-      let redundant = this.progressW.contains(inv);
-      if (redundant) {
-        this.progressW.markInvariant(inv, "duplicate");
-        this.tracesW.immediateError("Duplicate Invariant!");
-        return;
-      }
+      simplify(jsInv, (simplInv: ESTree.Node) => { 
+        let ui: UserInvariant = new UserInvariant(inv, jsInv, simplInv)
 
-      let all = pos_res.length + neg_res.length + ind_res.length;
-      let hold_pos = pos_res.filter(function(x) { return x; }).length;
-      let hold_neg = neg_res.filter(function(x) { return !x; }).length;
-      let ind_choices = this.tracesW.switches.map(x => x.pos);
-      let hold_ind = zip(ind_choices, ind_res).filter(function(x) {
-        if (x[0] === 0)
-          return !x[1][0];
-        else
-          return x[1][0] && x[1][1];
-      }).length;
-      let hold = hold_pos + hold_neg + hold_ind;
-
-      if (hold < all)
-        this.tracesW.error("Holds for " + hold + "/" + all + " cases.");
-      else {
-        this.tracesW.enableSubmit();
-        if (!commit) {
-          this.tracesW.msg("<span class='good'>Press Enter...</span>");
-          return;
+        let redundant = this.progressW.contains(ui.id)
+        if (redundant) {
+          this.progressW.markInvariant(ui.id, "duplicate")
+          this.tracesW.immediateError("Duplicate Expression!")
+          return
         }
 
-        let gl = this;
-        isTautology(invToJS(inv), function(res) {
-          if (res) {
-            gl.tracesW.error("This is a always true...");
+        let all = pos_res.length + neg_res.length + ind_res.length
+        let hold_pos = pos_res.filter(function (x) { return x; }).length
+        let hold_neg = neg_res.filter(function (x) { return !x; }).length
+        let ind_choices = this.tracesW.switches.map(x=>x.pos)
+        let hold_ind = zip(ind_choices, ind_res).filter(function (x) {
+          if (x[0] == 0)
+            return !x[1][0]
+          else
+            return x[1][0] && x[1][1]
+        }).length
+        var hold = hold_pos + hold_neg + hold_ind
+
+        if (hold < all)
+          this.tracesW.error("Holds for " + hold + "/" + all + " cases.")
+        else {
+          this.tracesW.enableSubmit();
+          if (!commit) {
+            this.tracesW.msg("<span class='good'>Press Enter...</span>");
             return;
           }
 
-          impliedBy(gl.foundJSInv, jsInv, function(x: number) {
-            if (x !== null) {
-              gl.progressW.markInvariant(gl.foundInv[x], "implies");
-              gl.tracesW.immediateError("This is weaker than a found expression!");
-            } else {
-              gl.pwupSuggestion.invariantTried(jsInv);
-              gl.setPowerups(gl.pwupSuggestion.getPwups());
-
-              gl.invSound(jsInv, function(sound, res) {
-                if (res.ctrex[0].length !== 0) {
-                  gl.overfittedInvs.push(jsInv);
-                } else if (res.ctrex[2].length !== 0) {
-                  gl.nonindInvs.push(jsInv);
-                } else {
-                  gl.soundInvs.push(jsInv);
-                }
-
-                if (sound) {
-                  let addScore = gl.computeScore(jsInv, 1);
-                  gl.score += addScore;
-                  gl.scoreW.add(addScore);
-                  gl.foundInv.push(inv);
-                  gl.foundJSInv.push(jsInv);
-                  gl.progressW.addInvariant(inv);
-                  gl.tracesW.setExp("");
-                  if (!gl.lvlPassedF) {
-                    gl.goalSatisfied((sat, feedback) => {
-                      let lvl = gl.curLvl;
-                      if (sat) {
-                        gl.lvlPassedF = true;
-                        gl.lvlPassedCb();
-                      }
-                    });
-                  }
-                } else {
-                  gl.addData(res.ctrex);
-                  gl.userInput(false);
-                }
-              });
+          let gl = this;
+          isTautology(ui.canonForm, function(res) {
+            if (res) {
+              gl.tracesW.error("This is a always true...")
+              return
             }
-          });
-        });
-      }
 
+            impliedBy(gl.foundJSInv.map((x)=>x.canonForm), ui.canonForm, function (x: ESTree.Node[]) {
+              if (x.length > 0) {
+                gl.progressW.markInvariant(esprimaToStr(x[0]), "implies")
+                gl.tracesW.immediateError("This is weaker than a found expression!")
+              } else {
+                gl.pwupSuggestion.invariantTried(ui.rawInv);
+                gl.setPowerups(gl.pwupSuggestion.getPwups());
+
+                gl.invSound(ui, function (sound, res) {
+                  if (res.ctrex[0].length != 0) {
+                    gl.overfittedInvs.push(ui)
+                  } else if (res.ctrex[2].length != 0) {
+                    gl.nonindInvs.push(ui)
+                  } else {
+                    gl.soundInvs.push(ui)
+                  } 
+
+                  if (sound) {
+                    var addScore = gl.computeScore(ui.rawInv, 1)
+                    gl.score += addScore;
+                    gl.scoreW.add(addScore);
+                    gl.foundJSInv.push(ui)
+                    gl.progressW.addInvariant(ui.id, ui.rawInv);
+                    gl.tracesW.setExp("");
+                    if (!gl.lvlPassedF) {
+                      gl.goalSatisfied((sat, feedback) => {
+                          var lvl = gl.curLvl
+                          if (sat) {
+                            gl.lvlPassedF = true;
+                            gl.lvlPassedCb();
+                          }
+                        });
+                    }
+                  } else {
+                    gl.addData(res.ctrex);
+                    gl.userInput(false)
+                  }
+                })
+              }
+            })
+          })
+        }
+      })
     } catch (err) {
       this.tracesW.delayedError(<string>interpretError(err));
     }
@@ -477,17 +486,21 @@ class TutorialCounterexampleGameLogic extends CounterexampleGameLogic {
 }
 
 class MultiroundGameLogic extends BaseGameLogic {
-  foundJSInv: string[] = [];
-  foundInv: string[] = [];
-  soundInvs: string[] = [];
-  overfittedInvs: string[] = [];
-  nonindInvs: string[] = [];
+  foundJSInv: UserInvariant[] = [];
+  invMap: { [ id: string ] : UserInvariant } = {};
   lvlPassedF: boolean = false;
+  nonindInvs: UserInvariant[] = [];
+  overfittedInvs: UserInvariant[] = [];
+  soundInvs: UserInvariant[] = [];
+
+  allData: { [ lvlid: string ] : dataT } = { };
+  allOverfitted: { [ lvlid: string ] : UserInvariant[] } =  { };
+  allNonind: { [ lvlid: string ] : invariantT[] } =  { };
 
   constructor(public tracesW: ITracesWindow,
-    public progressW: IProgressWindow,
-    public scoreW: ScoreWindow,
-    public stickyW: StickyWindow) {
+              public progressW: IgnoredInvProgressWindow,
+              public scoreW: ScoreWindow,
+              public stickyW: StickyWindow) {
     super(tracesW, progressW, scoreW, stickyW);
     this.pwupSuggestion = new PowerupSuggestionFullHistory(5, "lfu");
   }
@@ -495,33 +508,33 @@ class MultiroundGameLogic extends BaseGameLogic {
   clear(): void {
     super.clear();
     this.foundJSInv = [];
-    this.foundInv = [];
-    this.nonindInvs = [];
-    this.overfittedInvs = [];
+    this.invMap = {};
     this.soundInvs = [];
+    this.overfittedInvs = [];
+    this.nonindInvs = [];
     this.lvlPassedF = false;
   }
 
-  invSound(inv: invariantT, cb: (sound: boolean, res: invSoundnessResT) => void): void {
-    let invs = this.soundInvs.concat([inv]);
-    let gl = this;
-    pre_vc_ctrex(curLvlSet, this.curLvl.id, invs, function(pos_res) {
-      if (pos_res.length !== 0) {
-        cb(false, { ctrex: [pos_res, [], []] });
-      } else {
-        ind_vc_ctrex(curLvlSet, gl.curLvl.id, invs, function(ind_res) {
-          cb(ind_res.length === 0, { ctrex: [[], [], ind_res] });
-        });
-      }
-    });
-  }
-
-  goalSatisfied(cb: (sat: boolean, feedback: any) => void): void {
-    if (this.soundInvs.length > 0) {
-      counterexamples(curLvlSet, this.curLvl.id, this.soundInvs, (res: dataT) => {
-        let pos = res[0], neg = res[1], ind = res[2];
-        cb(pos.length === 0 && neg.length === 0 && ind.length === 0, res);
-      });
+  goalSatisfied(cb:(sat: boolean, feedback: any)=>void):void {
+    if (this.foundJSInv.length > 0) {
+      checkInvs(curLvlSet, this.curLvl.id, this.foundJSInv.map((x)=>x.canonForm),
+        ([overfitted, nonind, sound]) => {
+          if (sound.length > 0) {
+            this.soundInvs = sound.map((x) => this.invMap[esprimaToStr(x)])
+            this.overfittedInvs = overfitted.map((v) => this.invMap[esprimaToStr(v[0])])
+            this.allOverfitted[this.curLvl.id] = unique(
+              this.allOverfitted[this.curLvl.id].concat(this.overfittedInvs),
+              (x:UserInvariant) => x.id);
+            this.nonindInvs = nonind.map((v) => this.invMap[esprimaToStr(v[0])])
+            counterexamples(curLvlSet, this.curLvl.id, this.soundInvs.map((x)=>x.canonForm), (res) => {
+              let overfitted=res[0],nonind=res[1],sound=res[2], post_ctrex=res[3]
+              cb((overfitted.length == 0 && nonind.length == 0 && post_ctrex.length == 0) ||
+                  this.foundJSInv.length >= 4, res)
+            })
+          } else {
+              cb(this.foundJSInv.length >= 4, null)
+          }
+        })
     } else {
       cb(false, [[], [], []]);
     }
@@ -557,97 +570,339 @@ class MultiroundGameLogic extends BaseGameLogic {
       if (!evalResultBool(res))
         return;
 
-      let redundant = this.progressW.contains(inv);
-      if (redundant) {
-        this.progressW.markInvariant(inv, "duplicate");
-        this.tracesW.immediateError("Duplicate Invariant!");
-        return;
-      }
+      simplify(jsInv, (simplInv: ESTree.Node) => { 
+        let ui: UserInvariant = new UserInvariant(inv, jsInv, simplInv)
 
-      let all = pos_res.length;
-      let hold = pos_res.filter(function(x) { return x; }).length;
-
-      if (hold < all)
-        this.tracesW.error("Holds for " + hold + "/" + all + " cases.");
-      else {
-        this.tracesW.enableSubmit();
-        if (!commit) {
-          this.tracesW.msg("<span class='good'>Press Enter...</span>");
-          return;
+        let redundant = this.progressW.contains(ui.id)
+        if (redundant) {
+          this.progressW.markInvariant(ui.id, "duplicate")
+          this.tracesW.immediateError("Duplicate Expression!")
+          return
         }
 
-        let gl = this;
-        isTautology(invToJS(inv), function(res) {
-          if (res) {
-            gl.tracesW.error("This is a always true...");
+        let all = pos_res.length
+        let hold = pos_res.filter(function (x) { return x; }).length
+
+        if (hold < all)
+          this.tracesW.error("Holds for " + hold + "/" + all + " cases.")
+        else {
+          this.tracesW.enableSubmit();
+          if (!commit) {
+            this.tracesW.msg("<span class='good'>Press Enter...</span>");
             return;
           }
 
-          impliedBy(gl.foundJSInv, jsInv, function(x: number) {
-            if (x !== null) {
-              gl.progressW.markInvariant(gl.foundInv[x], "implies");
-              gl.tracesW.immediateError("This is weaker than a found expression!");
-            } else {
-              gl.pwupSuggestion.invariantTried(jsInv);
-              gl.setPowerups(gl.pwupSuggestion.getPwups());
+          let gl = this;
+          isTautology(ui.rawInv, function(res) {
+            if (res) {
+              gl.tracesW.error("This is a always true...")
+              return
+            }
 
-              gl.invSound(jsInv, function(sound, res) {
-                if (res.ctrex[0].length !== 0) {
-                  gl.overfittedInvs.push(jsInv);
-                } else if (res.ctrex[2].length !== 0) {
-                  gl.nonindInvs.push(jsInv);
-                } else {
-                  gl.soundInvs.push(jsInv);
-                }
+            // Def:
+            //    The syntactic archetype of an invariant is the result
+            //    of calling abstractLiterals(simplify(inv)).
+            //
+            //    We are assuming that simplify is nondeterministing (abstractLiterals is).
+            //    A syntactic archetype denotes a family of invariants.
 
-                if (sound) {
-                  let addScore = gl.computeScore(jsInv, 1);
-                  gl.score += addScore;
-                  gl.scoreW.add(addScore);
-                  gl.foundInv.push(inv);
-                  gl.foundJSInv.push(jsInv);
-                  gl.progressW.addInvariant(inv);
-                  gl.tracesW.setExp("");
-                  if (!gl.lvlPassedF) {
-                    gl.goalSatisfied((sat, feedback) => {
-                      let lvl = gl.curLvl;
+            // We want to check if the new invariant is implied by:
+            //    1) a known sound invariant
+            //    2) a known 'ignored' inv from the same syntactic family (i.e. same ast up to constants)
+            let soundCandidattes = gl.soundInvs.map((x)=>x.canonForm);
+            let unsoundCandidates = gl.nonindInvs.concat(gl.overfittedInvs)
+              .filter((uinv) => uinv.archetypeId == ui.archetypeId).map((x)=>x.canonForm)
+            let allCandidates = soundCandidattes.concat(unsoundCandidates)
+              .concat(gl.foundJSInv.map((x)=>x.canonForm))
+
+            impliedBy(allCandidates, ui.canonForm, function (x: ESTree.Node[]) {
+              if (x.length > 0) {
+                gl.progressW.markInvariant(esprimaToStr(x[0]), "implies")
+                gl.tracesW.immediateError("This is weaker than a found expression!")
+              } else {
+                gl.pwupSuggestion.invariantTried(ui.rawInv);
+                gl.setPowerups(gl.pwupSuggestion.getPwups());
+
+                var addScore = gl.computeScore(ui.rawInv, 1)
+                gl.score += addScore;
+                gl.scoreW.add(addScore);
+                gl.foundJSInv.push(ui)
+                gl.invMap[ui.id] = ui;
+                gl.progressW.addInvariant(ui.id, ui.rawInv);
+                gl.tracesW.setExp("");
+                if (!gl.lvlPassedF) {
+                  gl.goalSatisfied((sat, feedback) => {
+                      var lvl = gl.curLvl
                       if (sat) {
                         gl.lvlPassedF = true;
                         gl.lvlPassedCb();
-                      } else {
-                        let lvl = gl.curLvl;
-                        rpc.call("App.getPositiveExamples", [curLvlSet,
-                          lvl.id, /* lvl.exploration_state, */
-                          gl.overfittedInvs.map(esprima.parse), 5], (data) => {
-                            /*
-                            let templates = foundJSInv.map(abstractLiterals)
-                            rpc.call("App.instantiate", [templates, lvl.variables, data[1]],
-                            (invs) => {
-                              invs = invs.map((inv) => inv.substring(1, inv.length - 1))
-                              invs = invs.filter( (item, ind) => invs.indexOf(item) == ind )
-                              var newLvl = new Level(lvl.id,
-                                lvl.variables, [data[1], [], []], data[0], lvl.goal,
-                                lvl.hint,invs)
-                              // TODO: CB for new level unlocked
-                              gl.lvlPassedF = true;
-                              gl.lvlPassed();
-                            })
-                            */
-                          }, log);
                       }
                     });
-                  }
-                } else {
                 }
-              });
-            }
-          });
+              }
+            })
+          })
+        }
+      })
+    } catch (err) {
+      this.tracesW.delayedError(<string>interpretError(err))
+    }
+  }
+
+  addIgnoredInvariants(invs: invariantT[], queue: UserInvariant[]): void {
+    for (let ind in invs) {
+      let inv = invs[ind]
+      let jsStr = esprimaToStr(inv);
+      simplify(jsStr, (simplInv:invariantT) => {
+        let ui = new UserInvariant(jsStr, jsStr, simplInv)
+        this.invMap[ui.id] = ui;
+        queue.push(ui);
+        this.progressW.addIgnoredInvariant(ui.id, ui.rawInv);
+      })
+    }
+  }
+
+  addSoundInvariants(invs: invariantT[]): void {
+    for (let ind in invs) {
+      let inv = invs[ind]
+      let jsStr = esprimaToStr(inv);
+      simplify(jsStr, (simplInv:invariantT) => {
+        let ui = new UserInvariant(jsStr, jsStr, inv)
+        this.foundJSInv.push(ui)
+        this.invMap[ui.id] = ui;
+        this.progressW.addInvariant(ui.id, ui.rawInv);
+      })
+    }
+  }
+
+  loadLvl(lvl: PrepopulatedDynamicLevel): void {
+    let loadedCb = this.lvlLoadedCb;
+    this.lvlLoadedCb = null;
+    super.loadLvl(lvl);
+    let [ overfitted, nonind, sound ] = lvl.startingInvs
+    this.addIgnoredInvariants(overfitted.map(x=>x[0]), this.overfittedInvs);
+    this.addIgnoredInvariants(nonind.map(x=>x[0]), this.nonindInvs);
+    this.addSoundInvariants(sound);
+
+    if (!this.allData.hasOwnProperty(lvl.id)) {
+      this.allData[lvl.id] = [ [], [], [] ];
+      this.allOverfitted[lvl.id] = [ ];
+    }
+
+    for (let i in [0,1,2])
+      this.allData[lvl.id][i]  = this.allData[lvl.id][i].concat(lvl.data[i])
+
+    for (var i in overfitted) {
+      this.allData[lvl.id][0].push(overfitted[i][1])
+      let s = esprimaToStr(overfitted[i][0]);
+      this.allOverfitted[lvl.id].push(new UserInvariant(s, s, overfitted[i][0]));
+    }
+
+    this.lvlLoadedCb = loadedCb;
+    if (this.lvlLoadedCb)
+      this.lvlLoadedCb();
+  }
+}
+
+
+class PatternGameLogic extends BaseGameLogic {
+  foundJSInv: UserInvariant[] = [];
+  invMap: { [ id: string ] : UserInvariant } = {};
+  lvlPassedF: boolean = false;
+  nonindInvs: UserInvariant[] = [];
+  overfittedInvs: UserInvariant[] = [];
+  soundInvs: UserInvariant[] = [];
+
+  allData: { [ lvlid: string ] : dataT } = { };
+  allNonind: { [ lvlid: string ] : invariantT[] } =  { };
+
+  constructor(public tracesW: ITracesWindow,
+              public progressW: IProgressWindow,
+              public scoreW: ScoreWindow,
+              public stickyW: StickyWindow) {
+    super(tracesW, progressW, scoreW, stickyW);
+    this.pwupSuggestion = new PowerupSuggestionFullHistoryVariableMultipliers(3, "lfu");
+  }
+
+  clear(): void {
+    super.clear();
+    this.foundJSInv = [];
+    this.invMap = {};
+    this.soundInvs = [];
+    this.overfittedInvs = [];
+    this.nonindInvs = [];
+    this.lvlPassedF = false;
+  }
+
+  protected computeScore(inv: invariantT, s: number): number {
+    let pwups = this.pwupSuggestion.getPwups();
+    let hold: IPowerup[] = pwups.filter((pwup)=> pwup.holds(inv))
+    let newScore = hold.reduce((score, pwup) => pwup.transform(score), s)
+    for (var i in hold) {
+      if (i == ""+(hold.length - 1)) {
+        /* After the last powerup is done highlighting,
+         * recompute the powerups
+         */
+        hold[i].highlight(()=>{
+          this.pwupSuggestion.invariantTried(inv);
+          this.setPowerups(this.pwupSuggestion.getPwups());
         });
+      } else {
+        hold[i].highlight(()=>0);
+      }
+    }
+
+    if (hold.length == 0) {
+      this.pwupSuggestion.invariantTried(inv);
+    }
+    return newScore;
+  }
+
+  goalSatisfied(cb:(sat: boolean, feedback: any)=>void):void {
+    if (this.foundJSInv.length > 0) {
+      checkInvs(curLvlSet, this.curLvl.id, this.foundJSInv.map((x)=>x.canonForm),
+        ([overfitted, nonind, sound]) => {
+          if (sound.length > 0) {
+            this.soundInvs = sound.map((x) => this.invMap[esprimaToStr(x)])
+            this.overfittedInvs = overfitted.map((v) => this.invMap[esprimaToStr(v[0])])
+            this.nonindInvs = nonind.map((v) => this.invMap[esprimaToStr(v[0])])
+            counterexamples(curLvlSet, this.curLvl.id, this.soundInvs.map((x)=>x.canonForm), (res) => {
+              let overfitted=res[0],nonind=res[1],sound=res[2], post_ctrex=res[3]
+              cb((overfitted.length == 0 && nonind.length == 0 && post_ctrex.length == 0) ||
+                  this.foundJSInv.length >= 8, res)
+            })
+          } else {
+              cb(this.foundJSInv.length >= 8, null)
+          }
+        })
+    } else {
+      cb(false, [ [], [], [] ])
+    }
+  }
+
+  userInput(commit: boolean): void {
+    this.tracesW.disableSubmit();
+    this.tracesW.clearError();
+    this.progressW.clearMarks();
+
+    let inv = invPP(this.tracesW.curExp().trim());
+    let jsInv = invToJS(inv)
+    let parsedInv: ESTree.Node = null;
+
+    this.userInputCb(inv);
+
+    if (inv.length == 0) {
+      this.tracesW.evalResult({ clear: true })
+      return;
+    }
+
+    try {
+      parsedInv = esprima.parse(jsInv);
+    } catch (err) {
+      //this.tracesW.delayedError(inv + " is not a valid expression.");
+      return;
+    }
+
+    let undefined_ids = difference(identifiers(parsedInv), toStrset(this.curLvl.variables));
+    if (!isEmpty(undefined_ids)) {
+      this.tracesW.delayedError(any_mem(undefined_ids) + " is not defined.");
+      return;
+    }
+
+    try {
+      if (jsInv.search("\\^") >= 0) {
+        throw new ImmediateErrorException("UnsupportedError", "^ not supported. Try * instead.");
       }
 
+      let pos_res = invEval(jsInv, this.curLvl.variables, this.curLvl.data[0])
+      let res: [any[], any[], [any, any][]] = [pos_res, [], [] ]
+      this.tracesW.evalResult({ data: res })
+
+
+      if (!evalResultBool(res))
+        return;
+
+      simplify(jsInv, (simplInv: ESTree.Node) => { 
+        let ui: UserInvariant = new UserInvariant(inv, jsInv, simplInv)
+
+        let redundant = this.progressW.contains(ui.id)
+        if (redundant) {
+          this.progressW.markInvariant(ui.id, "duplicate")
+          this.tracesW.immediateError("Duplicate Expression!")
+          return
+        }
+
+        let all = pos_res.length
+        let hold = pos_res.filter(function (x) { return x; }).length
+
+        if (hold < all)
+          this.tracesW.error("Holds for " + hold + "/" + all + " cases.")
+        else {
+          this.tracesW.enableSubmit();
+          if (!commit) {
+            this.tracesW.msg("<span class='good'>Press Enter...</span>");
+            return;
+          }
+
+          let gl = this;
+          isTautology(ui.rawInv, function(res) {
+            if (res) {
+              gl.tracesW.error("This is a always true...")
+              return
+            }
+
+            let allCandidates = gl.foundJSInv.map((x)=>x.canonForm);
+
+            impliedBy(allCandidates, ui.canonForm, function (x: ESTree.Node[]) {
+              if (x.length > 0) {
+                gl.progressW.markInvariant(esprimaToStr(x[0]), "implies")
+                gl.tracesW.immediateError("This is weaker than a found expression!")
+              } else {
+                var addScore = gl.computeScore(ui.rawInv, 1)
+                gl.score += addScore;
+                gl.scoreW.add(addScore);
+                gl.foundJSInv.push(ui)
+                gl.invMap[ui.id] = ui;
+                gl.progressW.addInvariant(ui.id, ui.rawInv);
+                gl.tracesW.setExp("");
+                if (!gl.lvlPassedF) {
+                  gl.goalSatisfied((sat, feedback) => {
+                      var lvl = gl.curLvl
+                      if (sat) {
+                        gl.lvlPassedF = true;
+                        gl.lvlPassedCb();
+                      }
+                    });
+                }
+              }
+            })
+          })
+        }
+      })
     } catch (err) {
-      this.tracesW.delayedError(<string>interpretError(err));
+      if (err instanceof ImmediateErrorException) {
+        this.tracesW.immediateError(<string>interpretError(err))
+      } else {
+        this.tracesW.delayedError(<string>interpretError(err))
+      }
     }
+  }
+
+  loadLvl(lvl: DynamicLevel): void {
+    let loadedCb = this.lvlLoadedCb;
+    this.lvlLoadedCb = null;
+    super.loadLvl(lvl);
+
+    if (!this.allData.hasOwnProperty(lvl.id)) {
+      this.allData[lvl.id] = [ [], [], [] ];
+    }
+
+    for (let i in [0,1,2])
+      this.allData[lvl.id][i]  = this.allData[lvl.id][i].concat(lvl.data[i])
+
+    this.lvlLoadedCb = loadedCb;
+    if (this.lvlLoadedCb)
+      this.lvlLoadedCb();
   }
 }
 
@@ -655,7 +910,7 @@ abstract class TwoPlayerBaseGameLogic implements IGameLogic {
   curLvl: Level = null;
   lvlPassedCb: voidCb = null;
   lvlLoadedCb: voidCb = null;
-  userInputCb: (inv: invariantT) => void = null;
+  userInputCb: (inv: string) => void = null;
   commitCb: voidCb = null;
   pwupSuggestion: IPowerupSuggestion = null;
   score: number = 0;
@@ -705,7 +960,7 @@ abstract class TwoPlayerBaseGameLogic implements IGameLogic {
       this.lvlLoadedCb();
   }
 
-  protected computeScore(inv: string, s: number): number {
+  protected computeScore(inv: invariantT, s: number): number {
     let pwups = this.pwupSuggestion.getPwups();
     let hold = pwups.filter((pwup) => pwup.holds(inv));
     let newScore = hold.reduce((score, pwup) => pwup.transform(score), s);
@@ -719,12 +974,12 @@ abstract class TwoPlayerBaseGameLogic implements IGameLogic {
       pwups[new_pwups[i].id] = new_pwups[i];
     }
 
-    this.stickyW.set(new_pwups);
+    this.stickyW.setPowerups(new_pwups);
   }
 
   abstract userInput(commit: boolean): void
   abstract goalSatisfied(cb: (sat: boolean, feedback: any) => void): void;
-  onUserInput(cb: (inv: invariantT) => void): void { this.userInputCb = cb; };
+  onUserInput(cb: (inv: string) => void): void { this.userInputCb = cb; };
   onLvlPassed(cb: () => void): void { this.lvlPassedCb = cb; };
   onLvlLoaded(cb: () => void): void { this.lvlLoadedCb = cb; };
   onCommit(cb: () => void): void { this.commitCb = cb; };
@@ -798,7 +1053,7 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
     } else if (goal.equivalent) {
       // check for the union of both players' invariants
       // equivalentPairs(goal.equivalent, this.foundJSInv, function(pairs) {
-      equivalentPairs(goal.equivalent, allInvs, function(pairs) {
+      equivalentPairs(goal.equivalent.map(esprima.parse), allInvs.map(esprima.parse), function(pairs) {
         let numFound = 0;
         let equiv = [];
         for (let i = 0; i < pairs.length; i++) {
@@ -879,7 +1134,7 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
         let player2Invs: string[] = getAllPlayer2Inv();
 
         if (player2Invs.length !== 0) {
-          equivalentPairs([jsInv], player2Invs, function(x: any) {
+          equivalentPairs([esprima.parse(jsInv)], player2Invs.map(esprima.parse), function(x: any) {
             if (x != null && typeof player2Invs[x] !== "undefined") {
               // console.log(jsInv + " <=> " + player2Invs[x]);
               progW2.markInvariant(player2Invs[x], "duplicate");
@@ -889,7 +1144,7 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
               return;
             }
             else {
-              impliedBy(player2Invs, jsInv, function(x: any) {
+              impliedBy(player2Invs.map(esprima.parse), esprima.parse(jsInv), function(x: any) {
                 if (x !== null) {
                   // console.log(player2Invs[x] + " ==> " + jsInv);
                   progW2.markInvariant(player2Invs[x], "implies");
@@ -917,7 +1172,7 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
 
         if (player1Invs.length !== 0) {
 
-          equivalentPairs([jsInv], player1Invs, function(x) {
+          equivalentPairs([esprima.parse(jsInv)], player1Invs.map(esprima.parse), function(x) {
             if (x != null && typeof player1Invs[x] !== "undefined") {
               // console.log(jsInv + " <=> " + player1Invs[x]);
               progW.markInvariant(player1Invs[x], "duplicate");
@@ -928,10 +1183,10 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
             }
 
             else {
-              impliedBy(player1Invs, jsInv, function(x: any) {
-                if (x !== null) {
+              impliedBy(player1Invs.map(esprima.parse), esprima.parse(jsInv), function(x: invariantT[]) {
+                if (x !== null && x.length > 0) {
                   // console.log(player1Invs[x] + " ==> " + jsInv);
-                  progW.markInvariant(player1Invs[x], "implies");
+                  progW.markInvariant(esprimaToStr(x[0]), "implies");
                   traceW2.immediateError("Implied by opponent's invariant!");
                   traceW2.disableSubmit();
                   doProceed = false;
@@ -953,7 +1208,7 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
       }
       else {
         let gl = this;
-        isTautology(jsInv, function(res) {
+        isTautology(esprima.parse(jsInv), function(res) {
           if (res) {
             gl.tracesW.error("This is a always true...");
             gl.tracesW.disableSubmit();
@@ -961,8 +1216,11 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
             return;
           }
 
-          impliedBy(gl.foundJSInv, jsInv, function(x: number) {
-            if (x !== null) {
+          let jsInvEs = esprima.parse(jsInv);
+
+          impliedBy(gl.foundJSInv.map(esprima.parse), jsInvEs, function(invs: invariantT[]) {
+            if (invs !== null && invs.length > 0) {
+              var x: number = gl.foundJSInv.indexOf(esprimaToStr(invs[0]));
               gl.progressW.markInvariant(gl.foundInv[x], "implies");
               gl.tracesW.immediateError("Implied by existing invariant!");
               // console.log(gl.foundInv[x] + " ==> " + jsInv);
@@ -976,16 +1234,16 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
                   return;
                 }
 
-                let addScore = gl.computeScore(jsInv, 1);
+                let addScore = gl.computeScore(jsInvEs, 1);
 
-                gl.pwupSuggestion.invariantTried(jsInv);
+                gl.pwupSuggestion.invariantTried(jsInvEs);
                 setTimeout(() => gl.setPowerups(gl.pwupSuggestion.getPwups()), 1000); // TODO: Remove hack
 
                 gl.score += addScore;
                 gl.scoreW.add(addScore);
                 gl.foundInv.push(inv);
                 gl.foundJSInv.push(jsInv);
-                gl.progressW.addInvariant(inv);
+                gl.progressW.addInvariant(inv, jsInvEs);
                 gl.tracesW.setExp("");
 
                 if (allowBonus) {
@@ -1014,3 +1272,4 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
     }
   }
 }
+

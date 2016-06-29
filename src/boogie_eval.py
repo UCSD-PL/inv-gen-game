@@ -4,12 +4,21 @@ from boogie_paths import get_path_vars
 from itertools import permutations
 from z3 import *
 
-def env_to_expr(env, suff = ""):
-    s = "&&".join([("(%s%s==%s)" %(k, suff, str(v))) for (k,v) in env.iteritems()])
-    if (s == ""):
+def val_to_boogie(v):
+    if (isinstance(v, IntNumRef)):
+        return AstNumber(v.as_long())
+    elif (isinstance(v, BoolRef)):
+        return AstTrue() if is_true(v) else AstFalse()
+    elif (v == "true"):
         return AstTrue()
-    return parseExprAst(s)[0]
+    elif (v == "false"):
+        return AstFalse()
+    else:
+        return AstNumber(int(v))
 
+def env_to_expr(env, suff = ""):
+    return ast_and([ AstBinExpr(AstId(k + suff), "==", val_to_boogie(v))
+        for (k,v) in env.iteritems() ])
 
 def evalPred(boogie_expr, env, consts = []):
     s = Solver()
@@ -31,17 +40,20 @@ def instantiateAndEval(inv, vals, var_names = ["x", "y", "z"], const_names = ["a
     def consts(expr): return [ x for x in expr_read(expr) if x in const_names ]
 
     res = []
-    vs = vars(inv)
-    cs = consts(inv)
+    symVs = vars(inv)
+    symConsts = consts(inv)
+    nonSymVs = set(expr_read(inv)).difference(set(symVs)).difference(set(symConsts))
     traceVs = vals[0].keys()
-    prms = permutations(range(len(traceVs)), len(vs))
+    prms = permutations(range(len(traceVs)), len(symVs))
 
     typeEnv = { str(x) + str(i) : Int for x in vals[0].keys() for i in xrange(len(vals)) }
-    typeEnv.update({ str(c) : Int for c in cs })
+    typeEnv.update({ str(c) : Int for c in symConsts })
 
     for prm in prms:
-        varM = { vs[i]: traceVs[prm[i]] for i in xrange(len(vs)) }
-        inst_inv = replace(inv, { AstId(x) : AstId(varM[x]) for x in vs })
+        varM = { symVs[i]: traceVs[prm[i]] for i in xrange(len(symVs)) }
+        varM.update({ nonSymV: nonSymV for nonSymV in nonSymVs })
+
+        inst_inv = replace(inv, { AstId(x) : AstId(varM[x]) for x in symVs })
         p = [ AstAssume(env_to_expr(x, str(i))) for (i,x) in enumerate(vals) ]
         p += [ AstAssert(replace(inst_inv, { AstId(x) : AstId(x + str(i)) for x in varM.values() }))
                for i in xrange(len(vals)) ]
@@ -51,7 +63,7 @@ def instantiateAndEval(inv, vals, var_names = ["x", "y", "z"], const_names = ["a
 
         if (sat == s.check()):
             m = s.model()
-            const_vals = { AstId(x) : AstNumber(m[Int(x)].as_long()) for x in cs }
+            const_vals = { AstId(x) : AstNumber(m[Int(x)].as_long()) for x in symConsts }
             res.append(replace(inst_inv, const_vals))
 
     return res

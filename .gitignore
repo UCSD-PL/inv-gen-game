@@ -1,9 +1,7 @@
 *.out
 *.run
-*.swp
-*.swn
-*.swo
 *.pyc
+.*.sw*
 
 src/harness/dilig/binding.so
 src/harness/dilig/binding_stdout.so

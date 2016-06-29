@@ -64,15 +64,17 @@ def collapse_scc(g, ccs):
     return g1
 
 def topo_sort(g):
-    in_degree = { n : 0 for n in g.keys() }
+    rev_g = { n : set() for n in g.keys() }
+    
     for n in g:
         for n1 in g[n]:
-            in_degree[n1] += 1;
+            rev_g[n1].add(n)
 
-    wl = [ x for x in in_degree.keys() if in_degree[x] == 0 ]
+    roots = set([ n for n in g.keys() if len(g[n]) == 0 ])
+    wl = [ x for x in roots ]
     ind = 0
     order = { n : 0 for n in g.keys() }
-    cnt = { n : (1 if in_degree[n] == 0 else 0) for n in g.keys() }
+    cnt = { n : (1 if n in roots else 0) for n in g.keys() }
 
     while (len(wl) > 0):
         # INV: cnt[n] == # times n appears in wl
@@ -86,7 +88,7 @@ def topo_sort(g):
 
         order[n] = max(ind, order[n])
         ind += 1;
-        for n1 in g[n]:
+        for n1 in rev_g[n]:
             cnt[n1] += 1
             wl.append(n1)
 
@@ -96,9 +98,9 @@ def topo_sort(g):
     # Assert that this IS a topological sort
     for n in g:
         for n1 in g[n]:
-            assert order[n] < order[n1]
+            assert order[n] > order[n1]
 
-    return order
+    return [ order[i] for i in xrange(len(g)) ]
         
 if __name__ == "__main__":
     g = { 1 : [ 2], 2: [1], 3: [1,2]}
