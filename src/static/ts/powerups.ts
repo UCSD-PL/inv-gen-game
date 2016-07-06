@@ -35,7 +35,7 @@ class MultiplierPowerup extends BasePowerup {
               public holds: holdsT,
               public mult: number,
               public applies: appliesT,
-              public tip: string) {
+              tip: string) {
     super(id + "x",
           "<div class='pwup box'>" + html + "<div class='pwup-mul'>" + mult + "X</div></div>",
           holds,
@@ -54,7 +54,10 @@ class MultiplierPowerup extends BasePowerup {
 
   setMultiplier(newm: number): void {
     this.mult = newm;
-    this.tip = newm + "X if you " + this.tip;
+    while (this.tip.charAt(0) >= "0" && this.tip.charAt(0) <= "9") { 
+      this.tip = this.tip.slice(1);
+    }
+    this.tip = newm + this.tip;
     this.transform = (x)=>x*newm;
     this.element.find("div.pwup-mul").html(newm + "X");
     this.element.find("div.pwup-mul").effect({ effect: "highlight", color: "red" })
@@ -110,47 +113,65 @@ interface IPowerupSuggestion {
 
 class PowerupSuggestionAll implements IPowerupSuggestion {
   all_pwups: IPowerup[];
-  actual: IPowerup[] = [];
   age: { [ind: string]: number } = {};
+  protected lbls : Label[] = [];
+  protected timers : number[] = [];
 
-  constructor(public threshold: number) {
+  constructor() {
     this.all_pwups = [
       new VarOnlyPowerup(2),
-      new UseXVarsPwup(1, 2),
-      new UseXVarsPwup(2, 2),
-      new UseXVarsPwup(3, 2),
-      new UseXVarsPwup(4, 2),
-      new UseOpsPwup(["<=", ">=", "<", ">"], "<>", "inequality"),
+      new UseOpsPwup(["<=", ">=", "<", ">", "!=="], "<>", "inequality"),
       new UseOpsPwup(["=="], "=", "equality"),
-      new UseOpsPwup(["*"], "*", "multiplication"),
-      new UseOpsPwup(["+"], "+", "addition"),
-    ];
+      new UseOpsPwup(["*", "/"], "*/", "multiplication or division"),
+      new UseOpsPwup(["+", "-"], "&plusmn;", "addition or subtraction"),
+    ]
   }
 
   clear(lvl: Level): void {
-    this.actual = [ ];
     this.age = {};
-    for (let i in this.all_pwups) {
-      let p = this.all_pwups[i];
-      this.actual.push(p);
-      this.age[p.id] = this.threshold + 1;
+    for (let p of this.all_pwups) {
+      this.age[p.id] = 0;
     }
+    this.clearLabels();
+  }
+
+  clearLabels(): void {
+    for (let t of this.timers) {
+      clearTimeout(t);
+    }
+    for (let l of this.lbls) {
+      removeLabel(l);
+    }
+    this.timers = [];
+    this.lbls = [];
   }
 
   invariantTried(inv: invariantT): void {
-    for (let i in this.actual) {
-      if (!this.actual[i].holds(inv))
-        this.age[this.actual[i].id] ++;
-      else {
-        this.age[this.actual[i].id] = 0;
+    for (let p of this.all_pwups) {
+      if (p.holds(inv)) {
+        this.age[p.id] = 0;
+      } else {
+        this.age[p.id] ++;
       }
+      console.log(p.id + " has age " + this.age[p.id]);
+      let newM : number = 2 * (this.age[p.id] + 1)
+      let mPwup : MultiplierPowerup = <MultiplierPowerup> p;
+      if (newM > mPwup.mult) {
+        let fn = () => {
+          let l = label({ "at": "left center", "of": mPwup.element },
+            "Went up to " + newM + "X !", "right");
+          let t = setTimeout(() => { removeLabel(l); }, 3000);
+          this.timers.push(t);
+          this.lbls.push(l);
+        }
+        fn();
+      }
+      mPwup.setMultiplier(newM);
     }
   }
 
   getPwups(): IPowerup[] {
-    return this.actual.filter(function (pwup) {
-      return this.age[pwup.id] >= this.threshold;
-    });
+    return this.all_pwups;
   }
 }
 
@@ -176,7 +197,7 @@ class PowerupSuggestionFullHistory implements IPowerupSuggestion {
 
     for (let i in this.all_pwups) {
       this.nUses[this.all_pwups[i].id] = 0;
-      this.lastUse[this.all_pwups[i].id] = -1;
+      this.lastUse[this.all_pwups[i].id] = 0;
     }
   }
 
@@ -207,13 +228,13 @@ class PowerupSuggestionFullHistory implements IPowerupSuggestion {
   }
 
   invariantTried(inv: invariantT): void {
+    this.gen ++;
     for (let i in this.actual) {
       if (this.actual[i].holds(inv)) {
         this.nUses[this.actual[i].id] ++;
         this.lastUse[this.actual[i].id] = this.gen;
       }
     }
-    this.gen ++;
     this.computeOrders();
   }
 

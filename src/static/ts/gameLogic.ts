@@ -721,7 +721,8 @@ class PatternGameLogic extends BaseGameLogic {
               public scoreW: ScoreWindow,
               public stickyW: StickyWindow) {
     super(tracesW, progressW, scoreW, stickyW);
-    this.pwupSuggestion = new PowerupSuggestionFullHistoryVariableMultipliers(3, "lfu");
+    //this.pwupSuggestion = new PowerupSuggestionFullHistoryVariableMultipliers(3, "lfu");
+    this.pwupSuggestion = new PowerupSuggestionAll();
   }
 
   clear(): void {
