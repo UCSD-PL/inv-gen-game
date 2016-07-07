@@ -131,6 +131,8 @@ class PowerupSuggestionAll implements IPowerupSuggestion {
     this.age = {};
     for (let p of this.all_pwups) {
       this.age[p.id] = 0;
+      let mPwup = <MultiplierPowerup> p;
+      mPwup.setMultiplier(2);
     }
     this.clearLabels();
   }
@@ -153,7 +155,6 @@ class PowerupSuggestionAll implements IPowerupSuggestion {
       } else {
         this.age[p.id] ++;
       }
-      console.log(p.id + " has age " + this.age[p.id]);
       let newM : number = 2 * (this.age[p.id] + 1)
       let mPwup : MultiplierPowerup = <MultiplierPowerup> p;
       if (newM > mPwup.mult) {

@@ -20,7 +20,7 @@ keywords = "game, math, programming"
 
 description = "Help us evaluate our verification game InvGen! Each level is structured as a math puzzle, where you try to come up with correct expressions Your work directly helps with the verification of programs!"
 
-htmlOverview = """<p>We are developing a new game to aid program verification. The game consists of a short tutorial, followed by only 5 levels! Your goal in each level is to come up with expressions that are accepted by the game. If the game rejects an expression, it will give you more guidance! </p>
+htmlOverview = """<p>We are developing a new game to aid program verification. The game consists of a short tutorial, followed by only 5 levels! Your goal in each level is to come up with expressions that are accepted by the game.</p>
 
 <p>
 Here is what you need to do concretely:
@@ -40,7 +40,7 @@ Begin recording your screen.
 </li>
 
 <li>
-Use Google Chrome to navigate to <a target='_blank' href='http://zoidberg.ucsd.edu:5000/tutorial_new.html'> http://zoidberg.ucsd.edu:5000/tutorial_new.html </a>
+Use Google Chrome to navigate to <a target='_blank' href='http://zoidberg.ucsd.edu:5000/tutorial_patterns.html'> http://zoidberg.ucsd.edu:5000/tutorial_patterns.html </a>
 </li>
 
 <li>
@@ -54,6 +54,11 @@ Play as far as you can through the 5 actual game levels (these come after the en
 <li>
 Upload the recording(s) of your browser screen, as you were playing the game.
 </li>
+
+<li>
+Fill out the questionaire below, which asks for your feedback.
+</li>
+
 </ol>
 
 Thank you!"""
@@ -66,15 +71,49 @@ try:
     print "Balance:", balance[0]
 
     o = Overview([FormattedContent(htmlOverview)])
-    q = Question("upload",
+    q1 = Question("upload",
                  QuestionContent([SimpleField("Title", "Screen Recording Upload"),
                                   SimpleField("Text", "Please upload the recording of your screen as you were plaing the game.")]),
                  AnswerSpecification(FileUploadAnswer(1024*1024, 100*1024*1024)),
                  True)
 
-    qf = QuestionForm([o, q])
+    likert_answ = [("Strongly Agree", "R5"), ("Agree", "R4"), ("Neutral", "R3"), ("Disagree", "R2"), ("Strongly disagree","R1")]
+
+    q2 = Question("fun",
+                 QuestionContent([SimpleField("Title", "Questionaire"),
+                                  SimpleField("Text", "The game was fun to play. Select the option that is closest to your feelings:")]),
+                 AnswerSpecification(SelectionAnswer(1, 1, "radiobutton", likert_answ)),
+                 True)
+
+    q3 = Question("challenging",
+                 QuestionContent([SimpleField("Text", "The game was challenging. Select the option that is closest to your feelings:")]),
+                 AnswerSpecification(SelectionAnswer(1, 1, "radiobutton", likert_answ)),
+                 True)
+
+    q4 = Question("likes",
+                 QuestionContent([SimpleField("Text", "What did you like about the game?")]),
+                 AnswerSpecification(FreeTextAnswer()),
+                 True)
+
+    q5 = Question("dislikes",
+                 QuestionContent([SimpleField("Text", "What did you find confusing about the game?")]),
+                 AnswerSpecification(FreeTextAnswer()),
+                 True)
+
+    q6 = Question("suggestions",
+                 QuestionContent([SimpleField("Text", "Do have any suggestions on how to improve the game? If so, what are they?")]),
+                 AnswerSpecification(FreeTextAnswer()),
+                 True)
+
+    qf = QuestionForm([o, q1, q2, q3, q4, q5, q6])
     mastersQualType = "2ARFPLSP75KLA8M8DH1HTEQVJT3SY6" if args.sandbox else \
                       "2F1QJWKUDD8XADTFD2Q0G6UTO95ALH"
+
+    quals = [] if args.sandbox else [
+                        NumberHitsApprovedRequirement("GreaterThanOrEqualTo", 1000), 
+                        PercentAssignmentsApprovedRequirement("GreaterThanOrEqualTo", 97), 
+                        Requirement(mastersQualType, "Exists")
+                      ]
 
     r = mc.create_hit(question=qf,
                       lifetime=timedelta(7),
@@ -84,11 +123,7 @@ try:
                       keywords=keywords,
                       reward=reward,
                       duration=timedelta(0, 45*60),
-                      qualifications=Qualifications([
-                        NumberHitsApprovedRequirement("GreaterThanOrEqualTo", 1000), 
-                        PercentAssignmentsApprovedRequirement("GreaterThanOrEqualTo", 97), 
-                        Requirement(mastersQualType, "Exists")
-                      ]))
+                      qualifications=Qualifications(quals))
     assert len(r) == 1
     print "Created HIT ", r[0].HITId
 except:
