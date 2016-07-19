@@ -14,7 +14,7 @@ e = Experiment(args.experiment_id)
 mc = connect(args.credentials_file, args.sandbox)
 
 for s in e.sessions:
-    print("Session " + str(s.sess_id))
+    print("\nSession " + str(s.sess_id))
 
     r = mc.get_assignments(s.hit_id)
     assert(len(r) == 0 or len(r) == 1)
@@ -24,7 +24,9 @@ for s in e.sessions:
         for ans in assn.answers[0]:
             if (len(ans.fields) > 0):
                 answers[ans.qid] = ans.fields[0]
-        print answers
+        q = ["fun", "challenging", "likes", "dislikes", "suggestions", "experience"]
+        print "\n".join([n + ": " + str(answers[n]) for n in q if n in answers])
+        #print answers
 
     # process logs
     fname = get_event_log_fname(args.experiment_id, s.sess_id)

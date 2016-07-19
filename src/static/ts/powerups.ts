@@ -159,9 +159,10 @@ class PowerupSuggestionAll implements IPowerupSuggestion {
       let mPwup : MultiplierPowerup = <MultiplierPowerup> p;
       if (newM > mPwup.mult) {
         let fn = () => {
+          let delay = 1000 + (1000 * newM / 2);
           let l = label({ "at": "left center", "of": mPwup.element },
             "Went up to " + newM + "X !", "right");
-          let t = setTimeout(() => { removeLabel(l); }, 3000);
+          let t = setTimeout(() => { removeLabel(l); }, delay);
           this.timers.push(t);
           this.lbls.push(l);
         }
