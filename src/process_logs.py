@@ -36,10 +36,10 @@ for s in e.sessions:
         for line in f:
             data = json.loads(line)
             if data["method"] == "logEvent":
-                args = data["args"]
-                event_name = args[0]
+                method_args = data["args"]
+                event_name = method_args[0]
                 if event_name == "FinishLevel":
-                    event_args = args[1]
+                    event_args = method_args[1]
                     lvl_set = event_args[0]
                     lvl_id = event_args[1]
                     proved_the_level = event_args[2]
