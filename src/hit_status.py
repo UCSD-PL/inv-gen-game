@@ -33,7 +33,10 @@ for s in e.sessions:
         else:
             workers.add(assn.WorkerId)
         if (s.server_pid != 0):
-            os.kill(s.server_pid, signal.SIGTERM)
+            try:
+                os.kill(s.server_pid, signal.SIGTERM)
+            except:
+                print "Could not kill process " + str(s.server_pid) + ", probably already dead"
             s.server_pid = 0
             changed = True
     else:
