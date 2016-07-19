@@ -52,10 +52,33 @@ function assert(c: boolean, msg?: any): void {
   if (!c)
     throw msg || "Assertion failed.";
 }
-
+function logEvent(name: string, data: any): void {
+  rpc.call("App.logEvent", [name, data], (res) => { }, log);
+}
 
 function fst<T1, T2>(x: [T1, T2]): T1 { return x[0]; }
 function snd<T1, T2>(x: [T1, T2]): T2 { return x[1]; }
+
+class Args {
+  static args: { [key:string] : string; } = {};
+  static session_id: string = null;
+  static parse_args() {
+    var query = window.location.search.substring(1).split("&");
+    let max = query.length;
+    for (let i = 0; i < max; i++) {
+      if (query[i] === "") // check for trailing & with no param
+        continue;
+      let param = query[i].split("=");
+      Args.args[decodeURIComponent(param[0])] = decodeURIComponent(param[1] || "");
+    }
+    Args.session_id = Args.args["sid"];
+  }
+  static get_session_id(): string {
+    if (Args.session_id === null)
+      Args.parse_args()
+    return Args.session_id;
+  }
+}
 
 function shuffle<T>(arr: T[]): void {
   let j: number = null;
@@ -165,6 +188,7 @@ class Label {
     clearInterval(this.timer);
   }
 }
+
 function removeLabel(l: Label) {
   l.remove();
 }

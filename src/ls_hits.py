@@ -5,7 +5,7 @@ import sys
 from boto.mturk.question import *
 from boto.mturk.connection import *
 from datetime import *
-from common import error, connect, mkParser
+from mturk_util import error, connect, mkParser
 
 
 p = mkParser("Publish a HIT for playing the game")

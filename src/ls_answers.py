@@ -5,7 +5,7 @@ import sys
 from boto.mturk.question import *
 from boto.mturk.connection import *
 from datetime import *
-from common import error, connect, mkParser
+from mturk_util import error, connect, mkParser
 
 p = mkParser("List assignments for a hit")
 p.add_argument('AssignmentId', type=str,
@@ -13,12 +13,11 @@ p.add_argument('AssignmentId', type=str,
 args = p.parse_args()
 mc = connect(args.credentials_file, args.sandbox)
 
-
 try:
     assgn, hit = mc.get_assignment(args.AssignmentId)
     print "qid         Fields"
-    for ans in assgn.answers:
-        print ans[0].qid, ans[0].fields
+    for ans in assgn.answers[0]:
+        print ans.qid, ans.fields
 except Exception,e:
     print_exc()
     error("Failed...")

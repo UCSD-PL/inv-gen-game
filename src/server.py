@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 from flask import Flask
 from flask import request
 from flask_jsonrpc import JSONRPC as rpc
@@ -33,6 +34,7 @@ from copy import copy
 
 p = argparse.ArgumentParser(description="invariant gen game server")
 p.add_argument('--log', type=str, help='an optional log file to store all user actions. Entries are stored in JSON format.')
+p.add_argument('--port', type=int, help='an optional port number')
 
 args = p.parse_args();
 
@@ -45,6 +47,7 @@ def log(action):
     action['ip'] = request.remote_addr;
     if (logF):
         logF.write(dumps(action) + '\n')
+        logF.flush()
     else:
         print dumps(action) + '\n'
 
@@ -349,6 +352,12 @@ class Server(Flask):
 
 app = Server(__name__, static_folder='static/', static_url_path='')
 api = rpc(app, '/api')
+
+@api.method("App.logEvent")
+@pp_exc
+@log_d
+def logEvent(name, data):
+    return None
 
 @api.method("App.listData")
 @pp_exc
@@ -693,4 +702,4 @@ def simplifyInv(inv):
     return boogieToEsprima(z3_expr_to_boogie(simpl_z3_inv));
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0',port=args.port)

@@ -5,16 +5,16 @@ import sys
 from boto.mturk.question import *
 from boto.mturk.connection import *
 from datetime import *
-from common import error, connect, mkParser
+from mturk_util import error, connect, mkParser
 
 
-p = mkParser("Dispose of a HIT")
+p = mkParser("Expire a HIT")
 p.add_argument('HITId', type=str, help='ID Of the HIT To expire.')
 args = p.parse_args()
 
 try:
     mc = connect(args.credentials_file, args.sandbox)
-    r = mc.dispose_hit(args.HITId)
+    r = mc.expire_hit(args.HITId)
 except Exception,e:
     print_exc()
     error("Failed...")

@@ -764,20 +764,19 @@ class PatternGameLogic extends BaseGameLogic {
       checkInvs(curLvlSet, this.curLvl.id, this.foundJSInv.map((x)=>x.canonForm),
         ([overfitted, nonind, sound]) => {
           if (sound.length > 0) {
-            this.soundInvs = sound.map((x) => this.invMap[esprimaToStr(x)])
-            this.overfittedInvs = overfitted.map((v) => this.invMap[esprimaToStr(v[0])])
-            this.nonindInvs = nonind.map((v) => this.invMap[esprimaToStr(v[0])])
+            this.soundInvs = sound.map((x) => this.invMap[esprimaToStr(x)]);
+            this.overfittedInvs = overfitted.map((v) => this.invMap[esprimaToStr(v[0])]);
+            this.nonindInvs = nonind.map((v) => this.invMap[esprimaToStr(v[0])]);
             counterexamples(curLvlSet, this.curLvl.id, this.soundInvs.map((x)=>x.canonForm), (res) => {
-              let overfitted=res[0],nonind=res[1],sound=res[2], post_ctrex=res[3]
-              cb((overfitted.length == 0 && nonind.length == 0 && post_ctrex.length == 0) ||
-                  this.foundJSInv.length >= 8, res)
-            })
+              let overfitted=res[0],nonind=res[1],sound=res[2], post_ctrex=res[3];
+              cb(overfitted.length == 0 && nonind.length == 0 && post_ctrex.length == 0, res);
+            });
           } else {
-              cb(this.foundJSInv.length >= 8, null)
+              cb(false, null);
           }
         })
     } else {
-      cb(false, [ [], [], [] ])
+      cb(false, [ [], [], [] ]);
     }
   }
 
@@ -868,8 +867,13 @@ class PatternGameLogic extends BaseGameLogic {
                 gl.tracesW.setExp("");
                 if (!gl.lvlPassedF) {
                   gl.goalSatisfied((sat, feedback) => {
-                      var lvl = gl.curLvl
-                      if (sat) {
+                      if (sat || gl.foundJSInv.length >= 8) {
+                        logEvent("FinishLevel",
+                                 [curLvlSet,
+                                  gl.curLvl.id,
+                                  sat,
+                                  gl.foundJSInv.map((x)=>x.rawUserInp),
+                                  gl.foundJSInv.map((x)=>x.canonForm)]);
                         gl.lvlPassedF = true;
                         gl.lvlPassedCb();
                       }
@@ -904,6 +908,7 @@ class PatternGameLogic extends BaseGameLogic {
     this.lvlLoadedCb = loadedCb;
     if (this.lvlLoadedCb)
       this.lvlLoadedCb();
+    logEvent("StartLevel", [curLvlSet, this.curLvl.id]);
   }
 }
 
