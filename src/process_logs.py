@@ -27,6 +27,8 @@ for s in e.sessions:
         q = ["fun", "challenging", "likes", "dislikes", "suggestions", "experience"]
         print "\n".join([n + ": " + str(answers[n]) for n in q if n in answers])
         #print answers
+    else:
+        print "HIT not completed"
 
     # process logs
     fname = get_event_log_fname(args.experiment_id, s.sess_id)

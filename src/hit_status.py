@@ -39,4 +39,4 @@ for s in e.sessions:
     else:
         print s.hit_id, "not completed                  not completed"
 if changed:
-    experiment.store_sessions()
+    e.store_sessions()
