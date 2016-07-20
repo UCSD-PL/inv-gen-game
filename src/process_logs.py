@@ -4,6 +4,17 @@ from pprint import pprint
 from js import esprimaToBoogie
 from mturk_util import error, connect, mkParser
 from experiments import *
+import boogie_ast
+from boogie_z3 import *
+from z3 import *
+import os
+
+def equiv(boogie1, boogie2):
+    [p1,p2] = [expr_to_z3(p, AllIntTypeEnv()) for p in [boogie1, boogie2]]
+    s = Solver()
+    s.add(Not(p1 == p2))
+    r = s.check()
+    return r == unsat
 
 p = mkParser("Process logs for experiment")
 p.add_argument('experiment_id', type=int, help='ID of experiment to process logs for')
@@ -14,7 +25,9 @@ e = Experiment(args.experiment_id)
 mc = connect(args.credentials_file, args.sandbox)
 
 for s in e.sessions:
-    print("\nSession " + str(s.sess_id))
+    print "\n** Session " + str(s.sess_id)
+
+    print "++ Survey"
 
     r = mc.get_assignments(s.hit_id)
     assert(len(r) == 0 or len(r) == 1)
@@ -25,8 +38,7 @@ for s in e.sessions:
             if (len(ans.fields) > 0):
                 answers[ans.qid] = ans.fields[0]
         q = ["fun", "challenging", "likes", "dislikes", "suggestions", "experience"]
-        print "\n".join([n + ": " + str(answers[n]) for n in q if n in answers])
-        #print answers
+        print "\n".join(["-- " + n + ": " + str(answers[n]) for n in q if n in answers])
     else:
         print "HIT not completed"
 
@@ -44,9 +56,21 @@ for s in e.sessions:
                     lvl_id = event_args[1]
                     proved_the_level = event_args[2]
                     js_invs = event_args[3]
-                    print(lvl_set + "." + lvl_id +
-                          (" (Proved): " if proved_the_level else " : ") +
-                          ", ".join(js_invs))
-                    #invs = event_args[4]
-                    #boogieInvs = [ esprimaToBoogie(x, {}) for x in invs ]
-                    #print(boogieInvs)
+                    canon_invs = event_args[4]
+
+                    print "++ " + lvl_set + "." + lvl_id
+                    print "-- " + "Proved" if proved_the_level else " Not Proved"
+                    print "-- User invs: " + ", ".join(js_invs)
+
+                    boogie_user_invs = [ esprimaToBoogie(x, {}) for x in canon_invs ]
+                    try:
+                        with open(os.path.join(get_lvlset_dir(lvl_set), lvl_id + ".soln")) as f:
+                            found = []
+                            for l in f:
+                                boogie_soln_inv = boogie_ast.parseExprAst(l)[0]
+                                for boogie_user_inv in boogie_user_invs:
+                                    if equiv(boogie_soln_inv, boogie_user_inv):
+                                        found.append(str(boogie_soln_inv) + " [canon: " + str(boogie_user_inv) + "]")
+                            print "-- Found from soln: " + ", ".join(found)
+                    except IOError:
+                        print "-- No .soln file"

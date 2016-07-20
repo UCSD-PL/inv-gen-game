@@ -12,8 +12,11 @@ def get_log_dir():
 def get_log_fname(name):
     return os.path.join(ROOT_DIR, 'logs', name)
 
-def get_run_cmd():
+def get_server_run_cmd():
     return os.path.join(ROOT_DIR, "src", "server.py")
+
+def get_lvlset_dir(lvlset):
+    return os.path.join(ROOT_DIR, lvlset)
 
 class Session:
     def __init__(self, sess_id, hit_id, server_pid):
@@ -92,12 +95,5 @@ def start_server(port, experiment_id, session_id):
     server_log = get_server_log_fname(experiment_id, session_id)
     event_log = get_event_log_fname(experiment_id, session_id)
     with open(server_log, 'w') as output:
-        p = subprocess.Popen([get_run_cmd(), "--port", str(port), "--log", event_log], stdout=output, stderr=subprocess.STDOUT)
+        p = subprocess.Popen([get_server_run_cmd(), "--port", str(port), "--log", event_log], stdout=output, stderr=subprocess.STDOUT)
     return p
-
-#print Sessions.fname
-# quit()
-
-# port = getUnusedPort()
-# sid = Sessions.get_unique_session_id()
-# start_server(port)
