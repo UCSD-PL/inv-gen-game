@@ -65,18 +65,15 @@ for s in e.sessions:
                     boogie_user_invs = [ esprimaToBoogie(x, {}) for x in canon_invs ]
                     try:
                         with open(os.path.join(get_lvlset_dir(lvl_set), lvl_id + ".soln")) as f:
-                            found_list = []
-                            not_found_list = []
                             for l in f:
-                                found = False
                                 boogie_soln_inv = boogie_ast.parseExprAst(l)[0]
+                                header = "-- Soln " + str(boogie_soln_inv) + ": "
+                                found = False
                                 for boogie_user_inv in boogie_user_invs:
                                     if equiv(boogie_soln_inv, boogie_user_inv):
-                                        found_list.append(str(boogie_soln_inv) + " [canon: " + str(boogie_user_inv) + "]")
+                                        print header + "Found equiv in user canon pred: " + str(boogie_user_inv) + "]"
                                         found = True
                                 if not found:
-                                    not_found_list.append(str(boogie_soln_inv))
-                            print "-- Found from soln: " + ", ".join(found_list)
-                            print "-- Not found from soln: " + ", ".join(not_found_list)
+                                    print header + "No equiv found"
                     except IOError:
                         print "-- No .soln file"
