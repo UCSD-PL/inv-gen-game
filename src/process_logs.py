@@ -59,18 +59,24 @@ for s in e.sessions:
                     canon_invs = event_args[4]
 
                     print "++ " + lvl_set + "." + lvl_id
-                    print "-- " + "Proved" if proved_the_level else " Not Proved"
+                    print "-- " + ("Proved" if proved_the_level else " Not Proved")
                     print "-- User invs: " + ", ".join(js_invs)
 
                     boogie_user_invs = [ esprimaToBoogie(x, {}) for x in canon_invs ]
                     try:
                         with open(os.path.join(get_lvlset_dir(lvl_set), lvl_id + ".soln")) as f:
-                            found = []
+                            found_list = []
+                            not_found_list = []
                             for l in f:
+                                found = False
                                 boogie_soln_inv = boogie_ast.parseExprAst(l)[0]
                                 for boogie_user_inv in boogie_user_invs:
                                     if equiv(boogie_soln_inv, boogie_user_inv):
-                                        found.append(str(boogie_soln_inv) + " [canon: " + str(boogie_user_inv) + "]")
-                            print "-- Found from soln: " + ", ".join(found)
+                                        found_list.append(str(boogie_soln_inv) + " [canon: " + str(boogie_user_inv) + "]")
+                                        found = True
+                                if not found:
+                                    not_found_list.append(str(boogie_soln_inv))
+                            print "-- Found from soln: " + ", ".join(found_list)
+                            print "-- Not found from soln: " + ", ".join(not_found_list)
                     except IOError:
                         print "-- No .soln file"
