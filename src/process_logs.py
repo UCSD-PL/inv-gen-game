@@ -59,7 +59,7 @@ for s in e.sessions:
                     canon_invs = event_args[4]
 
                     print "++ " + lvl_set + "." + lvl_id
-                    print "-- " + ("Proved" if proved_the_level else " Not Proved")
+                    print "-- " + ("Proved" if proved_the_level else "Not Proved")
                     print "-- User invs: " + ", ".join(js_invs)
 
                     boogie_user_invs = [ esprimaToBoogie(x, {}) for x in canon_invs ]
