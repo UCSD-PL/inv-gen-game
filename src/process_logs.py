@@ -8,6 +8,7 @@ import boogie_ast
 from boogie_z3 import *
 from z3 import *
 import os
+import time
 
 def equiv(boogie1, boogie2):
     [p1,p2] = [expr_to_z3(p, AllIntTypeEnv()) for p in [boogie1, boogie2]]
@@ -59,7 +60,9 @@ for s in e.sessions:
                     canon_invs = event_args[4]
 
                     print "++ " + lvl_set + "." + lvl_id
-                    print "-- " + ("Proved" if proved_the_level else "Not Proved")
+                    print "-- " + ("Finished and Proved" if proved_the_level else "Finished and Not Proved")
+                    print "-- IP: " + data["ip"]
+                    print "-- Time: " + str(time.asctime(time.localtime(data["time"])))
                     print "-- User invs: " + ", ".join(js_invs)
 
                     boogie_user_invs = [ esprimaToBoogie(x, {}) for x in canon_invs ]
