@@ -702,4 +702,4 @@ def simplifyInv(inv):
     return boogieToEsprima(z3_expr_to_boogie(simpl_z3_inv));
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0',port=args.port)
+    app.run(host='0.0.0.0',port=args.port,ssl_context=(MYDIR + '/ssl.cert', MYDIR + '/ssl.key'), threaded=True)
