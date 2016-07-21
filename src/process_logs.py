@@ -62,7 +62,7 @@ for s in e.sessions:
                     print "++ " + lvl_set + "." + lvl_id
                     print "-- " + ("Finished and Proved" if proved_the_level else "Finished and Not Proved")
                     print "-- IP: " + data["ip"]
-                    print "-- Time: " + str(time.asctime(time.localtime(data["time"])))
+                    print "-- Time when finished: " + str(time.asctime(time.localtime(data["time"])))
                     print "-- User invs: " + ", ".join(js_invs)
 
                     boogie_user_invs = [ esprimaToBoogie(x, {}) for x in canon_invs ]
@@ -74,7 +74,7 @@ for s in e.sessions:
                                 found = False
                                 for boogie_user_inv in boogie_user_invs:
                                     if equiv(boogie_soln_inv, boogie_user_inv):
-                                        print header + "Found equiv in user canon pred: " + str(boogie_user_inv) + "]"
+                                        print header + "Found as user predicate (canon version): " + str(boogie_user_inv)
                                         found = True
                                 if not found:
                                     print header + "No equiv found"
