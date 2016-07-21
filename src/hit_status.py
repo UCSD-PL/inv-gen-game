@@ -12,34 +12,35 @@ import os
 import signal
 
 p = mkParser("Wait for HITs to finish")
-p.add_argument('experiment_id', type=int, help='ID of experiment to wait for')
+p.add_argument('--ename', type=str, default = "default", help='Name for experiment; if none provided, use "default"')
 
 args = p.parse_args()
-e = Experiment(args.experiment_id)
+
+e = create_experiment_or_die(args.ename)
 mc = connect(args.credentials_file, args.sandbox)
 
 print "HIT ID                         Assignment ID                  Worker ID"
 
 changed = False
 workers = set()
-for s in e.sessions:
-    r = mc.get_assignments(s.hit_id)
+for sr in e.server_runs:
+    r = mc.get_assignments(sr.hit_id)
     assert(len(r) == 0 or len(r) == 1)
     if len(r) == 1:
         assn = r[0]
-        print s.hit_id, assn.AssignmentId, assn.WorkerId
+        print sr.hit_id, assn.AssignmentId, assn.WorkerId
         if assn.WorkerId in workers:
             print "WARNING, duplicate worker in experiment:", assn.WorkerId
         else:
             workers.add(assn.WorkerId)
-        if (s.server_pid != 0):
+        if (sr.pid != 0):
             try:
-                os.kill(s.server_pid, signal.SIGTERM)
+                os.kill(sr.pid, signal.SIGTERM)
             except:
-                print "Could not kill process " + str(s.server_pid) + ", probably already dead"
-            s.server_pid = 0
+                print "Could not kill process " + str(sr.pid) + ", probably already dead"
+            sr.pid = 0
             changed = True
     else:
-        print s.hit_id, "not completed                  not completed"
+        print sr.hit_id, "not completed                  not completed"
 if changed:
-    e.store_sessions()
+    e.store_server_runs()

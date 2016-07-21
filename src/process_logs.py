@@ -18,15 +18,16 @@ def equiv(boogie1, boogie2):
     return r == unsat
 
 p = mkParser("Process logs for experiment")
-p.add_argument('experiment_id', type=int, help='ID of experiment to process logs for')
+p.add_argument('--ename', type=str, default = "default", help='Name for experiment; if none provided, use "default"')
 
 args = p.parse_args()
 
-e = Experiment(args.experiment_id)
+e = create_experiment_or_die(args.ename)
+
 mc = connect(args.credentials_file, args.sandbox)
 
-for s in e.sessions:
-    print "\n** Session " + str(s.sess_id)
+for s in e.server_runs:
+    print "\n** Server run " + str(s.srid)
 
     print "++ Survey"
 
@@ -44,7 +45,7 @@ for s in e.sessions:
         print "HIT not completed"
 
     # process logs
-    fname = get_event_log_fname(args.experiment_id, s.sess_id)
+    fname = get_event_log_fname(args.ename, s.srid)
     with open(fname) as f:
         for line in f:
             data = json.loads(line)

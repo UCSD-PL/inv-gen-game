@@ -53,7 +53,7 @@ function assert(c: boolean, msg?: any): void {
     throw msg || "Assertion failed.";
 }
 function logEvent(name: string, data: any): void {
-  rpc.call("App.logEvent", [name, data], (res) => { }, log);
+  rpc.call("App.logEvent", [Args.get_worker_id(), name, data], (res) => { }, log);
 }
 
 function fst<T1, T2>(x: [T1, T2]): T1 { return x[0]; }
@@ -61,7 +61,7 @@ function snd<T1, T2>(x: [T1, T2]): T2 { return x[1]; }
 
 class Args {
   static args: { [key:string] : string; } = {};
-  static session_id: string = null;
+  static worker_id: string = null;
   static parse_args() {
     console.log(window.location.search)
     let query = window.location.search.substring(1).split("&");
@@ -72,12 +72,12 @@ class Args {
       Args.args[decodeURIComponent(param[0])] = decodeURIComponent(param[1] || "");
     }
     console.log(Args.args)
-    Args.session_id = Args.args["sid"];
+    Args.worker_id = "workerId" in Args.args ? Args.args["workerId"] : "";
   }
-  static get_session_id(): string {
-    if (Args.session_id === null)
+  static get_worker_id(): string {
+    if (Args.worker_id === null)
       Args.parse_args()
-    return Args.session_id;
+    return Args.worker_id;
   }
 }
 

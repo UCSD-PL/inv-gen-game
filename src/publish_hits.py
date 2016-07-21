@@ -11,7 +11,8 @@ from experiments import *
 
 p = mkParser("Run experiment")
 p.add_argument('--num_hits', type=int, default=1, help='number of HITs to create')
-p.add_argument('--eid', type=int, help='ID for experiment; if none provided, create new experiment')
+p.add_argument('--ename', type=str, default = 'default', help='Name for experiment; if none provided, use "default"')
+p.add_argument('--ext', action='store_const', const=True, default=False, help='if specified run ExternalQuestion')
 
 args = p.parse_args()
 
@@ -50,7 +51,7 @@ Begin recording your screen.
 </li>
 
 <li>
-Use Google Chrome to navigate to <a target='_blank' href='http://zoidberg.ucsd.edu:{0}/tutorial_patterns.html'> the following link</a>
+Use Google Chrome to navigate to <a target='_blank' href='https://zoidberg.ucsd.edu:{0}/tutorial_patterns.html'> the following link</a>
 </li>
 
 <li>
@@ -124,7 +125,7 @@ quals = [] if args.sandbox else [
                     NumberHitsApprovedRequirement("GreaterThanOrEqualTo", 1000), 
                     PercentAssignmentsApprovedRequirement("GreaterThanOrEqualTo", 97), 
                     Requirement(mastersQualType, "Exists")
-                  ]
+                ]
 
 reward = '2.00'
 
@@ -133,36 +134,20 @@ try:
     balance = mc.get_account_balance()
     print "Balance:", balance[0]
 
-    q = ExternalQuestion("https://zoidberg.ucsd.edu:5000/tutorial_patterns.html", 600)
-
-    r = mc.create_hit(question=q,
-                      lifetime=timedelta(7),
-                      max_assignments=max_assignments,
-                      title=title,
-                      description=description,
-                      keywords=keywords,
-                      reward=reward,
-                      duration=timedelta(0, 45*60),
-                      qualifications=Qualifications(quals))
-    assert len(r) == 1
-    print "Created HIT", r[0].HITId
-
-    quit()
-
-    if args.eid == None:
-        exp = create_new_experiment()
-        s = "Created new experiment with id"
-    else:
-        exp = Experiment(args.eid)
-        s = "Using existing experiment with id"
-    eid = exp.experiment_id
-    print s, eid
+    exp = Experiment(args.ename, True)
+    print "Running under experiment", args.ename
     for i in range(args.num_hits):
         port = get_unused_port()
-        sid = exp.create_unique_session_id()
-        p = start_server(port, eid, sid)
-        print "Started server session", sid, "on port", port, "with pid", p.pid 
-        r = mc.create_hit(question=question_form(port),
+        srid = exp.create_unique_server_run_id()
+        p = start_server(port, args.ename, srid)
+        print "Started server run", srid, "on port", port, "with pid", p.pid 
+        if args.ext:
+            q = ExternalQuestion("https://zoidberg.ucsd.edu:{0}/tutorial_patterns.html".format(port), 600)
+            kind = "ExternalQuestion"
+        else:
+            q = question_form(port)
+            kind = "QuestionForm"
+        r = mc.create_hit(question=q,
                           lifetime=timedelta(7),
                           max_assignments=max_assignments,
                           title=title,
@@ -172,8 +157,8 @@ try:
                           duration=timedelta(0, 45*60),
                           qualifications=Qualifications(quals))
         assert len(r) == 1
-        print "Created HIT", r[0].HITId
-        exp.add_session(Session(sid,r[0].HITId,p.pid))
+        print "Created", kind, "HIT", r[0].HITId
+        exp.add_session(ServerRun(srid, r[0].HITId, p.pid))
 except:
     print_exc()
     error("Failed...")
