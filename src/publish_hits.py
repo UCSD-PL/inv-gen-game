@@ -133,6 +133,22 @@ try:
     balance = mc.get_account_balance()
     print "Balance:", balance[0]
 
+    q = ExternalQuestion("https://zoidberg.ucsd.edu:5000/tutorial_patterns.html", 600)
+
+    r = mc.create_hit(question=q,
+                      lifetime=timedelta(7),
+                      max_assignments=max_assignments,
+                      title=title,
+                      description=description,
+                      keywords=keywords,
+                      reward=reward,
+                      duration=timedelta(0, 45*60),
+                      qualifications=Qualifications(quals))
+    assert len(r) == 1
+    print "Created HIT", r[0].HITId
+
+    quit()
+
     if args.eid == None:
         exp = create_new_experiment()
         s = "Created new experiment with id"

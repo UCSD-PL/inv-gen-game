@@ -63,14 +63,15 @@ class Args {
   static args: { [key:string] : string; } = {};
   static session_id: string = null;
   static parse_args() {
-    var query = window.location.search.substring(1).split("&");
-    let max = query.length;
-    for (let i = 0; i < max; i++) {
+    console.log(window.location.search)
+    let query = window.location.search.substring(1).split("&");
+    for (let i = 0; i < query.length; i++) {
       if (query[i] === "") // check for trailing & with no param
         continue;
       let param = query[i].split("=");
       Args.args[decodeURIComponent(param[0])] = decodeURIComponent(param[1] || "");
     }
+    console.log(Args.args)
     Args.session_id = Args.args["sid"];
   }
   static get_session_id(): string {
