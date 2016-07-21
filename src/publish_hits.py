@@ -23,7 +23,13 @@ keywords = "game, math, programming"
 
 description = "Help us evaluate our verification game InvGen! Each level is structured as a math puzzle, where you try to come up with correct expressions Your work directly helps with the verification of programs!"
 
-htmlOverview = """<p>We are developing a new game to aid program verification. The game consists of a short tutorial, followed by only 5 levels! Your goal in each level is to come up with expressions that are accepted by the game.</p>
+htmlOverview = """
+<p>We are developing a new game to aid program verification.
+   The game consists of a short tutorial, followed by 5 levels.
+   Your goal in each level is to come up with expressions that are
+   accepted by the game. If you have already played this game in a previous HIT,
+   please don't accept the current HIT. At this point we are looking for 
+   new players.</p>
 
 <p>
 Here is what you need to do concretely:
@@ -35,7 +41,8 @@ Install a free screen recording software of your choice. For example:
 <a target='_blank' href='http://screencast-o-matic.com/home'>http://screencast-o-matic.com/home</a>
 
 <br/>
-<p> <b> Note: </b> Some free screen recording software has a limit on the length of the video (e.g. 10 min). If you run into this, please split your recording into several smaller videos, then zip them up and upload them as a single ile. </p>
+<p> <b> Note: </b> Some free screen recording software has a limit on the length of the video (e.g. 10 min).
+        If you run into this, please split your recording into several smaller videos, then zip them up and upload them as a single file. </p>
 </li>
 
 <li>
@@ -51,7 +58,7 @@ Play through the short tutorial. Note that the tutorial has 3 easy sample levels
 </li>
 
 <li>
-Play as far as you can through the 5 actual game levels (these come after the end of the tutorial).<b>You will get 50c bonus for each actual level you pass!</b>
+Play as far as you can through the 5 actual game levels (these come after the end of the tutorial).<b>You will get 25c bonus for each actual level you pass!</b>
 </li>
 
 <li>
