@@ -1,0 +1,84 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- third party libraries -->
+  <script src="jquery-1.12.0.min.js"></script>
+  <script src="jquery.jsonrpcclient.js"></script>
+  <script src="jquery.color-2.1.2.min.js"></script>
+  <script src="jquery-ui-1.11.4/jquery-ui.js"></script>
+  <script src="esprima.js"></script>
+  <link rel="stylesheet" href="bootstrap.min.css">
+  <link rel="stylesheet" href="bootstrap-theme.min.css">
+  <script src="bootstrap.min.js"></script>
+
+  <!-- our code -->
+  <link rel="stylesheet" href="inv.css">
+  <link rel="stylesheet" href="arrow.css">
+  <script src="build/ts/container.js"></script>
+  <script src="build/ts/stickyWindow.js"></script>
+  <script src="build/ts/progressWindow.js"></script>
+  <script src="build/ts/scoreWindow.js"></script>
+  <script src="build/ts/logic.js"></script>
+  <script src="build/ts/traceWindow.js"></script>
+  <script src="build/ts/gameLogic.js"></script>
+  <script src="build/ts/level.js"></script>
+  <script src="build/ts/eval.js"></script>
+  <script src="build/ts/pp.js"></script>
+  <script src="build/ts/util.js"></script>
+  <script src="build/ts/powerups.js"></script>
+
+
+<script>
+
+// Given the ID of the assignmentId form field element, populate it
+// with the assignmentId parameter from the URL.  If no assignment ID
+// is present, inform the worker that the HIT is being previewed.
+
+function init() {
+  var paramstr = window.location.search.substring(1);
+  var parampairs = paramstr.split("&");
+  for (i in parampairs) {
+    var pair = parampairs[i].split("=");
+    if (pair[0] == "turkSubmitTo") {
+      document.getElementById("form").action = pair[1] + "mturk/externalSubmit";
+    }
+    if (pair[0] == "assignmentId") {
+      if (pair[1] == "ASSIGNMENT_ID_NOT_AVAILABLE") {
+        document.getElementById("main").innerHTML =
+          "<p><b>You are previewing this HIT.</b>  To perform this HIT, please accept it.</p>";
+      } else {
+        document.getElementById("assignment_id_field").value = pair[1];
+      }
+    }
+  }
+}
+
+</script>
+
+</head>
+<body onload="init()">
+  <div id="main" class="container">
+    <form id="form" action="" method="POST">
+      <fieldset class="form-group">
+        <label for="exampleSelect1">Example select</label>
+        <select class="form-control" id="exampleSelect1">
+          <option>1</option>
+          <option>2</option>
+          <option>3</option>
+          <option>4</option>
+          <option>5</option>
+        </select>
+      </fieldset>
+      <fieldset class="form-group">
+        <label for="exampleTextarea">Example textarea</label>
+        <textarea class="form-control" id="exampleTextarea" rows="3"></textarea>
+      </fieldset>
+      <input type="hidden" name="assignmentId" id="assignment_id_field" value="">
+      <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+  </div>
+</body>
+</html>

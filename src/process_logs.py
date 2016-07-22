@@ -52,10 +52,10 @@ for s in e.server_runs:
             if data["method"] == "logEvent":
                 ip = data["ip"]
                 method_args = data["args"]
-                event_name = method_args[0]
-                worker_id = method_args[1]
+                worker_id = method_args[0]
                 if worker_id == "":
                     worker_id = ip
+                event_name = method_args[1]
                 if event_name == "FinishLevel":
                     event_args = method_args[2]
                     lvl_set = event_args[0]
@@ -66,7 +66,7 @@ for s in e.server_runs:
 
                     print "++ " + lvl_set + "." + lvl_id
                     print "-- " + ("Finished and Proved" if proved_the_level else "Finished and Not Proved")
-                    print "-- " + worker_id
+                    print "-- Worker ID: " + worker_id
                     print "-- IP: " + ip
                     print "-- Time when finished: " + str(time.asctime(time.localtime(data["time"])))
                     print "-- User invs: " + ", ".join(js_invs)
