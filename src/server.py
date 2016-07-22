@@ -356,7 +356,7 @@ api = rpc(app, '/api')
 @api.method("App.logEvent")
 @pp_exc
 @log_d
-def logEvent(name, data):
+def logEvent(worker_id, name, data):
     return None
 
 @api.method("App.listData")
