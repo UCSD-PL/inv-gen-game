@@ -61,7 +61,10 @@ function snd<T1, T2>(x: [T1, T2]): T2 { return x[1]; }
 
 class Args {
   static args: { [key:string] : string; } = {};
+  static hit_id: string = null;
   static worker_id: string = null;
+  static assignment_id: string = null;
+  static turk_submit_to: string = null;
   static parse_args() {
     console.log(window.location.search)
     let query = window.location.search.substring(1).split("&");
@@ -71,14 +74,33 @@ class Args {
       let param = query[i].split("=");
       Args.args[decodeURIComponent(param[0])] = decodeURIComponent(param[1] || "");
     }
-    console.log(Args.args)
-    Args.worker_id = "workerId" in Args.args ? Args.args["workerId"] : "";
+    Args.hit_id = Args.args["hitId"];
+    Args.worker_id = Args.args["workerId"] || "";
+    Args.assignment_id = Args.args["assignmentId"];
+    Args.turk_submit_to = Args.args["turkSubmitTo"];
+  }
+  static get_hit_id(): string {
+    if (Args.hit_id === null)
+      Args.parse_args()
+    return Args.hit_id;
   }
   static get_worker_id(): string {
     if (Args.worker_id === null)
       Args.parse_args()
     return Args.worker_id;
   }
+  static get_assignment_id(): string {
+    if (Args.assignment_id === null)
+      Args.parse_args()
+    return Args.assignment_id;
+  }
+  static get_turk_submit_to(): string {
+    if (Args.turk_submit_to === null)
+      Args.parse_args()
+    return Args.turk_submit_to;
+  }
+
+
 }
 
 function shuffle<T>(arr: T[]): void {

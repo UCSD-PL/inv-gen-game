@@ -38,22 +38,23 @@
 // is present, inform the worker that the HIT is being previewed.
 
 function init() {
-  var paramstr = window.location.search.substring(1);
-  var parampairs = paramstr.split("&");
-  for (i in parampairs) {
-    var pair = parampairs[i].split("=");
-    if (pair[0] == "turkSubmitTo") {
-      document.getElementById("form").action = decodeURIComponent(pair[1]) + "/mturk/externalSubmit";
-    }
-    if (pair[0] == "assignmentId") {
-      if (pair[1] == "ASSIGNMENT_ID_NOT_AVAILABLE") {
+    console.log(Args.get_hit_id());
+    console.log(Args.get_worker_id());
+    console.log(Args.get_assignment_id());
+    console.log(Args.get_turk_submit_to());
+    var turk_submit_to = Args.get_turk_submit_to();
+    var assignment_id = Args.get_assignment_id();
+    if (assignment_id == "ASSIGNMENT_ID_NOT_AVAILABLE") {
         document.getElementById("main").innerHTML =
-          "<p><b>You are previewing this HIT.</b>  To perform this HIT, please accept it.</p>";
-      } else {
-        document.getElementById("assignment_id_field").value = pair[1];
-      }
+           "<p><b>You are previewing this HIT.</b>  To perform this HIT, please accept it.</p>";
+        return;
     }
-  }
+    if (assignment_id !== undefined) {
+        document.getElementById("assignment_id_field").value = assignment_id;
+    }
+    if (turk_submit_to !== undefined) {
+        document.getElementById("form").action = turk_submit_to + "/mturk/externalSubmit";
+    }
 }
 
 </script>
@@ -61,20 +62,90 @@ function init() {
 </head>
 <body onload="init()">
   <div class="container" id="main">
-    <form action="" method="POST" id="form">
+      <fieldset>
+        <label>This game was fun to play. Select the option that is closest to your feelings:</label>
+        <div class="radio">
+          <label>
+            <input type="radio" name="fun" value="5">
+            Strongly Agree 
+          </label>
+        </div>
+        <div class="radio">
+          <label>
+            <input type="radio" name="fun" value="4">
+            Agree
+          </label>
+        </div>
+        <div class="radio">
+          <label>
+            <input type="radio" name="fun" value="3">
+            Neutral
+          </label>
+        </div>
+        <div class="radio">
+          <label>
+            <input type="radio" name="fun" value="2">
+            Disagree
+          </label>
+        </div>
+        <div class="radio">
+          <label>
+            <input type="radio" name="fun" value="1">
+            Strongly Disagree 
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <label>The game was challenging. Select the option that is closest to your feelings:</label>
+        <div class="radio">
+          <label>
+            <input type="radio" name="challenging" value="5">
+            Strongly Agree 
+          </label>
+        </div>
+        <div class="radio">
+          <label>
+            <input type="radio" name="challenging" value="4">
+            Agree
+          </label>
+        </div>
+        <div class="radio">
+          <label>
+            <input type="radio" name="challenging" value="3">
+            Neutral
+          </label>
+        </div>
+        <div class="radio">
+          <label>
+            <input type="radio" name="challenging" value="2">
+            Disagree
+          </label>
+        </div>
+        <div class="radio">
+          <label>
+            <input type="radio" name="challenging" value="1">
+            Strongly Disagree 
+          </label>
+        </div>
+      </fieldset>
+
       <fieldset class="form-group">
-        <label for="exampleSelect1">Example select</label>
-        <select name="fun" class="form-control">
-          <option>1</option>
-          <option>2</option>
-          <option>3</option>
-          <option>4</option>
-          <option>5</option>
-        </select>
+        <label for="likes_input">What did you like about the game?</label>
+        <textarea name="likes" class="form-control" rows="2" id="likes_input"></textarea>
       </fieldset>
       <fieldset class="form-group">
-        <label for="exampleTextarea">Example text area</label>
-        <textarea name="suggestions" class="form-control" rows="3"></textarea>
+        <label for="dislikes_input">What did you find confusing about the game?</label>
+        <textarea name="dislikes" class="form-control" rows="2" id="dislikes_input"></textarea>
+      </fieldset>
+      <fieldset class="form-group">
+        <label for="suggestions_input">Do have any suggestions on how to improve the game? If so, what are they?</label>
+        <textarea name="suggestions" class="form-control" rows="2" id="suggestions_input"></textarea>
+      </fieldset>
+      <fieldset class="form-group">
+        <label for="experience_input">So we can calibrate our results, please describe what programming experience you've had,
+        in particular what programming languages you've used and for how long. If no programming experience, just say None.</label>
+        <textarea name="experience" class="form-control" rows="2" id="experience_input"></textarea>
       </fieldset>
       <input type="hidden" name="assignmentId" id="assignment_id_field" value="">
       <button type="submit" class="btn btn-primary">Submit</button>
