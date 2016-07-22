@@ -458,7 +458,7 @@
                  $('#next-lvl').html("Start Playing")
                  $('#next-lvl').off("click")
                  $('#next-lvl').click(function() {
-                   window.location.replace('game_patterns.html');
+                   window.location.replace('game_patterns.html' + window.location.search);
                  })
                  $('#next-lvl').fadeIn(fadeDelay, function() {
                    curL = label({ of: $("#next-lvl"), at: "left center"},
