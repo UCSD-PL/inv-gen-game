@@ -43,7 +43,7 @@ function init() {
   for (i in parampairs) {
     var pair = parampairs[i].split("=");
     if (pair[0] == "turkSubmitTo") {
-      document.getElementById("form").action = pair[1] + "mturk/externalSubmit";
+      document.getElementById("form").action = decodeURIComponent(pair[1]) + "/mturk/externalSubmit";
     }
     if (pair[0] == "assignmentId") {
       if (pair[1] == "ASSIGNMENT_ID_NOT_AVAILABLE") {
@@ -60,11 +60,11 @@ function init() {
 
 </head>
 <body onload="init()">
-  <div id="main" class="container">
-    <form id="form" action="" method="POST">
+  <div class="container" id="main">
+    <form action="" method="POST" id="form">
       <fieldset class="form-group">
         <label for="exampleSelect1">Example select</label>
-        <select class="form-control" id="exampleSelect1">
+        <select name="fun" class="form-control">
           <option>1</option>
           <option>2</option>
           <option>3</option>
@@ -73,8 +73,8 @@ function init() {
         </select>
       </fieldset>
       <fieldset class="form-group">
-        <label for="exampleTextarea">Example textarea</label>
-        <textarea class="form-control" id="exampleTextarea" rows="3"></textarea>
+        <label for="exampleTextarea">Example text area</label>
+        <textarea name="suggestions" class="form-control" rows="3"></textarea>
       </fieldset>
       <input type="hidden" name="assignmentId" id="assignment_id_field" value="">
       <button type="submit" class="btn btn-primary">Submit</button>

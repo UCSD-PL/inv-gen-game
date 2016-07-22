@@ -142,7 +142,7 @@ try:
         p = start_server(port, args.ename, srid)
         print "Started server run", srid, "on port", port, "with pid", p.pid 
         if args.ext:
-            q = ExternalQuestion("https://zoidberg.ucsd.edu:{0}/tutorial_patterns.html".format(port), 600)
+            q = ExternalQuestion("https://zoidberg.ucsd.edu:{0}/game_patterns.html".format(port), 600)
             kind = "ExternalQuestion"
         else:
             q = question_form(port)
