@@ -7,10 +7,11 @@ from boto.mturk.connection import *
 from datetime import *
 from mturk_util import error, connect, mkParser
 from json import loads
+from experiments import *
 
 p = mkParser("Publish a HIT for playing the game")
 p.add_argument("--qualtype", type=str, help="Qualification Type Identifier");
-p.add_argument("--logfile", type=str, help="Path to server log file where codes are emitted");
+p.add_argument("--ename", type=str, default='tutorial', help="Experiment name under which the tutorial qualification is running");
 args = p.parse_args()
 
 mc = connect(args.credentials_file, args.sandbox)
@@ -24,8 +25,12 @@ def getCodes(log_file):
 
     return codes
 
-codes = getCodes(args.logfile);
+exp = Experiment(args.ename, True);
+codes = set()
 
+for server_run in exp.server_runs:
+    codes = codes.union(getCodes(get_event_log_fname(args.ename, server_run.srid)))
+    
 try:
     balance = mc.get_account_balance()
     print "Balance:", balance[0]
@@ -41,7 +46,7 @@ try:
             action = "approved"
         else:
             action = "nothing - you must reject manually"
-            
+
         print qt.QualificationRequestId, qt.SubmitTime, qt.SubjectId, code, action
 except Exception,e:
     print_exc()

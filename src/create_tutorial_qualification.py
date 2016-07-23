@@ -10,6 +10,7 @@ from mturk_util import error, mkParser, connect
 from experiments import *
 
 p = mkParser("Run experiment")
+p.add_argument('--ename', type=str, default = 'tutorial', help='Name for experiment; if none provided, use "tutorial"')
 
 args = p.parse_args()
 
@@ -52,9 +53,10 @@ def question_form(port):
     return QuestionForm([o, q])
 
 try:
-    srid = "tutorial_qualification"
+    exp = Experiment(args.ename, True);
+    srid = exp.create_unique_server_run_id()
     port = get_unused_port()
-    p = start_server(port, srid, "tutorial_server")
+    p = start_server(port, args.ename, srid)
     print "Started server run", srid, "on port", port, "with pid", p.pid 
 
     mc = connect(args.credentials_file, args.sandbox)
@@ -63,6 +65,8 @@ try:
 
     r = mc.create_qualification_type("InvGame Tutorial Completed", "Complete the short tutorial to the game", "Active", ["game tutorial", "math", "puzzle"],
             test = question_form(port), test_duration = 30 * 60);
+    assert len(r) == 1
+    exp.add_session(ServerRun(srid, r[0].QualificationTypeId, p.pid))
 except:
     print_exc()
     error("Failed...")
