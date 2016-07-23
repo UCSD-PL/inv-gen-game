@@ -433,9 +433,10 @@
                   $('#data-display').html('<div stype="display: none">' +
                     '<h2><p>Good Job!</p><br>Please enter the following code in the qualification question: <span class="important" id="code"> ... loading </span></h2>' +
                     '</div>');
-                    rpc.call("App.getRandomCode", [], function (code) {
-                      $('#code').html(code);
-                    });
+                  $("#next-lvl").hide();
+                  rpc.call("App.getRandomCode", [], function (code) {
+                    $('#code').html(code);
+                  });
                }
       },
     ]

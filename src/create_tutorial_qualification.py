@@ -67,6 +67,7 @@ try:
             test = question_form(port), test_duration = 30 * 60);
     assert len(r) == 1
     exp.add_session(ServerRun(srid, r[0].QualificationTypeId, p.pid))
+    print "Created qualification: ", r[0].QualificationTypeId
 except:
     print_exc()
     error("Failed...")
