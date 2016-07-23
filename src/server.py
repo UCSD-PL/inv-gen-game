@@ -24,7 +24,7 @@ from sys import exc_info
 from cProfile import Profile
 from pstats import Stats
 from StringIO import StringIO
-from random import randint
+from random import randint, choice
 
 import argparse
 import traceback
@@ -700,6 +700,13 @@ def simplifyInv(inv):
     z3_inv = esprimaToZ3(inv, {});
     simpl_z3_inv = simplify(z3_inv, arith_lhs=True);
     return boogieToEsprima(z3_expr_to_boogie(simpl_z3_inv));
+
+@api.method("App.getRandomCode")
+@pp_exc
+@log_d
+def getRandomCode():
+    alphanum = "".join([chr(ord('a') + i) for i in range(26) ] + [ str(i) for i in range(0,10)])
+    return "".join([ choice(alphanum) for x in range(5) ]);
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0',port=args.port,ssl_context=(MYDIR + '/cert.pem', MYDIR + '/privkey.pem'), threaded=True)
