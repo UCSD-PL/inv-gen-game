@@ -20,10 +20,11 @@ def get_lvlset_dir(lvlset):
 
 
 class ServerRun:
-    def __init__(self, srid, hit_id, pid):
+    def __init__(self, srid, hit_id, pid, port):
         self.srid = srid    # server run id, unique id for each run
         self.hit_id = hit_id
         self.pid = pid
+        self.port = port;
 
 class Experiment:
     def __init__(self, experiment_name, create_if_not_there = False):
@@ -42,7 +43,7 @@ class Experiment:
             with open(self.fname, "rb") as f:
                 for line in f:
                     s = json.loads(line)
-                    self.server_runs.append(ServerRun(s[0], s[1], s[2]))
+                    self.server_runs.append(ServerRun(s[0], s[1], s[2], s[3]))
         except IOError:
             # file does not exist, create it
             self.store_server_runs()
@@ -50,7 +51,7 @@ class Experiment:
     def store_server_runs(self):
         with open(self.fname, 'wb') as f:
             for s in self.server_runs:
-                json.dump([s.srid, s.hit_id, s.pid], f)
+                json.dump([s.srid, s.hit_id, s.pid, s.port], f)
                 f.write("\n")
     def create_unique_server_run_id(self):
         res = 0

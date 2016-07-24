@@ -158,7 +158,7 @@ try:
                           qualifications=Qualifications(quals))
         assert len(r) == 1
         print "Created", kind, "HIT", r[0].HITId
-        exp.add_session(ServerRun(srid, r[0].HITId, p.pid))
+        exp.add_session(ServerRun(srid, r[0].HITId, p.pid, port))
 except:
     print_exc()
     error("Failed...")

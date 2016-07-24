@@ -66,7 +66,7 @@ try:
     r = mc.create_qualification_type("InvGame Tutorial Completed", "Complete the short tutorial to the game", "Active", ["game tutorial", "math", "puzzle"],
             test = question_form(port), test_duration = 30 * 60);
     assert len(r) == 1
-    exp.add_session(ServerRun(srid, r[0].QualificationTypeId, p.pid))
+    exp.add_session(ServerRun(srid, r[0].QualificationTypeId, p.pid, port))
     print "Created qualification: ", r[0].QualificationTypeId
 except:
     print_exc()
