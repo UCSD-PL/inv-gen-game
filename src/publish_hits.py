@@ -6,15 +6,14 @@ from boto.mturk.question import *
 from boto.mturk.qualification import *
 from boto.mturk.connection import *
 from datetime import *
-from mturk_util import error, mkParser, connect
+from mturk_util import *
 from experiments import *
 
-p = mkParser("Run experiment")
+p = mkParser("Run experiment", True)
 p.add_argument('--num_hits', type=int, default=1, help='number of HITs to create')
-p.add_argument('--ename', type=str, default = 'default', help='Name for experiment; if none provided, use "default"')
 p.add_argument('--ext', action='store_const', const=True, default=False, help='if specified run ExternalQuestion')
 
-args = p.parse_args()
+args = parse_args(p)
 
 title = "Play a Math Puzzle Game For Science!"
 
@@ -22,7 +21,18 @@ max_assignments = 1
 
 keywords = "game, math, programming"
 
-description = "Help us evaluate our verification game InvGen! Each level is structured as a math puzzle, where you try to come up with correct expressions Your work directly helps with the verification of programs!"
+description = "Help us evaluate our verification game InvGen! Each level is structured as a math puzzle, where you try to come up with correct expressions. Your work directly helps with the verification of programs! More specifically, this HIT involves playing at least two non-tutorial levels of our game. Played it before? Come play again! You will bypass the tutorial and get new levels! New player? Come try it out! We aim to pay about $10/hr. More specifically: (a) $1 for the HIT, which involves playing the game for at least 2 non-tutorial levels (b) $1 bonus for doing the tutorial, which you only do the first time (c) $0.50 bonus for each non-tutorial level you pass beyond two."
+
+
+
+                                         # "<h3>This HIT involves playing at least two non-tutorial levels of the <span class='good'>InvGen</span> game.<h3>" +
+                                         # "<h3><b>Played it before?</b> Come play again! You will bypass the tutorial and get new levels!<br>" + 
+                                         # "<b>New player?</b> Come try it out!</h3>" + 
+                                         # "<h3>We aim to pay about $10/hr</h3>" +
+                                         # "<h3><b>$1 for the HIT</b>, which involves playing the game for at least 2 non-tutorial levels<br>" +
+                                         # "<b>$1 bonus for doing the tutorial</b> (which you only do the first time)<br>" + 
+                                         # "<b>$0.50 bonus for each non-tutorial level you pass beyond two</b></h3>");
+
 
 htmlOverview = """
 <p>We are developing a new game to aid program verification.
@@ -127,8 +137,6 @@ quals = [] if args.sandbox else [
                     Requirement(mastersQualType, "Exists")
                 ]
 
-reward = '2.00'
-
 try:
     mc = connect(args.credentials_file, args.sandbox)
     balance = mc.get_account_balance()
@@ -142,7 +150,7 @@ try:
         p = start_server(port, args.ename, srid)
         print "Started server run", srid, "on port", port, "with pid", p.pid 
         if args.ext:
-            q = ExternalQuestion("https://zoidberg.ucsd.edu:{0}/game_patterns.html".format(port), 600)
+            q = ExternalQuestion("https://zoidberg.ucsd.edu:{0}/start_patterns.html".format(port), 600)
             kind = "ExternalQuestion"
         else:
             q = question_form(port)
@@ -153,7 +161,7 @@ try:
                           title=title,
                           description=description,
                           keywords=keywords,
-                          reward=reward,
+                          reward=HIT_REWARD,
                           duration=timedelta(0, 45*60),
                           qualifications=Qualifications(quals))
         assert len(r) == 1

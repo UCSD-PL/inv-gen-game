@@ -723,7 +723,6 @@ class PatternGameLogic extends BaseGameLogic {
     super(tracesW, progressW, scoreW, stickyW);
     //this.pwupSuggestion = new PowerupSuggestionFullHistoryVariableMultipliers(3, "lfu");
     this.pwupSuggestion = new PowerupSuggestionAll();
-    Args.parse_args();
   }
 
   clear(): void {
@@ -866,19 +865,26 @@ class PatternGameLogic extends BaseGameLogic {
                 gl.invMap[ui.id] = ui;
                 gl.progressW.addInvariant(ui.id, ui.rawInv);
                 gl.tracesW.setExp("");
+                logEvent("FoundInvariant", [curLvlSet, gl.curLvl.id, ui.rawUserInp, ui.canonForm]);
                 if (!gl.lvlPassedF) {
                   gl.goalSatisfied((sat, feedback) => {
-                      if (sat || gl.foundJSInv.length >= 8) {
-                        logEvent("FinishLevel",
-                                 [curLvlSet,
-                                  gl.curLvl.id,
-                                  sat,
-                                  gl.foundJSInv.map((x)=>x.rawUserInp),
-                                  gl.foundJSInv.map((x)=>x.canonForm)]);
-                        gl.lvlPassedF = true;
-                        gl.lvlPassedCb();
-                      }
-                    });
+                    if (Args.get_worker_id() != "") {
+                      if (sat)
+                        rpc.call("App.setLvlAsDone", [curLvlSet, gl.curLvl.id], (res) => { }, log);
+                      else if (gl.foundJSInv.length >= 1)
+                        rpc.call("App.addToIgnoreList", [Args.get_worker_id(), curLvlSet, gl.curLvl.id], (res) => { }, log);
+                    }
+                    if (sat || gl.foundJSInv.length >= 8) {
+                      logEvent("FinishLevel",
+                               [curLvlSet,
+                                gl.curLvl.id,
+                                sat,
+                                gl.foundJSInv.map((x)=>x.rawUserInp),
+                                gl.foundJSInv.map((x)=>x.canonForm)]);
+                      gl.lvlPassedF = true;
+                      gl.lvlPassedCb();
+                    }
+                  });
                 }
               }
             })

@@ -4,6 +4,12 @@ import os
 import json
 from os.path import *
 
+
+BONUS_PER_LEVEL=0.50
+BONUS_FOR_TUTORIAL=1.00
+HIT_REWARD=1.00
+REQUIRED_LEVELS_PER_HIT = 2
+
 ROOT_DIR = dirname(dirname(abspath(realpath(__file__))))
 
 def get_server_run_cmd():
@@ -43,7 +49,11 @@ class Experiment:
             with open(self.fname, "rb") as f:
                 for line in f:
                     s = json.loads(line)
-                    self.server_runs.append(ServerRun(s[0], s[1], s[2], s[3]))
+                    try:
+                        port = s[3]
+                    except IndexError:
+                        port = 0
+                    self.server_runs.append(ServerRun(s[0], s[1], s[2], port))
         except IOError:
             # file does not exist, create it
             self.store_server_runs()
@@ -63,7 +73,7 @@ class Experiment:
         self.server_runs.append(s)
         self.store_server_runs()
 
-def create_experiment_or_die(ename):
+def load_experiment_or_die(ename):
     try:
         return Experiment(ename)
     except IOError:
@@ -90,5 +100,6 @@ def start_server(port, experiment_name, srid):
     server_log = get_server_log_fname(experiment_name, srid)
     event_log = get_event_log_fname(experiment_name, srid)
     with open(server_log, 'w') as output:
-        p = subprocess.Popen([get_server_run_cmd(), "--port", str(port), "--log", event_log], stdout=output, stderr=subprocess.STDOUT)
+        p = subprocess.Popen([get_server_run_cmd(), "--port", str(port), "--log", event_log, "--ename", experiment_name], stdout=output, stderr=subprocess.STDOUT)
     return p
+

@@ -6,13 +6,12 @@ from boto.mturk.question import *
 from boto.mturk.qualification import *
 from boto.mturk.connection import *
 from datetime import *
-from mturk_util import error, mkParser, connect
+from mturk_util import *
 from experiments import *
 
-p = mkParser("Run experiment")
-p.add_argument('--ename', type=str, default = 'tutorial', help='Name for experiment; if none provided, use "tutorial"')
+p = mkParser("Run experiment", True)
 
-args = p.parse_args()
+args = parse_args(p)
 
 CODE_LEN = "5";
 
@@ -53,15 +52,15 @@ def question_form(port):
     return QuestionForm([o, q])
 
 try:
+    mc = connect(args.credentials_file, args.sandbox)
+    balance = mc.get_account_balance()
+    print "Balance:", balance[0]
+
     exp = Experiment(args.ename, True);
     srid = exp.create_unique_server_run_id()
     port = get_unused_port()
     p = start_server(port, args.ename, srid)
     print "Started server run", srid, "on port", port, "with pid", p.pid 
-
-    mc = connect(args.credentials_file, args.sandbox)
-    balance = mc.get_account_balance()
-    print "Balance:", balance[0]
 
     r = mc.create_qualification_type("InvGame Tutorial Completed", "Complete the short tutorial to the game", "Active", ["game tutorial", "math", "puzzle"],
             test = question_form(port), test_duration = 30 * 60);

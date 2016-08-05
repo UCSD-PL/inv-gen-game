@@ -35,6 +35,8 @@ from copy import copy
 p = argparse.ArgumentParser(description="invariant gen game server")
 p.add_argument('--log', type=str, help='an optional log file to store all user actions. Entries are stored in JSON format.')
 p.add_argument('--port', type=int, help='an optional port number')
+p.add_argument('--ename', type=str, default = 'default', help='Name for experiment; if none provided, use "default"')
+p.add_argument('--lvlset', type=str, default = 'desugared-boogie-benchmarks', help='Lvlset to use for serving benchmarks"')
 
 args = p.parse_args();
 
@@ -81,7 +83,8 @@ def prof_d(f):
             print s.getvalue()
     return decorated
 
-MYDIR=dirname(abspath(realpath(__file__)))
+MYDIR = dirname(abspath(realpath(__file__)))
+ROOT_DIR = dirname(MYDIR)
 z3s = Solver()
 
 def _tryUnroll(loop, bbs, min_un, max_un, bad_envs, good_env):
@@ -356,28 +359,96 @@ api = rpc(app, '/api')
 @api.method("App.logEvent")
 @pp_exc
 @log_d
-def logEvent(worker_id, name, data):
+def logEvent(workerId, name, data):
     return None
 
 @api.method("App.listData")
 @pp_exc
 @log_d
 def listData(levelSet):
-    res = traces[levelSet].keys();
+    res = traces[levelSet].keys()
     res.sort()
     return res
+
+@api.method("App.getTutorialDone")
+@pp_exc
+@log_d
+def getTutorialDone(workerId):
+    if workerId == "":
+        return False
+    return isfile(join(ROOT_DIR, 'logs', args.ename, "tut-done-" + workerId))
+
+@api.method("App.setTutorialDone")
+@pp_exc
+@log_d
+def setTutorialDone(workerId):
+    if workerId != "":
+        open(join(ROOT_DIR, 'logs', args.ename, "tut-done-" + workerId), "w").close()
+
+# @api.method("App.getMyNextLvl")
+# @pp_exc
+# @log_d
+# def getMyNextLvl(workerId, levelSet):
+#     if workerId == "":
+#         return "Tutorial"
+#     if (levelSet not in traces):
+#         raise Exception("Unkonwn level set " + levelSet)
+#     fname = join(ROOT_DIR, 'logs', args.ename, workerId)
+#     try:
+#         with open(fname) as f:
+#             last = f.read()
+#     except IOError:
+#         return "Tutorial"
+#     levelIds = traces[levelSet].keys()
+#     levelIds.sort()
+#     levelIds = ["Tutorial"] + levelIds
+#     try:
+#         i = levelIds.index(last)
+#         return levelIds[i+1]
+#     except (ValueError, IndexError):
+#         return "None"
+
+# @api.method("App.getMyLastLvl")
+# @pp_exc
+# @log_d
+# def getMyLastLvl(workerId, levelSet):
+#     # note that we ignore levelSet -- for now assume each
+#     # experiment uses a single levelSet
+#     if workerId == "":
+#         return "None"
+#     if (levelSet not in traces):
+#         raise Exception("Unkonwn level set " + levelSet)
+#     fname = join(ROOT_DIR, 'logs', args.ename, workerId)
+#     try:
+#         with open(fname) as f:
+#             return f.read()
+#     except IOError:
+#         return "None"
+
+
+# @api.method("App.storeMyLastLvl")
+# @pp_exc
+# @log_d
+# def storeMyLastLvl(workerId, levelSet, lvlId):
+#     # note that we ignore levelSet -- for now assume each
+#     # experiment uses a single levelSet
+#     if workerId == "":
+#         return
+#     fname = join(ROOT_DIR, 'logs', args.ename, workerId)
+#     with open(fname, "w") as f:
+#         f.write(lvlId)
 
 @api.method("App.loadLvl")
 @pp_exc
 @log_d
-def loadLvl(levelSet, traceId):
+def loadLvl(levelSet, lvlId):
     if (levelSet not in traces):
         raise Exception("Unkonwn level set " + levelSet)
 
-    if (traceId not in traces[levelSet]):
-        raise Exception("Unkonwn trace " + traceId + " in levels " + levelSet)
+    if (lvlId not in traces[levelSet]):
+        raise Exception("Unkonwn trace " + lvlId + " in levels " + levelSet)
 
-    lvl = traces[levelSet][traceId]
+    lvl = traces[levelSet][lvlId]
     if ('program' in lvl):
       # This is a boogie level - don't return the program/loop and other book keeping
       lvl = {
@@ -393,6 +464,64 @@ def loadLvl(levelSet, traceId):
       }
 
     return lvl
+
+class IgnoreManager:
+    def __init__(self):
+        self.ignores = {}
+    def fname(self, workerId):
+        return join(ROOT_DIR, 'logs', args.ename, "ignore-" + workerId)
+    def ignoreset(self, workerId):
+        if not workerId in self.ignores:
+            self.load_from_file(workerId)
+        return self.ignores[workerId]
+    def load_from_file(self, workerId):
+        res = set()
+        try:
+            with open(self.fname(workerId)) as f:
+                for l in f.readlines():
+                    res.add(tuple(l.split()))
+        except IOError:
+            pass # file does not exist, this is just empty ignore set
+        self.ignores[workerId] = res
+    def add(self, workerId, levelSet, lvlId):
+        self.ignoreset(workerId).add((levelSet, lvlId))
+        with open(self.fname(workerId), "a") as f:
+            f.write(levelSet + " " + lvlId + "\n")
+    def contains(self,workerId, levelSet, lvlId):
+        return (levelSet, lvlId) in self.ignoreset(workerId)
+
+@api.method("App.loadNextLvl")
+@pp_exc
+@log_d
+def loadNextLvl(workerId):
+    levelSet = args.lvlset
+    if (levelSet not in traces):
+        raise Exception("Unkonwn level set " + levelSet)
+    exp_dir = join(ROOT_DIR, "logs", args.ename)
+    level_names = traces[levelSet].keys();
+    level_names.sort()
+    for lvlId in level_names:
+        if isfile(join(exp_dir, "done-" + levelSet + "-" + lvlId)):
+            continue
+        if workerId != "" and ignore.contains(workerId, levelSet, lvlId):
+            continue
+        result = loadLvl(levelSet, lvlId)
+        result["id"] = lvlId
+        result["lvlSet"] = levelSet
+        return result
+
+@api.method("App.addToIgnoreList")
+@pp_exc
+@log_d
+def addToIgnoreList(workerId, levelSet, lvlId):
+    if workerId != "":
+        ignore.add(workerId, levelSet, lvlId)
+
+@api.method("App.setLvlAsDone")
+@pp_exc
+@log_d
+def setLvlAsDone(levelSet, lvlId):
+    open(join(ROOT_DIR, "logs", args.ename, "done-" + levelSet + "-" + lvlId), "w").close()
 
 def _to_dict(vs, vals):
     return { vs[i]: vals[i] for i in xrange(0, len(vs)) }
@@ -709,4 +838,5 @@ def getRandomCode():
     return "".join([ choice(alphanum) for x in range(5) ]);
 
 if __name__ == "__main__":
+    ignore = IgnoreManager()
     app.run(host='0.0.0.0',port=args.port,ssl_context=(MYDIR + '/cert.pem', MYDIR + '/privkey.pem'), threaded=True)

@@ -45,4 +45,16 @@ class PrepopulatedDynamicLevel extends DynamicLevel {
       cb(new PrepopulatedDynamicLevel(id, data.variables, data.data, data.goal, data.hint, data.exploration_state, [[], [], []]))
     }, log)
   }
+
+  static loadNext(cb: (res: [string, Level])=>void) {
+    rpc.call('App.loadNextLvl', [Args.get_worker_id()], function(data) {
+      if (data === null)
+        cb(null)
+      else {
+        let lvl = new PrepopulatedDynamicLevel(data.id, data.variables, data.data, data.goal, data.hint, data.exploration_state, [[], [], []]);
+        cb([data.lvlSet, lvl]);
+      }
+    }, log)
+  }
+
 }

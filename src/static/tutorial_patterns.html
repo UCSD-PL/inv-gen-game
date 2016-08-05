@@ -115,6 +115,16 @@
     var tutorialScript = [
       { setup: function (cs) {
                   $('.overlay').html("<h1>Welcome to the <span class='good'>InvGen</span> Tutorial!<br> You can press spacebar at any time <br>to proceed to the next step.</h1>")
+                  if (Args.get_assignment_id() == "ASSIGNMENT_ID_NOT_AVAILABLE") {
+                    $('.overlay').append("<h1><b>This is a preview, which only shows you the tutorial</b></h1>" + 
+                                         "<h3>This HIT involves playing at least two non-tutorial levels of the <span class='good'>InvGen</span> game.<h3>" +
+                                         "<h3><b>Played it before?</b> Come play again! You will bypass the tutorial and get new levels!<br>" + 
+                                         "<b>New player?</b> Come try it out!</h3>" + 
+                                         "<h3>We aim to pay about $10/hr</h3>" +
+                                         "<h3><b>$1 for the HIT</b>, which involves playing the game for at least 2 non-tutorial levels<br>" +
+                                         "<b>$1 bonus for doing the tutorial</b> (which you only do the first time)<br>" + 
+                                         "<b>$0.50 bonus for each non-tutorial level you pass beyond two</b></h3>");
+                  }
                   $('.overlay').fadeIn(fadeDelay, function () {
                     cs.nextStepOnKeyOrTimeout(stepTimeout, ()=>0, 32)
                   })
@@ -122,6 +132,7 @@
       },
       // UI tutorial -----------------------------------------------------
       { setup: function (cs) {
+                  logEvent("TutorialStart", null);
                   $(".overlay").fadeOut(fadeDelay, function () {
                     var lvl = {
 
@@ -340,7 +351,7 @@
       },
       { setup: function (cs) {
                  curL = label({ of: $("#score-div-row"), at: "right center" },
-                              "So you get +4pts.<br>(instead of just +1)", "left")
+                              "So you get +4<br>instead of +1", "left")
                  scoreW.add(4)
                  var inv = invPP(tracesW.curExp().trim());
                  addSuccessfulInvariant(inv);
@@ -383,10 +394,13 @@
                }
       },
       { setup: function (cs) {
-                 $('#container').click()
                  curL = label({ of: $("#sticky"), at: "left+10 bottom" },
                               "Hover over each bonus for details!", "up");
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+                 // In following line, use timeout of 3000 instead of stepTimeout because of some
+                 // weird thing that happens only in firefox (not in Chrome and not in Edge), 
+                 // which is that because of tracesW.disable(), the keyboard events don't come through
+                 // unless someone clicks somewhere on the page.
+                 cs.nextStepOnKeyOrTimeout(3000, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
@@ -455,16 +469,19 @@
                }
       },
       { setup: function (cs) {
-                 $('#next-lvl').html("Start Playing")
-                 $('#next-lvl').off("click")
-                 $('#next-lvl').click(function() {
-                   window.location.replace('game_patterns.html' + window.location.search);
-                 })
-                 $('#next-lvl').fadeIn(fadeDelay, function() {
-                   curL = label({ of: $("#next-lvl"), at: "left center"},
-                                "Proceed to the game!", "right");
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
-                 })
+                 rpc.call('App.setTutorialDone', [Args.get_worker_id()], function(res) {
+                   logEvent("TutorialDone", null);
+                   $('#next-lvl').html("Start Playing")
+                   $('#next-lvl').off("click")
+                   $('#next-lvl').click(function() {
+                     window.location.replace('game_patterns.html' + window.location.search);
+                   })
+                   $('#next-lvl').fadeIn(fadeDelay, function() {
+                     curL = label({ of: $("#next-lvl"), at: "left center"},
+                                  "Proceed to the game!", "right");
+                     cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+                   })
+                 }, log)
                }
       },
       { setup: function (cs) {
@@ -473,8 +490,11 @@
     ]
 
     $(document).ready(function() {
-      rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
+      if (Args.get_assignment_id() == "ASSIGNMENT_ID_NOT_AVAILABLE") {
+        $("#hit-preview-warning").html("<p class='lead'><b>This is just a preview of the HIT. The work you do here will have to be redone when you accept the HIT.</b></p>");
+      }
 
+      rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
       progW = new ProgressWindow($('#discovered-invariants-div'));
       $('#discovered-invariants-div').hide();
       $('.ignoreWindow').hide();
@@ -494,8 +514,9 @@
   </script>
 </head>
 <body>
-</body>
   <div class='container'>
+    <div class='row' id='hit-preview-warning'>
+    </div>
     <div class='row'>
       <div class='col-md-1' id='dummy'>
       </div>
@@ -522,6 +543,6 @@
       </div>
     </div>
   </div>
-  <div class='overlay text-center'></div>
-</div>
+  <div class='overlay text-center' style='display: none;'></div> 
+</body>
 </html>

@@ -9,8 +9,8 @@ from mturk_util import error, connect, mkParser
 from json import loads
 from experiments import *
 
-p = mkParser("Publish a HIT for playing the game")
-p.add_argument("--qualtype", type=str, help="Qualification Type Identifier");
+p = mkParser("Process qualification requests")
+p.add_argument("qualtype", type=str, help="Qualification Type Identifier");
 p.add_argument("--ename", type=str, default='tutorial', help="Experiment name under which the tutorial qualification is running");
 args = p.parse_args()
 

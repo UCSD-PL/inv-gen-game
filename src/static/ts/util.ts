@@ -66,7 +66,7 @@ class Args {
   static assignment_id: string = null;
   static turk_submit_to: string = null;
   static parse_args() {
-    console.log(window.location.search)
+    console.log(window.location.search);
     let query = window.location.search.substring(1).split("&");
     for (let i = 0; i < query.length; i++) {
       if (query[i] === "") // check for trailing & with no param
@@ -253,7 +253,7 @@ class Script {
 
     this.cancelCb = function() {
       if (timeout > 0)
-        clearTimeout(this.timeoutId);
+        clearTimeout(s.timeoutId);
       $("body").off("keyup");
       $("body").off("keypress");
       destructor();
@@ -271,8 +271,9 @@ class Script {
         $("body").off("keyup");
         $("body").off("keypress");
         destructor();
-        if (timeout > 0)
-          clearTimeout(this.timeoutId);
+        if (timeout > 0) {
+          clearTimeout(s.timeoutId);
+        }
         s.nextStep();
         ev.stopPropagation();
         return false;

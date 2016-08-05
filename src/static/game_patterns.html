@@ -32,6 +32,7 @@
 
   <script>
     var curLvl;
+    var curLvlId;
     var curLvlSet;
     var curL = null;
     var lvls = null;
@@ -39,23 +40,42 @@
     var gameLogic = null;
     var stepTimeout = 5000;
     var curScript = null;
+    var dynamicLvlOrder = true;
+    var numLvlPassed = 0;
 
     disableBackspaceNav();
 
     function loadTrace(traceId) {
       PrepopulatedDynamicLevel.load(curLvlSet, traceId, function(lvl) {
+        curLvlId = traceId
         gameLogic.loadLvl(lvl)
       })
     }
 
+    function loadNextTrace() {
+      PrepopulatedDynamicLevel.loadNext(function(res) {
+        if (res === null)
+          doneScreen(true)
+        else {
+          curLvlSet = res[0];
+          let lvl = res[1];
+          curLvlId = lvl.id; 
+          gameLogic.loadLvl(lvl);
+        }
+      })
+    }
+
     function nextLvl() {
-      loadLvl(curLvl + 1);
+      if (dynamicLvlOrder)
+        loadNextTrace()
+      else
+        loadLvl(curLvl + 1);
     }
 
     function loadLvl(lvl) {
       if (lvl == lvls.length) {
         curLvl = lvl;
-        doneScreen();
+        doneScreen(true);
       } else {
         curLvl = lvl;
 
@@ -73,20 +93,45 @@
         lvls = res;
         curLvl = -1;
         nextLvl();
+        //if (Args.get_worker_id() === "") {
+        //  curLvl = -1;
+        //  nextLvl();
+        //} else {
+        //  rpc.call('App.getMyLastLvl', [Args.get_worker_id(), lvlset], function(myLastLvl) {
+        //    if (myLastLvl === "None")
+        //      window.location.replace('tutorial_patterns.html' + window.location.search);
+        //    curLvl = lvls.indexOf(myLastLvl);
+        //    nextLvl();
+        //  }, log);
+        //}
       }, log)
     }
 
-    function doneScreen() {
-      //loadLvlSet("test-benchmarks")
-      var lvlStr = (curLvl == lvls.length ? "all" : "" + curLvl + "/" + lvls.length)
-      $(".overlay").html("<h1 class='good'> Good job! You finished " + lvlStr +
-        " levels! <br> Your score is: " + gameLogic.score  + "!</h1><br>" +
-        "<h2> Please submit the screencast of your work! </h2>"
-      );
-      $(".overlay").fadeIn(1000);
-      $(".overlay").click(function() {
-        window.location.replace('survey.html' + window.location.search);
-      });
+    function doneScreen(alldone) {
+      let assignment_id = Args.get_assignment_id();
+      if (assignment_id == "ASSIGNMENT_ID_NOT_AVAILABLE") {
+          $("#done-screen").html("<h2 class='text-center'><b>You are previewing the HIT. To perform this HIT, please accept it.</b></h2>");
+          $("#done-screen").fadeIn(1000);
+          return;
+      }
+      if (assignment_id !== undefined) {
+          document.getElementById("assignment-id-in-form").value = assignment_id;
+      }
+      let turk_submit_to = Args.get_turk_submit_to();
+      if (turk_submit_to !== undefined) {
+          document.getElementById("turk-form").action = turk_submit_to + "/mturk/externalSubmit";
+      }
+      msg = "Good job! You finished " + numLvlPassed + " level(s)! Your score is: " + gameLogic.score  + "!";
+      if (alldone) {
+         msg = "There are no more levels to play at this moment.<br>" + msg
+      }
+      $("#done-screen").prepend("<h2 class='good text-center'>" + msg + "</h2>");
+      logEvent("GameDone", [numLvlPassed]);
+  
+      $("#done-screen").fadeIn(1000);
+      //$("#done-screen").click(function() {
+      //  window.location.replace('survey.html' + window.location.search);
+      //});
     }
 
     function labelRemover(lbl) {
@@ -109,6 +154,11 @@
     ]
 
     $(document).ready(function() {
+      if (Args.get_assignment_id() == "ASSIGNMENT_ID_NOT_AVAILABLE") {
+        s = "This is just a preview of the HIT. The work you do here will have to be redone when you accept the HIT."
+        $("#hit-preview-warning").html("<p class='lead'><b>" + s + "</b></p>");
+      }
+
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
       progW = new ProgressWindow($('#discovered-invariants-div'));
       scoreW = new ScoreWindow($('#score-div'));
@@ -120,19 +170,34 @@
       $('#next-lvl').hide();
 
       gameLogic.onLvlPassed(function() {
-        if (curLvl < lvls.length - 1) {
-          $("#lvl_dots").before('<li class="level pending">' + 
-            '<a class="loadLvl" id="lvl_' + (curLvl + 1) + '" >' + (curLvl + 1) + '</a>' + '</li>');
+        //rpc.call('App.storeMyLastLvl', [Args.get_worker_id(), curLvlSet, lvls[curLvl]], function(res) {});
+
+        //if (curLvl == lvls.length - 1) {
+        //  $('#next-lvl').html('Finish');
+        //}
+        //$('#next-lvl').show();
+        //curL = label({ of: $('#next-lvl'), at: "right center"},
+        //      "Click Here! (50c bonus!)", "left")
+
+        numLvlPassed = numLvlPassed + 1;
+        function plural(n,s) { return n == 1? s : s + "s" }
+        if (numLvlPassed >= 2) {
+          s = "You can continue or quit.<br>Each additional level you pass will give you a new $0.50 bonus!";
+          $("#next-or-quit-additional-text").html("<h2>"+s+"</h2>");
+          $("#quit-overlay").show();
+        } else {
+          left = 2 - numLvlPassed;
+          s = "Please try to finish at least " + left + plural(left," more level") + "!"
+          $("#next-or-quit-additional-text").html("<h2>"+s+"</h2>")
+          $("#quit-overlay").hide();
         }
+        $("#next-or-quit-screen").fadeIn(1000);
 
-        if (curLvl == lvls.length - 1) {
-          $('#next-lvl').html('Finish');
+      });
 
-        }
-
-        $('#next-lvl').show();
-        curL = label({ of: $('#next-lvl'), at: "right center"},
-              "Click Here! (50c bonus!)", "left")
+      $('#next-level-overlay').click(function() {
+        $("#next-or-quit-screen").fadeOut(1000);
+        nextLvl();
       });
 
       $('#next-lvl').click(function() {
@@ -189,7 +254,8 @@
         }(ops[i][1]))
       }
 
-      $('.btn-quit').click(doneScreen);
+      $('#quit').click(function () { doneScreen(false) });
+      $('#quit-overlay').click(function() { doneScreen(false) });
 
       $('#replay').click(function() {
         var win = window.open('tutorial_patterns.html', '_blank');
@@ -202,8 +268,10 @@
         }
       })
 
-      //loadLvlSet("pruned-intro-benchmarks");
-      loadLvlSet("desugared-boogie-benchmarks");
+      if (dynamicLvlOrder)
+        nextLvl()
+      else
+        loadLvlSet("desugared-boogie-benchmarks");
 
       gameLogic.onLvlLoaded(function () {
         curScript = new Script(tutorialScript)
@@ -222,6 +290,8 @@
 </head>
 <body>
   <div class='container'>
+    <div class='row' id='hit-preview-warning'>
+    </div>
     <div class='row'>
       <div class='col-md-1' id='dummy'>
       </div>
@@ -377,11 +447,75 @@
         <div class='row good centered positioned' id='discovered-invariants-div'>
         </div>
         <div class='row ' id='quit-div'>
-          <button id='next-lvl' class='btn-quit'>Quit</button>
+          <button id='quit' class='btn-quit'>Quit</button>
         </div>
       </div>
     </div>
   </div>
-  <div class='overlay text-center' style='display: none;'></div> 
+  <div class='overlay text-center' style='display: none;' id='next-or-quit-screen'>
+    <h1 class='good'> Good job, you finished another level!</h1>
+    <div id='next-or-quit-additional-text'></div>
+    <button id='next-level-overlay' class='btn-next'>Next Level</button>
+    <button id='quit-overlay' class='btn-next'>Quit</button>
+  </div> 
+  <div class='overlay' style='display: none;' id='done-screen'>
+    <div class="container">
+      <h2 class='text-center'>Please answer a few questions and click on Finish HIT below</h2>
+      <form action="" id="turk-form">
+        <label class="statement">This sesssion was fun to play.</label>
+        <ul class='likert'>
+          <li>
+            <input type="radio" name="fun" value="5">
+            <label>Strongly agree</label>
+          </li>
+          <li>
+            <input type="radio" name="fun" value="4">
+            <label>Agree</label>
+          </li>
+          <li>
+            <input type="radio" name="fun" value="3">
+            <label>Neutral</label>
+          </li>
+          <li>
+            <input type="radio" name="fun" value="2">
+            <label>Disagree</label>
+          </li>
+          <li>
+            <input type="radio" name="fun" value="1">
+            <label>Strongly disagree</label>
+          </li>
+        </ul>
+        <label class="statement">This session was challenging.</label>
+        <ul class='likert'>
+          <li>
+            <input type="radio" name="challenging" value="5">
+            <label>Strongly agree</label>
+          </li>
+          <li>
+            <input type="radio" name="challenging" value="4">
+            <label>Agree</label>
+          </li>
+          <li>
+            <input type="radio" name="challenging" value="3">
+            <label>Neutral</label>
+          </li>
+          <li>
+            <input type="radio" name="challenging" value="2">
+            <label>Disagree</label>
+          </li>
+          <li>
+            <input type="radio" name="challenging" value="1">
+            <label>Strongly disagree</label>
+          </li>
+        </ul>
+        <fieldset class="form-group">
+          <label for="likes_input">Any comments? Likes, Dislikes?</label>
+          <textarea name="likes" class="form-control" rows="2" id="likes_input"></textarea>
+        </fieldset>
+        <input type="hidden" name="assignmentId" id="assignment-id-in-form" value="">
+        <button type="submit" class="btn-next">Finish HIT</button>
+      </form>
+    </div>
+  </div> 
 </body>
 </html>
