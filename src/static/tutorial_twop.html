@@ -293,7 +293,7 @@
       { setup: function (cs) {
                 $('.overlay').html("<h1>Welcome to the <span class='good'>InvGen</span> Two-Player Tutorial!<br><br>You can press spacebar at any time <br>to proceed to the next step.</h1>")
                 $('.overlay').fadeIn(0, function () {
-                  cs.nextStepOnKeyOrTimeout(stepTimeout, ()=>0, 32)
+                  cs.nextStepOnKeyClickOrTimeout(stepTimeout, ()=>0, 32)
                 })
                }
       },
@@ -344,7 +344,7 @@
                               "This is Player 1's score",
                               "left")
                  $('body').focus();
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32);
                }
       },
       {
@@ -353,7 +353,7 @@
                             "The invariants Player 1<br>finds will appear here",
                             "left")
                  $('body').focus();
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32);
                }
       },
       {
@@ -362,7 +362,7 @@
                             "This is Player 2's score",
                             "left")
                  $('body').focus();
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32);
                }
       },
       {
@@ -371,7 +371,7 @@
                             "The invariants Player 2<br>finds will appear here",
                             "left")
                  $('body').focus();
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32);
                }
       },
       {
@@ -386,7 +386,7 @@
                                "Click here to pass up your turn if you're stuck",
                                "left");
                 }
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32);
                }
       },
       {
@@ -394,7 +394,7 @@
                   curL = label($('#sticky'), "", "up")
                   curL1 = label($('#pnum'), "", "up")
                   curL2 = label($('#data-display'), "Red color indicates that<br>it's Player 1's turn", "up")
-                  cs.nextStepOnKeyOrTimeout(stepTimeout, () => {
+                  cs.nextStepOnKeyClickOrTimeout(stepTimeout, () => {
                     removeLabel(curL); removeLabel(curL1); removeLabel(curL2); }, 32);
         }
       },
@@ -402,7 +402,7 @@
       {
         setup: function (cs) {
                   $('#btn-switch2').click();
-                  cs.nextStepOnKeyOrTimeout(10, () => {}, 32);
+                  cs.nextStepOnKeyClickOrTimeout(10, () => {}, 32);
         }
       },
 
@@ -417,13 +417,13 @@
                  traceW.okToSubmit = true;
                  traceW.msg("Press Enter...")
                  curL = label($("#formula-entry"), "Press enter...", "left")
-                 cs.nextStepOnKeyOrTimeout(-1, labelRemover(curL), 13)
+                 cs.nextStepOnKeyClickOrTimeout(-1, labelRemover(curL), 13)
                }
       },
 
       { setup: function (cs) {
                  curL = label($("#score-div"), "Player 1 gets 8 points<br>for the invariant n>i", "left")
-                 cs.nextStepOnKeyOrTimeout(5000, () => {removeLabel(curL); }, 0)
+                 cs.nextStepOnKeyClickOrTimeout(5000, () => {removeLabel(curL); }, 0)
                }
       },
 
@@ -431,7 +431,7 @@
                     curL = label($('#sticky2'), "", "up")
                     curL1 = label($('#pnum'), "", "up")
                     curL2 = label($('#data-display2'), "Blue color indicates that<br>it's Player 2's turn", "up")
-                    cs.nextStepOnKeyOrTimeout(stepTimeout, () => {
+                    cs.nextStepOnKeyClickOrTimeout(stepTimeout, () => {
                       removeLabel(curL); removeLabel(curL1); removeLabel(curL2); }, 32);
                   }
       },
@@ -449,18 +449,18 @@
                  traceW2.okToSubmit = true;
                  traceW2.msg("Press Enter...")
                  curL = label($("#formula-entry2"), "Press enter...", "left")
-                 cs.nextStepOnKeyOrTimeout(-1, labelRemover(curL), 13)
+                 cs.nextStepOnKeyClickOrTimeout(-1, labelRemover(curL), 13)
                }
       },
 
       { setup: function (cs) {
-                 cs.nextStepOnKeyOrTimeout(1000, labelRemover(curL), 0)
+                 cs.nextStepOnKeyClickOrTimeout(1000, labelRemover(curL), 0)
                }
       },
 
       { setup: function (cs) {
                  curL = label($("#score-div2"), "Player 2 gets 4 points<br>for the invariant n=i+2", "left")
-                 cs.nextStepOnKeyOrTimeout(-1, labelRemover(curL), 32)
+                 cs.nextStepOnKeyClickOrTimeout(-1, labelRemover(curL), 32)
                }
       },
 
@@ -468,14 +468,14 @@
                  showImplication(2, $('#good_20'), $('#good_10'));
                  curL = label($("#good_20"), "This invariant implies<br>Player 1's invariant", "left")
                  curL1 = label($("#good_10"), "", "left")
-                 cs.nextStepOnKeyOrTimeout(-1, () => {removeLabel(curL); removeLabel(curL1);}, 32)
+                 cs.nextStepOnKeyClickOrTimeout(-1, () => {removeLabel(curL); removeLabel(curL1);}, 32)
                }
       },
 
       { setup: function (cs) {
                  curL = label($("#good_20"), "Since n = i + 2,<br>n is certainly greater than i", "left")
                  curL1 = label($("#good_10"), "", "left")
-                 cs.nextStepOnKeyOrTimeout(-1, () => {removeLabel(curL); removeLabel(curL1);}, 32)
+                 cs.nextStepOnKeyClickOrTimeout(-1, () => {removeLabel(curL); removeLabel(curL1);}, 32)
                }
       },
 
@@ -485,21 +485,21 @@
                  allowBonus = true;
                  allowSwitch = true;
                  curL = label($("#score-div2"), "&nbsp;&nbsp;So Player 2 gets 5 bonus points<br>for finding a stronger invariant", "left")
-                 cs.nextStepOnKeyOrTimeout(-1, labelRemover(curL), 32)
+                 cs.nextStepOnKeyClickOrTimeout(-1, labelRemover(curL), 32)
                }
       },
 
       { setup: function (cs) {
                  $(".curved_arrow").fadeOut(1000);
                  $("#btn-switch2").click();
-                 cs.nextStepOnKeyOrTimeout(2000, () => {}, 32)
+                 cs.nextStepOnKeyClickOrTimeout(2000, () => {}, 32)
                }
       },
 
       { setup: function (cs) {
                   $('.overlay').html("<h1>Your goal is to win the game<br>by scoring more than your opponent.<br><br></h1><h2>Remember that you get bonus points<br>if your invariants are stronger than your opponent's.</h2>")
                   $('.overlay').fadeIn(0, function () {
-                    cs.nextStepOnKeyOrTimeout(stepTimeout, ()=>0, 32)
+                    cs.nextStepOnKeyClickOrTimeout(stepTimeout, ()=>0, 32)
                   })
                }
       },
@@ -511,7 +511,7 @@
             allowBonus = true;
             $('#next-level').show();
             curL = label($("#next-level"), "Proceed to the game", "up")
-            cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+            cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
           });
         }
       },

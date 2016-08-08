@@ -8,15 +8,15 @@ from datetime import *
 from mturk_util import error, connect, mkParser
 
 
-p = mkParser("Dispose of a HIT")
-p.add_argument('--hitids', nargs='+', type=str, help='IDs of the HITs to dispose.')
+p = mkParser("Disable HIT")
+p.add_argument('--hitids', nargs='+', type=str, help='IDs of the HITs to disable.')
 args = p.parse_args()
 
 try:
     mc = connect(args.credentials_file, args.sandbox)
     for hitid in args.hitids:
-        print "Disposing", hitid
-        r = mc.dispose_hit(hitid)
+        print "Disabling", hitid
+        r = mc.disable_hit(hitid)
 except Exception,e:
     print_exc()
     error("Failed...")

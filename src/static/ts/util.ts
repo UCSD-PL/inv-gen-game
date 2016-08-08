@@ -238,15 +238,16 @@ class Script {
     this.steps[this.step].setup(this);
   }
 
-  nextStepOnKeyOrTimeout(timeout: number,
+  nextStepOnKeyClickOrTimeout(timeout: number,
     destructor: () => any,
     keyCode: number = null) {
     let s = this;
     if (timeout > 0) {
       this.timeoutId = setTimeout(function() {
-        destructor();
         $("body").off("keyup");
         $("body").off("keypress");
+        $("body").off("click");
+        destructor();
         s.nextStep();
       }, timeout);
     }
@@ -256,6 +257,7 @@ class Script {
         clearTimeout(s.timeoutId);
       $("body").off("keyup");
       $("body").off("keypress");
+      $("body").off("click");
       destructor();
     };
 
@@ -268,16 +270,26 @@ class Script {
 
     $("body").keyup(function(ev) {
       if (keyCode === null || ev.which === keyCode) {
+        if (timeout > 0)
+          clearTimeout(s.timeoutId);
         $("body").off("keyup");
         $("body").off("keypress");
+        $("body").off("click");
         destructor();
-        if (timeout > 0) {
-          clearTimeout(s.timeoutId);
-        }
         s.nextStep();
         ev.stopPropagation();
         return false;
       }
+    });
+
+    $("body").click(function(ev) { 
+      if (timeout > 0)
+        clearTimeout(s.timeoutId);
+      $("body").off("keyup");
+      $("body").off("keypress");
+      $("body").off("click");
+      destructor();
+      s.nextStep();
     });
   }
   cancel(): void {

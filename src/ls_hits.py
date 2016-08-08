@@ -21,8 +21,7 @@ try:
     for hit in r:
         print hit.HITId, hit.CreationTime, hit.Expiration, hit.HITReviewStatus, \
             hit.HITStatus, hit.NumberOfAssignmentsAvailable, " ",\
-            hit.NumberOfAssignmentsCompleted,\
-            hit.Description
+            hit.NumberOfAssignmentsCompleted#, hit.Description
 except Exception,e:
     print_exc()
     error("Failed...")

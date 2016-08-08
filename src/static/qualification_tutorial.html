@@ -116,7 +116,7 @@
       { setup: function (cs) {
                   $('.overlay').html("<h1>Welcome to the <span class='good'>InvGen</span> Tutorial!<br> You can press spacebar at any time <br>to proceed to the next step.</h1>")
                   $('.overlay').fadeIn(fadeDelay, function () {
-                    cs.nextStepOnKeyOrTimeout(stepTimeout, ()=>0, 32)
+                    cs.nextStepOnKeyClickOrTimeout(stepTimeout, ()=>0, 32)
                   })
                }
       },
@@ -161,7 +161,7 @@
       { setup: function (cs) {
                  curL = label({ of: "#2 .temp_expr_eval", at: "left+10 bottom" },
                               "3+4=7! (Press spacebar...)", "up")
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
@@ -174,7 +174,7 @@
                               "Column contains values of i! (Spacebar to continue...)", "up")
                  curL1 = label({ of: $("#lvl_table > thead > tr > th:nth-child(1)"), at: "left center" },
                               "", "right")
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, () => {
+                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, () => {
                    removeLabel(curL); removeLabel(curL1);
                  }, 32)
                }
@@ -189,20 +189,20 @@
                               "Now you get i+1 in this column!", "up")
                  curL1 = label({ of: $("#lvl_table > thead > tr > th:nth-child(1)"), at: "left center" },
                               "", "right")
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, () => {
+                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, () => {
                    removeLabel(curL); removeLabel(curL1);
                  }, 32)
                }
       },
       { setup: function (cs) {
                  curL = label($("#formula-entry"), "This box works like a calculator!", "left")
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
                  curL = label({ of: "#2 .temp_expr_eval", at: "left+10 bottom" },
                               "And the results appear here", "up")
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
@@ -212,18 +212,18 @@
       },
       { setup: function (cs) {
                  curL = label($("#0 .temp_expr_eval"), "Red means false.", "left")
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
                  curL = label($("#1 .temp_expr_eval"), "Green means true.", "left")
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
                  curL = label($("#0 .temp_expr_eval"),
                               "This row is part green, part red<br>Lets fix that.", "left")
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
@@ -234,20 +234,20 @@
       { setup: function (cs) {
                  curL = label($("#0 .temp_expr_eval"),
                               "Hurray! Each row is a single color now!!", "left")
-                 cs.nextStepOnKeyOrTimeout(-1, labelRemover(curL), 32)
+                 cs.nextStepOnKeyClickOrTimeout(-1, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
                  curL = label($("#0 .temp_expr_eval"), "This is your goal: <br>" +
                     "to find an expression, <br> such that each row is a single color.",
                     "left")
-                 cs.nextStepOnKeyOrTimeout(-1, labelRemover(curL), 32)
+                 cs.nextStepOnKeyClickOrTimeout(-1, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
                  tracesW.msg("Press Enter...")
                  curL = label($("#formula-entry"), "Press enter...", "left")
-                 cs.nextStepOnKeyOrTimeout(-1, labelRemover(curL), 13)
+                 cs.nextStepOnKeyClickOrTimeout(-1, labelRemover(curL), 13)
                }
       },
       { setup: function (cs) {
@@ -256,7 +256,7 @@
                    curL = label({ of: $("#score-div-row"), at: "left+10 bottom" },
                                 "You get points for each <br> accepted expression! Sweet!", "up");
                    scoreW.add(1);
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+                   cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
                   })
                }
       },
@@ -266,7 +266,7 @@
                    addSuccessfulInvariant(inv);
                    curL = label({ of: $("#good_0"), at: "left+10 bottom" },
                                 "Your accepted expressions <br> appear here", "up");
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+                   cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
                  })
                }
       },
@@ -280,7 +280,7 @@
                  $('#errormsg').html("<div class='error'> Duplicate Expression! </div>");
                  curL = label({ of: $("#good_0"), at: "left+10 bottom" },
                                 "Can't use same expression twice", "up")
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
@@ -291,7 +291,7 @@
       { setup: function (cs) {
                  curL = label({ of: $("#good_0"), at: "left+10 bottom" },
                               "Can't use a weaker<br> expression than <br> found one either.", "up");
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
@@ -305,7 +305,7 @@
                  $('#sticky').fadeIn(fadeDelay, () => {
                    curL = label({ of: $("#sticky"), at: "center bottom" },
                                 "Some expressions<br>give you more points!", "up");
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+                   cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
                  })
                }
       },
@@ -317,7 +317,7 @@
       { setup: function (cs) {
                  tracesW.msg("Press Enter...")
                  curL = label($("#formula-entry"), "Press enter...", "left")
-                 cs.nextStepOnKeyOrTimeout(-1, labelRemover(curL), 13)
+                 cs.nextStepOnKeyClickOrTimeout(-1, labelRemover(curL), 13)
                }
       },
       { setup: function (cs) {
@@ -325,7 +325,7 @@
                  curL = label({ of: $("#sticky"), at: "center bottom" },
                               "Double added points <br> since you used only <br> variables", "up")
                  pwups[0].highlight(() => 
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+                   cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
                  );
                }
       },
@@ -334,7 +334,7 @@
                  curL = label({ of: $("#sticky"), at: "center bottom" },
                               "Double added points <br> since you used <br> inequality", "up")
                  pwups[1].highlight(() => 
-                   cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+                   cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
                  );
                }
       },
@@ -344,7 +344,7 @@
                  scoreW.add(4)
                  var inv = invPP(tracesW.curExp().trim());
                  addSuccessfulInvariant(inv);
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
@@ -355,14 +355,14 @@
                  stickyW.setPowerups(pwups);
                  curL = label({ of: $("#sticky"), at: "center bottom" },
                               "Bonuses change<br>based on what you try.", "up");
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       // Tutorial Levels for UI-----------------------------------------------
       { setup: function (cs) {
                   $('.overlay').html("<h1>Lets warm up with a couple of levels!</h1>")
                   $('.overlay').fadeIn(fadeDelay, function () {
-                    cs.nextStepOnKeyOrTimeout(stepTimeout, ()=>0, 32)
+                    cs.nextStepOnKeyClickOrTimeout(stepTimeout, ()=>0, 32)
                   })
                }
       },
@@ -386,7 +386,7 @@
                  $('#container').click()
                  curL = label({ of: $("#sticky"), at: "left+10 bottom" },
                               "Hover over each bonus for details!", "up");
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32)
+                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {

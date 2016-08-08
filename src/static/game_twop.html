@@ -473,7 +473,7 @@
     var tutorialScript = [
       {
         setup: function (cs) {
-                 cs.nextStepOnKeyOrTimeout(1000, () => {}, 0);
+                 cs.nextStepOnKeyClickOrTimeout(1000, () => {}, 0);
                }
       },
       {
@@ -482,7 +482,7 @@
                             "Click here if you need any help later",
                             "right")
                  $('body').focus();
-                 cs.nextStepOnKeyOrTimeout(stepTimeout, labelRemover(curL), 32);
+                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32);
                }
       },
       { setup: function (cs) {
