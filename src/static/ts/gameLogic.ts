@@ -786,7 +786,7 @@ class PatternGameLogic extends BaseGameLogic {
     this.progressW.clearMarks();
 
     let inv = invPP(this.tracesW.curExp().trim());
-    let jsInv = invToJS(inv)
+    let desugaredInv = invToJS(inv)
     let parsedInv: ESTree.Node = null;
 
     this.userInputCb(inv);
@@ -797,7 +797,7 @@ class PatternGameLogic extends BaseGameLogic {
     }
 
     try {
-      parsedInv = esprima.parse(jsInv);
+      parsedInv = esprima.parse(desugaredInv);
     } catch (err) {
       //this.tracesW.delayedError(inv + " is not a valid expression.");
       return;
@@ -809,12 +809,15 @@ class PatternGameLogic extends BaseGameLogic {
       return;
     }
 
+    let jsInv = esprimaToStr(parsedInv)
+    let jsEvalInv = esprimaToEvalStr(parsedInv)
+
     try {
       if (jsInv.search("\\^") >= 0) {
         throw new ImmediateErrorException("UnsupportedError", "^ not supported. Try * instead.");
       }
 
-      let pos_res = invEval(jsInv, this.curLvl.variables, this.curLvl.data[0])
+      let pos_res = invEval(jsEvalInv, this.curLvl.variables, this.curLvl.data[0])
       let res: [any[], any[], [any, any][]] = [pos_res, [], [] ]
       this.tracesW.evalResult({ data: res })
 

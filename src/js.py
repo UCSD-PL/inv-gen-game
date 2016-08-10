@@ -98,6 +98,7 @@ def esprimaToZ3Expr(astn, typeEnv):
       return {
         '&&': And,
         '||': Or,
+        '->': Implies,
       }[astn["operator"]](ln, rn)
     except:
       raise Exception("Unkown logical expression " + str(astn))
@@ -105,11 +106,10 @@ def esprimaToZ3Expr(astn, typeEnv):
     return Int(astn["name"]);
   if (astn["type"] == "Literal"):
     if (astn["raw"] in ["true", "false"]):
-      return astn["raw"] == "true"
+      return Or(True) if (astn["raw"] == "true") else And(False);
     else:
       return jsNumToZ3(astn["raw"])
   else:
-    print (astn["type"])
     raise Exception("Don't know how to parse " + str(astn))
 
 def esprimaToBoogieExprAst(astn, typeEnv):
@@ -153,6 +153,7 @@ def esprimaToBoogieExprAst(astn, typeEnv):
       op = {
         '&&': '&&',
         '||': '||',
+        '->': '=>',
       }
       return AstBinExpr(ln, op[astn['operator']], rn)
     except:

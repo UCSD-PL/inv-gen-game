@@ -9,6 +9,7 @@ function invPP(inv: string): string {
 
 function invToHTML(inv: invariantT): string{
   return esprimaToStr(inv)
+    .replace(/->/g, "&rArr;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/<=/g, "&lt;=")
@@ -23,5 +24,6 @@ function htmlToInv(html: string): string {
     .replace(/&gt;/g, ">")
     .replace(/<==/g, "<=")
     .replace(/>==/g, ">=")
+    .replace(/==>/g, "->")
     .replace(/&amp;&amp;/g, "&&");
 }
