@@ -27,12 +27,21 @@ function interpretError(err: Error): (string|Error) {
 
 function invToJS(inv:string): string {
   return inv.replace(/[^<>]=[^>]/g, function (v) { return v[0] + '==' + v[2]; })
+            .replace(/=>/g, "->")
 }
 
 function holds(inv:string, variables: string[], data: any[][]): boolean {
   let res = invEval(inv, variables, data);
   return evalResultBool(res) &&
          res.filter((x)=>!(x === true)).length == 0;
+}
+
+function check_implication(arg1: any, arg2: any) {
+  if (typeof(arg1) != "boolean" || typeof(arg2) != "boolean") {
+    throw new InvException("IMPLICATION_TYPES", "Implication expects 2 booleans, not " + arg1 + " and " + arg2);
+  }
+
+  return (!(<boolean>arg1) || (<boolean>arg2));
 }
 
 function invEval(inv:string, variables: string[], data: any[][]): any[] {
@@ -284,6 +293,43 @@ function esprimaToStr(nd: ESTree.Node): string {
     if (nd.type == "LogicalExpression") {
       let le = <ESTree.LogicalExpression>nd;
       return "(" + args[0] + le.operator + args[1] + ")"
+    }
+
+    if (nd.type == "UnaryExpression") {
+      let ue = <ESTree.UnaryExpression>nd;
+      let s = args[0]
+      if (ue.operator == '-' && s[0] == '-')
+        s = '(' + s + ')'
+      return "(" + ue.operator + s + ")"
+    }
+
+    if (nd.type == "Literal") {
+      return "" + (<ESTree.Literal>nd).value
+    }
+
+    if (nd.type == "Identifier") {
+      return (<ESTree.Identifier>nd).name
+    }
+  })
+}
+
+function esprimaToEvalStr(nd: ESTree.Node): string {
+  return estree_reduce<string>(nd,  (nd: ESTree.Node, args: string[]): string => {
+    if (nd.type == "Program") {
+      return args[0]
+    }
+
+    if (nd.type == "BinaryExpression") {
+      let be = <ESTree.BinaryExpression>nd;
+      return "(" + args[0] + be.operator + args[1] + ")"
+    }
+
+    if (nd.type == "LogicalExpression") {
+      let le = <ESTree.LogicalExpression>nd;
+      if (le.operator == "->")
+        return "check_implication(" + args[0] + "," + args[1] + ")";
+      else
+        return "(" + args[0] + le.operator + args[1] + ")"
     }
 
     if (nd.type == "UnaryExpression") {

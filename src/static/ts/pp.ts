@@ -8,9 +8,10 @@ function invPP(inv: string) : string {
 
 function invToHTML(inv: invariantT): string{
   return esprimaToStr(inv)
+    .replace(/->/g, "&rArr;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/<=/g, "&lt=;")
     .replace(/>=/g, "&gt=;")
-    .replace(/&&/g, "&amp;&amp;")
+    .replace(/&&/g, "&amp;&amp;");
 }
