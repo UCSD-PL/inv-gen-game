@@ -26,7 +26,7 @@ function interpretError(err: Error): (string|Error) {
 }
 
 function invToJS(inv: string): string {
-  return inv.replace(/[^<>]=[^>]/g, function(v) { return v[0] + "==" + v[2]; });
+  return inv.replace(/[^<>]=[^>]/g, function(v) { return v[0] + "==" + v[2]; })
             .replace(/=>/g, "->")
 }
 
