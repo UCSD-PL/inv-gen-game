@@ -188,11 +188,11 @@ class StaticGameLogic extends BaseGameLogic implements IGameLogic {
     let inv = invPP(this.tracesW.curExp().trim());
     this.userInputCb(inv);
 
-    let jsInv = invToJS(inv)
+    let desugaredInv = invToJS(inv)
     let parsedInv:invariantT = null
 
     try {
-      parsedInv = esprima.parse(jsInv);
+      parsedInv = esprima.parse(desugaredInv);
     } catch (err) {
       this.tracesW.delayedError(inv + " is not a valid expression.");
       return;
@@ -203,8 +203,11 @@ class StaticGameLogic extends BaseGameLogic implements IGameLogic {
       return;
     }
 
+    var jsInv = esprimaToStr(parsedInv);
+    var jsEvalInv = esprimaToEvalStr(parsedInv);
+
     try {
-      let pos_res = invEval(jsInv, this.curLvl.variables, this.curLvl.data[0]);
+      let pos_res = invEval(jsEvalInv, this.curLvl.variables, this.curLvl.data[0]);
       let res: [any[], any[], [any, any][]] = [pos_res, [], []];
       this.tracesW.evalResult({ data: res });
 
@@ -346,16 +349,20 @@ class CounterexampleGameLogic extends BaseGameLogic implements IDynGameLogic {
     this.progressW.clearMarks();
 
     let inv = invPP(this.tracesW.curExp().trim());
-    let jsInv = invToJS(inv);
+    let desugaredInv = invToJS(inv)
+    let parsedInv: ESTree.Node = null;
 
     this.userInputCb(inv);
 
     try {
-      let parsedInv = esprima.parse(jsInv);
+      parsedInv = esprima.parse(desugaredInv);
     } catch (err) {
       this.tracesW.delayedError(inv + " is not a valid expression.");
       return;
     }
+
+    var jsInv = esprimaToStr(parsedInv);
+    var jsEvalInv = esprimaToEvalStr(parsedInv);
 
     if (inv.length === 0) {
       this.tracesW.evalResult({ clear: true });
@@ -363,9 +370,9 @@ class CounterexampleGameLogic extends BaseGameLogic implements IDynGameLogic {
     }
 
     try {
-      let pos_res = invEval(jsInv, this.curLvl.variables, this.curLvl.data[0]);
-      let neg_res = invEval(jsInv, this.curLvl.variables, this.curLvl.data[1]);
-      let raw_ind_res = invEval(jsInv, this.curLvl.variables, this.curLvl.data[2]);
+      let pos_res = invEval(jsEvalInv, this.curLvl.variables, this.curLvl.data[0]);
+      let neg_res = invEval(jsEvalInv, this.curLvl.variables, this.curLvl.data[1]);
+      let raw_ind_res = invEval(jsEvalInv, this.curLvl.variables, this.curLvl.data[2]);
 
       // Pair the inductive results
       let ind_res = zip(raw_ind_res.filter((_, i) => i % 2 === 0), raw_ind_res.filter((_, i) => i % 2 === 1));
@@ -375,7 +382,7 @@ class CounterexampleGameLogic extends BaseGameLogic implements IDynGameLogic {
       if (!evalResultBool(res))
         return;
 
-      simplify(jsInv, (simplInv: ESTree.Node) => { 
+      simplify(jsInv, (simplInv: ESTree.Node) => {
         let ui: UserInvariant = new UserInvariant(inv, jsInv, simplInv)
 
         let redundant = this.progressW.contains(ui.id)
@@ -546,12 +553,13 @@ class MultiroundGameLogic extends BaseGameLogic {
     this.progressW.clearMarks();
 
     let inv = invPP(this.tracesW.curExp().trim());
-    let jsInv = invToJS(inv);
+    let desugaredInv = invToJS(inv);
+    let parsedInv: ESTree.Node = null;
 
     this.userInputCb(inv);
 
     try {
-      let parsedInv = esprima.parse(jsInv);
+      parsedInv = esprima.parse(desugaredInv);
     } catch (err) {
       this.tracesW.delayedError(inv + " is not a valid expression.");
       return;
@@ -562,15 +570,18 @@ class MultiroundGameLogic extends BaseGameLogic {
       return;
     }
 
+    var jsInv = esprimaToStr(parsedInv);
+    var jsEvalInv = esprimaToEvalStr(parsedInv);
+
     try {
-      let pos_res = invEval(jsInv, this.curLvl.variables, this.curLvl.data[0]);
+      let pos_res = invEval(jsEvalInv, this.curLvl.variables, this.curLvl.data[0]);
       let res: [any[], any[], [any, any][]] = [pos_res, [], []];
       this.tracesW.evalResult({ data: res });
 
       if (!evalResultBool(res))
         return;
 
-      simplify(jsInv, (simplInv: ESTree.Node) => { 
+      simplify(jsInv, (simplInv: ESTree.Node) => {
         let ui: UserInvariant = new UserInvariant(inv, jsInv, simplInv)
 
         let redundant = this.progressW.contains(ui.id)
@@ -1105,12 +1116,13 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
     progW2.clearMarks();
 
     let inv = invPP(this.tracesW.curExp().trim());
-    let jsInv = invToJS(inv);
+    let desugaredInv = invToJS(inv);
+    let parsedInv: ESTree.Node = null;
 
     this.userInputCb(inv);
 
     try {
-      let parsedInv = esprima.parse(jsInv);
+      parsedInv = esprima.parse(desugaredInv);
     } catch (err) {
       this.tracesW.delayedError(inv + " is not a valid expression.");
       return;
@@ -1121,9 +1133,12 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
       return;
     }
 
+    let jsInv = esprimaToStr(parsedInv)
+    let jsEvalInv = esprimaToEvalStr(parsedInv)
+
     try {
       let doProceed = true;
-      let pos_res = invEval(jsInv, this.curLvl.variables, this.curLvl.data[0]);
+      let pos_res = invEval(jsEvalInv, this.curLvl.variables, this.curLvl.data[0]);
       let res: [any[], any[], [any, any][]] = [pos_res, [], []];
       this.tracesW.evalResult({ data: res });
 
