@@ -1,4 +1,5 @@
 var notDefRe = /(.*) is not defined/;
+type VarValMapT = { [varName: string] : any };
 
 class InvException extends Error{
   constructor(public name: string, public message: string) { super(message); }
@@ -30,7 +31,7 @@ function invToJS(inv: string): string {
             .replace(/=>/g, "->")
 }
 
-function holds(inv:string, variables: string[], data: any[][]): boolean {
+function holds(inv:invariantT, variables: string[], data: any[][]): boolean {
   let res = invEval(inv, variables, data);
   return evalResultBool(res) &&
          res.filter((x)=>!(x === true)).length == 0;
@@ -44,26 +45,17 @@ function check_implication(arg1: any, arg2: any) {
   return (!(<boolean>arg1) || (<boolean>arg2));
 }
 
-function invEval(inv:string, variables: string[], data: any[][]): any[] {
+function invEval(inv:invariantT, variables: string[], data: any[][]): any[] {
   // Sort variable names in order of decreasing length
-  let vars: [string, number][] = variables.map(function(val, ind, _) { return <[string, number]>[val, ind]; });
-  vars.sort(function(e1, e2) {
-    let s1 = e1[0], s2 = e2[0];
-    if (s1.length > s2.length) return -1;
-    if (s1.length < s2.length) return 1;
-    return 0;
-  });
-
+  let vars: [string, number][] = variables.map(
+    function(val, ind, _) { return <[string, number]>[val, ind]; });
   let holds_arr = [];
 
   // Do substitutions and eval
   for (var row in data) {
-    let s = inv
-    for (var v in vars) {
-      s = s.replace(new RegExp(vars[v][0], 'g'), '(' + data[row][vars[v][1]] + ')')
-    }
-    let res = eval(s);
-    holds_arr.push(res);
+    let valMap = vars.reduce((m, el) => { m[el[0]] = data[row][el[1]]; return m; }, <VarValMapT>{})
+    let instantiatedInv = instantiateVars(inv, valMap);
+    holds_arr.push(eval(esprimaToEvalStr(instantiatedInv)));
   }
   return holds_arr;
 }
@@ -246,6 +238,17 @@ function replace(inv: (string|ESTree.Node), replF): ESTree.Node {
       return replF(nd);
     }
   });
+}
+
+function instantiateVars(inv:invariantT, vals: VarValMapT): invariantT {
+  return replace(inv, (node) => {
+    if (node.type == "Identifier") {
+      let val: number = vals[node.name];
+      return { type: "Literal", raw: "" + val, value: val }
+    }
+
+    return node
+  })
 }
 
 function generalizeConsts(inv:string|ESTree.Node): [ESTree.Node, string[], string[]] {

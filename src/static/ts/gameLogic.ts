@@ -204,10 +204,9 @@ class StaticGameLogic extends BaseGameLogic implements IGameLogic {
     }
 
     var jsInv = esprimaToStr(parsedInv);
-    var jsEvalInv = esprimaToEvalStr(parsedInv);
 
     try {
-      let pos_res = invEval(jsEvalInv, this.curLvl.variables, this.curLvl.data[0]);
+      let pos_res = invEval(parsedInv, this.curLvl.variables, this.curLvl.data[0]);
       let res: [any[], any[], [any, any][]] = [pos_res, [], []];
       this.tracesW.evalResult({ data: res });
 
@@ -362,7 +361,6 @@ class CounterexampleGameLogic extends BaseGameLogic implements IDynGameLogic {
     }
 
     var jsInv = esprimaToStr(parsedInv);
-    var jsEvalInv = esprimaToEvalStr(parsedInv);
 
     if (inv.length === 0) {
       this.tracesW.evalResult({ clear: true });
@@ -370,9 +368,9 @@ class CounterexampleGameLogic extends BaseGameLogic implements IDynGameLogic {
     }
 
     try {
-      let pos_res = invEval(jsEvalInv, this.curLvl.variables, this.curLvl.data[0]);
-      let neg_res = invEval(jsEvalInv, this.curLvl.variables, this.curLvl.data[1]);
-      let raw_ind_res = invEval(jsEvalInv, this.curLvl.variables, this.curLvl.data[2]);
+      let pos_res = invEval(parsedInv, this.curLvl.variables, this.curLvl.data[0]);
+      let neg_res = invEval(parsedInv, this.curLvl.variables, this.curLvl.data[1]);
+      let raw_ind_res = invEval(parsedInv, this.curLvl.variables, this.curLvl.data[2]);
 
       // Pair the inductive results
       let ind_res = zip(raw_ind_res.filter((_, i) => i % 2 === 0), raw_ind_res.filter((_, i) => i % 2 === 1));
@@ -571,10 +569,9 @@ class MultiroundGameLogic extends BaseGameLogic {
     }
 
     var jsInv = esprimaToStr(parsedInv);
-    var jsEvalInv = esprimaToEvalStr(parsedInv);
 
     try {
-      let pos_res = invEval(jsEvalInv, this.curLvl.variables, this.curLvl.data[0]);
+      let pos_res = invEval(parsedInv, this.curLvl.variables, this.curLvl.data[0]);
       let res: [any[], any[], [any, any][]] = [pos_res, [], []];
       this.tracesW.evalResult({ data: res });
 
@@ -821,14 +818,13 @@ class PatternGameLogic extends BaseGameLogic {
     }
 
     let jsInv = esprimaToStr(parsedInv)
-    let jsEvalInv = esprimaToEvalStr(parsedInv)
 
     try {
       if (jsInv.search("\\^") >= 0) {
         throw new ImmediateErrorException("UnsupportedError", "^ not supported. Try * instead.");
       }
 
-      let pos_res = invEval(jsEvalInv, this.curLvl.variables, this.curLvl.data[0])
+      let pos_res = invEval(parsedInv, this.curLvl.variables, this.curLvl.data[0])
       let res: [any[], any[], [any, any][]] = [pos_res, [], [] ]
       this.tracesW.evalResult({ data: res })
 
@@ -1134,11 +1130,10 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
     }
 
     let jsInv = esprimaToStr(parsedInv)
-    let jsEvalInv = esprimaToEvalStr(parsedInv)
 
     try {
       let doProceed = true;
-      let pos_res = invEval(jsEvalInv, this.curLvl.variables, this.curLvl.data[0]);
+      let pos_res = invEval(parsedInv, this.curLvl.variables, this.curLvl.data[0]);
       let res: [any[], any[], [any, any][]] = [pos_res, [], []];
       this.tracesW.evalResult({ data: res });
 
