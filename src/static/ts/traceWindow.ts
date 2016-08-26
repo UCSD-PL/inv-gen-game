@@ -28,7 +28,7 @@ interface ITracesWindow {
   disableSubmit():  void;
 }
 
-abstract class BaseTracesWinow implements ITracesWindow {
+abstract class BaseTracesWindow implements ITracesWindow {
   ppInv: string = "";
   okToSubmit: boolean = false;
   data: dataT = [ [], [], [] ];
@@ -123,6 +123,26 @@ abstract class BaseTracesWinow implements ITracesWindow {
 
   enable(): void { $("#formula-entry").removeAttr("disabled"); }
 
+  highlightRect(x: number, y: number, w: number, h:number, border_style: string, backgroud_style: string) {
+    for (let i = x; i < x+w; i++) {
+      $("#" + y + "_" + i).css('border-top', border_style);
+      $("#" + (y+h-1) + "_" + i).css('border-bottom', border_style);
+    }
+    for (let j = y; j < y+h; j++) {
+      $("#" + j + "_" + x).css('border-left', border_style);
+      $("#" + j + "_" + (x+w-1)).css('border-right', border_style);
+    }
+    for (let i = x; i < x+w; i++) {
+      for (let j = y; j < y+h; j++) {
+        $("#" + j + "_"+ i).css('background-color', backgroud_style);
+      }
+    }
+  }
+
+  clearRect(x: number, y: number, w: number, h:number) {
+    this.highlightRect(x, y, w, h, "", "");
+  }
+
   private reflowCb(): void { das.reflowAll(); }
 
   protected setResultCell(row: JQuery, datum: any): void {
@@ -156,7 +176,7 @@ abstract class BaseTracesWinow implements ITracesWindow {
   }
 }
 
-class PositiveTracesWindow extends BaseTracesWinow {
+class PositiveTracesWindow extends BaseTracesWindow {
   addData(data: dataT): void {
     // For now support a single inductive counterexample
     assert (data[1].length === 0 && data[2].length === 0);
@@ -166,10 +186,11 @@ class PositiveTracesWindow extends BaseTracesWinow {
 
     for (let i in data[0]) {
       let data_id = this.data[0].length;
+      let col_id = 0;
       let curRow = $(
           "<tr class='traces-row' id='" + id + "'>" +
             data[0][i].map(el =>
-              "<td class='" + classes[0]  + "'>" + el + "</td>").join("") +
+              "<td class='" + classes[0]  + "' id='" + id + "_" + col_id++ + "'>" + el + "</td>").join("") +
             "<td class='temp_expr_eval'>&nbsp</td>" +
           "</tr>");
       this.data[0].push(data[0][i]);
@@ -200,7 +221,7 @@ class PositiveTracesWindow extends BaseTracesWinow {
   }
 }
 
-class CounterExampleTracesWindow extends BaseTracesWinow {
+class CounterExampleTracesWindow extends BaseTracesWindow {
   switches: KillSwitch[] = [];
   clearData(type: number): void {
     if (type === 2) {
@@ -239,10 +260,11 @@ class CounterExampleTracesWindow extends BaseTracesWinow {
         let curRow: any = null;
 
         if (type !== "2") {
+          let col_id = 0;
           curRow = $(
             "<tr class='traces-row' id='" + id + "'>" +
               data[type][i].map(el =>
-                "<td class='" + classes[type]  + "'>" + el + "</td>").join("") +
+                "<td class='" + classes[type] + "' id='" + id + "_" + col_id++ + "'>" + el + "</td>").join("") +
               "<td class='temp_expr_eval'>&nbsp</td>" +
             "</tr>");
         } else {
@@ -350,7 +372,7 @@ class CounterExampleTracesWindow extends BaseTracesWinow {
   }
 }
 
-class TwoPlayerTracesWindow extends BaseTracesWinow {
+class TwoPlayerTracesWindow extends BaseTracesWindow {
   player: number;
 
   constructor (public playerNum: number, public parent: HTMLElement) {

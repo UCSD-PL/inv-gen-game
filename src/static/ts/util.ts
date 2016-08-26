@@ -65,6 +65,7 @@ class Args {
   static worker_id: string = null;
   static assignment_id: string = null;
   static turk_submit_to: string = null;
+  static tutorial_action: string = null;
   static parse_args() {
     console.log(window.location.search);
     let query = window.location.search.substring(1).split("&");
@@ -78,6 +79,7 @@ class Args {
     Args.worker_id = Args.args["workerId"] || "";
     Args.assignment_id = Args.args["assignmentId"];
     Args.turk_submit_to = Args.args["turkSubmitTo"];
+    Args.tutorial_action = Args.args["tutorialAction"];
   }
   static get_hit_id(): string {
     if (Args.hit_id === null)
@@ -99,8 +101,11 @@ class Args {
       Args.parse_args()
     return Args.turk_submit_to;
   }
-
-
+  static get_tutorial_action(): string {
+    if (Args.tutorial_action === null)
+      Args.parse_args()
+    return Args.tutorial_action;
+  }
 }
 
 function shuffle<T>(arr: T[]): void {
@@ -218,8 +223,10 @@ function removeLabel(l: Label) {
 
 function label(arg: (JQueryUI.JQueryPositionOptions | HTMLElement),
   txt: string,
-  direction: directionT) {
-  return new Label(arg, txt, direction);
+  direction: directionT,
+  pulseWidth = 5,
+  pulse = 500) {
+  return new Label(arg, txt, direction, pulseWidth, pulse);
 }
 
 interface IStep {

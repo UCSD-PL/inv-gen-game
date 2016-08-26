@@ -34,7 +34,7 @@
     var jsfound = [];
     var curLvl;
     var tracesW = null, progW = null, scoreW = null, stickyW = null, gameLogic = null;
-    var curL, curL1;
+    var curL = null, curL1 = null, curL2 = null;
     var tempCb = null;
     var stepTimeout = -1;
     var pwups = []
@@ -58,7 +58,7 @@
 
     function updateUI() {
         $('#errormsg').html("")
-        var inv = invPP(tracesW.curExp().trim());
+        var inv = invPP(tracesW.curExp().trim()).replace(/\s/g, "");
         try {
           var parsedInv = esprima.parse();
         } catch (err) {
@@ -112,18 +112,18 @@
       return function () { removeLabel(lbl) }
     }
 
-    var tutorialScript = [
+    var mainScript = [
       { setup: function (cs) {
-                  $('.overlay').html("<h1>Welcome to the <span class='good'>InvGen</span> Tutorial!<br> You can press spacebar at any time <br>to proceed to the next step.</h1>")
+                  $('.overlay').html("<h1>Welcome to the <span class='good'>InvGen</span> Tutorial!<br> You can press spacebar or click anywhere<br>to proceed to the next step.</h1>")
                   if (Args.get_assignment_id() == "ASSIGNMENT_ID_NOT_AVAILABLE") {
                     $('.overlay').append("<h1><b>This is a preview, which only shows you the tutorial</b></h1>" + 
                                          "<h3>This HIT involves playing at least two non-tutorial levels of the <span class='good'>InvGen</span> game.<h3>" +
                                          "<h3><b>Played it before?</b> Come play again! You will bypass the tutorial and get new levels!<br>" + 
                                          "<b>New player?</b> Come try it out!</h3>" + 
                                          "<h3>We aim to pay about $10/hr</h3>" +
-                                         "<h3><b>$1 for the HIT</b>, which involves playing the game for at least 2 non-tutorial levels<br>" +
-                                         "<b>$1 bonus for doing the tutorial</b> (which you only do the first time)<br>" + 
-                                         "<b>$0.50 bonus for each non-tutorial level you pass beyond two</b></h3>");
+                                         "<h3><b>$1.50 for the HIT</b>, which involves playing the game for at least 2 non-tutorial levels<br>" +
+                                         "<b>$1.50 bonus for doing the tutorial</b> (which you only do the first time)<br>" + 
+                                         "<b>$0.75 bonus for each non-tutorial level you pass beyond two</b></h3>");
                   }
                   $('.overlay').fadeIn(fadeDelay, function () {
                     cs.nextStepOnKeyClickOrTimeout(stepTimeout, ()=>0, 32)
@@ -171,7 +171,7 @@
       },
       { setup: function (cs) {
                  curL = label({ of: "#2 .temp_expr_eval", at: "left+10 bottom" },
-                              "3+4=7! (Press spacebar...)", "up")
+                              "3+4=7! (Press spacebar or click anywhere...)", "up")
                  cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
@@ -182,7 +182,7 @@
       },
       { setup: function (cs) {
                  curL = label({ of: "#2 .temp_expr_eval", at: "left+10 bottom" },
-                              "Column contains values of i! (Spacebar to continue...)", "up")
+                              "Column contains values of i! (space/click to continue...)", "up")
                  curL1 = label({ of: $("#lvl_table > thead > tr > th:nth-child(1)"), at: "left center" },
                               "", "right")
                  cs.nextStepOnKeyClickOrTimeout(stepTimeout, () => {
@@ -414,8 +414,8 @@
                }
       },
       { setup: function (cs) {
-                 $('#next-lvl').hide();
-                 removeLabel(curL);
+                 //$('#next-lvl').hide();
+                 //removeLabel(curL);
                  var lvl = new Level("tutorial_lvl_2",
                    [ "k", "l" ],
                    [ [ [ 1, 2 ], [ 2, 3 ], [ 3, 4 ] ], [], [] ],
@@ -424,8 +424,8 @@
                }
       },
       { setup: function (cs) {
-                 removeLabel(curL);
-                 $('#next-lvl').hide();
+                 //removeLabel(curL);
+                 //$('#next-lvl').hide();
                  var lvl = new Level("tutorial_lvl_3",
                    [ "k", "l" ],
                    [ [ [ 1, 3 ], [ 2, 6 ], [ 3, 9 ] ], [], [] ],
@@ -433,17 +433,123 @@
                  gameLogic.loadLvl(lvl)
                }
       },
+    ]
+
+    var conditionalsScript = [
+      { setup: function (cs) {
+                  $('.overlay').html("<h2>Sometimes there is a pattern that only holds under some conditions.<br>" + 
+                                     "You can capture this with an 'if' expression.<br>" + 
+                                     "Let's see an example! (space/click to continue)</h2>")
+                  $('.overlay').fadeIn(fadeDelay, function () {
+                    cs.nextStepOnKeyClickOrTimeout(stepTimeout, () => {}, 32)
+                  })
+               }
+      },
+      { setup: function (cs) {
+                 $(".overlay").fadeOut(fadeDelay, function () {});
+                 //$('#next-lvl').hide();
+               
+                 // gameLogic can be null here because we allow tutorial re-runs to begin with conditionals
+                 if (gameLogic === null) {
+                   $('#score-div-row').fadeIn(fadeDelay, function() {});
+                   tracesW = new CounterExampleTracesWindow($('#data-display'));
+                   $('#sticky').addClass("box stickyWindow");
+                   stickyW = new StickyWindow($('#sticky'));
+                   gameLogic = new StaticGameLogic(tracesW, progW, scoreW, stickyW, 3);
+                   gameLogic.onLvlPassed(()=>
+                     $('#next-lvl').fadeIn(fadeDelay, ()=> {
+                       curL = label({ of: $('#next-lvl'), at: "right center" },
+                                   "Click Here!", "left")
+                     }))
+                 }
+
+                 var lvl = new Level("tutorial_lvl_4",
+                   [ "i", "x", "y" ],
+                   [ [ [ 1, 4, 5 ], [ 2, 5, 6 ], [ 3, 7, 7 ], [ 4, 8, 8 ], [ 5, 9, 9 ] ], [], [] ],
+                   { atleast: 2 });
+                 gameLogic.loadLvl(lvl);
+                 tracesW.highlightRect(1,2,2,3, 'solid 3px blue', "lightcyan");
+                 curL = label($('#3_2'), "See how x = y here (space/click to continue)", "left", 0, 0);
+                 setTimeout(function() { cs.nextStepOnKeyClickOrTimeout(stepTimeout, () => {}, 32) }, 500);
+               }
+      },
+      { setup: function (cs) {
+                 tracesW.highlightRect(1,0,2,2, 'solid 3px purple', "F9F2F9");
+                 curL1 = label({ of: '#0_2', at: "right bottom"}, "But not here (space/click to continue)", "left", 0, 0);
+                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, () => {}, 32)
+               }
+      },
+      { setup: function (cs) {
+                 tracesW.highlightRect(0,2,1,3, 'solid 3px red', "FFEFF2");
+                 curL2 = label({ of: '#4_0', at: "left bottom" }, 
+                   "Also note that i >= 3 here. In summary: x=y <i>if</i> i >= 3<br>(space/click to continue)", "up", 0, 0);
+                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, () => {}, 32)
+               }
+      },
+      { setup: function (cs) {
+                 removeLabel(curL);
+                 removeLabel(curL1);
+                 removeLabel(curL2); 
+                 tracesW.clearRect(1,2,2,3);
+                 tracesW.clearRect(1,0,2,2);
+                 tracesW.clearRect(0,2,1,3);
+                 curL = label($('#formula-entry'), "Type 'x=y'", "left");
+                 gameLogic.onUserInput(function (inv) {
+                      if (tempCb != null)
+                        tempCb(inv.replace(/\s/g, ""))
+                 });
+                 nextStepOnInvariant(cs, "x=y", labelRemover(curL));
+               }
+      },
+      { setup: function (cs) {
+                 curL = label({ of: "#4 .temp_expr_eval", at: "left+10 bottom" }, "Notice results (space/click to continue)", "up");
+                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($('#formula-entry'), "Add ' if i>=3'", "left");
+                 nextStepOnInvariant(cs, "x=yifi>=3", labelRemover(curL));
+               }
+      },
+      { setup: function (cs) {
+                 gameLogic.onCommit(function () {
+                      cs.nextStep();
+                 });
+               }
+      },
+      { setup: function (cs) {
+                 gameLogic.onCommit(null);
+                 setTimeout(function() {
+                   tracesW.highlightRect(0,0,3,2, 'solid 3px purple', "F9F2F9");
+                   curL = label($('#0_2'), "See how y=x+1 if i < 3<br>(space/click to continue)", "left", 0, 0);
+                   cs.nextStepOnKeyClickOrTimeout(stepTimeout, () => {}, 32)
+                 }, 700);
+               }
+      },
+      { setup: function (cs) {
+                 removeLabel(curL);
+                 tracesW.clearRect(0,0,3,2);
+                 curL = label($('#formula-entry'), "Try 'y=x+1 if i<3'", "left");
+                 nextStepOnInvariant(cs, "y=x+1ifi<3", labelRemover(curL));
+               }
+      },
+      { setup: function (cs) {
+               }
+      },
       // Conclusion ----------------------------------------------------------
       { setup: function (cs) {
-                  $('#data-display table').add('#score-div-row').add('#discovered-invariants-div')
-                  .add('#sticky').add('.kill-switch')
-                  .fadeOut(fadeDelay, function () {
+                  var elmts = $('#data-display table').add('#score-div-row').add('#discovered-invariants-div')
+                  .add('#sticky').add('.kill-switch');
+                  var numElmts = elmts.length;
+                  elmts.fadeOut(fadeDelay, function () {
+                    if( --numElmts > 0 ) return;
                     removeLabel(curL);
                     cs.nextStep()
                   })
                }
       },
       { setup: function (cs) {
+                  $('#next-lvl').hide();
                   $('#data-display').html('<div stype="display: none">' +
                     '<h2><p>You can use all of the following operators:</p></h2><h3>' +
                     '<table class="table table-stripped"><thead><tr><th>Operator</th><th>Description</th><th>Examples</th></tr></thead>' +
@@ -460,12 +566,14 @@
                       ['&lt= <br> &gt=', 'Less than or equal<br>Greater than or equal', '2<=2, n>=0'],
                       ['&&', 'Logical And', '(n<5) && (n>0)'],
                       ['||', 'Logical Or', '(n>=5) || (n<=0)'],
+                      ['if', 'Conditional', 'x=y if x > y'],
                     ].map(
                       ((x) => '<tr><td>' + x[0] + '</td><td>' + x[1] + '</td><td>' + x[2] + '</td></tr>'))
                      .join('\n') +
                     '</tbody></table></h3>' +
                     '</div>');
-                    cs.nextStep()
+                    if (Args.get_tutorial_action() != "redo-cond" && Args.get_tutorial_action() != "redo-all")
+                      cs.nextStep()
                }
       },
       { setup: function (cs) {
@@ -479,15 +587,16 @@
                    $('#next-lvl').fadeIn(fadeDelay, function() {
                      curL = label({ of: $("#next-lvl"), at: "left center"},
                                   "Proceed to the game!", "right");
-                     cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
                    })
                  }, log)
                }
       },
-      { setup: function (cs) {
-               }
-      },
     ]
+
+    if (Args.get_tutorial_action() != "redo-cond")
+       tutorialScript = mainScript.concat(conditionalsScript)
+    else
+       tutorialScript = conditionalsScript
 
     $(document).ready(function() {
       if (Args.get_assignment_id() == "ASSIGNMENT_ID_NOT_AVAILABLE") {
@@ -506,8 +615,10 @@
       var curScript = new Script(tutorialScript);
 
       $('#next-lvl').click(function() {
+        $('#next-lvl').hide();
+        if (curL != null)
+          removeLabel(curL);
         curScript.nextStep();
-        //window.location.replace('game.html');
       })
     })
 

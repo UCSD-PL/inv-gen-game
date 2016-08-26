@@ -283,6 +283,7 @@ traces = {
     "intro-benchmarks": introTraces,
     "test-benchmarks": testTraces,
     "pruned-intro-benchmarks": prunedIntroTraces,
+    "test-conditional" : loadBoogies(MYDIR + '/../test-conditional', False),
     "desugared-boogie-benchmarks" : loadBoogies(MYDIR + '/../desugared-boogie-benchmarks', False),
     "old-dilig-traces": {
       '15-c': {

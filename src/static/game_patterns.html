@@ -59,7 +59,13 @@
         else {
           curLvlSet = res[0];
           let lvl = res[1];
-          curLvlId = lvl.id; 
+          curLvlId = lvl.id;
+          console.log("Just loaded " + curLvlSet + "." + curLvlId);
+          if (lvl.hint === null)
+            $("#hint-row").html("");
+          else
+            $("#hint-row").html("<p class='lead'><b>" + lvl.hint + "</b></p>");
+          console.log("Sorin " + lvl.hint);
           gameLogic.loadLvl(lvl);
         }
       })
@@ -141,7 +147,7 @@
     var tutorialScript = [
       {
         setup: function (cs) {
-                  curL = label($('#help'), "Click here if you need any help later", "left")
+                  curL = label($('#help_row'), "Help on operators or Replay Tutorials", "left")
                   $('body').focus();
                   cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32);
         }
@@ -245,8 +251,9 @@
                  ['#not_op', 'not_ex'],
                  ['#and_op', 'and_ex'],
                  ['#or_op', 'or_ex'],
-                 /*['#impl_op', 'impl_ex'],
-                 ['#equiv_op', 'equiv_ex'],*/
+                 ['#impl_op', 'impl_ex'],
+                 ['#tutorials', 'tutorials_info'],
+                 //['#equiv_op', 'equiv_ex'],
       ]
       for (var i in ops) {
         $(ops[i][0]).click(function (lbl) {
@@ -254,13 +261,24 @@
         }(ops[i][1]))
       }
 
+      $('#see-conditional-tutorial-1, #see-conditional-tutorial-2').click(function() { 
+        logEvent("SeeConditionalTutorial", []);
+        $('#tutorial-video').fadeIn(1000)
+      });
+      $('#tutorial-video-done').click(function() { 
+        $('#tutorial-video').fadeOut(1000) 
+      });
+      $('#replay-tutorial-all').click(function() {
+        logEvent("ReplayTutorialAll", []);
+        window.open('tutorial_patterns.html?tutorialAction=redo-all', '_blank').focus();
+      })
+      $('#replay-tutorial-cond-1, #replay-tutorial-cond-2').click(function() {
+        logEvent("ReplayTutorialConditional", []);
+        window.open('tutorial_patterns.html?tutorialAction=redo-cond', '_blank').focus();
+      })
+
       $('#quit').click(function () { doneScreen(false) });
       $('#quit-overlay').click(function() { doneScreen(false) });
-
-      $('#replay').click(function() {
-        var win = window.open('tutorial_patterns.html', '_blank');
-        win.focus();
-      })
 
       $('#arrows').click(function() {
         if (curScript == null) {
@@ -275,7 +293,7 @@
 
       gameLogic.onLvlLoaded(function () {
         curScript = new Script(tutorialScript)
-        gameLogic.onLvlLoaded(function (){})
+        //gameLogic.onLvlLoaded(function (){})
       })
 
       gameLogic.onUserInput(function () {
@@ -292,6 +310,8 @@
   <div class='container'>
     <div class='row' id='hit-preview-warning'>
     </div>
+    <div class='row' id='hint-row'>
+    </div>
     <div class='row'>
       <div class='col-md-1' id='dummy'>
       </div>
@@ -301,8 +321,8 @@
       <div class='col-md-6' id='middle'>
         <div class='row' id='data-display' style="font-family:monospace;">
         </div>
-        <div class='row box' id='op_row'>
-                <span class='centered'> <h4>Available Operators:</h4></span>
+        <div class='row box' id='help_row'>
+                <span class='centered'> <h4>Click below for Help on Operators or to Replay tutorials:</h4></span>
                 <div id='ops'>
                   <table class='opTable'>
                     <tr>
@@ -320,8 +340,9 @@
                       <td class="centered"><a id='not_op'>!</a></td>
                       <td class="centered"><a id='and_op'>&amp;&amp;</a></td>
                       <td class="centered"><a id='or_op'>||</a></td>
+                      <td class="centered"><a id='impl_op'>if</a></td>
+                      <td class="centered"><a id='tutorials'>Tutorials</a></td>
 <!--
-                      <td class="centered"><a id='impl_op'>=&gt</a></td>
                       <td class="centered"><a id='equiv_op'>&lt=&gt</a></td>
 -->
                     </tr>
@@ -329,88 +350,101 @@
                       
                 <h5>
                 <div id="plus_ex" style='display: none'>
-                  Addition. i + j returns the sum of i and j. Examples:
-                    <span class='bold'>3+4</span>,
-                    <span class='bold'>3+4=7</span>,
-                    <span class='bold'>i+1</span>  
+                  Addition: X + Y returns the sum of X and Y. <br> Examples:
+                    <span class='bold'>3+4</span> ;
+                    <span class='bold'>i+1</span> ;
+                    <span class='bold'>i=j+1</span>
                 </div>
                 <div id="minus_ex" style='display: none'>
-                  Subtraction. i - j returns the difference of i and j. Examples:
-                    <span class='bold'>5-4</span>,
-                    <span class='bold'>5-4=1</span>,
-                    <span class='bold'>i-1</span>  
+                  Subtraction: X - Y returns the difference of X and Y. <br> Examples:
+                    <span class='bold'>5-4</span> ;
+                    <span class='bold'>i-1</span> ;
+                    <span class='bold'>i-j=5</span>
                 </div>
                 <div id="mul_ex" style='display: none'>
-                  Multiplication. Example: 3 * x multiplies x by 3. E.g.
-                    <span class='bold'>5*4</span>,
-                    <span class='bold'>5*4=20</span>,
-                    <span class='bold'>i*3</span>  
+                  Multiplication: X * Y returns X and Y. <br> Examples:
+                    <span class='bold'>5*4</span> ;
+                    <span class='bold'>5*j=20</span> ;
+                    <span class='bold'>5*j=20</span>  
                 </div>
                 <div id="div_ex" style='display: none'>
-                  Division. Example: j / x divides j by x. E.g.:
-                    <span class='bold'>10/2</span>,
-                    <span class='bold'>10/2=5</span>,
-                    <span class='bold'>i/3</span>  
+                  Division: X / Y returns X divived by Y. <br> Examples:
+                    <span class='bold'>10/2</span> ;
+                    <span class='bold'>i/3</span> ;
+                    <span class='bold'>i/2=5</span>
                 </div>
                 <div id="mod_ex" style='display: none'>
-                  Modulo. i % 2 for example returns the remainder of division of i by 2. Examples:
-                    <span class='bold'>5 % 3</span>,
-                    <span class='bold'>5 % 3 = 2</span>,
+                  Modulo: X % Y  returns the remainder of division of X by Y. <br> Examples:
+                    <span class='bold'>5 % 3 = 2</span> ;
                     <span class='bold'>i % 3</span>  
                 </div>
                 <div id="eq_ex" style='display: none'>
-                  Equality. Example: i = 2 is true i is equal to 2. E.g. 
-                    <span class='bold'>5 = 5</span>,
-                    <span class='bold'>!(5 = 4)</span>,
-                    <span class='bold'>i = 3</span>  
+                  Equality: X = Y is true if X is equal to Y. <br> Examples: 
+                    <span class='bold'>n = 5</span>; 
+                    <span class='bold'>!(5 = 4)</span>; 
+                    <span class='bold'>i = a+b</span>  
                 </div>
                 <div id="neq_ex" style='display: none'>
-                  Not-equal operator. Example: i != 2 is true if i is not 2. E.g.
-                    <span class='bold'>5 != 4</span>,
-                    <span class='bold'>i != 3</span>  
+                  Not-equal: X != Y is true if X is not equal to Y. <br> Examples:
+                    <span class='bold'>5 != 4</span> ;
+                    <span class='bold'>a != b+c</span>  
                 </div>
                 <div id="lt_ex" style='display: none'>
-                    Less than. i &lt; j is true if i is less than j. E.g.
-                    <span class='bold'>4 &lt; 5</span>,
-                    <span class='bold'>i &lt; 3</span>  
+                    Less than: X &lt; Y is true if X is less than Y. <br> Examples:
+                    <span class='bold'>4 &lt; 5</span> ;
+                    <span class='bold'>i &lt; 5</span> ;
+                    <span class='bold'>i &lt; j</span>  
                 </div>
                 <div id="lte_ex" style='display: none'>
-                    Less than or equal. i &lt;= j checks if i is less than or equal to j. Example: 
-                    <span class='bold'>4 &lt;= 5</span>,
-                    <span class='bold'>4 &lt;= 4</span>,
-                    <span class='bold'>i &lt;= 3</span>  
+                    Less than or equal: X &lt;= Y is true if X is less than or equal to Y. <br> Examples: 
+                    <span class='bold'>4 &lt; 5</span>,
+                    <span class='bold'>5 &lt; 5</span>,
+                    <span class='bold'>i &lt;= 5</span>,
+                    <span class='bold'>i &lt;= j</span>
                 </div>
                 <div id="gt_ex" style='display: none'>
-                    Greater than.i &gt; j is true if i is greater than j. Examples:
+                    Greater than: X &gt; Y is true if X is greater than Y. <br> Examples:
                     <span class='bold'>5 &gt; 4</span>,
                     <span class='bold'>i &gt; 3</span>  
                 </div>
                 <div id="gte_ex" style='display: none'>
-                    Greater than or equal. Example: i &gt;= j checks if i is greater than or equal to j
+                    Greater than or equal: X &gt;= Y is true if X is greater than or equal to Y. <br>Examples:
                     <span class='bold'>5 &gt;= 4</span>,
                     <span class='bold'>4 &gt;= 4</span>,
                     <span class='bold'>i &gt;= 3</span>  
                 </div>
                 <div id="not_ex" style='display: none'>
-                    Logical Not. Example: !b is true whenever b is false. Example 
+                    Logical Not: !B is true if B is false. <br> Examples:
                     <span class='bold'>!false</span>,
                     <span class='bold'>!(3=4)</span>,
                     <span class='bold'>!(i &gt;= 3)</span>  
                 </div>
                 <div id="and_ex" style='display: none'>
-                    Logical And. Example: (i=2) &amp;&amp; (j &gt; 0) is true only if both i=2 and j>0 are true. Example
+                    Logical And: A &amp;&amp; B is true if both A and B are true. <br>Examples:
                     <span class='bold'>true &amp;&amp; true</span>,
                     <span class='bold'>(3 &gt; 0) &amp;&amp; (4 &lt;= 5) </span>,
                     <span class='bold'>(i=2) &amp;&amp; (j &gt; 0 )</span>  
                 </div>
                 <div id="or_ex" style='display: none'>
-                    Logical Or. For example (i=2) || (j&gt;0) is true if at leas one of (i=2) and (j&gt;0) is true.
+                    Logical Or: A || B is true if A is true or B is true. <br> Examples:
                     <span class='bold'>true || false</span>,
                     <span class='bold'>(3 &gt; 0) || (4 &lt;= 5) </span>,
-                    <span class='bold'>(i=2) || (j &gt; 0)</span>  
+                    <span class='bold'>(i=2) || (j &gt; 0)</span>
                 </div>
-                <div id="impl_ex" style='display: none'>The implication operator. Example: i => j checks if i implies j">=></div>
-                <div id="equiv_ex" style='display: none'>The equivalence operator. Example: i <=> j checks if i is logically equivalent to j"><=></div>
+                <div id="impl_ex" style='display: none'>
+                    <p>
+                    If operator: "A if B" is true if A is true whenever B is true. <br> Examples:
+                    <span class='bold'>i=j if i < n</span> ;
+                    <span class='bold'>i=k if i >= n</span></p>
+                    <button id='see-conditional-tutorial-1'>Video of "if" Tutorial</button>
+                    <button id='replay-tutorial-cond-1'>Replay "if" Tutorial</button></p>
+                </div>
+                <div id="tutorials_info" style='display: none'>
+                    <button id='see-conditional-tutorial-2'>Video of "if" Tutorial</button>
+                    <button id='replay-tutorial-cond-2'>Replay "if" Tutorial</button>
+                    <button id='replay-tutorial-all'>Replay Entire Tutorial</button>
+                </div>
+                <div id="equiv_ex" style='display: none'>The equivalence operator. Example: i <=> j checks if i is logically equivalent to j</div>
                       
                 </h5>
                 </div>
@@ -423,17 +457,17 @@
             </span>
           </div>
 
-          <div class='row'>
-            <div class='col-md-6 gap'>
-              <img id='help' src="help-icon.png" class='help-icon' data-toggle="tooltip" title="Click to toggle help options"/>
-              <div id='help-content' class='helpContentWindow box'>
-                <span id='replay' class='helpContent' data-toggle="tooltip" title="Click to play the tutorial again">Replay tutorial</span>
-                <br>
-                <span id='arrows' class='helpContent' data-toggle="tooltip" title="Click to view the layout introduction">Understand screen layout</span>
-                <br>
-              </div>
-            </div>
-          </div>
+          <!-- <div class='row'> -->
+          <!--   <div class='col-md-6 gap'> -->
+          <!--     <img id='help' src="help-icon.png" class='help-icon' data-toggle="tooltip" title="Click to toggle help options"/> -->
+          <!--     <div id='help-content' class='helpContentWindow box'> -->
+          <!--       <span id='replay' class='helpContent' data-toggle="tooltip" title="Click to play the tutorial again">Replay tutorial</span> -->
+          <!--       <br> -->
+          <!--       <span id='arrows' class='helpContent' data-toggle="tooltip" title="Click to view the layout introduction">Understand screen layout</span> -->
+          <!--       <br> -->
+          <!--     </div> -->
+          <!--   </div> -->
+          <!-- </div> -->
 
         </div>
       </div>
@@ -452,6 +486,15 @@
       </div>
     </div>
   </div>
+  <div class='overlay text-center' style='display: none;' id='tutorial-video'>
+     <center>
+       <video width="75%" controls>
+         <source src="http://cseweb.ucsd.edu/~lerner/if-tutorial.mp4" type="video/mp4">
+           Your browser does not support the video tag.
+       </video>
+    </center>
+    <button id='tutorial-video-done' class='btn-next'>Return to Game</button>
+  </div> 
   <div class='overlay text-center' style='display: none;' id='next-or-quit-screen'>
     <h1 class='good'> Good job, you finished another level!</h1>
     <div id='next-or-quit-additional-text'></div>

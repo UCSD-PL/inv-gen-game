@@ -79,6 +79,8 @@ abstract class BaseGameLogic implements IGameLogic {
       gl.tracesW.disable();
       gl.userInput(true);
       gl.tracesW.enable();
+      if (gl.commitCb)
+        gl.commitCb();
     });
 
     this.onUserInput(() => { });
@@ -881,7 +883,7 @@ class PatternGameLogic extends BaseGameLogic {
                     if (Args.get_worker_id() != "") {
                       if (sat)
                         rpc.call("App.setLvlAsDone", [curLvlSet, gl.curLvl.id], (res) => { }, log);
-                      else if (gl.foundJSInv.length >= 1)
+                      else if (gl.foundJSInv.length >= 8)
                         rpc.call("App.addToIgnoreList", [Args.get_worker_id(), curLvlSet, gl.curLvl.id], (res) => { }, log);
                     }
                     if (sat || gl.foundJSInv.length >= 8) {

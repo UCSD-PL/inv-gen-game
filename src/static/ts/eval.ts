@@ -29,6 +29,8 @@ function interpretError(err: Error): (string|Error) {
 function invToJS(inv: string): string {
   return inv.replace(/[^<>]=[^>]/g, function(v) { return v[0] + "==" + v[2]; })
             .replace(/=>/g, "->")
+            .replace(/(.+)if(.+)/g, "($2) -> ($1)")
+            //.replace(/if(.+)then(.+)/g, "($1) -> ($2)")
 }
 
 function holds(inv:invariantT, variables: string[], data: any[][]): boolean {

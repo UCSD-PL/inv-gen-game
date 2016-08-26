@@ -1688,7 +1688,6 @@
 
         lookahead = (typeof extra.tokens !== 'undefined') ? collectToken() : advance();
         scanning = false;
-        console.log("lexing: " + token);
         return token;
     }
 

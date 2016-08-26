@@ -20,17 +20,23 @@ void run(int n, int m)
   assume(m<n);
   int x=0; 
   int y=m;
+  printf("n m x y\n");
   while(x<n) {
-    printf("n = %d m = %d x = %d y = %d\n", n, m, x, y);
+    printf("%d %d %d %d\n", n, m, x, y);
     x++;
     if(x>m) y++;
   }
-  printf("n = %d m = %d x = %d y = %d\n", n, m, x, y);
+  printf("%d %d %d %d\n", n, m, x, y);
   static_assert(y==n);
 }
 
 void main() {
-  run(7, 3);
+  run(3, 2);
+  run(4, 2);
+  run(4, 3);
+  run(5, 3);
+  run(5, 2);
+  run(7, 4);
 }
 
 

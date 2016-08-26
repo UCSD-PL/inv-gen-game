@@ -5,9 +5,9 @@ import json
 from os.path import *
 
 
-BONUS_PER_LEVEL=0.50
-BONUS_FOR_TUTORIAL=1.00
-HIT_REWARD=1.00
+BONUS_PER_LEVEL=0.75
+BONUS_FOR_TUTORIAL=1.50
+HIT_REWARD=1.50
 REQUIRED_LEVELS_PER_HIT = 2
 
 ROOT_DIR = dirname(dirname(abspath(realpath(__file__))))
@@ -96,10 +96,13 @@ def get_unused_port():
     s.close()
     return port
 
-def start_server(port, experiment_name, srid):
+def start_server(port, experiment_name, srid, lvlset = None):
     server_log = get_server_log_fname(experiment_name, srid)
     event_log = get_event_log_fname(experiment_name, srid)
     with open(server_log, 'w') as output:
-        p = subprocess.Popen([get_server_run_cmd(), "--port", str(port), "--log", event_log, "--ename", experiment_name], stdout=output, stderr=subprocess.STDOUT)
+        cmd = [get_server_run_cmd(), "--port", str(port), "--log", event_log, "--ename", experiment_name]
+        if lvlset != None:
+            cmd = cmd + ["--lvlset", lvlset]
+        p = subprocess.Popen(cmd, stdout=output, stderr=subprocess.STDOUT)
     return p
 

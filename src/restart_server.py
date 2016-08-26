@@ -12,6 +12,7 @@ import signal
 
 p = ArgumentParser(description='Restart a server')
 p.add_argument('--ename', type=str, default = "default", help='Name for experiment; if none provided, use "default"')
+p.add_argument('--lvlset', type=str, default = 'desugared-boogie-benchmarks', help='Lvlset to use for serving benchmarks"')
 p.add_argument('srid', type=int, help='The server run ID that you want to restart')
 args = p.parse_args()
 exp = load_experiment_or_die(args.ename)
@@ -29,7 +30,7 @@ for sr in exp.server_runs:
             sr.pid = 0
         new_srid = exp.create_unique_server_run_id()
         port = sr.port
-        p = start_server(port, args.ename, new_srid)
+        p = start_server(port, args.ename, new_srid, args.lvlset)
         print "Started server run", new_srid, "on port", port, "with pid", p.pid 
         exp.add_session(ServerRun(new_srid, sr.hit_id, p.pid, port))
         exit(0)
