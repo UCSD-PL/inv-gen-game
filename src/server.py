@@ -22,7 +22,7 @@ from pstats import Stats
 from StringIO import StringIO
 from random import randint, choice
 
-from levels import _tryUnroll, loadBoogies, loadTraces, findNegatingTrace
+from levels import _tryUnroll, loadBoogies, loadTraces, findNegatingTrace, loadBoogieLvlSet
 
 import argparse
 import traceback
@@ -85,78 +85,8 @@ MYDIR = dirname(abspath(realpath(__file__)))
 ROOT_DIR = dirname(MYDIR)
 z3s = Solver()
 
-
-introTraces = loadTraces(MYDIR + '/../intro-benchmarks')
-testTraces = loadTraces(MYDIR + '/../test-benchmarks')
-prunedIntroTraces = loadTraces(MYDIR + '/../intro-benchmarks-pruned')
-
-traces = {
-    "intro-benchmarks": introTraces,
-    "test-benchmarks": testTraces,
-    "pruned-intro-benchmarks": prunedIntroTraces,
-    "test-conditional" : loadBoogies(MYDIR + '/../test-conditional', False),
-    "desugared-boogie-benchmarks" : loadBoogies(MYDIR + '/../desugared-boogie-benchmarks', False),
-    "old-dilig-traces": {
-      '15-c': {
-          'variables': ['n', 'k', 'j'],
-          'data': [
-              [7, 9, 0],
-              [7, 8, 1],
-              [7, 7, 2],
-              [7, 6, 3],
-              [7, 5, 4],
-              [7, 4, 5],
-              [7, 3, 6],
-              [7, 2, 7]
-          ]
-      },
-
-      '19-c': {
-          'variables': ['n', 'm', 'x', 'y'],
-          'data': [
-              [7, 3, 0, 3],
-              [7, 3, 1, 3],
-              [7, 3, 2, 3],
-              [7, 3, 3, 3],
-              [7, 3, 4, 4],
-              [7, 3, 5, 5],
-              [7, 3, 6, 6],
-          ]
-      },
-
-      '25-c outer loop': {
-          'variables': ['x', 'y', 'i', 'j'],
-          'data': [
-              [0, 0, 0, 0],
-              [1, 1, 4, 0],
-              [2, 2, 8, 0],
-              [3, 3, 12, 0],
-          ]
-      },
-
-      '25-c inner loop': {
-          'variables': ['x', 'y', 'i', 'j'],
-          'data': [
-              [0, 0, 0, 0],
-              [0, 0, 1, 0],
-              [0, 0, 2, 0],
-              [0, 0, 3, 0],
-              [1, 1, 4, 0],
-              [1, 1, 5, 0],
-              [1, 1, 6, 0],
-              [1, 1, 7, 0],
-              [2, 2, 8, 0],
-              [2, 2, 9, 0],
-              [2, 2, 10, 0],
-              [2, 2, 11, 0],
-              [3, 3, 12, 0],
-              [3, 3, 13, 0],
-              [3, 3, 14, 0],
-              [3, 3, 15, 0],
-          ]
-      },
-  }
-}
+curLevelSetName, lvls = loadBoogieLvlSet(args.lvlset)
+traces = { curLevelSetName: lvls }
 
 class Server(Flask):
     def get_send_file_max_age(self, name):
@@ -306,20 +236,17 @@ class IgnoreManager:
 @pp_exc
 @log_d
 def loadNextLvl(workerId):
-    levelSet = args.lvlset
-    if (levelSet not in traces):
-        raise Exception("Unkonwn level set " + levelSet)
     exp_dir = join(ROOT_DIR, "logs", args.ename)
-    level_names = traces[levelSet].keys();
+    level_names = traces[curLevelSetName].keys();
     level_names.sort()
     for lvlId in level_names:
-        if isfile(join(exp_dir, "done-" + levelSet + "-" + lvlId)):
+        if isfile(join(exp_dir, "done-" + curLevelSetName + "-" + lvlId)):
             continue
-        if workerId != "" and ignore.contains(workerId, levelSet, lvlId):
+        if workerId != "" and ignore.contains(workerId, curLevelSetName, lvlId):
             continue
-        result = loadLvl(levelSet, lvlId)
+        result = loadLvl(curLevelSetName, lvlId)
         result["id"] = lvlId
-        result["lvlSet"] = levelSet
+        result["lvlSet"] = curLevelSetName
         return result
 
 @api.method("App.addToIgnoreList")

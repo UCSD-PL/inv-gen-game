@@ -5,6 +5,8 @@ from util import unique, powerset, average
 from boogie_analysis import livevars
 from boogie_eval import instantiateAndEval
 from os import listdir
+from os.path import dirname, join, abspath, realpath
+from json import load, dumps
 
 def _tryUnroll(loop, bbs, min_un, max_un, bad_envs, good_env):
     # Lets first try to find a terminating loop between min and max iterations
@@ -193,3 +195,15 @@ def readTrace(fname):
 def loadTraces(dirN):
     return { name[:-4] : readTrace(dirN + '/' + name) for name in listdir(dirN)
                 if name.endswith('.out') }
+
+def loadBoogieLvlSet(lvlSetFile):
+    lvlSet = load(open(lvlSetFile, "r"))
+    lvlSetDir = dirname(abspath(realpath(lvlSetFile)))
+    print "Loading level set " + lvlSet["name"] + " from " + lvlSetFile;
+    lvls = {}
+    for (lvlName, lvlPath) in lvlSet["levels"]:
+        if lvlPath[0] != '/':
+          lvlPath = join(lvlSetDir, lvlPath)
+        lvls[lvlName] = loadBoogieFile(lvlPath, False)
+
+    return (lvlSet["name"], lvls)
