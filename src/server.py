@@ -20,7 +20,7 @@ from sys import exc_info
 from cProfile import Profile
 from pstats import Stats
 from StringIO import StringIO
-from random import randint, choice
+from random import choice
 
 from levels import _tryUnroll, loadBoogies, loadTraces, findNegatingTrace, loadBoogieLvlSet
 

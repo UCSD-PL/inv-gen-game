@@ -7,6 +7,7 @@ from boogie_eval import instantiateAndEval
 from os import listdir
 from os.path import dirname, join, abspath, realpath
 from json import load, dumps
+from random import randint
 
 def _tryUnroll(loop, bbs, min_un, max_un, bad_envs, good_env):
     # Lets first try to find a terminating loop between min and max iterations
