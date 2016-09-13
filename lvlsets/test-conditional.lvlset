@@ -1,0 +1,7 @@
+{
+  "name" : "test",
+  "levels": [
+    [ "1", "test-conditional/019.boogie.desugared.bpl" ],
+    [ "2", "test-conditional/01.bpl" ],
+  ]
+}
