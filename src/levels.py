@@ -205,6 +205,11 @@ def loadBoogieLvlSet(lvlSetFile):
     for (lvlName, lvlPath) in lvlSet["levels"]:
         if lvlPath[0] != '/':
           lvlPath = join(lvlSetDir, lvlPath)
-        lvls[lvlName] = loadBoogieFile(lvlPath, False)
+        try:
+          print "Loading level: ", lvlPath
+          lvls[lvlName] = loadBoogieFile(lvlPath, False)
+        except:
+          print lvlPath;
+          raise;
 
     return (lvlSet["name"], lvls)
