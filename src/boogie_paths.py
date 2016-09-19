@@ -15,7 +15,7 @@ def nd_bb_path_to_ssa(p, bbs, ssa_env, cur_p = ""):
         if isinstance(arg, str):
             repl_ms = [ ssa_env.replm() ]
             for stmt in bbs[arg].stmts:
-                if isinstance(stmt, AstAssignment):
+                for lhs_name in stmt_changed(stmt):
                     lhs_name = stmt.lhs.name
                     ssa_env.update(lhs_name)
                     new_name = ssa_env.lookup(lhs_name)
@@ -58,6 +58,9 @@ def nd_bb_path_to_ssa(p, bbs, ssa_env, cur_p = ""):
     return (path, ssa_env)
 
 def ssa_stmt(stmt, prev_replm, cur_replm):
+    # Havoc's turn into no-ops when SSA-ed.
+    if isinstance(stmt, AstHavoc):
+        return AstAssert(AstTrue);
     if isinstance(stmt, AstAssignment):
         return AstAssignment(replace(stmt.lhs, cur_replm), replace(stmt.rhs, prev_replm))
     else:

@@ -205,9 +205,10 @@ AssumeStmt = ASSUME + O(S("{:partition}")) + Expr + SEMI
 ReturnStmt = RETURN + SEMI 
 GotoStmt = GOTO + csl(Label) + SEMI
 AssignmentStmt = G(csl(Lhs)) + ASSGN + G(csl(Expr)) + SEMI 
+HavocStmt = HAVOC + csl(Id) + SEMI
 Stmt =  AssertStmt \
       | AssumeStmt \
-      | HAVOC + csl(Id) + SEMI \
+      | HavocStmt \
       | AssignmentStmt \
       | CALL + CallLhs + Id + LPARN + csl(Expr) + RPARN + SEMI \
       | CALL + FORALL + Id + LPARN + csl(WildcardExpr) + RPARN + SEMI \

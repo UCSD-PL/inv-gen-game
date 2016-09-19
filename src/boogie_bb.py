@@ -1,5 +1,6 @@
 from boogie_ast import *;
 from collections import namedtuple
+from util import unique
 
 BB = namedtuple("BB", ["predecessors", "stmts", "successors"])
 
@@ -19,6 +20,7 @@ def get_bbs(filename):
 
         if (isinstance(stmt, AstAssert) or
             isinstance(stmt, AstAssume) or
+            isinstance(stmt, AstHavoc) or
             isinstance(stmt, AstAssignment)):
             bbs[curLbl].stmts.append(stmt)
         elif (isinstance(stmt, AstGoto)):
@@ -43,10 +45,11 @@ def entry(bbs):
     assert (len(e) == 1)
     return e[0]
 
+def exits(bbs):
+    return [x for x in bbs if not is_internal_bb(x) and len(bbs[x].successors) == 0]
+
 def exit(bbs):
-    e = [x for x in bbs if not is_internal_bb(x) and len(bbs[x].successors) == 0]
-    assert (len(e) == 1)
-    return e[0]
+    return unique(exits(bbs))
 
 def bbpath_to_stmts(bb_path, bbs):
     r = []
@@ -56,3 +59,16 @@ def bbpath_to_stmts(bb_path, bbs):
         else:
             r.append([ bbpath_to_stmts(x, bbs) for x in b ])
     return r
+
+def ensureSingleExit(bbs):
+    e = exits(bbs);
+    if (len(e) == 1):
+      return;
+
+    bbs["_exit_"] = BB(e, [ ], []);
+    
+    for bb_lbl in e:
+      bbs[bb_lbl].stmts[-1] = AstGoto(["_exit_"]);
+      bbs[bb_lbl].successors.append("_exit_");
+
+    print bbs

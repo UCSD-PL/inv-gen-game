@@ -118,10 +118,18 @@ class AstAssume(AstOneExprStmt):
         assert (len(toks) == 2)
         return AstAssume(toks[1])
 
+class AstHavoc(AstStmt):
+    def __init__(s, ids):  AstNode.__init__(s, ids)
+    def __str__(s): return "havoc " + ",".join(s.ids) + ";"
+    @staticmethod
+    def __parse__(toks):
+        assert toks[0] == "havoc";
+        return AstHavoc(map(str, toks[1:]))
+
 # Returns is for now without argument
 class AstReturn(AstStmt):
     def __init__(s):  AstNode.__init__(s)
-    def __str__(s): return "return"
+    def __str__(s): return "return ;"
     @staticmethod
     def __parse__(toks):    return AstReturn()
 
@@ -182,6 +190,8 @@ def expr_read(ast):
         return expr_read(ast.expr)
     elif isinstance(ast, AstBinExpr):
         return expr_read(ast.lhs).union(expr_read(ast.rhs))
+    elif isinstance(ast, AstTrue) or isinstance(ast, AstFalse):
+        return set()
     else:
         raise Exception("Unknown expression type " + str(ast))
 
@@ -288,6 +298,7 @@ def parseAst(s):
     LabeledStatement.setParseAction(act_wrap(AstLabel))
     AssertStmt.setParseAction(act_wrap(AstAssert))
     AssumeStmt.setParseAction(act_wrap(AstAssume))
+    HavocStmt.setParseAction(act_wrap(AstHavoc))
     ReturnStmt.setParseAction(act_wrap(AstReturn))
     GotoStmt.setParseAction(act_wrap(AstGoto))
     AssignmentStmt.setParseAction(assign_act);
