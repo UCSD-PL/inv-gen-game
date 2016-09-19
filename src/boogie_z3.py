@@ -50,9 +50,9 @@ def expr_to_z3(expr, typeEnv):
             return e1 - e2
         elif expr.op == "*":
             return e1 * e2
-        elif expr.op == "/":
+        elif expr.op == "div":
             return e1 / e2
-        elif expr.op == "%":
+        elif expr.op == "mod":
             return e1 % e2
         else:
             raise Exception("Unknown binary operator " + str(expr.op))
@@ -118,8 +118,8 @@ def z3_expr_to_boogie(expr):
             "+": ("+","left"),
             "-": ("-","left"),
             "*": ("*","left"),
-            "div": ("/","left"),
-            "%": ("%","none"),
+            "div": ("div","left"),
+            "%": ("mod","none"),
             "=": ("==","none"),
             "!=":("!=","none"),
             "<": ("<","none"),

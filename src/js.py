@@ -140,8 +140,8 @@ def esprimaToBoogieExprAst(astn, typeEnv):
         '+': '+',
         '-': '-',
         '*': '*',
-        '/': '/',
-        '%': '%',
+        '/': 'div',
+        '%': 'mod',
       }
       return AstBinExpr(ln, op[astn['operator']], rn)
     except:
@@ -206,8 +206,8 @@ def boogieToEsprimaExpr(expr):
             '+':    ('+', 'BinaryExpression'),
             '-':    ('-', 'BinaryExpression'),
             '*':    ('*', 'BinaryExpression'),
-            '/':    ('/', 'BinaryExpression'),
-            '%':    ('%', 'BinaryExpression'),
+            '/':    ('div', 'BinaryExpression'),
+            '%':    ('mod', 'BinaryExpression'),
             '<':    ('<', 'BinaryExpression'),
             '>':    ('>', 'BinaryExpression'),
             '<=':    ('<=', 'BinaryExpression'),
