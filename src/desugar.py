@@ -23,14 +23,11 @@ def desugar(fname):
     while True:
         try:
             code = "\n".join(lines[
-                    lines.index("after creating a unified exit block",start)+1:
-                    lines.index("after inserting pre- and post-conditions", start)])
-#                    lines.index("after desugaring sugared commands like procedure calls",start)+1:
-#                    lines.index("after conversion into a DAG", start)])
+                    lines.index("after desugaring sugared commands like procedure calls",start)+1:
+                    lines.index("after conversion into a DAG", start)])
             name = r.findall(code)[0]
             res[name] = code;
-#            start = lines.index("after conversion into a DAG", start) + 1
-            start = lines.index("after creating a unified exit block", start) + 1
+            start = lines.index("after conversion into a DAG", start) + 1
         except ValueError:
             break;
 
