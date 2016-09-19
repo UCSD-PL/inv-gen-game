@@ -1,5 +1,5 @@
 from boogie_ast import parseExprAst, ast_or
-from boogie_bb import get_bbs
+from boogie_bb import get_bbs, ensureSingleExit
 from boogie_loops import loops, get_loop_header_values, loop_vc_pre_ctrex
 from util import unique, powerset, average
 from boogie_analysis import livevars
@@ -106,8 +106,35 @@ def findNegatingTrace(loop, bbs, nunrolls, invs, invVrs = None):
     else:
         return (None, False)
 
+def readTrace(fname):
+    trace = open(fname, "r").read();
+    lines = filter(lambda (x): len(x) != 0, map(lambda x:   x.strip(), trace.split('\n')))
+    vs = filter(lambda x:   len(x) != 0, lines[0].split(' '))
+    header_vals = [ ]
+    for l in lines[1:]:
+        if (l[0] == '#'):    continue;
+
+        env = { }
+        for (var,val) in zip(vs, filter(lambda x:   len(x) != 0, l.split(' '))):
+            env[var] = val
+        header_vals.append(env);
+    return (vs, header_vals)
+
+def writeTrace(fname, header_vals):
+    f = open(fname, "w");
+
+    if (len(header_vals) != 0):
+      vs = header_vals[0].keys();
+      f.write(" ".join(vs) + "\n");
+      for env in header_vals:
+        f.write(" ".join([str(env[v]) for v in vs]) + "\n")
+
+    f.close();
+
+#TODO: Remove multiround. Its crud.
 def loadBoogieFile(fname, multiround):
     bbs = get_bbs(fname)
+    ensureSingleExit(bbs);
     loop = unique(loops(bbs), "Cannot handle program with multiple loops:" + fname)
 
     # The variables to trace are all live variables at the loop header
@@ -118,24 +145,13 @@ def loadBoogieFile(fname, multiround):
 
     # See if there is a .hint files
     hint = None
-    trace = None
+    header_vals = None;
     try:
-        trace = open(fname[:-4] + '.trace').read();
+        (vs, header_vals) = readTrace(fname[:-4] + '.trace')
         hint = open(fname[:-4] + '.hint').read()
     except: pass
 
-    if (trace):
-        lines = filter(lambda (x): len(x) != 0, map(lambda x:   x.strip(), trace.split('\n')))
-        vs = filter(lambda x:   len(x) != 0, lines[0].split(' '))
-        header_vals = [ ]
-        for l in lines[1:]:
-            if (l[0] == '#'):    continue;
-
-            env = { }
-            for (var,val) in zip(vs, filter(lambda x:   len(x) != 0, l.split(' '))):
-                env[var] = val
-            header_vals.append(env);
-    else:
+    if (not header_vals):
         new_header_vals, new_terminates = getInitialData(loop, bbs, 4,
           [ parseExprAst(inv)[0] for inv in ["x<y", "x<=y", "x==c", "x==y", "x==0", "x<0"] ],
           [ "x", "y" ])
@@ -143,6 +159,7 @@ def loadBoogieFile(fname, multiround):
         if (new_header_vals != None):
             header_vals = new_header_vals
             terminates = new_terminates
+            writeTrace(fname[:-4] + ".trace", new_header_vals);
 
     return { 'variables': vs,
              'data': [[[ str(row[v]) for v in vs  ]  for row in header_vals], [], []],
@@ -161,7 +178,7 @@ def loadBoogies(dirN, multiround = False):
     return { name[:-4] : loadBoogieFile(dirN + '/' + name, multiround) for name in listdir(dirN)
                 if name.endswith('.bpl') }
 
-def readTrace(fname):
+def readTraceOnlyLvl(fname):
     rows = []
     first = True
     for l in open(fname):
@@ -194,7 +211,7 @@ def readTrace(fname):
     }
 
 def loadTraces(dirN):
-    return { name[:-4] : readTrace(dirN + '/' + name) for name in listdir(dirN)
+    return { name[:-4] : readTraceOnlyLvl(dirN + '/' + name) for name in listdir(dirN)
                 if name.endswith('.out') }
 
 def loadBoogieLvlSet(lvlSetFile):
@@ -205,11 +222,7 @@ def loadBoogieLvlSet(lvlSetFile):
     for (lvlName, lvlPath) in lvlSet["levels"]:
         if lvlPath[0] != '/':
           lvlPath = join(lvlSetDir, lvlPath)
-        try:
-          print "Loading level: ", lvlPath
-          lvls[lvlName] = loadBoogieFile(lvlPath, False)
-        except:
-          print lvlPath;
-          raise;
+        print "Loading level: ", lvlPath
+        lvls[lvlName] = loadBoogieFile(lvlPath, False)
 
     return (lvlSet["name"], lvls)
