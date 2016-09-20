@@ -209,6 +209,8 @@ def stmt_read(ast):
 def stmt_changed(ast):
     if isinstance(ast, AstAssignment):
         return expr_read(ast.lhs)
+    elif isinstance(ast, AstHavoc):
+        return set(ast.ids)
     else:
         return set([])
 
