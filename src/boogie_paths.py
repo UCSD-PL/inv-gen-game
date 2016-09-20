@@ -15,31 +15,36 @@ def nd_bb_path_to_ssa(p, bbs, ssa_env, cur_p = ""):
         if isinstance(arg, str):
             repl_ms = [ ssa_env.replm() ]
             for stmt in bbs[arg].stmts:
-                for lhs_name in stmt_changed(stmt):
-                    lhs_name = stmt.lhs.name
-                    ssa_env.update(lhs_name)
-                    new_name = ssa_env.lookup(lhs_name)
+                for name in stmt_changed(stmt):
+                    ssa_env.update(name)
+                    new_name = ssa_env.lookup(name)
                 repl_ms.append(ssa_env.replm())
             path.append((arg, repl_ms))
         else:
             tmp = []
             choice_var = "_split_" + cur_p + "." + str(ind)
 
+            # Build each SSA-ed subpath
             for nsplit, subp in enumerate(arg):
                 suffix = cur_p + "." + str(ind) + "." + str(nsplit) + "."
                 tmp.append(nd_bb_path_to_ssa(subp, bbs, SSAEnv(ssa_env, suffix), cur_p + suffix))
 
+            # Compute the set of variables changed across ALL paths
             changed = set()
             for (_, sub_env) in tmp:  changed.update(sub_env.changed())
 
+            # Compute their ssa name BEFORE the paths
             old_varm = { s : ssa_env.lookup(s) for s in changed }
-            pre_ssa_replm = ssa_env.replm()
+            # Make sure each of them is upded in the environment AFTER the paths
             for s in changed: ssa_env.update(s)
 
+            # For each sub-path add a "union" block at the end
+            # that makes sure the SSA-ed names of all changed variables
+            # across all paths match up
             for (nsplit, (subp, sub_env)) in enumerate(tmp):
                 bb_name = "_union_"  + cur_p + "." + str(ind) + "." + str(nsplit)
                 bb_stmts = []
-                bb_replmps = [ pre_ssa_replm ]
+                bb_replmps = [ sub_env.replm() ]
 
                 for s in changed:
                     if (s in sub_env.changed()):
@@ -52,9 +57,11 @@ def nd_bb_path_to_ssa(p, bbs, ssa_env, cur_p = ""):
                     bb_replmps.append(sub_env.replm())
 
                 bb = BB(set(), bb_stmts, set())
+                print bb_name, bb_stmts;
                 bbs[bb_name] = bb
                 subp.append((bb_name, bb_replmps))
             path.append((choice_var, map(lambda x:  x[0], tmp)))
+
     return (path, ssa_env)
 
 def ssa_stmt(stmt, prev_replm, cur_replm):
