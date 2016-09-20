@@ -68,7 +68,6 @@ def stmt_to_z3(stmt, typeEnv):
     elif (isinstance(stmt, AstAssert)):
         return (expr_to_z3(stmt.expr, typeEnv))
     elif (isinstance(stmt, AstAssume)):
-        # TODO: WTF?
         return (expr_to_z3(stmt.expr, typeEnv))
     else:
         raise Exception("Can't convert " + str(stmt))

@@ -139,19 +139,22 @@ def loadBoogieFile(fname, multiround):
 
     # The variables to trace are all live variables at the loop header
     vs = list(livevars(bbs)[loop.loop_paths[0][0]])
-    header_vals, terminates = _tryUnroll(loop, bbs, 0, 4, None, None)
-    # Assume we have no tests with dead loops
-    assert(header_vals != [])
 
-    # See if there is a .hint files
+    # See if there is a .trace or a .hint file
     hint = None
     header_vals = None;
+    terminates = False;
     try:
         (vs, header_vals) = readTrace(fname[:-4] + '.trace')
         hint = open(fname[:-4] + '.hint').read()
-    except: pass
+    except: 
+        pass
 
     if (not header_vals):
+        header_vals, terminates = _tryUnroll(loop, bbs, 0, 4, None, None)
+        # Assume we have no tests with dead loops
+        assert(header_vals != [])
+
         new_header_vals, new_terminates = getInitialData(loop, bbs, 4,
           [ parseExprAst(inv)[0] for inv in ["x<y", "x<=y", "x==c", "x==y", "x==0", "x<0"] ],
           [ "x", "y" ])
