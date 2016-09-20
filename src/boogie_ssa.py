@@ -1,12 +1,13 @@
 from boogie_ast import *;
 from z3 import *
+from copy import copy, deepcopy;
 
 class SSAEnv:
     def __init__(s, parent = None, prefix = "."):
         s._cnt = {}
         parent_pfix = parent._prefix if parent else ""
         s._prefix = parent_pfix + prefix
-        s._parent = parent
+        s._parent = deepcopy(parent)
 
     def lookup(s, v):
         if v in s._cnt:
@@ -30,7 +31,7 @@ class SSAEnv:
         return s._cnt.keys()
 
     def replm(s):
-        replm = s._parent.replm() if (s._parent) else {}
+        replm = copy(s._parent.replm()) if (s._parent) else {}
         for k in s._cnt:
             replm[AstId(k)] = AstId(s.lookup(k))
         return replm
