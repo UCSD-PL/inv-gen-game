@@ -118,7 +118,7 @@ def z3_expr_to_boogie(expr):
             "-": ("-","left"),
             "*": ("*","left"),
             "div": ("div","left"),
-            "%": ("mod","none"),
+            "mod": ("mod","none"),
             "=": ("==","none"),
             "!=":("!=","none"),
             "<": ("<","none"),

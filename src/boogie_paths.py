@@ -57,7 +57,6 @@ def nd_bb_path_to_ssa(p, bbs, ssa_env, cur_p = ""):
                     bb_replmps.append(sub_env.replm())
 
                 bb = BB(set(), bb_stmts, set())
-                print bb_name, bb_stmts;
                 bbs[bb_name] = bb
                 subp.append((bb_name, bb_replmps))
             path.append((choice_var, map(lambda x:  x[0], tmp)))
