@@ -287,6 +287,21 @@ function generalizeInv(inv:string|ESTree.Node): [ESTree.Node, string[], string[]
   return [ newInv, symConsts, symVars ]
 }
 
+function fixVariableCase(inv: ESTree.Node, vars: string[]): ESTree.Node {
+  var stringM : { [lowerCaseVar:string] : string } = {};
+
+  for (let v of vars)
+    stringM[v.toLowerCase()] = v;
+
+  return replace(inv, (node) => {
+    if (node.type == "Identifier" && node.name.toLowerCase() in stringM) {
+      return { "type": "Identifier", "name": stringM[node.name.toLowerCase()] };
+    } else {
+      return node;
+    }
+  });
+}
+
 function esprimaToStr(nd: ESTree.Node): string {
   return estree_reduce<string>(nd,  (nd: ESTree.Node, args: string[]): string => {
     if (nd.type == "Program") {

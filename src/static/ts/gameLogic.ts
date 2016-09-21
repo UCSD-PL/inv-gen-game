@@ -797,7 +797,7 @@ class PatternGameLogic extends BaseGameLogic {
 
     let inv = invPP(this.tracesW.curExp().trim());
     let desugaredInv = invToJS(inv)
-    let parsedInv: ESTree.Node = null;
+    var parsedInv: ESTree.Node = null;
 
     this.userInputCb(inv);
 
@@ -812,6 +812,8 @@ class PatternGameLogic extends BaseGameLogic {
       //this.tracesW.delayedError(inv + " is not a valid expression.");
       return;
     }
+
+    parsedInv = fixVariableCase(parsedInv, this.curLvl.variables);
 
     let undefined_ids = difference(identifiers(parsedInv), toStrset(this.curLvl.variables));
     if (!isEmpty(undefined_ids)) {

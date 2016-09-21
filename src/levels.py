@@ -140,6 +140,9 @@ def loadBoogieFile(fname, multiround):
     # The variables to trace are all live variables at the loop header
     vs = list(livevars(bbs)[loop.loop_paths[0][0]])
 
+    # Make sure variable names are different modulo case
+    assert len(vs) == len(set([var.lower() for var in vs]))
+
     # See if there is a .trace or a .hint file
     hint = None
     header_vals = None;
