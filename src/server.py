@@ -62,15 +62,19 @@ def log(action, *pps):
         else:
           assert(len(action['kwargs']) == 0);
           assert(len(pps) >= len(action['args']));
-          s = "[" + Fore.GREEN + str(action['ip']) + Style.RESET_ALL + '] ' + \
-              Style.DIM + str(action['time']) + Style.RESET_ALL + ':' + \
-              Fore.RED + action['method'] + Style.RESET_ALL + "(" \
+          prompt = "[" + Fore.GREEN + str(action['ip']) + Style.RESET_ALL + '] ' + \
+              Style.DIM + str(action['time']) + Style.RESET_ALL + ':'
+
+          call = Fore.RED + action['method'] + "(" + Style.RESET_ALL \
               + (Fore.RED + "," + Style.RESET_ALL).join(\
                   [pps[ind](arg) for (ind, arg) in enumerate(action["args"])]) + \
                Fore.RED + ")" + Style.RESET_ALL
+
           if (len(action['args']) + 1 == len(pps)):
-            s += "=" + pps[len(action['args'])](action['res']); 
-          print s;
+            call += "=" + pps[len(action['args'])](action['res']);
+
+          print prompt + call;
+        sys.stdout.flush();
 
 def log_d(*pps):
     def decorator(f):
