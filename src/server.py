@@ -28,7 +28,12 @@ import argparse
 import traceback
 import time
 import sys
+from pp import *
 from copy import copy
+from colorama import Fore,Back,Style
+from colorama import init as colorama_init
+
+colorama_init();
 
 p = argparse.ArgumentParser(description="invariant gen game server")
 p.add_argument('--log', type=str, help='an optional log file to store all user actions. Entries are stored in JSON format.')
@@ -42,26 +47,44 @@ logF = None;
 if args.log:
     logF = open(args.log,'w')
 
-def log(action):
+def arg_tostr(arg):
+    return str(arg);
+
+def log(action, *pps):
     action['time'] = time.time()
     action['ip'] = request.remote_addr;
     if (logF):
         logF.write(dumps(action) + '\n')
         logF.flush()
     else:
-        print dumps(action) + '\n'
+        if (len(pps) == 0):
+          print dumps(action) + "\n";
+        else:
+          assert(len(action['kwargs']) == 0);
+          assert(len(pps) >= len(action['args']));
+          s = "[" + Fore.GREEN + str(action['ip']) + Style.RESET_ALL + '] ' + \
+              Style.DIM + str(action['time']) + Style.RESET_ALL + ':' + \
+              Fore.RED + action['method'] + Style.RESET_ALL + "(" \
+              + (Fore.RED + "," + Style.RESET_ALL).join(\
+                  [pps[ind](arg) for (ind, arg) in enumerate(action["args"])]) + \
+               Fore.RED + ")" + Style.RESET_ALL
+          if (len(action['args']) + 1 == len(pps)):
+            s += "=" + pps[len(action['args'])](action['res']); 
+          print s;
 
-def log_d(f):
-    def decorated(*args, **kwargs):
-        try:
-            res = f(*args, **kwargs)
-            log({ "method": f.__name__, "args": args, "kwargs": kwargs, "res": res })
-            return res;
-        except Exception,e:
-            log({ "method": f.__name__, "args": args, "kwargs": kwargs,
-                  "exception": ''.join(traceback.format_exception(*exc_info()))})
-            raise
-    return decorated
+def log_d(*pps):
+    def decorator(f):
+        def decorated(*args, **kwargs):
+            try:
+                res = f(*args, **kwargs)
+                log({ "method": f.__name__, "args": args, "kwargs": kwargs, "res": res }, *pps)
+                return res;
+            except Exception,e:
+                log({ "method": f.__name__, "args": args, "kwargs": kwargs,
+                      "exception": ''.join(traceback.format_exception(*exc_info()))})
+                raise
+        return decorated
+    return decorator
 
 def prof_d(f):
     def decorated(*args, **kwargs):
@@ -100,13 +123,13 @@ api = rpc(app, '/api')
 
 @api.method("App.logEvent")
 @pp_exc
-@log_d
+@log_d(str,str,str,str)
 def logEvent(workerId, name, data):
     return None
 
 @api.method("App.listData")
 @pp_exc
-@log_d
+@log_d(str,str)
 def listData(levelSet):
     res = traces[levelSet].keys()
     res.sort()
@@ -114,7 +137,7 @@ def listData(levelSet):
 
 @api.method("App.getTutorialDone")
 @pp_exc
-@log_d
+@log_d(str, str)
 def getTutorialDone(workerId):
     if workerId == "":
         return False
@@ -122,14 +145,14 @@ def getTutorialDone(workerId):
 
 @api.method("App.setTutorialDone")
 @pp_exc
-@log_d
+@log_d(str)
 def setTutorialDone(workerId):
     if workerId != "":
         open(join(ROOT_DIR, 'logs', args.ename, "tut-done-" + workerId), "w").close()
 
 # @api.method("App.getMyNextLvl")
 # @pp_exc
-# @log_d
+# @log_d()
 # def getMyNextLvl(workerId, levelSet):
 #     if workerId == "":
 #         return "Tutorial"
@@ -152,7 +175,7 @@ def setTutorialDone(workerId):
 
 # @api.method("App.getMyLastLvl")
 # @pp_exc
-# @log_d
+# @log_d()
 # def getMyLastLvl(workerId, levelSet):
 #     # note that we ignore levelSet -- for now assume each
 #     # experiment uses a single levelSet
@@ -170,7 +193,7 @@ def setTutorialDone(workerId):
 
 # @api.method("App.storeMyLastLvl")
 # @pp_exc
-# @log_d
+# @log_d()
 # def storeMyLastLvl(workerId, levelSet, lvlId):
 #     # note that we ignore levelSet -- for now assume each
 #     # experiment uses a single levelSet
@@ -182,7 +205,7 @@ def setTutorialDone(workerId):
 
 @api.method("App.loadLvl")
 @pp_exc
-@log_d
+@log_d(str, str, pp_BoogieLvl)
 def loadLvl(levelSet, lvlId):
     if (levelSet not in traces):
         raise Exception("Unkonwn level set " + levelSet)
@@ -234,7 +257,7 @@ class IgnoreManager:
 
 @api.method("App.loadNextLvl")
 @pp_exc
-@log_d
+@log_d(str, pp_BoogieLvl)
 def loadNextLvl(workerId):
     exp_dir = join(ROOT_DIR, "logs", args.ename)
     level_names = traces[curLevelSetName].keys();
@@ -251,14 +274,14 @@ def loadNextLvl(workerId):
 
 @api.method("App.addToIgnoreList")
 @pp_exc
-@log_d
+@log_d(str, str, str)
 def addToIgnoreList(workerId, levelSet, lvlId):
     if workerId != "":
         ignore.add(workerId, levelSet, lvlId)
 
 @api.method("App.setLvlAsDone")
 @pp_exc
-@log_d
+@log_d(str, str)
 def setLvlAsDone(levelSet, lvlId):
     open(join(ROOT_DIR, "logs", args.ename, "done-" + levelSet + "-" + lvlId), "w").close()
 
@@ -273,7 +296,7 @@ def _from_dict(vs, vals):
 
 @api.method("App.instantiate")
 @pp_exc
-@log_d
+@log_d(pp_EsprimaInvs, str, str)
 def instantiate(invs, traceVars, trace):
     res = []
     z3Invs = []
@@ -299,7 +322,7 @@ def instantiate(invs, traceVars, trace):
     
 @api.method("App.getPositiveExamples")
 @pp_exc
-@log_d
+@log_d()
 def getPositiveExamples(levelSet, levelId, cur_expl_state, overfittedInvs, num):
     if (levelSet not in traces):
         raise Exception("Unkonwn level set " + str(levelSet))
@@ -357,7 +380,7 @@ def getPositiveExamples(levelSet, levelId, cur_expl_state, overfittedInvs, num):
 
 @api.method("App.equivalentPairs")
 @pp_exc
-@log_d
+@log_d(pp_EsprimaInvs, pp_EsprimaInvs, pp_EsprimaInvPairs)
 def equivalentPairs(invL1, invL2):
     z3InvL1 = [esprimaToZ3(x, {}) for x in invL1]
     z3InvL2 = [esprimaToZ3(x, {}) for x in invL2]
@@ -369,7 +392,7 @@ def equivalentPairs(invL1, invL2):
 
 @api.method("App.impliedPairs")
 @pp_exc
-@log_d
+@log_d(pp_EsprimaInvs, pp_EsprimaInvs, pp_EsprimaInvPairs)
 def impliedPairs(invL1, invL2):
     z3InvL1 = [esprimaToZ3(x, {}) for x in invL1]
     z3InvL2 = [esprimaToZ3(x, {}) for x in invL2]
@@ -381,14 +404,14 @@ def impliedPairs(invL1, invL2):
 
 @api.method("App.isTautology")
 @pp_exc
-@log_d
+@log_d(pp_EsprimaInv, str)
 def isTautology(inv):
     res = (tautology(esprimaToZ3(inv, {})))
     return res
 
 @api.method("App.verifyInvariants")
 @pp_exc
-@log_d
+@log_d(str, str, pp_EsprimaInvs, str)
 def verifyInvariants(levelSet, levelId, invs):
     if (levelSet not in traces):
         raise Exception("Unkonwn level set " + str(levelSet))
@@ -528,7 +551,7 @@ def checkInvs_impl(bbs, loop, invs):
     
 @api.method("App.checkInvs")
 @pp_exc
-@log_d
+@log_d(str,str, pp_EsprimaInvs, pp_CheckInvsRes)
 def checkInvs(levelSet, levelId, invs):
     """ See checkInvs_impl
     """
@@ -547,7 +570,6 @@ def checkInvs(levelSet, levelId, invs):
       # Not a boogie level - error
       raise Exception("Level " + str(levelId) + " " + str(levelSet) + " not a dynamic boogie level.")
 
-    print invs
     bbs = lvl['program']
     loop = lvl['loop']
     boogie_invs = [ esprimaToBoogie(x, {}) for x in invs ]
@@ -557,13 +579,12 @@ def checkInvs(levelSet, levelId, invs):
     overfitted = map(lambda x:  (boogieToEsprima(x[0]), fix(x[1])), overfitted)
     nonind = map(lambda x:  (boogieToEsprima(x[0]), (fix(x[1][0]), fix(x[1][1]))), nonind)
     sound = map(lambda x:   boogieToEsprima(x), sound)
-    print (overfitted, nonind, sound)
 
     return (overfitted, nonind, sound)
 
 @api.method("App.simplifyInv")
 @pp_exc
-@log_d
+@log_d(pp_EsprimaInv, pp_EsprimaInv)
 def simplifyInv(inv):
     z3_inv = esprimaToZ3(inv, {});
     simpl_z3_inv = simplify(z3_inv, arith_lhs=True);
@@ -571,7 +592,7 @@ def simplifyInv(inv):
 
 @api.method("App.getRandomCode")
 @pp_exc
-@log_d
+@log_d(str)
 def getRandomCode():
     alphanum = "".join([chr(ord('a') + i) for i in range(26) ] + [ str(i) for i in range(0,10)])
     return "".join([ choice(alphanum) for x in range(5) ]);

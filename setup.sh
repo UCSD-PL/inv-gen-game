@@ -24,6 +24,7 @@ pip install slimit
 pip install pyparsing
 pip install boto
 pip install pyOpenSSL
+pip install colorama
 
 if [ ! -d $DIR/third_party ] ; then
   mkdir $DIR/third_party
