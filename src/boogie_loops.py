@@ -7,7 +7,6 @@ from boogie_ssa import *
 from boogie_eval import env_to_expr
 from collections import namedtuple
 from util import *
-from z3 import *
 
 Loop = namedtuple("Loop", ["header", "loop_paths", "exit_paths"])
 

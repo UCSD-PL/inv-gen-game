@@ -2,7 +2,6 @@ from boogie_z3 import *
 from boogie_ast import *
 from boogie_paths import get_path_vars
 from itertools import permutations
-from z3 import *
 
 def val_to_boogie(v):
     if (isinstance(v, IntNumRef)):

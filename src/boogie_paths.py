@@ -3,7 +3,6 @@ from boogie_z3 import *
 from boogie_bb import *
 from boogie_ssa import *
 from boogie_predicate_transformers import wp_stmts, sp_stmts
-from z3 import *
 
 # BB_PATH = [ BB_LABEL ]
 # NONDET_BB_PATH = [ (BB | [ NONDET_BB_PATH ] ) ]
@@ -88,19 +87,12 @@ def ssa_path_to_z3(ssa_path, bbs):
 
 def is_nd_bb_path_possible(bbpath, bbs):
     nd_ssa_p, _ = nd_bb_path_to_ssa(bbpath, bbs, SSAEnv(None, ""))
-    q = ssa_path_to_z3(nd_ssa_p, bbs)
-    s = Solver()
-    s.append(q)
-    return sat == s.check();
+    return satisfiable(ssa_path_to_z3(nd_ssa_p, bbs))
 
 def get_path_vars(bbpath, bbs):
     ssa_p, _ = nd_bb_path_to_ssa(bbpath, bbs, SSAEnv(None, ""))
-    q = ssa_path_to_z3(ssa_p, bbs)
-    s = Solver()
-    s.append(q)
-    assert(sat == s.check())
+    m = model(ssa_path_to_z3(ssa_p, bbs))
 
-    m = s.model()
     argsS = set([str(x) for x in m.decls() if not is_ssa_str(str(x)) and '_split_' not in str(x)])
 
     def _helper(ssa_p):

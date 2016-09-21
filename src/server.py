@@ -4,7 +4,6 @@ from flask import request
 from flask_jsonrpc import JSONRPC as rpc
 from os.path import *
 from json import load, dumps
-from z3 import *
 from js import invJSToZ3, addAllIntEnv, esprimaToZ3, esprimaToBoogie, boogieToEsprima
 from boogie_ast import parseAst, AstBinExpr, AstTrue, AstUnExpr,\
     ast_and, replace, expr_read
@@ -15,7 +14,6 @@ from boogie_z3 import expr_to_z3, AllIntTypeEnv, ids, z3_expr_to_boogie
 from boogie_paths import sp_nd_ssa_path, nd_bb_path_to_ssa, wp_nd_ssa_path
 from boogie_ssa import SSAEnv
 from graph import strongly_connected_components, collapse_scc, topo_sort
-from logic import implies, equivalent, tautology
 from sys import exc_info
 from cProfile import Profile
 from pstats import Stats
@@ -70,7 +68,7 @@ def log(action, *pps):
                   [pps[ind](arg) for (ind, arg) in enumerate(action["args"])]) + \
                Fore.RED + ")" + Style.RESET_ALL
 
-          if (len(action['args']) + 1 == len(pps)):
+          if (len(action['args']) + 1 == len(pps) and 'res' in action):
             call += "=" + pps[len(action['args'])](action['res']);
 
           print prompt + call;
@@ -110,7 +108,6 @@ def prof_d(f):
 
 MYDIR = dirname(abspath(realpath(__file__)))
 ROOT_DIR = dirname(MYDIR)
-z3s = Solver()
 
 curLevelSetName, lvls = loadBoogieLvlSet(args.lvlset)
 traces = { curLevelSetName: lvls }

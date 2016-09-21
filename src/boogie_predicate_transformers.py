@@ -1,7 +1,6 @@
 from boogie_ast import *;
 from boogie_z3 import *
 from collections import namedtuple
-from z3 import *
 
 def wp_stmt(stmt, pred, typeEnv):
     if (isinstance(stmt, AstLabel)):

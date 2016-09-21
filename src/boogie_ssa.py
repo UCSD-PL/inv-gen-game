@@ -1,5 +1,4 @@
 from boogie_ast import *;
-from z3 import *
 from copy import copy, deepcopy;
 
 class SSAEnv:
