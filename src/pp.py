@@ -1,7 +1,10 @@
 from js import *
 
 def pp_BoogieLvl(lvl):
-  return "Boogie(" + str(lvl['data']) + ")"
+  if (lvl != None):
+    return "Boogie(" + str(lvl['data']) + ")"
+  else:
+    return str(lvl)
 
 def pp_EsprimaInv(inv):
   return str(esprimaToZ3(inv, {}))

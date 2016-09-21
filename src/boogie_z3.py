@@ -19,8 +19,11 @@ def shutdownZ3():
   try:
       ctxPoolLock.acquire();
       for (ctx,thr) in ctxPool.iteritems():
-        print "Trying to interrupt z3 ctx for thread ", thr.name
-        ctx.interrupt();
+        if (thr):
+          print "Trying to interrupt z3 ctx for thread ", thr.name
+          ctx.interrupt();
+
+      z3.main_ctx().interrupt();
   finally:
       ctxPoolLock.release();
 
@@ -65,6 +68,9 @@ def getSolver():
 
 def Int(n):
   return z3.Int(n, ctx=get_ctx());
+
+def Bool(b):
+  return z3.BoolVal(b, ctx=get_ctx());
 
 def counterex(pred):
     s = getSolver()

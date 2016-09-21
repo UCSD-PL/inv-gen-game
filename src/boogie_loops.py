@@ -116,7 +116,7 @@ def loop_vc_pre_ctrex(loop, inv, bbs):
 def loop_vc_post_ctrex(loop, inv, bbs):
     exit_path = unique(loop.exit_paths)
     exit_ssa, ssa_env = nd_bb_path_to_ssa(exit_path, bbs, SSAEnv(None, ""))
-    q = Not(Implies(expr_to_z3(inv, AllIntTypeEnv()), wp_nd_ssa_path(exit_ssa, bbs, BoolVal(True), AllIntTypeEnv())))
+    q = Not(Implies(expr_to_z3(inv, AllIntTypeEnv()), wp_nd_ssa_path(exit_ssa, bbs, Bool(True), AllIntTypeEnv())))
     ctr = counterex(q)
     return None if not ctr else _unssa_z3_model(ctr, {})
 
