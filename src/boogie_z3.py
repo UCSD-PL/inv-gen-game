@@ -8,6 +8,29 @@ _TL = local();
 ctxPool = { }
 ctxPoolLock = Lock();
 
+shuttingDown = False;
+class Die(Exception): pass
+
+def shutdownZ3():
+  global shuttingDown
+  print "Shutting down Z3"
+  shuttingDown = True;
+
+  try:
+      ctxPoolLock.acquire();
+      for (ctx,thr) in ctxPool.iteritems():
+        print "Trying to interrupt z3 ctx for thread ", thr.name
+        ctx.interrupt();
+  finally:
+      ctxPoolLock.release();
+
+def checkShuttingDown():
+  global shuttingDown
+
+  if (shuttingDown):
+    raise Die()
+
+
 def get_ctx():
     if (not hasattr(_TL, "ctx")):
         # Allocate a context for this thread
@@ -15,7 +38,8 @@ def get_ctx():
         try:
             ctxPoolLock.acquire();
             # First GC any Ctx from the ctx pool whose threads are gone
-            reclaim = [ (ctx, thr) for (ctx,thr) in ctxPool.iteritems() if (not thr.is_alive()) ]
+            reclaim = [ (ctx, thr) for (ctx,thr) in ctxPool.iteritems()
+                        if (thr !=None and not thr.is_alive()) ]
             for (ctx, thr) in reclaim:
                 print "Reclaiming z3 ctx from dead thread " + thr.name
                 ctxPool[ctx] = None;
@@ -46,6 +70,7 @@ def counterex(pred):
     s = getSolver()
     s.add(pred)
     res = s.check()
+    checkShuttingDown();
     return None if z3.unsat == res else s.model()
 
 def Or(*args):
@@ -65,12 +90,22 @@ def Implies(a,b):
 def satisfiable(pred):
     s = getSolver()
     s.add(pred);
-    return s.check() == z3.sat
+    res = s.check() == z3.sat
+    checkShuttingDown();
+    return res;
+
+def unsatisfiable(pred):
+    s = getSolver()
+    s.add(pred);
+    res = s.check() == z3.unsat
+    checkShuttingDown();
+    return res;
 
 def model(pred):
     s = getSolver();
     s.add(pred);
     assert s.check() == z3.sat
+    checkShuttingDown()
     return s.model();
 
 def simplify(pred, *args, **kwargs):
@@ -78,38 +113,13 @@ def simplify(pred, *args, **kwargs):
     return z3.simplify(pred, *args, **kwargs)
 
 def implies(inv1, inv2):
-    s = getSolver()
-    s.add(inv1)
-    s.add(Not(inv2))
-    return z3.unsat == s.check();
+    return unsatisfiable(And(inv1, Not(inv2)))
 
 def equivalent(inv1, inv2):
-    s = getSolver();
-    s.push();
-    s.add(inv1)
-    s.add(Not(inv2))
-    impl = s.check();
-    s.pop();
-
-    if (impl != z3.unsat):
-      return False;
-
-    s.push();
-    s.add(Not(inv1))
-    s.add(inv2)
-    impl = s.check();
-    s.pop();
-
-    if (impl != z3.unsat):
-      return False;
-
-    return True
+    return implies(inv1,inv2) and implies(inv2, inv1)
 
 def tautology(inv):
-    s = getSolver()
-    s.add(Not(inv))
-    return (z3.unsat == s.check())
-
+    return unsatisfiable(Not(inv))
 
 class AllIntTypeEnv:
     def __getitem__(s, i):  return Int
