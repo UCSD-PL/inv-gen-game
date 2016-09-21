@@ -1,8 +1,115 @@
 import boogie_ast as ast
 import z3;
+from threading import local, current_thread, Lock
+from z3 import substitute
+
+_TL = local();
+
+ctxPool = { }
+ctxPoolLock = Lock();
+
+def get_ctx():
+    if (not hasattr(_TL, "ctx")):
+        # Allocate a context for this thread
+        ct = current_thread()
+        try:
+            ctxPoolLock.acquire();
+            # First GC any Ctx from the ctx pool whose threads are gone
+            reclaim = [ (ctx, thr) for (ctx,thr) in ctxPool.iteritems() if (not thr.is_alive()) ]
+            for (ctx, thr) in reclaim:
+                print "Reclaiming z3 ctx from dead thread " + thr.name
+                ctxPool[ctx] = None;
+
+            if (len(reclaim) > 0):
+              print "Assigning existing ctx to thread " + ct.name
+              newCtx = reclaim[0][0]
+            else:
+              print "Creating new ctx for thread " + ct.name
+              newCtx = z3.Context();
+
+            ctxPool[newCtx] = ct;
+            print "ctxPool has ", len(ctxPool), "entries"
+        finally:
+            ctxPoolLock.release();
+
+        _TL.ctx = newCtx
+
+    return _TL.ctx
+
+def getSolver():
+    return z3.Solver(ctx=get_ctx())
 
 def Int(n):
-  return z3.Int(n);
+  return z3.Int(n, ctx=get_ctx());
+
+def counterex(pred):
+    s = getSolver()
+    s.add(pred)
+    res = s.check()
+    return None if z3.unsat == res else s.model()
+
+def Or(*args):
+    t = tuple(list(args) + [ get_ctx() ])
+    return z3.Or(*t)
+
+def And(*args):
+    t = tuple(list(args) + [ get_ctx() ])
+    return z3.And(*t)
+
+def Not(pred):
+    return z3.Not(pred, ctx=get_ctx())
+
+def Implies(a,b):
+    return z3.Implies(a,b, ctx=get_ctx())
+
+def satisfiable(pred):
+    s = getSolver()
+    s.add(pred);
+    return s.check() == z3.sat
+
+def model(pred):
+    s = getSolver();
+    s.add(pred);
+    assert s.check() == z3.sat
+    return s.model();
+
+def simplify(pred, *args, **kwargs):
+    # Simplify doesn't need get_ctx() as it gets its ctx from pred
+    return z3.simplify(pred, *args, **kwargs)
+
+def implies(inv1, inv2):
+    s = getSolver()
+    s.add(inv1)
+    s.add(Not(inv2))
+    return z3.unsat == s.check();
+
+def equivalent(inv1, inv2):
+    s = getSolver();
+    s.push();
+    s.add(inv1)
+    s.add(Not(inv2))
+    impl = s.check();
+    s.pop();
+
+    if (impl != z3.unsat):
+      return False;
+
+    s.push();
+    s.add(Not(inv1))
+    s.add(inv2)
+    impl = s.check();
+    s.pop();
+
+    if (impl != z3.unsat):
+      return False;
+
+    return True
+
+def tautology(inv):
+    s = getSolver()
+    s.add(Not(inv))
+    return (z3.unsat == s.check())
+
 
 class AllIntTypeEnv:
     def __getitem__(s, i):  return Int
@@ -21,20 +128,20 @@ def expr_to_z3(expr, typeEnv):
         if expr.op == '-':
             return -z3_inner
         elif expr.op == '!':
-            return z3.Not(z3_inner)
+            return Not(z3_inner)
         else:
             raise Exception("Unknown unary operator " + str(expr.op))
     elif isinstance(expr, ast.AstBinExpr):
         e1 = expr_to_z3(expr.lhs, typeEnv)
         e2 = expr_to_z3(expr.rhs, typeEnv)
         if expr.op == "<==>":
-            return z3.And(Implies(e1, e2), Implies(e2,e1))
+            return And(Implies(e1, e2), Implies(e2,e1))
         elif expr.op == "==>":
-            return z3.Implies(e1, e2)
+            return Implies(e1, e2)
         elif expr.op == "||":
-            return z3.Or(e1, e2)
+            return Or(e1, e2)
         elif expr.op == "&&":
-            return z3.And(e1, e2)
+            return And(e1, e2)
         elif expr.op == "==":
             return e1 == e2
         elif expr.op == "!=":
@@ -153,77 +260,12 @@ def z3_expr_to_boogie(expr):
         raise Exception("Can't translate z3 expression " + str(expr) +
             " to boogie.") 
 
-def counterex(pred):
-    s = z3.Solver()
-    s.add(pred)
-    res = s.check()
-    return None if z3.unsat == res else s.model()
-
-def Or(*args):
-    return z3.Or(*args)
-
-def And(*args):
-    return z3.And(*args)
-
-def Not(pred):
-    return z3.Not(pred)
-
-def Implies(a,b):
-    return z3.Implies(a,b)
-
-def satisfiable(pred):
-    s = z3.Solver();
-    s.add(pred);
-    return s.check() == z3.sat
-
-def model(pred):
-    s = z3.Solver();
-    s.add(pred);
-    assert s.check() == z3.sat
-    return s.model();
-
-def simplify(pred, *args, **kwargs):
-    return z3.simplify(pred, *args, **kwargs)
-
-def implies(inv1, inv2):
-    s = z3.Solver();
-    s.add(inv1)
-    s.add(z3.Not(inv2))
-    return z3.unsat == s.check();
-
-def equivalent(inv1, inv2):
-    s = z3.Solver();
-    s.push();
-    s.add(inv1)
-    s.add(z3.Not(inv2))
-    impl = s.check();
-    s.pop();
-
-    if (impl != z3.unsat):
-      return False;
-
-    s.push();
-    s.add(z3.Not(inv1))
-    s.add(inv2)
-    impl = s.check();
-    s.pop();
-
-    if (impl != z3.unsat):
-      return False;
-
-    return True
-
-def tautology(inv):
-    s = z3.Solver();
-    s.add(z3.Not(inv))
-    return (z3.unsat == s.check())
-
 if (__name__ == "__main__"):
-    a = z3_expr_to_boogie(z3.Int('a') + z3.Int("b"))
+    a = z3_expr_to_boogie(Int('a') + Int("b"))
     print a
-    a = z3_expr_to_boogie(z3.Int('a') * 2)
+    a = z3_expr_to_boogie(Int('a') * 2)
     print a
-    a = z3_expr_to_boogie(z3.Or((z3.Bool('x'), z3.Bool('y'))))
+    a = z3_expr_to_boogie(Or((Bool('x'), Bool('y'))))
     print a
-    a = z3_expr_to_boogie(z3.And(z3.Or(z3.Bool('x'), True), ((z3.Int('a') - 1) >= z3.Int('b'))))
+    a = z3_expr_to_boogie(And(Or(Bool('x'), True), ((Int('a') - 1) >= Int('b'))))
     print a
