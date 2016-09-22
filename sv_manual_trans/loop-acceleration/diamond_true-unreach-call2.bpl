@@ -6,7 +6,7 @@ procedure main() {
   //unsigned int y = __VERIFIER_nondet_uint();
 
   while (x < 99) 
-  invariant (y mod 2 == 0 ==> x mod 2 == 0) && (y mod 2 == 1 ==> x <= 99);
+  invariant (y mod 2 == 0 ==> x mod 2 == 0) && (y mod 2 == 1 ==> x <= 0);
   {
     if (y mod 2 == 0) {
       x := x + 2;

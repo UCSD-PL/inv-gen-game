@@ -2,6 +2,7 @@ import boogie_ast as ast
 import z3;
 from threading import local, current_thread, Lock
 from z3 import substitute
+from z3 import IntNumRef, BoolRef
 
 _TL = local();
 
@@ -113,6 +114,16 @@ def model(pred):
     assert s.check() == z3.sat
     checkShuttingDown()
     return s.model();
+
+def maybeModel(pred):
+    s = getSolver();
+    s.add(pred);
+    res = s.check();
+    checkShuttingDown()
+    if res == z3.sat:
+        return s.model();
+    else:
+        return None;
 
 def simplify(pred, *args, **kwargs):
     # Simplify doesn't need get_ctx() as it gets its ctx from pred

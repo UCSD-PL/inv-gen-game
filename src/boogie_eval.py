@@ -20,15 +20,12 @@ def env_to_expr(env, suff = ""):
         for (k,v) in env.iteritems() ])
 
 def evalPred(boogie_expr, env, consts = []):
-    s = Solver()
     typeEnv = { x : Int for x in env }
     typeEnv["__result__"] = Bool
     q = And(map(lambda stmt:    stmt_to_z3(stmt, typeEnv),
         [AstAssume(env_to_expr(env)),
          AstAssert(AstBinExpr(AstId("__result__"), "<==>", boogie_expr))]))
-    s.append(q)
-    assert(sat == s.check())
-    m = s.model()
+    m = model(q)
     return (m[Bool("__result__")], [m[Int(c)] for c in consts])
 
 # Given an invariant template as a boogie expression where [x,y,z] are
@@ -57,11 +54,9 @@ def instantiateAndEval(inv, vals, var_names = ["x", "y", "z"], const_names = ["a
         p += [ AstAssert(replace(inst_inv, { AstId(x) : AstId(x + str(i)) for x in varM.values() }))
                for i in xrange(len(vals)) ]
 
-        s = Solver();
-        s.add(And(map(lambda s: stmt_to_z3(s, typeEnv), p)))
+        m = maybeModel(And(map(lambda s: stmt_to_z3(s, typeEnv), p)))
 
-        if (sat == s.check()):
-            m = s.model()
+        if (m):
             const_vals = { AstId(x) : AstNumber(m[Int(x)].as_long()) for x in symConsts }
             res.append(replace(inst_inv, const_vals))
 
