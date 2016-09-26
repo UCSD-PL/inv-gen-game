@@ -29,3 +29,6 @@ def pp_Ctrexs(ctrxs):
 
 def pp_CheckInvsRes(res):
   return pp_Tuple(res, pp_Ctrexs, pp_Ctrexs, pp_EsprimaInvs)
+
+def pp_verifyInvariantsRes(res):
+  return pp_Tuple(res, pp_Ctrexs, pp_Ctrexs, pp_EsprimaInvs, str)

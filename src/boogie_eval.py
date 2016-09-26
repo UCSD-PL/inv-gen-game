@@ -15,18 +15,20 @@ def val_to_boogie(v):
     else:
         return AstNumber(int(v))
 
+def _to_dict(vs, vals):
+    return { vs[i]: vals[i] for i in xrange(0, len(vs)) }
+
 def env_to_expr(env, suff = ""):
     return ast_and([ AstBinExpr(AstId(k + suff), "==", val_to_boogie(v))
         for (k,v) in env.iteritems() ])
 
-def evalPred(boogie_expr, env, consts = []):
+def evalPred(boogie_expr, env):
     typeEnv = { x : Int for x in env }
     typeEnv["__result__"] = Bool
     q = And(map(lambda stmt:    stmt_to_z3(stmt, typeEnv),
         [AstAssume(env_to_expr(env)),
          AstAssert(AstBinExpr(AstId("__result__"), "<==>", boogie_expr))]))
-    m = model(q)
-    return (m[Bool("__result__")], [m[Int(c)] for c in consts])
+    return satisfiable(q)
 
 # Given an invariant template as a boogie expression where [x,y,z] are
 # variables and [a,b,c] constants And a series of environments, find all

@@ -1,9 +1,9 @@
-from boogie_ast import parseExprAst, ast_or
+from boogie_ast import parseExprAst, ast_or, ast_and
 from boogie_bb import get_bbs, ensureSingleExit
 from boogie_loops import loops, get_loop_header_values, loop_vc_pre_ctrex
 from util import unique, powerset, average
 from boogie_analysis import livevars
-from boogie_eval import instantiateAndEval
+from boogie_eval import instantiateAndEval, evalPred, _to_dict
 from os import listdir
 from os.path import dirname, join, abspath, realpath
 from json import load, dumps
@@ -225,10 +225,27 @@ def loadBoogieLvlSet(lvlSetFile):
     lvlSetDir = dirname(abspath(realpath(lvlSetFile)))
     print "Loading level set " + lvlSet["name"] + " from " + lvlSetFile;
     lvls = {}
-    for (lvlName, lvlPath) in lvlSet["levels"]:
+    for t in lvlSet["levels"]:
+        lvlName = t[0]
+        lvlPath = t[1]
+
         if lvlPath[0] != '/':
           lvlPath = join(lvlSetDir, lvlPath)
         print "Loading level: ", lvlPath
-        lvls[lvlName] = loadBoogieFile(lvlPath, False)
+        lvl = loadBoogieFile(lvlPath, False)
+
+        if (len(t) > 2):
+          splitterPreds = [ parseExprAst(exp)[0] for exp in t[2] ]
+          splitterPred = ast_and(splitterPreds)
+          remainderInv = parseExprAst(t[3])[0]
+
+          lvl['data'][0] = filter(
+            lambda row: evalPred(splitterPred, _to_dict(lvl['variables'], row)),
+            lvl['data'][0]);
+
+          lvl['partialInv'] = remainderInv
+          lvl['splitterPreds'] = splitterPreds
+
+        lvls[lvlName] = lvl;
 
     return (lvlSet["name"], lvls)

@@ -32,3 +32,6 @@ def split(pred, itr):
             no.append(i);
 
     return (yes, no)
+
+def nonempty(lst):
+    return filter(lambda x: len(x) > 0, lst)

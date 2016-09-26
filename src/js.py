@@ -202,6 +202,13 @@ def boogieToEsprimaExpr(expr):
     elif isinstance(expr, AstBinExpr):
         lhs = boogieToEsprimaExpr(expr.lhs)
         rhs = boogieToEsprimaExpr(expr.rhs)
+
+        # Hack to desugar implication to disjunction for esprima.
+        if (expr.op == "==>"):
+          return {"type": "LogicalExpression", "operator": "||",\
+            "left": { "type": "UnaryExpression", "operator": "!", "argument": lhs },
+            "right": rhs }
+        
         espr_op, typ = {
             '+':    ('+', 'BinaryExpression'),
             '-':    ('-', 'BinaryExpression'),
