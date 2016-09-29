@@ -1,4 +1,4 @@
-{
+{ 
   "name" : "test",
   "levels": [
     [ "02.0", "../new_summer_benchmarks/sum1.boogie.desugared.bpl",
@@ -47,7 +47,11 @@
         "(x < 50 ==> x == y)" ],
     [ "17.0", "../sv_manual_trans/loop-lit/gj2007b_true-unreach-call.desugared.bpl",
         ["n>0"],
-        "true || false" ]
+        "true || false" ],
+    [ "18.0", "../sv_manual_trans/loops/sum01_true-unreach-call_true-termination.desugared.bpl",
+        ["n>=1"], "n<1==>sn==0"],
+    [ "18.1", "../sv_manual_trans/loops/sum01_true-unreach-call_true-termination.desugared.bpl",
+        ["n<1"], "(n>=1==>i<=n+1) && (n>=1 ==> 2*(i-1) == sn)"]
   ],
   "queries_get_too_large": [
     [ "09.0", "../sv_manual_trans/loop-acceleration/diamond_true-unreach-call2.desugared.bpl",
@@ -58,17 +62,14 @@
         "(y mod 2 == 0 ==> x mod 2 == 0)" ]
   ],
   "pause": [
-    [ "01", "../test-conditional/01.bpl" ],
+    [ "01", "../test-conditional/01.bpl", "no implication" ],
     [ "04.0", "../new_summer_benchmarks/fig1.boogie.desugared.bpl",
-        ["y>0"], "(true)" ],
+        ["y>0"], "(true)", "Only the converse case is interesting" ],
     [ "06", "../sv_manual_trans/loop-new/count_by_k_true-unreach-call.desugared.bpl",
-        [""],
-        "" ],
+        "no implication" ],
     [ "08.0", "../sv_manual_trans/loop-acceleration/phases_true-unreach-call1.desugared.bpl",
         ["x<65520"],
-        "x >= 65520 ==> (x mod 2 == 0)" ],
-    [ "18", "../sv_manual_trans/loops/sum01_true-unreach-call_true-termination.desugared.bpl",
-        "Split predicate (n>=0) doesn't appear."],
+        "x >= 65520 ==> (x mod 2 == 0)", "only the converse case is interesting" ],
     []
   ],
   "not_yet_ready_levels": [
