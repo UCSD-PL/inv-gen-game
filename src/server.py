@@ -8,8 +8,8 @@ from js import invJSToZ3, addAllIntEnv, esprimaToZ3, esprimaToBoogie, boogieToEs
 from boogie_ast import parseAst, AstBinExpr, AstTrue, AstUnExpr,\
     ast_and, replace, expr_read
 from boogie_loops import loop_vc_pre_ctrex, loop_vc_post_ctrex, loop_vc_ind_ctrex
-from util import unique, pp_exc, powerset, average, split
-from boogie_eval import instantiateAndEval
+from util import unique, pp_exc, powerset, average, split, nonempty
+from boogie_eval import instantiateAndEval, _to_dict
 from boogie_z3 import expr_to_z3, AllIntTypeEnv, ids, z3_expr_to_boogie, shutdownZ3
 from boogie_paths import sp_nd_ssa_path, nd_bb_path_to_ssa, wp_nd_ssa_path
 from boogie_ssa import SSAEnv
@@ -286,9 +286,6 @@ def addToIgnoreList(workerId, levelSet, lvlId):
 def setLvlAsDone(levelSet, lvlId):
     open(join(ROOT_DIR, "logs", args.ename, "done-" + levelSet + "-" + lvlId), "w").close()
 
-def _to_dict(vs, vals):
-    return { vs[i]: vals[i] for i in xrange(0, len(vs)) }
-
 def _from_dict(vs, vals):
     if type(vals) == tuple:
         return ( _from_dict(vs, vals[0]), _from_dict(vs, vals[1]) )
@@ -412,7 +409,7 @@ def isTautology(inv):
 
 @api.method("App.verifyInvariants")
 @pp_exc
-@log_d(str, str, pp_EsprimaInvs, str)
+@log_d(str, str, pp_EsprimaInvs, pp_verifyInvariantsRes)
 def verifyInvariants(levelSet, levelId, invs):
     if (levelSet not in traces):
         raise Exception("Unkonwn level set " + str(levelSet))
@@ -432,9 +429,14 @@ def verifyInvariants(levelSet, levelId, invs):
     boogie_invs = [ esprimaToBoogie(x, {}) for x in invs ]
     bbs = lvl['program']
     loop = lvl['loop']
+    partialInvs = [ lvl['partialInv'] ] if 'partialInv' in lvl else []
+    splitterPreds = lvl['splitterPreds'] if 'splitterPreds' in lvl else [ AstTrue() ]
+    boogie_invs = [ esprimaToBoogie(x, {}) for x in invs ]
+    candidate_antecedents = [ ast_and(pSet) for pSet in nonempty(powerset(splitterPreds)) ]
+    boogie_invs = boogie_invs + [ AstBinExpr(antec, "==>", inv)
+      for antec in candidate_antecedents for inv in boogie_invs ] + partialInvs
 
     # Lets use checkInvs_impl to determine which invariants are sound/overfitted/inductive
-    print boogie_invs
     overfitted, nonind, sound = checkInvs_impl(bbs, loop, boogie_invs)
 
     # Finally see if the sound invariants imply the postcondition. Don't forget to
@@ -448,6 +450,10 @@ def verifyInvariants(levelSet, levelId, invs):
     overfitted = [ (boogieToEsprima(inv), fix(ctrex)) for (inv, ctrex) in overfitted ]
     nonind = [ (boogieToEsprima(inv), map(fix, ctrex)) for (inv, ctrex) in nonind ]
     sound = [ boogieToEsprima(inv) for inv in sound ]
+
+    # TODO(dbounov) HACK DELETE as soon as I integrate conditional checking somehow...
+    overfitted = []
+    nonind = []
     res = (overfitted, nonind, sound, post_ctrex)
     return res
 
@@ -573,13 +579,33 @@ def checkInvs(levelSet, levelId, invs):
 
     bbs = lvl['program']
     loop = lvl['loop']
+    partialInvs = [ lvl['partialInv'] ] if 'partialInv' in lvl else []
+    splitterPreds = lvl['splitterPreds'] if 'splitterPreds' in lvl else [ AstTrue() ]
     boogie_invs = [ esprimaToBoogie(x, {}) for x in invs ]
-    overfitted, nonind, sound = checkInvs_impl(bbs, loop, boogie_invs)
+    print "Initial boogie_invs: ", boogie_invs
+    p_overfitted, p_nonind, p_sound = checkInvs_impl(bbs, loop, boogie_invs)
+
+    remaining_inv = [ x[0] for x in p_nonind ] + [ x[0] for x in p_overfitted ]
+    print "Sound first pass: ", p_sound, " remaining: ", remaining_inv
+
+    candidate_antecedents = [ ast_and(pSet) for pSet in nonempty(powerset(splitterPreds)) ]
+    boogie_invM = { AstBinExpr(antec, "==>", inv) : inv 
+      for antec in candidate_antecedents for inv in remaining_inv }
+
+    impl_boogie_invs = list(boogie_invM.keys()) + partialInvs + list(p_sound)
+    print "Implication enhanced invs: ", impl_boogie_invs
+    i_overfitted, i_nonind, i_sound = checkInvs_impl(bbs, loop, impl_boogie_invs)
+
+    i_sound = set(i_sound).difference(p_sound);
 
     fix = lambda x: _from_dict(lvl['variables'], x)
-    overfitted = map(lambda x:  (boogieToEsprima(x[0]), fix(x[1])), overfitted)
-    nonind = map(lambda x:  (boogieToEsprima(x[0]), (fix(x[1][0]), fix(x[1][1]))), nonind)
-    sound = map(lambda x:   boogieToEsprima(x), sound)
+    sound = set(p_sound);
+    sound = sound.union((set([boogie_invM[x] for x in i_sound if x not in partialInvs])))
+    sound = map(boogieToEsprima, sound);
+
+    overfitted = [(boogieToEsprima(boogie_invM[x[0]]), fix(x[1])) for x in i_overfitted if x[0] not in partialInvs and x[0] not in sound]
+
+    nonind = [(boogieToEsprima(boogie_invM[x[0]]), (fix(x[1][0]), fix(x[1][1]))) for x in i_nonind if (x[0] not in partialInvs) and (x[0] not in sound)]
 
     return (overfitted, nonind, sound)
 
