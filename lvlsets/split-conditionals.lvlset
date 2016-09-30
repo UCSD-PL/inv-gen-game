@@ -10,7 +10,7 @@
     [ "03.0", "../test-conditional/019.boogie.desugared.bpl",
         ["x>m"],
         "x<=m ==> y == m"],
-    [ "03.0", "../test-conditional/019.boogie.desugared.bpl",
+    [ "03.1", "../test-conditional/019.boogie.desugared.bpl",
         ["x<=m"],
         "x>m ==> y == x"],
     [ "04.1", "../new_summer_benchmarks/fig1.boogie.desugared.bpl",
