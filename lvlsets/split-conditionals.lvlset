@@ -35,7 +35,7 @@
         "true || false" ],
     [ "11.0", "../sv_manual_trans/loop-lit/gj2007_true-unreach-call.desugared.bpl",
         ["x<50"],
-        "(x >= 50 ==> x == y)" ],
+        "(x >= 50 ==> x == y) && x <= 100" ],
     [ "11.1", "../sv_manual_trans/loop-lit/gj2007_true-unreach-call.desugared.bpl",
         ["x>=50"],
         "(x < 50 ==> y == 50)" ],
