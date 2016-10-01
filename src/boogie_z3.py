@@ -75,7 +75,7 @@ def Bool(b):
 
 def counterex(pred):
     s = getSolver()
-    s.add(pred)
+    s.add(Not(pred))
     res = s.check()
     checkShuttingDown();
     return None if z3.unsat == res else s.model()

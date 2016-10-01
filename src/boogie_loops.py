@@ -8,8 +8,23 @@ from boogie_eval import env_to_expr
 from collections import namedtuple
 from util import *
 
-Loop = namedtuple("Loop", ["header", "loop_paths", "exit_paths"])
+Loop = namedtuple("Loop", ["header", "loop_paths", "exit_paths", "entry_cond"])
 
+
+# TODO(dimo): This code is fragile - too many potentially limiting
+# assumptions about code shape. Should be removed when we
+# moved to on-demand level generation as loops are
+# discovered during dynamic exploration of the program.
+
+# There are several implicit assumption in the loop code
+# (these seem to hold for the desugared boogie code)
+#
+# 1) Each loop is identified by a unique header node
+# 2) Each loop has a single exit point
+# 3) All the relevant postcondition asserts are in the
+#    immediate loop exit code
+#
+# 3) is particularly risky.
 def _loops(bbs, curpath, loop_m):
     if (curpath == []):
         curpath.append(entry(bbs))
@@ -34,9 +49,17 @@ def _loops(bbs, curpath, loop_m):
         curpath.pop()
     return loop_m
 
+def loop_path_entry_cond(p,bbs):
+    # We are relying on boogie placing the entry condition in
+    # the second bb for a given path as the first statement
+    bb = bbs[p[1]]
+    assert isinstance(bb.stmts[0], AstAssume)
+    return bb.stmts[0].expr
+
 def loops(bbs):
     loop_m = _loops(bbs, [], {})
-    return [ Loop(k, v, [[ v[0][0], loop_exit_bb(v, bbs) ]]) \
+    return [ Loop(k, v, [[ v[0][0], loop_exit_bb(v, bbs) ]],
+                        ast_or([loop_path_entry_cond(p, bbs) for p in v])) \
         for (k,v) in loop_m.iteritems() ]
 
 def loop_exit_bb(body_paths, bbs):
@@ -107,23 +130,38 @@ def _unssa_z3_model(m, repl_m):
         original + map(str, repl_m.values()) }
 
 def loop_vc_pre_ctrex(loop, inv, bbs):
-    prefix_ssa, ssa_env = nd_bb_path_to_ssa(list(loop.header) + [loop.loop_paths + loop.exit_paths], bbs, SSAEnv(None, ""))
-    q = Not(Implies(And(ssa_path_to_z3(prefix_ssa, bbs)),
-                        expr_to_z3(replace(inv, ssa_env.replm()), AllIntTypeEnv())))
+    prefix_ssa, ssa_env = nd_bb_path_to_ssa(list(loop.header), bbs, SSAEnv(None, ""))
+
+    z3_precondition = ssa_path_to_z3(prefix_ssa, bbs)
+    z3_loop_entry_cond = expr_to_z3(replace(loop.entry_cond, ssa_env.replm()), AllIntTypeEnv())
+    z3_inv = expr_to_z3(replace(inv, ssa_env.replm()), AllIntTypeEnv())
+
+    q = Implies(And(z3_precondition, z3_loop_entry_cond), z3_inv)
+    print "vc_pre:", q
     ctr = counterex(q)
+    print ctr
     return None if not ctr else _unssa_z3_model(ctr, ssa_env.replm())
 
 def loop_vc_post_ctrex(loop, inv, bbs):
     exit_path = unique(loop.exit_paths)
     exit_ssa, ssa_env = nd_bb_path_to_ssa(exit_path, bbs, SSAEnv(None, ""))
-    q = Not(Implies(expr_to_z3(inv, AllIntTypeEnv()), wp_nd_ssa_path(exit_ssa, bbs, Bool(True), AllIntTypeEnv())))
+
+    z3_postcondition = wp_nd_ssa_path(exit_ssa, bbs, Bool(True), AllIntTypeEnv())
+    z3_loop_entry_cond = expr_to_z3(loop.entry_cond, AllIntTypeEnv())
+    z3_inv = expr_to_z3(inv, AllIntTypeEnv())
+
+    q = Implies(And(z3_inv, Not(z3_loop_entry_cond)), z3_postcondition)
     ctr = counterex(q)
     return None if not ctr else _unssa_z3_model(ctr, {})
 
 def loop_vc_ind_ctrex(loop, inv, bbs):
     body_ssa, ssa_env = nd_bb_path_to_ssa([loop.loop_paths], bbs, SSAEnv(None, ""))
-    q = Not(Implies(And(expr_to_z3(inv, AllIntTypeEnv()), ssa_path_to_z3(body_ssa, bbs)),
-                    expr_to_z3(replace(inv, ssa_env.replm()), AllIntTypeEnv())))
+
+    z3_inv_pre = expr_to_z3(inv, AllIntTypeEnv())
+    z3_path_pred = ssa_path_to_z3(body_ssa, bbs)
+    z3_inv_post = expr_to_z3(replace(inv, ssa_env.replm()), AllIntTypeEnv())
+
+    q = Implies(And(z3_inv_pre, z3_path_pred), z3_inv_post)
     ctr = counterex(q)
     return None if not ctr else (_unssa_z3_model(ctr, {}), _unssa_z3_model(ctr, ssa_env.replm()))
     
