@@ -136,7 +136,7 @@
                     }
 
                     curLvl = lvl;
-                    tracesW = new CounterExampleTracesWindow($('#data-display'));
+                    tracesW = new PositiveTracesWindow($('#data-display'));
                     tracesW.setVariables(lvl)
                     tracesW.onChanged(function() {
                       if (errorTimer) {

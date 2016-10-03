@@ -147,7 +147,7 @@
                     }
 
                     curLvl = lvl;
-                    tracesW = new CounterExampleTracesWindow($('#data-display'));
+                    tracesW = new PositiveTracesWindow($('#data-display'));
                     tracesW.setVariables(lvl)
                     tracesW.onChanged(function() {
                       if (errorTimer) {
@@ -452,7 +452,7 @@
                  // gameLogic can be null here because we allow tutorial re-runs to begin with conditionals
                  if (gameLogic === null) {
                    $('#score-div-row').fadeIn(fadeDelay, function() {});
-                   tracesW = new CounterExampleTracesWindow($('#data-display'));
+                   tracesW = new PositiveTracesWindow($('#data-display'));
                    $('#sticky').addClass("box stickyWindow");
                    stickyW = new StickyWindow($('#sticky'));
                    gameLogic = new StaticGameLogic(tracesW, progW, scoreW, stickyW, 3);
