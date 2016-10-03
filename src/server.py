@@ -429,18 +429,18 @@ def tryAndVerify(levelSet, levelId, invs):
     boogie_invs = [ esprimaToBoogie(x, {}) for x in invs ]
     candidate_antecedents = [ ast_and(pSet) for pSet in nonempty(powerset(splitterPreds)) ]
 
-    boogie_invs = boogie_invs
     # First lets find the invariants that are sound without implication
-    overfitted, nonind, sound = checkInvs_impl(bbs, loop, boogie_invs)
+    overfitted, nonind, sound = tryAndVerify_impl(bbs, loop, [], boogie_invs)
 
+    # Next lets add implication  to all unsound invariants from first pass
+    # Also add manually specified partialInvs
     unsound = [ inv_ctr_pair[0] for inv_ctr_pair in overfitted + nonind ]
-    # Next lets add implication and the manually specified partial invs to all
-    # unsound invariants from first pass
-    boogie_invs = list(sound) + [ AstBinExpr(antec, "==>", inv)
+    p2_invs = [ AstBinExpr(antec, "==>", inv)
       for antec in candidate_antecedents for inv in unsound ] + partialInvs
 
-    # And try again
-    overfitted, nonind, sound = checkInvs_impl(bbs, loop, boogie_invs)
+    # And look for any new sound invariants
+    overfitted, nonind, sound_p2 = tryAndVerify_impl(bbs, loop, sound, p2_invs)
+    sound = sound.union(sound_p2)
 
     # Finally see if the sound invariants imply the postcondition. Don't forget to
     # convert any counterexamples from {x:1, y:2} to [1,2]
@@ -477,7 +477,7 @@ def getInfluenceGraph(invs, loop, bbs):
     return influences;
 
 # TODO: Make this incremental
-def checkInvs_impl(bbs, loop, invs):
+def tryAndVerify_impl(bbs, loop, sound, invs):
     # 0. First get the overfitted invariants out of the way. We can check overfitted-ness
     #    individually for each invariant.
     pre_ctrexs = map(lambda inv:    (inv, loop_vc_pre_ctrex(loop, inv, bbs)), invs)
@@ -495,7 +495,7 @@ def checkInvs_impl(bbs, loop, invs):
     # 5. For each collapsed s.c.c in topo order (single invariants can be viewed as a s.c.c with 1 elmnt.)
     check_order = topo_sort(collapsedInflGraph)
 
-    sound_invs = set()
+    sound_invs = set(sound)
     nonind_ctrex = { }
 
     nchecks_worst = 2**len(invs)

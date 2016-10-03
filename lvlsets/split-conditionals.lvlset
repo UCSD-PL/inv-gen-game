@@ -3,7 +3,7 @@
   "levels": [
     [ "02.0", "../new_summer_benchmarks/sum1.boogie.desugared.bpl",
         ["n>0"],
-        "(n <= 0 ==> sn == 0) && (n <= 0 ==> i == sn + 1)" ],
+        "(n <= 0 ==> sn == 0)" ],
     [ "02.1", "../new_summer_benchmarks/sum1.boogie.desugared.bpl",
         ["n<=0"],
         "i == sn + 1 && ((n>=0) ==> sn <= n)", "n<=0 is not here :("],
