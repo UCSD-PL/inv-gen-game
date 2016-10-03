@@ -335,7 +335,7 @@ class PatternGameLogic extends BaseGameLogic {
 
   goalSatisfied(cb:(sat: boolean, feedback: any)=>void):void {
     if (this.foundJSInv.length > 0) {
-      counterexamples(curLvlSet, this.curLvl.id, this.foundJSInv.map((x)=>x.canonForm),
+      tryAndVerify(curLvlSet, this.curLvl.id, this.foundJSInv.map((x)=>x.canonForm),
         ([overfitted, nonind, sound, post_ctrex]) => {
           if (sound.length > 0) {
             cb(post_ctrex.length == 0, [overfitted, nonind, sound, post_ctrex]);

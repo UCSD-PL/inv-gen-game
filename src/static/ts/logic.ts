@@ -33,12 +33,21 @@ function simplify(inv:string, cb:(res:ESTree.Node)=>void): void {
   rpc.call("App.simplifyInv", [ esprima.parse(inv) ], cb, log)
 }
 
-function counterexamples(lvlSet: string, lvlId: string, invs: invariantT[],
+/*
+ *  Given a list of candidate invariants invs tryAndVerify will
+ *  return:
+ *    - the subset of inv that is overfitted (+ counterexample for each)
+ *    - the subset of inv that is non-inductive (+ counterexample for each)
+ *    - the subset of inv that is sound
+ *    - any counterexamples if the sound subset doesn't imply the postcondition
+ *
+ */
+function tryAndVerify(lvlSet: string, lvlId: string, invs: invariantT[],
                          cb: (res: [ [ESTree.Node, any[]][], // Overfitted invs & counterexample
                                      [ESTree.Node, [any[], any[]]][], // Nonind. invs & counterexample
                                      ESTree.Node[], // Sound Invariants
                                      any[]]) => void) {  // Post cond. counterexample to sound invariants
-  return rpc.call("App.verifyInvariants", [ lvlSet, lvlId, invs ], cb, log)
+  return rpc.call("App.tryAndVerify", [ lvlSet, lvlId, invs ], cb, log)
 }
 
 function instantiate(templates: templateT[],

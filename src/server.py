@@ -341,18 +341,13 @@ def getPositiveExamples(levelSet, levelId, cur_expl_state, overfittedInvs, num):
     heads = set([tuple(x[0]) for x in cur_expl_state])
     overfitBoogieInvs = [esprimaToBoogie(x, {}) for x in overfittedInvs]
     negatedVals, terminates = findNegatingTrace(loop, bbs, num, overfitBoogieInvs)
-    print "Negated vals: ", negatedVals
 
     if (negatedVals):
         cur_expl_state.insert(0, (_from_dict(lvl['variables'], negatedVals[0]), 0, False))
 
-    print cur_expl_state
-
     for (ind, (loop_head, nunrolls, is_finished)) in enumerate(cur_expl_state):
         if is_finished: continue
         if need <= 0:   break
-
-        print "Getting values from ", ind
 
         good_env = _to_dict(lvl['variables'], loop_head)
         # Lets first try to find terminating executions:
@@ -407,10 +402,10 @@ def isTautology(inv):
     res = (tautology(esprimaToZ3(inv, {})))
     return res
 
-@api.method("App.verifyInvariants")
+@api.method("App.tryAndVerify")
 @pp_exc
-@log_d(str, str, pp_EsprimaInvs, pp_verifyInvariantsRes)
-def verifyInvariants(levelSet, levelId, invs):
+@log_d(str, str, pp_EsprimaInvs, pp_tryAndVerifyRes)
+def tryAndVerify(levelSet, levelId, invs):
     if (levelSet not in traces):
         raise Exception("Unkonwn level set " + str(levelSet))
 
@@ -433,10 +428,18 @@ def verifyInvariants(levelSet, levelId, invs):
     splitterPreds = lvl['splitterPreds'] if 'splitterPreds' in lvl else [ AstTrue() ]
     boogie_invs = [ esprimaToBoogie(x, {}) for x in invs ]
     candidate_antecedents = [ ast_and(pSet) for pSet in nonempty(powerset(splitterPreds)) ]
-    boogie_invs = boogie_invs + [ AstBinExpr(antec, "==>", inv)
-      for antec in candidate_antecedents for inv in boogie_invs ] + partialInvs
 
-    # Lets use checkInvs_impl to determine which invariants are sound/overfitted/inductive
+    boogie_invs = boogie_invs
+    # First lets find the invariants that are sound without implication
+    overfitted, nonind, sound = checkInvs_impl(bbs, loop, boogie_invs)
+
+    unsound = [ inv_ctr_pair[0] for inv_ctr_pair in overfitted + nonind ]
+    # Next lets add implication and the manually specified partial invs to all
+    # unsound invariants from first pass
+    boogie_invs = list(sound) + [ AstBinExpr(antec, "==>", inv)
+      for antec in candidate_antecedents for inv in unsound ] + partialInvs
+
+    # And try again
     overfitted, nonind, sound = checkInvs_impl(bbs, loop, boogie_invs)
 
     # Finally see if the sound invariants imply the postcondition. Don't forget to
@@ -451,9 +454,6 @@ def verifyInvariants(levelSet, levelId, invs):
     nonind = [ (boogieToEsprima(inv), map(fix, ctrex)) for (inv, ctrex) in nonind ]
     sound = [ boogieToEsprima(inv) for inv in sound ]
 
-    # TODO(dbounov) HACK DELETE as soon as I integrate conditional checking somehow...
-    overfitted = []
-    nonind = []
     res = (overfitted, nonind, sound, post_ctrex)
     return res
 
@@ -531,10 +531,8 @@ def checkInvs_impl(bbs, loop, invs):
             ind_ctrex = loop_vc_ind_ctrex(loop, conj, bbs)
             nchecks_infl_graph_set_skipping += 1
             # If conjunction is inductive:
-            print conj, ind_ctrex
             if (not ind_ctrex):
                 # Add all invariants in conj. in sound set.
-                print inv_subs, "is inductive"
                 sound_invs = sound_invs.union(inv_subs);
                 sound_inv_inds = sound_inv_inds.union(subset);
             else:
@@ -556,59 +554,6 @@ def checkInvs_impl(bbs, loop, invs):
 
     return overfitted, nonind_invs, sound_invs
     
-@api.method("App.checkInvs")
-@pp_exc
-@log_d(str,str, pp_EsprimaInvs, pp_CheckInvsRes)
-def checkInvs(levelSet, levelId, invs):
-    """ See checkInvs_impl
-    """
-    if (levelSet not in traces):
-        raise Exception("Unkonwn level set " + str(levelSet))
-
-    if (levelId not in traces[levelSet]):
-        raise Exception("Unkonwn trace " + str(levelId) + " in levels " + str(levelSet))
-
-    if (len(invs) == 0):
-        raise Exception("No invariants given")
-
-    lvl = traces[levelSet][levelId]
-
-    if ('program' not in lvl):
-      # Not a boogie level - error
-      raise Exception("Level " + str(levelId) + " " + str(levelSet) + " not a dynamic boogie level.")
-
-    bbs = lvl['program']
-    loop = lvl['loop']
-    partialInvs = [ lvl['partialInv'] ] if 'partialInv' in lvl else []
-    splitterPreds = lvl['splitterPreds'] if 'splitterPreds' in lvl else [ AstTrue() ]
-    boogie_invs = [ esprimaToBoogie(x, {}) for x in invs ]
-    print "Initial boogie_invs: ", boogie_invs
-    p_overfitted, p_nonind, p_sound = checkInvs_impl(bbs, loop, boogie_invs)
-
-    remaining_inv = [ x[0] for x in p_nonind ] + [ x[0] for x in p_overfitted ]
-    print "Sound first pass: ", p_sound, " remaining: ", remaining_inv
-
-    candidate_antecedents = [ ast_and(pSet) for pSet in nonempty(powerset(splitterPreds)) ]
-    boogie_invM = { AstBinExpr(antec, "==>", inv) : inv 
-      for antec in candidate_antecedents for inv in remaining_inv }
-
-    impl_boogie_invs = list(boogie_invM.keys()) + partialInvs + list(p_sound)
-    print "Implication enhanced invs: ", impl_boogie_invs
-    i_overfitted, i_nonind, i_sound = checkInvs_impl(bbs, loop, impl_boogie_invs)
-
-    i_sound = set(i_sound).difference(p_sound);
-
-    fix = lambda x: _from_dict(lvl['variables'], x)
-    sound = set(p_sound);
-    sound = sound.union((set([boogie_invM[x] for x in i_sound if x not in partialInvs])))
-    sound = map(boogieToEsprima, sound);
-
-    overfitted = [(boogieToEsprima(boogie_invM[x[0]]), fix(x[1])) for x in i_overfitted if x[0] not in partialInvs and x[0] not in sound]
-
-    nonind = [(boogieToEsprima(boogie_invM[x[0]]), (fix(x[1][0]), fix(x[1][1]))) for x in i_nonind if (x[0] not in partialInvs) and (x[0] not in sound)]
-
-    return (overfitted, nonind, sound)
-
 @api.method("App.simplifyInv")
 @pp_exc
 @log_d(pp_EsprimaInv, pp_EsprimaInv)
