@@ -41,13 +41,6 @@ function counterexamples(lvlSet: string, lvlId: string, invs: invariantT[],
   return rpc.call("App.verifyInvariants", [ lvlSet, lvlId, invs ], cb, log)
 }
 
-function checkInvs(lvlSet: string, lvlId: string, invs: invariantT[],
-                  cb: (res: [ [ESTree.Node, any[]][],
-                              [ESTree.Node, [any[], any[]]][],
-                              ESTree.Node[] ]) => void) {
-  return rpc.call("App.checkInvs", [ lvlSet, lvlId, invs ], cb, log)
-}
-
 function instantiate(templates: templateT[],
                      lvlVars: string[], // TODO: Should eventually not need this argument. Convert 
                      data: [ any[] ],   //       data to a dictionary containing variable names.

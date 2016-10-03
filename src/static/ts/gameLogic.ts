@@ -335,18 +335,12 @@ class PatternGameLogic extends BaseGameLogic {
 
   goalSatisfied(cb:(sat: boolean, feedback: any)=>void):void {
     if (this.foundJSInv.length > 0) {
-      checkInvs(curLvlSet, this.curLvl.id, this.foundJSInv.map((x)=>x.canonForm),
-        ([overfitted, nonind, sound]) => {
+      counterexamples(curLvlSet, this.curLvl.id, this.foundJSInv.map((x)=>x.canonForm),
+        ([overfitted, nonind, sound, post_ctrex]) => {
           if (sound.length > 0) {
-            this.soundInvs = sound.map((x) => this.invMap[esprimaToStr(x)]);
-            this.overfittedInvs = overfitted.map((v) => this.invMap[esprimaToStr(v[0])]);
-            this.nonindInvs = nonind.map((v) => this.invMap[esprimaToStr(v[0])]);
-            counterexamples(curLvlSet, this.curLvl.id, this.soundInvs.map((x)=>x.canonForm), (res) => {
-              let overfitted=res[0],nonind=res[1],sound=res[2], post_ctrex=res[3];
-              cb(overfitted.length == 0 && nonind.length == 0 && post_ctrex.length == 0, res);
-            });
+            cb(post_ctrex.length == 0, [overfitted, nonind, sound, post_ctrex]);
           } else {
-              cb(false, null);
+            cb(false, null);
           }
         })
     } else {
