@@ -137,9 +137,7 @@ def loop_vc_pre_ctrex(loop, inv, bbs):
     z3_inv = expr_to_z3(replace(inv, ssa_env.replm()), AllIntTypeEnv())
 
     q = Implies(And(z3_precondition, z3_loop_entry_cond), z3_inv)
-    print "vc_pre:", q
     ctr = counterex(q)
-    print ctr
     return None if not ctr else _unssa_z3_model(ctr, ssa_env.replm())
 
 def loop_vc_post_ctrex(loop, inv, bbs):
