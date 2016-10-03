@@ -4,8 +4,8 @@ from pprint import pprint
 from js import esprimaToBoogie
 from mturk_util import *
 from experiments import *
-import boogie_ast
-from boogie_z3 import *
+import boogie.ast
+from boogie.z3_embed import *
 from z3 import *
 import os
 import time
@@ -321,7 +321,7 @@ for s in e.server_runs:
                     try:
                         with open(os.path.join(get_lvlset_dir(lvl_set), lvl_id + ".soln")) as f:
                             for l in f:
-                                boogie_soln_inv = boogie_ast.parseExprAst(l)[0]
+                                boogie_soln_inv = ast.parseExprAst(l)[0]
                                 header = "-- Soln " + str(boogie_soln_inv) + ": "
                                 found = False
                                 for boogie_user_inv in boogie_user_invs:

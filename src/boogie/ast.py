@@ -1,4 +1,4 @@
-from boogie_grammar import *
+from boogie.grammar import *
 from pyparsing import ParseResults
 
 def _strip(arg):

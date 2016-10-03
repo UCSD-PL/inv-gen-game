@@ -1,4 +1,4 @@
-from boogie_ast import *;
+from ast import *;
 from copy import copy, deepcopy;
 
 class SSAEnv:

@@ -1,4 +1,4 @@
-from boogie_ast import *;
+from ast import *;
 from collections import namedtuple
 from util import unique
 

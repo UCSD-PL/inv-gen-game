@@ -1,10 +1,10 @@
-from boogie_paths import is_nd_bb_path_possible
-from boogie_ast import *;
-from boogie_z3 import *
-from boogie_bb import BB, get_bbs, entry
-from boogie_paths import get_path_vars, nd_bb_path_to_ssa, ssa_path_to_z3, wp_nd_ssa_path
-from boogie_ssa import *
-from boogie_eval import env_to_expr
+from boogie.paths import is_nd_bb_path_possible
+from boogie.ast import *;
+from boogie.z3_embed import *
+from boogie.bb import BB, get_bbs, entry
+from boogie.paths import get_path_vars, nd_bb_path_to_ssa, ssa_path_to_z3, wp_nd_ssa_path
+from boogie.ssa import *
+from boogie.eval import env_to_expr
 from collections import namedtuple
 from util import *
 

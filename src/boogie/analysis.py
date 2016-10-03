@@ -1,6 +1,6 @@
 from copy import copy
-from boogie_bb import *
-from boogie_ast import *
+from bb import *
+from ast import *
 
 def backdflow(bbs, transformer_m, union_f, initial_vals):
     state = { bb: copy(initial_vals) for bb in bbs.keys() }

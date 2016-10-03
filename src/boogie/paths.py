@@ -1,8 +1,8 @@
-from boogie_ast import *;
-from boogie_z3 import *
-from boogie_bb import *
-from boogie_ssa import *
-from boogie_predicate_transformers import wp_stmts, sp_stmts
+from ast import *;
+from boogie.z3_embed import *
+from bb import *
+from ssa import *
+from predicate_transformers import wp_stmts, sp_stmts
 
 # BB_PATH = [ BB_LABEL ]
 # NONDET_BB_PATH = [ (BB | [ NONDET_BB_PATH ] ) ]

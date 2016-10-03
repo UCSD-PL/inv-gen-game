@@ -5,14 +5,14 @@ from flask_jsonrpc import JSONRPC as rpc
 from os.path import *
 from json import load, dumps
 from js import invJSToZ3, addAllIntEnv, esprimaToZ3, esprimaToBoogie, boogieToEsprima
-from boogie_ast import parseAst, AstBinExpr, AstTrue, AstUnExpr,\
+from boogie.ast import parseAst, AstBinExpr, AstTrue, AstUnExpr,\
     ast_and, replace, expr_read
 from boogie_loops import loop_vc_pre_ctrex, loop_vc_post_ctrex, loop_vc_ind_ctrex
 from util import unique, pp_exc, powerset, average, split, nonempty
-from boogie_eval import instantiateAndEval, _to_dict
-from boogie_z3 import expr_to_z3, AllIntTypeEnv, ids, z3_expr_to_boogie, shutdownZ3
-from boogie_paths import sp_nd_ssa_path, nd_bb_path_to_ssa, wp_nd_ssa_path
-from boogie_ssa import SSAEnv
+from boogie.eval import instantiateAndEval, _to_dict
+from boogie.z3_embed import expr_to_z3, AllIntTypeEnv, ids, z3_expr_to_boogie, shutdownZ3
+from boogie.paths import sp_nd_ssa_path, nd_bb_path_to_ssa, wp_nd_ssa_path
+from boogie.ssa import SSAEnv
 from graph import strongly_connected_components, collapse_scc, topo_sort
 from sys import exc_info
 from cProfile import Profile

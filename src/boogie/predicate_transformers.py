@@ -1,5 +1,5 @@
-from boogie_ast import *;
-from boogie_z3 import *
+from ast import *;
+from boogie.z3_embed import *
 from collections import namedtuple
 
 def wp_stmt(stmt, pred, typeEnv):

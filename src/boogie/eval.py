@@ -1,6 +1,6 @@
-from boogie_z3 import *
-from boogie_ast import *
-from boogie_paths import get_path_vars
+from boogie.z3_embed import *
+from boogie.ast import *
+from boogie.paths import get_path_vars
 from itertools import permutations
 
 def val_to_boogie(v):

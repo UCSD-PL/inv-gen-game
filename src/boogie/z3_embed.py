@@ -1,4 +1,4 @@
-import boogie_ast as ast
+import ast as ast
 import z3;
 from threading import local, current_thread, Lock
 from z3 import substitute
