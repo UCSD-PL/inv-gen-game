@@ -1,6 +1,11 @@
 from ast import *;
 from collections import namedtuple
-from util import unique
+
+def unique(iterable, msg=""):
+  l = list(iterable)
+  assert len(l) == 1, msg
+  return l[0]
+
 
 BB = namedtuple("BB", ["predecessors", "stmts", "successors"])
 
