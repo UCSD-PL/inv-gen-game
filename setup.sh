@@ -51,6 +51,6 @@ fi
 
 npm install
 
-echo "export PATH=$PATH:$MYDIR/node_modules/.bin/" >> $DIR/bin/activate
+echo "export PATH=\$PATH:$MYDIR/node_modules/.bin/" >> $DIR/bin/activate
 
 echo "To begin developing run source $DIR/bin/activate and then make"
