@@ -353,6 +353,7 @@ class PatternGameLogic extends BaseGameLogic {
     this.tracesW.clearError();
     this.progressW.clearMarks();
 
+    let gl = this;
     let inv = invPP(this.tracesW.curExp().trim());
     let desugaredInv = invToJS(inv)
     var parsedInv: ESTree.Node = null;
@@ -390,12 +391,12 @@ class PatternGameLogic extends BaseGameLogic {
       let res: [any[], any[], [any, any][]] = [pos_res, [], [] ]
       this.tracesW.evalResult({ data: res })
 
-
       if (!evalResultBool(res))
         return;
 
       simplify(jsInv, (simplInv: ESTree.Node) => { 
         let ui: UserInvariant = new UserInvariant(inv, jsInv, simplInv)
+        logEvent("TriedInvariant", [curLvlSet, gl.curLvl.id, ui.rawUserInp, ui.canonForm]);
 
         let redundant = this.progressW.contains(ui.id)
         if (redundant) {
@@ -416,7 +417,6 @@ class PatternGameLogic extends BaseGameLogic {
             return;
           }
 
-          let gl = this;
           isTautology(ui.rawInv, function(res) {
             if (res) {
               gl.tracesW.error("This is a always true...")
