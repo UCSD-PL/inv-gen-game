@@ -9,7 +9,7 @@ from boogie.ast import parseAst, AstBinExpr, AstTrue, AstUnExpr,\
 from boogie_loops import loop_vc_pre_ctrex, loop_vc_post_ctrex, loop_vc_ind_ctrex
 from util import unique, pp_exc, powerset, average, split, nonempty
 from boogie.eval import instantiateAndEval, _to_dict
-from boogie.z3_embed import expr_to_z3, AllIntTypeEnv, ids, z3_expr_to_boogie, shutdownZ3
+from boogie.z3_embed import expr_to_z3, AllIntTypeEnv, ids, z3_expr_to_boogie, shutdownZ3, tautology
 from boogie.paths import sp_nd_ssa_path, nd_bb_path_to_ssa, wp_nd_ssa_path
 from boogie.ssa import SSAEnv
 from graph import strongly_connected_components, collapse_scc, topo_sort
@@ -45,12 +45,14 @@ def getInfluenceGraph(invs, loop, bbs):
     return influences;
 
 # TODO: Make this incremental
-def tryAndVerify_impl(bbs, loop, sound, invs):
+def tryAndVerify_impl(bbs, loop, old_sound_invs, invs):
     # 0. First get the overfitted invariants out of the way. We can check overfitted-ness
     #    individually for each invariant.
     pre_ctrexs = map(lambda inv:    (inv, loop_vc_pre_ctrex(loop, inv, bbs)), invs)
     overfitted, rest = split(lambda ((inv, ctrex)): ctrex != None, pre_ctrexs)
     rest = map(lambda x:    x[0], rest)
+
+    print len(rest), " left after overfitted removed"
 
     # 1. Build an influences graph of the left-over invariants
     inflGraph = getInfluenceGraph(rest, loop, bbs)
@@ -63,8 +65,14 @@ def tryAndVerify_impl(bbs, loop, sound, invs):
     # 5. For each collapsed s.c.c in topo order (single invariants can be viewed as a s.c.c with 1 elmnt.)
     check_order = topo_sort(collapsedInflGraph)
 
-    sound_invs = set(sound)
+    new_sound_invs = set()
     nonind_ctrex = { }
+
+    scc_nchecks = 0
+    for scc in map(lambda i:    sccs[i], check_order):
+        # 5.1 For all possible subsets of s.c.c.
+        scc_nchecks += 2**len(scc)
+    print "After s.c.c.s ", scc_nchecks, " will be performed"
 
     nchecks_worst = 2**len(invs)
     nchecks_infl_graph = 0
@@ -95,13 +103,13 @@ def tryAndVerify_impl(bbs, loop, sound, invs):
                 continue
 
             inv_subs = [ rest[x] for x in subset ]
-            conj = ast_and(list(sound_invs) + inv_subs)
+            conj = ast_and(list(new_sound_invs) + list(old_sound_invs) + inv_subs)
             ind_ctrex = loop_vc_ind_ctrex(loop, conj, bbs)
             nchecks_infl_graph_set_skipping += 1
             # If conjunction is inductive:
             if (not ind_ctrex):
                 # Add all invariants in conj. in sound set.
-                sound_invs = sound_invs.union(inv_subs);
+                new_sound_invs = new_sound_invs.union(inv_subs);
                 sound_inv_inds = sound_inv_inds.union(subset);
             else:
                 d = subset.difference(sound_inv_inds)
@@ -114,11 +122,10 @@ def tryAndVerify_impl(bbs, loop, sound, invs):
     overfitted_set = set([ x[0] for x in overfitted ])
 
     for inv in invs:
-        if inv not in overfitted_set and inv not in sound_invs:
+        if inv not in overfitted_set and inv not in new_sound_invs:
             nonind_invs.append((inv, nonind_ctrex[inv]))
 
     print "NChecks: Worst: ", nchecks_worst, "InflGraph: ", nchecks_infl_graph,\
           "InflGraph+SetSkip:", nchecks_infl_graph_set_skipping, "Best:", nchecks_best 
 
-    return overfitted, nonind_invs, sound_invs
-    
+    return overfitted, nonind_invs, new_sound_invs
