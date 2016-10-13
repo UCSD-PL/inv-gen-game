@@ -78,6 +78,10 @@ def counterex(pred):
     s.add(Not(pred))
     res = s.check()
     checkShuttingDown();
+    if z3.unknown == res:
+      print "Query: ", Not(pred), " returned unknown!"
+      return None
+
     return None if z3.unsat == res else s.model()
 
 def Or(*args):
