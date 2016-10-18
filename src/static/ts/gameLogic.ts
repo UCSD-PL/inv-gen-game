@@ -439,14 +439,38 @@ class PatternGameLogic extends BaseGameLogic {
                 gl.tracesW.setExp("");
                 logEvent("FoundInvariant", [curLvlSet, gl.curLvl.id, ui.rawUserInp, ui.canonForm]);
                 if (!gl.lvlPassedF) {
-                  gl.goalSatisfied((sat, feedback) => {
-                    if (Args.get_worker_id() != "") {
-                      if (sat)
-                        rpc.call("App.setLvlAsDone", [curLvlSet, gl.curLvl.id], (res) => { }, log);
-                      else if (gl.foundJSInv.length >= 8)
-                        rpc.call("App.addToIgnoreList", [Args.get_worker_id(), curLvlSet, gl.curLvl.id], (res) => { }, log);
-                    }
-                    if (sat || gl.foundJSInv.length >= 8) {
+                  if (gl.foundJSInv.length >= 6) {
+                    rpc.call("App.addToIgnoreList",
+                             [Args.get_worker_id(), curLvlSet, gl.curLvl.id],
+                             (res) => { }, log);
+                    gl.lvlPassedF = true;
+                    gl.lvlPassedCb();
+                    logEvent("FinishLevel",
+                             [curLvlSet,
+                              gl.curLvl.id,
+                              false,
+                              gl.foundJSInv.map((x)=>x.rawUserInp),
+                              gl.foundJSInv.map((x)=>x.canonForm)]);
+                  } else {
+                    /*
+                     * There is a potential race between an earlier call to
+                     * goalSatisfied and a later game finish due to 8 levels,
+                     * that could result in 2 or more FinishLevel events for
+                     * the same level.
+                     */
+                    var preCallCurLvl = gl.curLvl.id;
+                    gl.goalSatisfied((sat, feedback) => {
+                      if (!sat)
+                        return;
+
+                      rpc.call("App.setLvlAsDone", [curLvlSet, preCallCurLvl], (res) => { }, log);
+                      /*
+                       * Lets try and make sure at least late "gameFinished" events from
+                       * previous levels don't impact next level.
+                       */
+                      if (preCallCurLvl != gl.curLvl.id)
+                        return;
+
                       logEvent("FinishLevel",
                                [curLvlSet,
                                 gl.curLvl.id,
@@ -455,8 +479,8 @@ class PatternGameLogic extends BaseGameLogic {
                                 gl.foundJSInv.map((x)=>x.canonForm)]);
                       gl.lvlPassedF = true;
                       gl.lvlPassedCb();
-                    }
-                  });
+                    });
+                  }
                 }
               }
             })
