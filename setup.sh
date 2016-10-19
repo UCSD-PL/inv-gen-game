@@ -26,6 +26,7 @@ pip install boto
 pip install pyOpenSSL
 pip install colorama
 pip install sqlalchemy
+pip install tabulate
 
 if [ ! -d $DIR/third_party ] ; then
   mkdir $DIR/third_party
