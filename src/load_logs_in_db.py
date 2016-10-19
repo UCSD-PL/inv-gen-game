@@ -5,6 +5,7 @@ from sqlalchemy.orm import relationship, sessionmaker
 from json import loads, dumps
 from js import esprimaToBoogie
 from datetime import datetime
+from models import open_sqlite_db, Source, Event
 
 import json
 import sys;
@@ -12,12 +13,7 @@ import sys;
 if len(sys.argv) != 3:
     print "Usage: <db_file> <log_file>"
 
-engine = create_engine('sqlite:///' + sys.argv[1], echo=True)
-Session = sessionmaker(bind=engine)
-
-s = Session()
-
-Base.metadata.create_all(engine);
+s = open_sqlite_db(sys.argv[1]
 
 srcs = {
     s.name : s for s in s.query(Source).all()
@@ -51,7 +47,8 @@ with open(sys.argv[2], 'r') as f:
           invs = zip(rest[3], [ str(esprimaToBoogie(x, {})) for x in rest[4] ])
           payl["all_found"] = invs;
       elif (evt_type == "FoundInvariant"):
-        payl = [ rest[2], str(esprimaToBoogie(rest[3], { })) ]
+        payl = { "lvlset" : rest[0], "lvlid" : rest[1],
+                  "raw": rest[2], "canonical": str(esprimaToBoogie(rest[3], { }))}
       else:
         print "Unknown event: ", e
       t = datetime.fromtimestamp(time)
