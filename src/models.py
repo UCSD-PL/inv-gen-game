@@ -19,6 +19,7 @@ class Event(Base):
   __tablename__ = "events"
   id = Column(Integer, Sequence('user_id_seq'), primary_key=True)
   type = Column(String)
+  experiment = Column(String)
   src = Column(String, ForeignKey("sources.name"))
   addr = Column(String) # For mturk users this is the ip of the access
   time = Column(DateTime)
