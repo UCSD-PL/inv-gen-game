@@ -1,7 +1,8 @@
 from json import loads, dumps
 from js import esprimaToBoogie
 from datetime import datetime
-from models import open_sqlite_db, Source, Event, workers, done_tutorial, finished_levels, found_invs
+from models import open_sqlite_db, Source, Event, workers, done_tutorial,\
+    finished_levels, found_invs, experiments
 import sys;
 
 if __name__ == "__main__":
@@ -11,7 +12,7 @@ if __name__ == "__main__":
     s = open_sqlite_db(sys.argv[1])
 
     for w in workers(s):
-        print w.name, done_tutorial(w), len(list(w.events))
+        print w.name, done_tutorial(w), len(list(w.events)), experiments(w)
         print "Finished lvls: "
         for lvl in finished_levels(w):
             print "   ", lvl

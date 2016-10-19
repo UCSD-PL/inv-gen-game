@@ -56,3 +56,6 @@ def started_levels(src):
 
 def found_invs(src):
     return [ e.payl() for e in src.events if e.type == "FoundInvariant"]
+
+def experiments(src):
+    return list(set([e.experiment for e in src.events]))
