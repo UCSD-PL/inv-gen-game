@@ -4,6 +4,7 @@ from boogie.paths import get_path_vars, nd_bb_path_to_ssa, sp_nd_ssa_path, extra
 from boogie.predicate_transformers import sp_stmts
 from boogie.ssa import SSAEnv
 from itertools import permutations
+from copy import deepcopy
 
 def val_to_boogie(v):
     if (isinstance(v, IntNumRef)):
@@ -89,4 +90,4 @@ def execute(env, bb, bbs, limit):
         continue
 
       for s in bbs[bb].successors:
-        q.append((postcond, s, SSAEnv(after_env, ""), newp, new_ssap))
+        q.append((postcond, s, deepcopy(after_env), newp, new_ssap))

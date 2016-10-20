@@ -104,7 +104,7 @@ def extract_ssa_path_vars(ssa_p, m):
                 envs = []
                 for repl_m in repl_ms:
                     vs = set(map(str, repl_m.keys())).union(argsS)
-                    envs.append({ x : m[Int(str(repl_m[AstId(x)] if AstId(x) in repl_m else x))] for x in vs })
+                    envs.append({ x : m[Int(str(repl_m[AstId(x)] if AstId(x) in repl_m else x))].as_long() for x in vs })
 
                 concrete_ssa_path.append((bb,envs)) 
         return concrete_ssa_path

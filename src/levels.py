@@ -1,9 +1,9 @@
 from boogie.ast import parseExprAst, ast_or, ast_and
-from boogie.bb import get_bbs, ensureSingleExit
+from boogie.bb import get_bbs, ensureSingleExit, entry
 from boogie_loops import loops, get_loop_header_values, loop_vc_pre_ctrex
 from util import unique, powerset, average
 from boogie.analysis import livevars
-from boogie.eval import instantiateAndEval, evalPred, _to_dict
+from boogie.eval import instantiateAndEval, evalPred, _to_dict, execute
 from os import listdir
 from os.path import dirname, join, abspath, realpath
 from json import load, dumps
@@ -20,22 +20,31 @@ def _tryUnroll(loop, bbs, min_un, max_un, bad_envs, good_env):
     term_vals = get_loop_header_values(loop, bbs, min_un, max_un, bad_envs, good_env, False)
     return (term_vals, False)
 
-def getEnsamble(loop, bbs, nunrolls, numTries = 100):
+def getEnsamble(loop, bbs, exec_limit, tryFind = 100, distr = lambda:  randint(0,5)):
     traceVs = list(livevars(bbs)[loop.loop_paths[0][0]])
     ensamble = []
     tried = set();
     #TODO: Not a smart way for generating random start values. Fix.
-    for s in xrange(0,numTries):
-        candidate = tuple([ randint(0,5) for x in traceVs ])
+    s = 0
+    while s < tryFind:
+        print "Try ", s
+        candidate = tuple([ distr() for x in traceVs ])
         if (candidate in tried):
             continue
 
         tried.add(candidate)
 
         candidate = { x : candidate[i] for (i,x) in enumerate(traceVs) }
-        trace, terminates = _tryUnroll(loop, bbs, 0, nunrolls, None, candidate)
-        if (trace):
-            ensamble.append(trace)
+        found = False
+        for (_,_,_,_,vals) in execute(candidate, entry(bbs), bbs, exec_limit):
+          print "FOUND!"
+          ensamble.append(vals)
+          found = True;
+          s += 1
+          if (s >= tryFind):
+            break;
+
+        if (not found): s += 1;
 
     return ensamble
 
@@ -233,6 +242,7 @@ def loadBoogieLvlSet(lvlSetFile):
           lvlPath = join(lvlSetDir, lvlPath)
         print "Loading level: ", lvlPath
         lvl = loadBoogieFile(lvlPath, False)
+        lvl["path"] = lvlPath
 
         if (len(t) > 2):
           splitterPreds = [ parseExprAst(exp)[0] for exp in t[2] ]
