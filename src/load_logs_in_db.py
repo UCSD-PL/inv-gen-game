@@ -38,7 +38,7 @@ for l in f:
     srcs[worker_id] = src;
 
   src = srcs[worker_id]
-  if (evt_type == "TutorialStart"):
+  if (evt_type == "TutorialStart" or evt_type == "ReplayTutorialAll"):
     payl = { }
   elif (evt_type == "TutorialDone"):
     payl = { }
@@ -48,9 +48,11 @@ for l in f:
       payl["verified"] = rest[2]
       invs = zip(rest[3], [ str(esprimaToBoogie(x, {})) for x in rest[4] ])
       payl["all_found"] = invs;
-  elif (evt_type == "FoundInvariant"):
+  elif (evt_type == "FoundInvariant" or evt_type == "TriedInvariant"):
     payl = { "lvlset" : rest[0], "lvlid" : rest[1],
               "raw": rest[2], "canonical": str(esprimaToBoogie(rest[3], { }))}
+  elif (evt_type == "GameDone"):
+    payl = { "numLvlsPassed" : rest[0] }
   else:
     print "Unknown event: ", e
   t = datetime.fromtimestamp(time)
