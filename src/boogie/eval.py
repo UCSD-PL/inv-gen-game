@@ -1,6 +1,8 @@
 from boogie.z3_embed import *
 from boogie.ast import *
-from boogie.paths import get_path_vars
+from boogie.paths import get_path_vars, nd_bb_path_to_ssa, sp_nd_ssa_path, extract_ssa_path_vars
+from boogie.predicate_transformers import sp_stmts
+from boogie.ssa import SSAEnv
 from itertools import permutations
 
 def val_to_boogie(v):
@@ -63,3 +65,28 @@ def instantiateAndEval(inv, vals, var_names = ["x", "y", "z"], const_names = ["a
             res.append(replace(inst_inv, const_vals))
 
     return res
+
+def execute(env, bb, bbs, limit):
+    q = [ (expr_to_z3(env_to_expr(env), AllIntTypeEnv()), bb ,SSAEnv(None, ""), [ ], [ ]) ]
+
+    def bb_sp(bb, initial_ssa_env, pre):
+      nd_path, final_env = nd_bb_path_to_ssa([bb], bbs, initial_ssa_env)
+      return simplify(sp_nd_ssa_path(nd_path, bbs, precond, AllIntTypeEnv())), final_env, nd_path
+
+    while len(q) > 0:
+      precond, bb, ssa_env, curp, cur_ssap = q.pop()
+      #print "Running ", bb, " with pre: ", precond, "env:", ssa_env.replm()
+      postcond, after_env, ssaed_bb = bb_sp(bb, ssa_env, precond)
+
+      if (not satisfiable(postcond)):
+        continue
+
+      newp = curp + [ bb ]
+      new_ssap = cur_ssap + ssaed_bb
+
+      if (len(bbs[bb].successors) == 0 or len(curp) + 1 >= limit):
+        yield postcond, after_env, newp, new_ssap, extract_ssa_path_vars(new_ssap, model(postcond))
+        continue
+
+      for s in bbs[bb].successors:
+        q.append((postcond, s, SSAEnv(after_env, ""), newp, new_ssap))
