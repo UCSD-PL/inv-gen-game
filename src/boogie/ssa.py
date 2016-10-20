@@ -8,6 +8,15 @@ class SSAEnv:
         s._prefix = parent_pfix + prefix
         s._parent = deepcopy(parent)
 
+    def _lookup_cnt(s, v):
+        if v in s._cnt:
+            return s._cnt[v]
+        else:
+            if (s._parent):
+                return s._parent._lookup_cnt(v)
+            else:
+                return 0 
+
     def lookup(s, v):
         if v in s._cnt:
             return v + "_ssa_" + s._prefix + str(s._cnt[v])
@@ -21,7 +30,7 @@ class SSAEnv:
         return v in s._cnt
 
     def update(s, v):
-        s._cnt[v] = s._cnt.get(v, 0) + 1
+        s._cnt[v] = s._lookup_cnt(v) + 1
 
     def remove(s, v):
         del s._cnt[v]

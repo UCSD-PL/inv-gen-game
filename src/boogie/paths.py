@@ -89,10 +89,7 @@ def is_nd_bb_path_possible(bbpath, bbs):
     nd_ssa_p, _ = nd_bb_path_to_ssa(bbpath, bbs, SSAEnv(None, ""))
     return satisfiable(ssa_path_to_z3(nd_ssa_p, bbs))
 
-def get_path_vars(bbpath, bbs):
-    ssa_p, _ = nd_bb_path_to_ssa(bbpath, bbs, SSAEnv(None, ""))
-    m = model(ssa_path_to_z3(ssa_p, bbs))
-
+def extract_ssa_path_vars(ssa_p, m):
     argsS = set([str(x) for x in m.decls() if not is_ssa_str(str(x)) and '_split_' not in str(x)])
 
     def _helper(ssa_p):
@@ -113,6 +110,12 @@ def get_path_vars(bbpath, bbs):
         return concrete_ssa_path
 
     return [x for x in _helper(ssa_p) if '_union_' not in x[0]]
+    
+
+def get_path_vars(bbpath, bbs):
+    ssa_p, _ = nd_bb_path_to_ssa(bbpath, bbs, SSAEnv(None, ""))
+    m = model(ssa_path_to_z3(ssa_p, bbs))
+    return extract_ssa_path_vars(ssa_p, m);
 
 def wp_nd_ssa_path(ssa_p, bbs, pred, typeEnv):
     for arg in reversed(ssa_p):
