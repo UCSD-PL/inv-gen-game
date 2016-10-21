@@ -27,11 +27,11 @@ def env_to_expr(env, suff = ""):
 
 def evalPred(boogie_expr, env):
     typeEnv = { x : Int for x in env }
-    typeEnv["__result__"] = Bool
     q = And(map(lambda stmt:    stmt_to_z3(stmt, typeEnv),
         [AstAssume(env_to_expr(env)),
-         AstAssert(AstBinExpr(AstId("__result__"), "<==>", boogie_expr))]))
-    return satisfiable(q)
+         AstAssert(boogie_expr)]))
+    res = satisfiable(q)
+    return res
 
 # Given an invariant template as a boogie expression where [x,y,z] are
 # variables and [a,b,c] constants And a series of environments, find all

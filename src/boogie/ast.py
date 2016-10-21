@@ -177,7 +177,7 @@ class AstId(AstNode):
 
 class AstBinExpr(AstNode):
     def __init__(s, lhs, op, rhs):  AstNode.__init__(s, lhs, op, rhs)
-    def __str__(s): return "(" + str(s.lhs) + s.op + str(s.rhs) + ")"
+    def __str__(s): return "(" + str(s.lhs) + " " + s.op + " " + str(s.rhs) + ")"
     @staticmethod
     def __parse__(toks):    return AstBinExpr(_strip(toks[0]), str(toks[1]), _strip(toks[2]))
 
