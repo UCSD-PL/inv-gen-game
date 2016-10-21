@@ -233,6 +233,7 @@ def loadBoogieLvlSet(lvlSetFile):
           lvlPath = join(lvlSetDir, lvlPath)
         print "Loading level: ", lvlPath
         lvl = loadBoogieFile(lvlPath, False)
+        lvl["path"] = lvlPath
 
         if (len(t) > 2):
           splitterPreds = [ parseExprAst(exp)[0] for exp in t[2] ]
