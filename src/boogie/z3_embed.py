@@ -73,14 +73,16 @@ def Int(n):
 def Bool(b):
   return z3.BoolVal(b, ctx=get_ctx());
 
+class Unknown:  pass;
+unknown = Unknown();
+
 def counterex(pred):
     s = getSolver()
     s.add(Not(pred))
     res = s.check()
     checkShuttingDown();
     if z3.unknown == res:
-      print "Query: ", Not(pred), " returned unknown!"
-      return None
+      return unknown
 
     return None if z3.unsat == res else s.model()
 
@@ -101,16 +103,20 @@ def Implies(a,b):
 def satisfiable(pred):
     s = getSolver()
     s.add(pred);
-    res = s.check() == z3.sat
+    res = s.check()
     checkShuttingDown();
-    return res;
+    if z3.unknown == res:
+      return unknown
+    return res == z3.sat;
 
 def unsatisfiable(pred):
     s = getSolver()
     s.add(pred);
-    res = s.check() == z3.unsat
+    res = s.check()
     checkShuttingDown();
-    return res;
+    if z3.unknown == res:
+      return unknown
+    return res == z3.unsat;
 
 def model(pred):
     s = getSolver();
@@ -124,7 +130,9 @@ def maybeModel(pred):
     s.add(pred);
     res = s.check();
     checkShuttingDown()
-    if res == z3.sat:
+    if z3.unknown == res:
+        return unknown
+    elif res == z3.sat:
         return s.model();
     else:
         return None;
