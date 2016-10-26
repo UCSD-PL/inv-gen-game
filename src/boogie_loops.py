@@ -152,7 +152,7 @@ def loop_vc_post_ctrex(loop, inv, bbs):
     ctr = counterex(q)
     return None if not ctr else _unssa_z3_model(ctr, {})
 
-def loop_vc_ind_ctrex(loop, inv, bbs):
+def loop_vc_ind_ctrex(loop, inv, bbs, timeout=None):
     body_ssa, ssa_env = nd_bb_path_to_ssa([loop.loop_paths], bbs, SSAEnv(None, ""))
 
     z3_inv_pre = expr_to_z3(inv, AllIntTypeEnv())
@@ -160,7 +160,7 @@ def loop_vc_ind_ctrex(loop, inv, bbs):
     z3_inv_post = expr_to_z3(replace(inv, ssa_env.replm()), AllIntTypeEnv())
 
     q = Implies(And(z3_inv_pre, z3_path_pred), z3_inv_post)
-    ctr = counterex(q)
+    ctr = counterex(q, timeout)
     return None if not ctr else (_unssa_z3_model(ctr, {}), _unssa_z3_model(ctr, ssa_env.replm()))
     
 ######################################### TESTING #################################

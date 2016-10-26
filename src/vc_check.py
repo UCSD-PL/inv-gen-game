@@ -9,7 +9,8 @@ from boogie.ast import parseAst, AstBinExpr, AstTrue, AstUnExpr,\
 from boogie_loops import loop_vc_pre_ctrex, loop_vc_post_ctrex, loop_vc_ind_ctrex
 from util import unique, pp_exc, powerset, average, split, nonempty
 from boogie.eval import instantiateAndEval, _to_dict
-from boogie.z3_embed import expr_to_z3, AllIntTypeEnv, ids, z3_expr_to_boogie, shutdownZ3, tautology
+from boogie.z3_embed import expr_to_z3, AllIntTypeEnv, ids, z3_expr_to_boogie,\
+    shutdownZ3, tautology, Unknown
 from boogie.paths import sp_nd_ssa_path, nd_bb_path_to_ssa, wp_nd_ssa_path
 from boogie.ssa import SSAEnv
 from graph import strongly_connected_components, collapse_scc, topo_sort
@@ -45,7 +46,7 @@ def getInfluenceGraph(invs, loop, bbs):
     return influences;
 
 # TODO: Make this incremental
-def tryAndVerify_impl(bbs, loop, old_sound_invs, invs):
+def tryAndVerify_impl(bbs, loop, old_sound_invs, invs, timeout=None):
     # 0. First get the overfitted invariants out of the way. We can check overfitted-ness
     #    individually for each invariant.
     pre_ctrexs = map(lambda inv:    (inv, loop_vc_pre_ctrex(loop, inv, bbs)), invs)
@@ -69,53 +70,63 @@ def tryAndVerify_impl(bbs, loop, old_sound_invs, invs):
     nonind_ctrex = { }
 
     scc_nchecks = 0
+    szs = ""
     for scc in map(lambda i:    sccs[i], check_order):
         # 5.1 For all possible subsets of s.c.c.
         scc_nchecks += 2**len(scc)
+        szs += str(len(scc)) + ","
+    print len(check_order), "s.c.c. Sizes:", szs
     print "After s.c.c.s ", scc_nchecks, " will be performed"
 
     nchecks_worst = 2**len(invs)
     nchecks_infl_graph = 0
     nchecks_infl_graph_set_skipping = 0
     nchecks_best = len(invs);
+
     # TODO: Opportunities for optimization: Some elements can be viewed
     # in parallel. To do so - modified bfs on the influences graph
     for scc in map(lambda i:    sccs[i], check_order):
         # 5.1 For all possible subsets of s.c.c.
-        ps = list(powerset(scc))
-        nchecks_infl_graph += len(ps)
         sound_inv_inds = set()
-        for subset in ps:
-            if (len(subset) == 0):  continue
-            # TODO: Opportunity for optimization: If you find a sound invariant
-            # in a s.c.c, can you break up the s.c.c And re-sort just the s.c.c
-            # topologically? Thus reduce the complexity?
-            # THOUGHTS: With the current dependency definition (shared variables)
-            # not likely, as I would expect most s.c.cs to be complete graphs.
-            # TODO: Check if this is true /\
+        nchecks_infl_graph += 2**len(scc)
+        done = False
+        while not done:
+          filtered = set([x for x in scc if x not in sound_inv_inds])
+          print "Filtered: ", len(filtered), "out of", len(scc)
+          ps = powerset(filtered)
+          done = True
+          for subset in ps:
+              if (len(subset) == 0):  continue
+              # TODO: Opportunity for optimization: If you find a sound invariant
+              # in a s.c.c, can you break up the s.c.c And re-sort just the s.c.c
+              # topologically? Thus reduce the complexity?
+              # THOUGHTS: With the current dependency definition (shared variables)
+              # not likely, as I would expect most s.c.cs to be complete graphs.
+              # TODO: Check if this is true /\
 
-            # OPTIMIZATION: We can ignore any subset that doesn't contain
-            # the currently discovered invariants. This is SAFE since
-            # powerset orders sets in increasing size, thus if some
-            # s doesn't contain a sound invariant i, then s + { i } follows
-            # in the ordering, and if s is sound, the s + { i } is definitely sound.
-            if (not sound_inv_inds.issubset(subset)): 
-                continue
+              inv_subs = [ rest[x] for x in subset ]
+              conj = ast_and(list(new_sound_invs) + list(old_sound_invs) + inv_subs)
+              print "Trying set of size: ", len(subset), ":", inv_subs
+              try:
+                ind_ctrex = loop_vc_ind_ctrex(loop, conj, bbs, timeout)
+              except Unknown:
+                ind_ctrex = "Unknown";
 
-            inv_subs = [ rest[x] for x in subset ]
-            conj = ast_and(list(new_sound_invs) + list(old_sound_invs) + inv_subs)
-            ind_ctrex = loop_vc_ind_ctrex(loop, conj, bbs)
-            nchecks_infl_graph_set_skipping += 1
-            # If conjunction is inductive:
-            if (not ind_ctrex):
-                # Add all invariants in conj. in sound set.
-                new_sound_invs = new_sound_invs.union(inv_subs);
-                sound_inv_inds = sound_inv_inds.union(subset);
-            else:
-                d = subset.difference(sound_inv_inds)
-                if (len(d) == 1):
-                    # TODO: Is this part sound?
-                    nonind_ctrex[rest[list(d)[0]]] = ind_ctrex
+              nchecks_infl_graph_set_skipping += 1
+              # If conjunction is inductive:
+              if (ind_ctrex == None):
+                  print "Found sound set with size ", len(subset)
+                  # Add all invariants in conj. in sound set.
+                  new_sound_invs = new_sound_invs.union(inv_subs);
+                  sound_inv_inds = sound_inv_inds.union(subset);
+                  done = False
+                  break;
+              else:
+                  d = subset.difference(sound_inv_inds)
+                  if (len(d) == 1):
+                      # TODO: Is this part sound?
+                      nonind_ctrex[rest[list(d)[0]]] = ind_ctrex
+            
 
     # 6. Label remainder as non-inductive
     nonind_invs = [ ]
