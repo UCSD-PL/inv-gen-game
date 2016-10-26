@@ -1,21 +1,27 @@
 import ast as ast
 import z3;
-from threading import local, current_thread, Lock
+from threading import local, current_thread, Lock, Thread
+from time import sleep, time
+from random import randint
 from z3 import substitute
 from z3 import IntNumRef, BoolRef
 
 _TL = local();
 
 ctxPool = { }
+ctxUseCount = { }
+MAX_USE = 10;
 ctxPoolLock = Lock();
 
-shuttingDown = False;
 class Die(Exception): pass
+class Unknown(Exception):
+  def __init__(s, q):
+    Exception.__init__(s, str(q) + " returned unknown.")
+    s.query = q;
 
 def shutdownZ3():
-  global shuttingDown
   print "Shutting down Z3"
-  shuttingDown = True;
+  TimeoutSolver.shuttingDown = True;
 
   try:
       ctxPoolLock.acquire();
@@ -27,13 +33,6 @@ def shutdownZ3():
       z3.main_ctx().interrupt();
   finally:
       ctxPoolLock.release();
-
-def checkShuttingDown():
-  global shuttingDown
-
-  if (shuttingDown):
-    raise Die()
-
 
 def get_ctx():
     if (not hasattr(_TL, "ctx")):
@@ -48,14 +47,30 @@ def get_ctx():
                 print "Reclaiming z3 ctx from dead thread " + thr.name
                 ctxPool[ctx] = None;
 
-            if (len(reclaim) > 0):
+            free = [ (ctx, thr) for (ctx,thr) in ctxPool.iteritems()
+                        if thr == None ]
+
+            # Delete any contexts that have been used too often
+            for (ctx,_) in free:
+              del ctxPool[ctx]
+              del ctxUseCount[ctx]
+              #if ctxUseCount[ctx] > MAX_USE:
+              #  del ctxPool[ctx]
+              #  del ctxUseCount[ctx]
+
+            free = [ (ctx, thr) for (ctx,thr) in ctxPool.iteritems()
+                        if thr == None ]
+
+            if (len(free) > 0):
               print "Assigning existing ctx to thread " + ct.name
-              newCtx = reclaim[0][0]
+              newCtx = free[randint(0, len(free)-1)][0]
             else:
               print "Creating new ctx for thread " + ct.name
               newCtx = z3.Context();
+              ctxUseCount[newCtx] = 0
 
             ctxPool[newCtx] = ct;
+            ctxUseCount[newCtx] += 1;
             print "ctxPool has ", len(ctxPool), "entries"
         finally:
             ctxPoolLock.release();
@@ -64,8 +79,47 @@ def get_ctx():
 
     return _TL.ctx
 
+class TimeoutSolver(z3.Solver):
+    shuttingDown = False;
+    queries = { }
+
+    @staticmethod
+    def watchdog():
+      print "Watchdog starting"
+      while (not TimeoutSolver.shuttingDown):
+        now = time()
+        sleep(1);
+        for (instance, endtime) in TimeoutSolver.queries.items():
+          #print now, ":Found timeout at ", endtime
+          if now > endtime:
+            #print "Instance is overdue. Interrupting"
+            instance.ctx.interrupt()
+
+    _watchdog_thr = Thread(target=lambda: TimeoutSolver.watchdog())
+
+    def check(s, timeout = None):
+      res = None
+
+      if (timeout != None):
+        TimeoutSolver.queries[s] = time() + timeout
+
+      res = z3.Solver.check(s);
+
+      if (timeout != None):
+        del TimeoutSolver.queries[s]
+
+      if (res == z3.unknown):
+        raise Unknown(s.to_smt2())
+
+      if (TimeoutSolver.shuttingDown):
+        raise Die()
+
+      return res
+
+TimeoutSolver._watchdog_thr.start()
+
 def getSolver():
-    return z3.Solver(ctx=get_ctx())
+    return TimeoutSolver(ctx=get_ctx())
 
 def Int(n):
   return z3.Int(n, ctx=get_ctx());
@@ -73,17 +127,10 @@ def Int(n):
 def Bool(b):
   return z3.BoolVal(b, ctx=get_ctx());
 
-class Unknown:  pass;
-unknown = Unknown();
-
-def counterex(pred):
+def counterex(pred, timeout=None):
     s = getSolver()
     s.add(Not(pred))
-    res = s.check()
-    checkShuttingDown();
-    if z3.unknown == res:
-      return unknown
-
+    res = s.check(timeout)
     return None if z3.unsat == res else s.model()
 
 def Or(*args):
@@ -104,38 +151,25 @@ def satisfiable(pred):
     s = getSolver()
     s.add(pred);
     res = s.check()
-    checkShuttingDown();
-    if z3.unknown == res:
-      return unknown
     return res == z3.sat;
 
 def unsatisfiable(pred):
     s = getSolver()
     s.add(pred);
     res = s.check()
-    checkShuttingDown();
-    if z3.unknown == res:
-      return unknown
     return res == z3.unsat;
 
 def model(pred):
     s = getSolver();
     s.add(pred);
     assert s.check() == z3.sat
-    checkShuttingDown()
     return s.model();
 
 def maybeModel(pred):
     s = getSolver();
     s.add(pred);
     res = s.check();
-    checkShuttingDown()
-    if z3.unknown == res:
-        return unknown
-    elif res == z3.sat:
-        return s.model();
-    else:
-        return None;
+    return s.model() if res == z3.sat else None
 
 def simplify(pred, *args, **kwargs):
     # Simplify doesn't need get_ctx() as it gets its ctx from pred
