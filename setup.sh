@@ -36,7 +36,7 @@ if [ ! -e $DIR/bin/z3 ]; then
   pushd $DIR/third_party
   git clone https://github.com/Z3Prover/z3.git z3
   cd z3
-  python scripts/mk_make.py --prefix=$DIR --python
+  python scripts/mk_make.py -d --prefix=$DIR --python
   cd build
   make -j 8
   make install
