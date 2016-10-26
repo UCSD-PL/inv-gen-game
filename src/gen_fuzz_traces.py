@@ -20,7 +20,7 @@ curLevelSetName, lvls = levels.loadBoogieLvlSet(args.lvlset)
 for lvl_name in lvls:
   print "Trying random values for ", lvl_name
   lvl = lvls[lvl_name]
-  traces = getEnsamble(lvl["loop"], lvl["program"], 1000, 5, lambda:  randint(0, 100))
+  traces = getEnsamble(lvl["loop"], lvl["program"], 1000, 5, lambda:  randint(-100, 100))
   if (len(traces) == 0):
     print "Found ", len(traces), " traces."
     continue
