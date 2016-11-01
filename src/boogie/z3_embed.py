@@ -96,6 +96,7 @@ class TimeoutSolver(z3.Solver):
             instance.ctx.interrupt()
 
     _watchdog_thr = Thread(target=lambda: TimeoutSolver.watchdog())
+    _watchdog_thr.daemon = True
 
     def check(s, timeout = None):
       res = None
