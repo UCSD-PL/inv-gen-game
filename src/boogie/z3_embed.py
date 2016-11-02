@@ -6,6 +6,7 @@ from random import randint
 from multiprocessing import Process, Queue as PQueue
 import Pyro4
 import sys
+import atexit
 
 class WrappedZ3Exception(BaseException):
   def __init__(s, value):
@@ -148,6 +149,11 @@ z3ProcessPoolCond = Condition();
 MAX_Z3_INSTANCES=1;
 ports = set(range(8100, 8100 + MAX_Z3_INSTANCES))
 z3ProcessPool = { }
+
+def _cleanupChildProcesses():
+  for proxy in z3ProcessPool:
+    proxy._proc.terminate();
+atexit.register(_cleanupChildProcesses)
 
 def getSolver():
     try:
