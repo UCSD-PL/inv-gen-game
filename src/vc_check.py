@@ -1,24 +1,9 @@
-from flask import Flask
-from flask import request
-from flask_jsonrpc import JSONRPC as rpc
-from os.path import *
-from json import load, dumps
-from js import invJSToZ3, addAllIntEnv, esprimaToZ3, esprimaToBoogie, boogieToEsprima
-from boogie.ast import parseAst, AstBinExpr, AstTrue, AstUnExpr,\
-    ast_and, replace, expr_read
-from boogie_loops import loop_vc_pre_ctrex, loop_vc_post_ctrex, loop_vc_ind_ctrex
-from util import unique, pp_exc, powerset, average, split, nonempty
-from boogie.eval import instantiateAndEval, _to_dict
-from boogie.z3_embed import expr_to_z3, AllIntTypeEnv, ids, z3_expr_to_boogie,\
-    shutdownZ3, tautology, Unknown
-from boogie.paths import sp_nd_ssa_path, nd_bb_path_to_ssa, wp_nd_ssa_path
+from boogie.ast import ast_and, replace
+from boogie_loops import loop_vc_pre_ctrex
+from util import split
+from boogie.z3_embed import expr_to_z3, AllIntTypeEnv, Unknown, counterex, Implies, And
+from boogie.paths import nd_bb_path_to_ssa, ssa_path_to_z3
 from boogie.ssa import SSAEnv
-from graph import strongly_connected_components, collapse_scc, topo_sort
-from sys import exc_info
-from cProfile import Profile
-from pstats import Stats
-from StringIO import StringIO
-from random import choice
 
 def _from_dict(vs, vals):
     if type(vals) == tuple:
@@ -26,26 +11,6 @@ def _from_dict(vs, vals):
     else:
         return [ vals[vs[i]].as_long() if vs[i] in vals else None for i in xrange(0, len(vs)) ]
 
-def getInfluenceGraph(invs, loop, bbs):
-    body_ssa, ssa_env = nd_bb_path_to_ssa([ loop.loop_paths ], bbs, SSAEnv(None, ""))
-    inv_wps = [ wp_nd_ssa_path(body_ssa, bbs,
-                              expr_to_z3(replace(x, ssa_env.replm()), AllIntTypeEnv()),
-                              AllIntTypeEnv())
-                for x in invs ]
-    infl_vars = [ set(ids(x)) for x in inv_wps ]
-    expr_vars = [ expr_read(x) for x in invs ]
-    influences = { i : set() for i in xrange(len(invs)) }
-
-    for i in xrange(len(invs)):
-        for j in xrange(len(invs)):
-            if (i == j):    continue
-            if len(infl_vars[i].intersection(expr_vars[j])) > 0:
-                # Expression j influences the outcome of expression i
-                influences[i].add(j)
-
-    return influences;
-
-# TODO: Make this incremental
 def tryAndVerify_impl(bbs, loop, old_sound_invs, invs, timeout=None):
     # 0. First get the overfitted invariants out of the way. We can check overfitted-ness
     #    individually for each invariant.
@@ -55,88 +20,42 @@ def tryAndVerify_impl(bbs, loop, old_sound_invs, invs, timeout=None):
 
     print len(rest), " left after overfitted removed"
 
-    # 1. Build an influences graph of the left-over invariants
-    inflGraph = getInfluenceGraph(rest, loop, bbs)
-    # 2. Build a collapsed version of the graph
-    sccs = strongly_connected_components(inflGraph) 
-
-    # 3. Sort collapsed graph topologically
-    collapsedInflGraph = collapse_scc(inflGraph, sccs)
-
-    # 5. For each collapsed s.c.c in topo order (single invariants can be viewed as a s.c.c with 1 elmnt.)
-    check_order = topo_sort(collapsedInflGraph)
-
-    new_sound_invs = set()
     nonind_ctrex = { }
 
-    scc_nchecks = 0
-    szs = ""
-    for scc in map(lambda i:    sccs[i], check_order):
-        # 5.1 For all possible subsets of s.c.c.
-        scc_nchecks += 2**len(scc)
-        szs += str(len(scc)) + ","
-    print len(check_order), "s.c.c. Sizes:", szs
-    print "After s.c.c.s ", scc_nchecks, " will be performed"
+    body_ssa, ssa_env = nd_bb_path_to_ssa([loop.loop_paths], bbs, SSAEnv(None, ""))
+    z3_path_pred = ssa_path_to_z3(body_ssa, bbs);
 
-    nchecks_worst = 2**len(invs)
-    nchecks_infl_graph = 0
-    nchecks_infl_graph_set_skipping = 0
-    nchecks_best = len(invs);
+    old_rest = []
 
-    # TODO: Opportunities for optimization: Some elements can be viewed
-    # in parallel. To do so - modified bfs on the influences graph
-    for scc in map(lambda i:    sccs[i], check_order):
-        # 5.1 For all possible subsets of s.c.c.
-        sound_inv_inds = set()
-        nchecks_infl_graph += 2**len(scc)
-        done = False
-        while not done:
-          filtered = set([x for x in scc if x not in sound_inv_inds])
-          print "Filtered: ", len(filtered), "out of", len(scc)
-          ps = powerset(filtered)
-          done = True
-          for subset in ps:
-              if (len(subset) == 0):  continue
-              # TODO: Opportunity for optimization: If you find a sound invariant
-              # in a s.c.c, can you break up the s.c.c And re-sort just the s.c.c
-              # topologically? Thus reduce the complexity?
-              # THOUGHTS: With the current dependency definition (shared variables)
-              # not likely, as I would expect most s.c.cs to be complete graphs.
-              # TODO: Check if this is true /\
+    # Repeat till quiescence (while rest is shrinking)
+    while (len(old_rest) != len(rest)):
+      old_rest = rest
+      rest = []
 
-              inv_subs = [ rest[x] for x in subset ]
-              conj = ast_and(list(new_sound_invs) + list(old_sound_invs) + inv_subs)
-              print "Trying set of size: ", len(subset), ":", inv_subs
-              try:
-                ind_ctrex = loop_vc_ind_ctrex(loop, conj, bbs, timeout)
-              except Unknown:
-                ind_ctrex = "Unknown";
+      z3_pre_cond = expr_to_z3(ast_and(list(old_rest) + old_sound_invs), AllIntTypeEnv())
 
-              nchecks_infl_graph_set_skipping += 1
-              # If conjunction is inductive:
-              if (ind_ctrex == None):
-                  print "Found sound set with size ", len(subset)
-                  # Add all invariants in conj. in sound set.
-                  new_sound_invs = new_sound_invs.union(inv_subs);
-                  sound_inv_inds = sound_inv_inds.union(subset);
-                  done = False
-                  break;
-              else:
-                  d = subset.difference(sound_inv_inds)
-                  if (len(d) == 1):
-                      # TODO: Is this part sound?
-                      nonind_ctrex[rest[list(d)[0]]] = ind_ctrex
-            
+      for inv in old_rest:
+        z3_inv_post = expr_to_z3(replace(inv, ssa_env.replm()), AllIntTypeEnv())
+        q = Implies(And(z3_pre_cond, z3_path_pred), z3_inv_post)
+
+        try:
+          ctr = counterex(q, timeout);
+        except Unknown:
+          ctr = "unknown"
+
+        if (ctr == None):
+          rest.append(inv);
+        else:
+          nonind_ctrex[inv] = ctr;
+
+    new_sound = set(rest)
 
     # 6. Label remainder as non-inductive
     nonind_invs = [ ]
     overfitted_set = set([ x[0] for x in overfitted ])
 
     for inv in invs:
-        if inv not in overfitted_set and inv not in new_sound_invs:
+        if inv not in overfitted_set and inv not in new_sound:
             nonind_invs.append((inv, nonind_ctrex[inv]))
 
-    print "NChecks: Worst: ", nchecks_worst, "InflGraph: ", nchecks_infl_graph,\
-          "InflGraph+SetSkip:", nchecks_infl_graph_set_skipping, "Best:", nchecks_best 
-
-    return overfitted, nonind_invs, new_sound_invs
+    return overfitted, nonind_invs, list(new_sound)
