@@ -42,10 +42,11 @@ nchecks = 0
 def reduction(a,b):
   return 100.0 * (a-b)/(1.0 * a)
 
+"""
 precond_ok = { }
 added = { }
 # For each level in the level set
-for lvl in ["02.0"]:
+for lvl in invs:
   loop = lvls[lvl]["loop"]
   bbs = lvls[lvl]["program"]
 
@@ -75,4 +76,36 @@ for lvl in ["02.0"]:
   print lvlstr, len(invs[lvl]), "tried", len(overf), "removed by prec", len(nonind), "nonind", len(sound), "sound"
   print lvlstr, "sound: ", " && ".join([str(x) for x in sound])
   post_ctrex = loop_vc_post_ctrex(loop, ast_and(sound + [partialInv]), bbs)
+  print lvlstr, "Solved?:", post_ctrex == None
+"""
+
+for lvl in invs:
+  invs[lvl] = [ parseExprAst(x)[0] for x in invs[lvl] ]
+
+for lvlGroup in [("03.0", "03.1"), ("02.0", "02.1"), ("05.0", "05.1", "05.2"), ("04.1",), ("07.1",)]:
+  allFound = set([])
+  condDerived = set([])
+  loop = lvls[lvlGroup[0]]["loop"]
+  bbs = lvls[lvlGroup[0]]["program"]
+
+  for lvl in lvlGroup:
+    allFound = allFound.union(set(invs[lvl]))
+
+    splitterPreds = lvls[lvl]['splitterPreds'] if 'splitterPreds' in lvls[lvl] else [ ] 
+    candidate_antecedents = [ ast_and(pSet) for pSet in nonempty(powerset(splitterPreds)) ]
+    cond_invs = [ AstBinExpr(antec, "==>", inv)\
+      for antec in candidate_antecedents\
+      for inv in invs[lvl] ]
+
+    condDerived = condDerived.union(set(cond_invs))
+
+  print "Found: ", len(allFound), "derived:", len(condDerived)
+  allFound = allFound.union(condDerived)
+
+  overf, nonind, sound = tryAndVerify_impl(bbs, loop, [], allFound, 10)
+  lvlstr = "[" + str(lvlGroup) + "]:"
+
+  print lvlstr, len(allFound), "tried", len(overf), "removed by prec", len(nonind), "nonind", len(sound), "sound"
+  print lvlstr, "sound: ", " && ".join([str(x) for x in sound])
+  post_ctrex = loop_vc_post_ctrex(loop, ast_and(sound), bbs)
   print lvlstr, "Solved?:", post_ctrex == None
