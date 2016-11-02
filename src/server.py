@@ -25,12 +25,12 @@ from levels import _tryUnroll, loadBoogies, loadTraces, findNegatingTrace, loadB
 
 import argparse
 import traceback
-import time
 import sys
 from pp import *
 from copy import copy
 from colorama import Fore,Back,Style
 from colorama import init as colorama_init
+from time import time
 
 colorama_init();
 
@@ -50,7 +50,7 @@ def arg_tostr(arg):
     return str(arg);
 
 def log(action, *pps):
-    action['time'] = time.time()
+    action['time'] = time()
     action['ip'] = request.remote_addr;
     if (logF):
         logF.write(dumps(action) + '\n')
@@ -425,7 +425,7 @@ def tryAndVerify(levelSet, levelId, invs):
     candidate_antecedents = [ ast_and(pSet) for pSet in nonempty(powerset(splitterPreds)) ]
 
     # First lets find the invariants that are sound without implication
-    overfitted, nonind, sound = tryAndVerify_impl(bbs, loop, [], boogie_invs)
+    overfitted, nonind, sound = tryAndVerify_impl(bbs, loop, partialInvs, boogie_invs)
 
     # Next lets add implication  to all unsound invariants from first pass
     # Also add manually specified partialInvs
@@ -435,10 +435,9 @@ def tryAndVerify(levelSet, levelId, invs):
 
     # And look for any new sound invariants
     overfitted, nonind, sound_p2 = tryAndVerify_impl(bbs, loop, sound, p2_invs)
-    sound = sound.union(sound_p2)
+    sound = set(sound).union(sound_p2)
 
-    # Finally see if the sound invariants imply the postcondition. Don't forget to
-    # convert any counterexamples from {x:1, y:2} to [1,2]
+    # Finally see if the sound invariants imply the postcondition. 
     fix = lambda x: _from_dict(lvl['variables'], x)
     boogie_inv = ast_and(sound)
     post_ctrex = map(fix, filter(lambda x:    x, [ loop_vc_post_ctrex(loop, boogie_inv, bbs) ]))

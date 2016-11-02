@@ -1,5 +1,5 @@
 from boogie.ast import ast_and, replace
-from boogie_loops import loop_vc_pre_ctrex
+from boogie_loops import loop_vc_pre_ctrex, _unssa_z3_model
 from util import split
 from boogie.z3_embed import expr_to_z3, AllIntTypeEnv, Unknown, counterex, Implies, And
 from boogie.paths import nd_bb_path_to_ssa, ssa_path_to_z3
@@ -9,7 +9,7 @@ def _from_dict(vs, vals):
     if type(vals) == tuple:
         return ( _from_dict(vs, vals[0]), _from_dict(vs, vals[1]) )
     else:
-        return [ vals[vs[i]].as_long() if vs[i] in vals else None for i in xrange(0, len(vs)) ]
+        return [ vals[vs[i]] if vs[i] in vals else None for i in xrange(0, len(vs)) ]
 
 def tryAndVerify_impl(bbs, loop, old_sound_invs, invs, timeout=None):
     # 0. First get the overfitted invariants out of the way. We can check overfitted-ness
@@ -17,8 +17,6 @@ def tryAndVerify_impl(bbs, loop, old_sound_invs, invs, timeout=None):
     pre_ctrexs = map(lambda inv:    (inv, loop_vc_pre_ctrex(loop, inv, bbs)), invs)
     overfitted, rest = split(lambda ((inv, ctrex)): ctrex != None, pre_ctrexs)
     rest = map(lambda x:    x[0], rest)
-
-    print len(rest), " left after overfitted removed"
 
     nonind_ctrex = { }
 
@@ -47,7 +45,7 @@ def tryAndVerify_impl(bbs, loop, old_sound_invs, invs, timeout=None):
         if (ctr == None):
           rest.append(inv);
         else:
-          nonind_ctrex[inv] = ctr;
+          nonind_ctrex[inv] = (_unssa_z3_model(ctr, {}), _unssa_z3_model(ctr, ssa_env.replm()));
 
     new_sound = set(rest)
 
