@@ -1,4 +1,5 @@
 from boogie.z3_embed import *
+from z3 import IntNumRef, BoolRef
 from boogie.ast import *
 from boogie.paths import get_path_vars, nd_bb_path_to_ssa, sp_nd_ssa_path, extract_ssa_path_vars
 from boogie.predicate_transformers import sp_stmts

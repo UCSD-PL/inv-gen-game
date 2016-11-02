@@ -125,8 +125,8 @@ def get_loop_header_values(loop, bbs, min_unrolls = 0, max_unrolls = 5, \
 
 def _unssa_z3_model(m, repl_m):
     updated = map(str, repl_m.keys())
-    original = [ x for x in map(str, m.decls()) if not is_ssa_str(x) and x not in updated ] 
-    return { (unssa_str(x) if is_ssa_str(x) else x) : m[Int(x)] for x in
+    original = [ x for x in m.keys() if not is_ssa_str(x) and x not in updated ] 
+    return { (unssa_str(x) if is_ssa_str(x) else x) : m[x] for x in
         original + map(str, repl_m.values()) }
 
 def loop_vc_pre_ctrex(loop, inv, bbs):

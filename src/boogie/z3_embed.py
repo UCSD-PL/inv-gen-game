@@ -1,178 +1,261 @@
-import ast as ast
+import ast
 import z3;
-from threading import local, current_thread, Lock, Thread
+from threading import Condition
 from time import sleep, time
 from random import randint
-from z3 import substitute
-from z3 import IntNumRef, BoolRef
+from multiprocessing import Process, Queue as PQueue
+from Pyro4 import Daemon, Proxy, expose
+from Pyro4.errors import TimeoutError as Pyro4TimeoutError
+import sys
 
-_TL = local();
+class WrappedZ3Exception(BaseException):
+  def __init__(s, value):
+    s._value = value;
 
-ctxPool = { }
-ctxUseCount = { }
-MAX_USE = 10;
-ctxPoolLock = Lock();
+def wrapZ3Exc(f):
+  def wrapped(*args, **kwargs):
+    try:
+      return f(*args, **kwargs);
+    except z3.z3types.Z3Exception as e:
+      raise WrappedZ3Exception(e.value);
+  return wrapped
 
-class Die(Exception): pass
+class Z3ServerInstance(object):
+  def __init__(s):
+    s._solver = z3.Solver();
+
+  @expose
+  @wrapZ3Exc
+  def add(s, sPred):
+    pred = z3.parse_smt2_string(sPred)
+    s._solver.add(pred)
+    return 0;
+
+  @expose
+  @wrapZ3Exc
+  def check(s):
+    return str(s._solver.check());
+
+  @expose
+  @wrapZ3Exc
+  def model(s):
+    m = s._solver.model()
+    return { x.name(): m[x].as_long() for x in m }
+
+  @expose
+  @wrapZ3Exc
+  def push(s):
+    s._solver.push();
+    return 0;
+
+  @expose
+  @wrapZ3Exc
+  def pop(s):
+    s._solver.pop();
+    return 0;
+
+
+def startAndWaitForZ3Instance():
+  q = PQueue();
+  def runDaemon(q):
+    import os
+
+    out = "z3_child.%d.out" % os.getpid()
+    err = "z3_child.%d.err" % os.getpid()
+
+    print "Redirecting child", os.getpid(), "streams to", out, err
+
+    sys.stdout.close();
+    sys.stderr.close();
+
+    sys.stdout = open(out, "w")
+    sys.stderr = open(err, "w")
+
+    daemon = Daemon();
+    uri = daemon.register(Z3ServerInstance)
+    sys.stderr.write( "Notify parent of my uri: " + str(uri) )
+    q.put(uri)
+    # Small window for racing
+    daemon.requestLoop();
+
+  p = Process(target=runDaemon, args=(q,))
+  p.start();
+  uri = q.get();
+  return p, uri
+
 class Unknown(Exception):
   def __init__(s, q):
     Exception.__init__(s, str(q) + " returned unknown.")
     s.query = q;
 
-def shutdownZ3():
-  print "Shutting down Z3"
-  TimeoutSolver.shuttingDown = True;
+class Z3ProxySolver:
+    def __init__(s, uri, proc):
+      s._uri = uri;
+      s._proc = proc;
+      s._remote = Proxy(uri);
+      s._timeout = None
 
-  try:
-      ctxPoolLock.acquire();
-      for (ctx,thr) in ctxPool.iteritems():
-        if (thr):
-          print "Trying to interrupt z3 ctx for thread ", thr.name
-          ctx.interrupt();
+    def add(s, p):
+      dummy = z3.Solver();
+      dummy.add(p);
+      strP = dummy.to_smt2();
+      s._remote.add(strP)
+      return None;
 
-      z3.main_ctx().interrupt();
-  finally:
-      ctxPoolLock.release();
+    def push(s):
+      s._remote.push();
+      return None
 
-def get_ctx():
-    if (not hasattr(_TL, "ctx")):
-        # Allocate a context for this thread
-        ct = current_thread()
-        try:
-            ctxPoolLock.acquire();
-            # First GC any Ctx from the ctx pool whose threads are gone
-            reclaim = [ (ctx, thr) for (ctx,thr) in ctxPool.iteritems()
-                        if (thr !=None and not thr.is_alive()) ]
-            for (ctx, thr) in reclaim:
-                print "Reclaiming z3 ctx from dead thread " + thr.name
-                ctxPool[ctx] = None;
-
-            free = [ (ctx, thr) for (ctx,thr) in ctxPool.iteritems()
-                        if thr == None ]
-
-            # Delete any contexts that have been used too often
-            for (ctx,_) in free:
-              del ctxPool[ctx]
-              del ctxUseCount[ctx]
-              #if ctxUseCount[ctx] > MAX_USE:
-              #  del ctxPool[ctx]
-              #  del ctxUseCount[ctx]
-
-            free = [ (ctx, thr) for (ctx,thr) in ctxPool.iteritems()
-                        if thr == None ]
-
-            if (len(free) > 0):
-              print "Assigning existing ctx to thread " + ct.name
-              newCtx = free[randint(0, len(free)-1)][0]
-            else:
-              print "Creating new ctx for thread " + ct.name
-              newCtx = z3.Context();
-              ctxUseCount[newCtx] = 0
-
-            ctxPool[newCtx] = ct;
-            ctxUseCount[newCtx] += 1;
-            print "ctxPool has ", len(ctxPool), "entries"
-        finally:
-            ctxPoolLock.release();
-
-        _TL.ctx = newCtx
-
-    return _TL.ctx
-
-class TimeoutSolver(z3.Solver):
-    shuttingDown = False;
-    queries = { }
-
-    @staticmethod
-    def watchdog():
-      print "Watchdog starting"
-      while (not TimeoutSolver.shuttingDown):
-        now = time()
-        sleep(1);
-        for (instance, endtime) in TimeoutSolver.queries.items():
-          #print now, ":Found timeout at ", endtime
-          if now > endtime:
-            #print "Instance is overdue. Interrupting"
-            instance.ctx.interrupt()
-
-    _watchdog_thr = Thread(target=lambda: TimeoutSolver.watchdog())
+    def pop(s):
+      s._remote.pop();
+      return None
 
     def check(s, timeout = None):
-      res = None
+      old_timeout = s._timeout
+      s._remote._pyroTimeout = timeout;
+      try:
+        r = s._remote.check()
+      except Pyro4TimeoutError:
+        print "Timeout. Returning unknown and restarting"
+        r = "unknown"
+        s._restartRemote();
+      except Exception,e:
+        sys.stdout.write("Got exception: " + str(e) + "\n")
+      finally:
+        s._remote._pyroTimeout = old_timeout;
 
-      if (timeout != None):
-        TimeoutSolver.queries[s] = time() + timeout
+      if (r=="sat"):
+        return z3.sat;
+      elif (r =="unsat"):
+        return z3.unsat;
+      elif (r == "unknown"):
+        raise Unknown("storing query NYI in proxy solver")
+      else:
+        raise Exception("bad reply to check: " + str(r));
 
-      res = z3.Solver.check(s);
+    def model(s):
+      return s._remote.model();
 
-      if (timeout != None):
-        del TimeoutSolver.queries[s]
+    def _restartRemote(s):
+        sys.stderr.write("Restarting remote\n");
+        # Kill Old Process
+        s._proc.terminate();
+        s._proc.join();
+        # Restart
+        s._proc, s._uri = startAndWaitForZ3Instance()
+        s._remote = Proxy(s._uri);
+        s.push();
 
-      if (res == z3.unknown):
-        raise Unknown(s.to_smt2())
-
-      if (TimeoutSolver.shuttingDown):
-        raise Die()
-
-      return res
-
-TimeoutSolver._watchdog_thr.start()
+z3ProcessPoolCond = Condition();
+MAX_Z3_INSTANCES=1;
+ports = set(range(8100, 8100 + MAX_Z3_INSTANCES))
+z3ProcessPool = { }
 
 def getSolver():
-    return TimeoutSolver(ctx=get_ctx())
+    try:
+        z3ProcessPoolCond.acquire();
+        # Repeatedly GC dead processes and see what free context we have
+        # If we have none wait on the condition variable for request to
+        # finish or processes to timeout and die.
+        while True:
+          free = [ (proxy, busy) for (proxy, busy) in z3ProcessPool.iteritems()
+                      if (not busy) ]
 
-def Int(n):
-  return z3.Int(n, ctx=get_ctx());
+          if (len(free) == 0 and len(ports) == 0):
+            print "No free instances and no ports for new instances..."
+            z3ProcessPoolCond.wait();
+          else:
+            break;
 
-def Bool(b):
-  return z3.BoolVal(b, ctx=get_ctx());
+        # We either have a free z3 solver or a process died and freed
+        # up a port for us to launch a new solver with.
+        if (len(free) > 0):
+          #print "Assigning existing z3 proxy"
+          solver = free[randint(0, len(free)-1)][0]
+        else:
+          portN = ports.pop();
+          #print "Creating new z3 proxy"
+          p, uri = startAndWaitForZ3Instance()
+          solver = Z3ProxySolver(uri, p)
+
+        z3ProcessPool[solver] = (True, False);
+        #print "z3ProcessPool has ", len(z3ProcessPool), "entries"
+    finally:
+        z3ProcessPoolCond.release();
+
+    solver.push();
+    return solver;
+
+def releaseSolver(solver):
+    try:
+        z3ProcessPoolCond.acquire();
+        solver.pop();
+        z3ProcessPool[solver] = False
+        z3ProcessPoolCond.notify();
+    finally:
+        z3ProcessPoolCond.release();
+
+def Int(n): return z3.Int(n);
+def Bool(b):  return z3.BoolVal(b);
+def Or(*args):  return z3.Or(*args)
+def And(*args): return z3.And(*args)
+def Not(pred):  return z3.Not(pred)
+def Implies(a,b): return z3.Implies(a,b)
 
 def counterex(pred, timeout=None):
-    s = getSolver()
-    s.add(Not(pred))
-    res = s.check(timeout)
-    return None if z3.unsat == res else s.model()
-
-def Or(*args):
-    t = tuple(list(args) + [ get_ctx() ])
-    return z3.Or(*t)
-
-def And(*args):
-    t = tuple(list(args) + [ get_ctx() ])
-    return z3.And(*t)
-
-def Not(pred):
-    return z3.Not(pred, ctx=get_ctx())
-
-def Implies(a,b):
-    return z3.Implies(a,b, ctx=get_ctx())
+    s = None
+    try:
+      s = getSolver()
+      s.add(Not(pred))
+      res = s.check(timeout)
+      m = None if res == z3.unsat else s.model()
+      return m;
+    finally:
+      if (s): releaseSolver(s);
 
 def satisfiable(pred):
-    s = getSolver()
-    s.add(pred);
-    res = s.check()
-    return res == z3.sat;
+    s = None
+    try:
+      s = getSolver()
+      s.add(pred);
+      res = s.check()
+      return res == z3.sat;
+    finally:
+      if (s): releaseSolver(s)
 
 def unsatisfiable(pred):
-    s = getSolver()
-    s.add(pred);
-    res = s.check()
-    return res == z3.unsat;
+    s = None
+    try:
+      s = getSolver()
+      s.add(pred);
+      res = s.check()
+      return res == z3.unsat;
+    finally:
+      if (s): releaseSolver(s)
 
 def model(pred):
-    s = getSolver();
-    s.add(pred);
-    assert s.check() == z3.sat
-    return s.model();
+    s = None
+    try:
+      s = getSolver();
+      s.add(pred);
+      assert s.check() == z3.sat
+      m = s.model();
+      return m;
+    finally:
+      if (s): releaseSolver(s);
 
 def maybeModel(pred):
-    s = getSolver();
-    s.add(pred);
-    res = s.check();
-    return s.model() if res == z3.sat else None
+    s = None
+    try:
+      s = getSolver();
+      s.add(pred);
+      res = s.check();
+      m = s.model() if res == z3.sat else None
+      return m
+    finally:
+      if (s): releaseSolver(s);
 
 def simplify(pred, *args, **kwargs):
-    # Simplify doesn't need get_ctx() as it gets its ctx from pred
     return z3.simplify(pred, *args, **kwargs)
 
 def implies(inv1, inv2):
