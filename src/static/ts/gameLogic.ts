@@ -440,17 +440,21 @@ class PatternGameLogic extends BaseGameLogic {
                 logEvent("FoundInvariant", [curLvlSet, gl.curLvl.id, ui.rawUserInp, ui.canonForm]);
                 if (!gl.lvlPassedF) {
                   if (gl.foundJSInv.length >= 6) {
-                    rpc.call("App.addToIgnoreList",
-                             [Args.get_worker_id(), curLvlSet, gl.curLvl.id],
-                             (res) => { }, log);
-                    gl.lvlPassedF = true;
-                    gl.lvlPassedCb();
-                    logEvent("FinishLevel",
-                             [curLvlSet,
-                              gl.curLvl.id,
-                              false,
-                              gl.foundJSInv.map((x)=>x.rawUserInp),
-                              gl.foundJSInv.map((x)=>x.canonForm)]);
+                    var coin = Math.random() > .5;
+
+                    if (coin) {
+                      rpc.call("App.addToIgnoreList",
+                               [Args.get_worker_id(), curLvlSet, gl.curLvl.id],
+                               (res) => { }, log);
+                      gl.lvlPassedF = true;
+                      gl.lvlPassedCb();
+                      logEvent("FinishLevel",
+                               [curLvlSet,
+                                gl.curLvl.id,
+                                false,
+                                gl.foundJSInv.map((x)=>x.rawUserInp),
+                                gl.foundJSInv.map((x)=>x.canonForm)]);
+                    }
                   } else {
                     /*
                      * There is a potential race between an earlier call to
