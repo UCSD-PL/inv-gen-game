@@ -11,8 +11,9 @@ from models import *
 from os import listdir
 from json import load, dumps
 from util import powerset, nonempty
-from time import time
+from time import time, sleep
 from vc_check import tryAndVerify_impl
+from boogie_loops import loop_vc_post_ctrex
 
 p = argparse.ArgumentParser(description="trace dumper")
 p.add_argument("--lvlset", type=str, default="single-loop-conditionals",
@@ -44,11 +45,11 @@ def reduction(a,b):
 precond_ok = { }
 added = { }
 # For each level in the level set
-for lvl in invs:
+for lvl in ["02.0"]:
   loop = lvls[lvl]["loop"]
   bbs = lvls[lvl]["program"]
 
-  print "Lvl: ", lvl
+  lvlstr = "[" + lvl + "]:"
   parseStart = time()
   invs[lvl] = [ parseExprAst(x)[0] for x in invs[lvl] ]
   parseEnd = time()
@@ -59,17 +60,19 @@ for lvl in invs:
   splitterPreds = lvls[lvl]['splitterPreds'] if 'splitterPreds' in lvls[lvl] else [ ] 
   partialInv = lvls[lvl]['partialInv']
   candidate_antecedents = [ ast_and(pSet) for pSet in nonempty(powerset(splitterPreds)) ]
-  print "Time to parse: ", parseEnd-parseStart, "parse per inv: ", (parseEnd-parseStart)/len(invs[lvl])
+  print lvlstr, "Time to parse: ", parseEnd-parseStart, "parse per inv: ", (parseEnd-parseStart)/len(invs[lvl])
 
   cond_invs = [ AstBinExpr(antec, "==>", inv)\
     for antec in candidate_antecedents\
     for inv in invs[lvl] ]
 
-  print "Starting with ", len(invs[lvl]), " adding ", len(cond_invs), "from implications"
+  print lvlstr, "Starting with ", len(invs[lvl]), " adding ", len(cond_invs), "from implications"
   invs[lvl] = invs[lvl] + cond_invs
   added[lvl] = len(cond_invs)
 
   # Remove any invariants not implied by the precondition
   overf, nonind, sound = tryAndVerify_impl(bbs, loop, [partialInv], invs[lvl], 10)
-  print len(invs[lvl]), "tried", len(overf), "removed by prec", len(nonind), "nonind", len(sound), "sound"
-  print "Sound inv for lvl", lvl,"is", " && ".join([str(x) for x in sound])
+  print lvlstr, len(invs[lvl]), "tried", len(overf), "removed by prec", len(nonind), "nonind", len(sound), "sound"
+  print lvlstr, "sound: ", " && ".join([str(x) for x in sound])
+  post_ctrex = loop_vc_post_ctrex(loop, ast_and(sound + [partialInv]), bbs)
+  print lvlstr, "Solved?:", post_ctrex == None
