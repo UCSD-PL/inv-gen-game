@@ -1,4 +1,4 @@
-from pyparsing import delimitedList,nums
+from pyparsing import delimitedList,nums, ParserElement
 from pyparsing import ZeroOrMore as ZoM,\
     OneOrMore as OoM,\
     Keyword as K,\
@@ -10,6 +10,8 @@ from pyparsing import ZeroOrMore as ZoM,\
     Word as W,\
     Group as G
 
+
+ParserElement.enablePackrat()
 
 csl = delimitedList
 
