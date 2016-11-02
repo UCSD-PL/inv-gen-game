@@ -25,6 +25,7 @@ def tryAndVerify_impl(bbs, loop, old_sound_invs, invs, timeout=None):
     body_ssa, ssa_env = nd_bb_path_to_ssa([loop.loop_paths], bbs, SSAEnv(None, ""))
     z3_path_pred = ssa_path_to_z3(body_ssa, bbs);
 
+    rest = list(rest) + old_sound_invs
     old_rest = []
 
     # Repeat till quiescence (while rest is shrinking)
@@ -32,7 +33,7 @@ def tryAndVerify_impl(bbs, loop, old_sound_invs, invs, timeout=None):
       old_rest = rest
       rest = []
 
-      z3_pre_cond = expr_to_z3(ast_and(list(old_rest) + old_sound_invs), AllIntTypeEnv())
+      z3_pre_cond = expr_to_z3(ast_and(old_rest), AllIntTypeEnv())
 
       for inv in old_rest:
         z3_inv_post = expr_to_z3(replace(inv, ssa_env.replm()), AllIntTypeEnv())

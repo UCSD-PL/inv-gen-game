@@ -136,8 +136,13 @@ def loop_vc_pre_ctrex(loop, inv, bbs):
     z3_loop_entry_cond = expr_to_z3(replace(loop.entry_cond, ssa_env.replm()), AllIntTypeEnv())
     z3_inv = expr_to_z3(replace(inv, ssa_env.replm()), AllIntTypeEnv())
 
-    q = Implies(And(z3_precondition, z3_loop_entry_cond), z3_inv)
-    ctr = counterex(q)
+    q = Implies(z3_precondition, z3_inv)
+    try:
+      ctr = counterex(q)
+    except Unknown:
+      assert False
+      return "unknown"
+
     return None if not ctr else _unssa_z3_model(ctr, ssa_env.replm())
 
 def loop_vc_post_ctrex(loop, inv, bbs):
@@ -149,7 +154,12 @@ def loop_vc_post_ctrex(loop, inv, bbs):
     z3_inv = expr_to_z3(inv, AllIntTypeEnv())
 
     q = Implies(And(z3_inv, Not(z3_loop_entry_cond)), z3_postcondition)
-    ctr = counterex(q)
+
+    try:
+      ctr = counterex(q)
+    except Unknown:
+      return "unknown"
+
     return None if not ctr else _unssa_z3_model(ctr, {})
 
 def loop_vc_ind_ctrex(loop, inv, bbs, timeout=None):
@@ -160,7 +170,11 @@ def loop_vc_ind_ctrex(loop, inv, bbs, timeout=None):
     z3_inv_post = expr_to_z3(replace(inv, ssa_env.replm()), AllIntTypeEnv())
 
     q = Implies(And(z3_inv_pre, z3_path_pred), z3_inv_post)
-    ctr = counterex(q, timeout)
+    try:
+      ctr = counterex(q, timeout)
+    except Unknown:
+      return "unknown"
+
     return None if not ctr else (_unssa_z3_model(ctr, {}), _unssa_z3_model(ctr, ssa_env.replm()))
     
 ######################################### TESTING #################################
