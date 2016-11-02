@@ -124,7 +124,7 @@ class PowerupSuggestionAll implements IPowerupSuggestion {
       new UseOpsPwup(["=="], "=", "equality"),
       new UseOpsPwup(["*", "/"], "*/", "multiplication or division"),
       new UseOpsPwup(["+", "-"], "&plusmn;", "addition or subtraction"),
-      new UseOpsPwup(["->"], "if", "if clause"),
+      //new UseOpsPwup(["->"], "if", "if clause"),
       new UseOpsPwup(["%"], "%", "remainder after division by"),
     ]
   }
