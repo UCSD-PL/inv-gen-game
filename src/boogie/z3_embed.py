@@ -4,8 +4,7 @@ from threading import Condition
 from time import sleep, time
 from random import randint
 from multiprocessing import Process, Queue as PQueue
-from Pyro4 import Daemon, Proxy, expose
-from Pyro4.errors import TimeoutError as Pyro4TimeoutError
+import Pyro4
 import sys
 
 class WrappedZ3Exception(BaseException):
@@ -24,31 +23,31 @@ class Z3ServerInstance(object):
   def __init__(s):
     s._solver = z3.Solver();
 
-  @expose
+  @Pyro4.expose
   @wrapZ3Exc
   def add(s, sPred):
     pred = z3.parse_smt2_string(sPred)
     s._solver.add(pred)
     return 0;
 
-  @expose
+  @Pyro4.expose
   @wrapZ3Exc
   def check(s):
     return str(s._solver.check());
 
-  @expose
+  @Pyro4.expose
   @wrapZ3Exc
   def model(s):
     m = s._solver.model()
     return { x.name(): m[x].as_long() for x in m }
 
-  @expose
+  @Pyro4.expose
   @wrapZ3Exc
   def push(s):
     s._solver.push();
     return 0;
 
-  @expose
+  @Pyro4.expose
   @wrapZ3Exc
   def pop(s):
     s._solver.pop();
@@ -63,7 +62,7 @@ def startAndWaitForZ3Instance():
     out = "z3_child.%d.out" % os.getpid()
     err = "z3_child.%d.err" % os.getpid()
 
-    print "Redirecting child", os.getpid(), "streams to", out, err
+    #print "Redirecting child", os.getpid(), "streams to", out, err
 
     sys.stdout.close();
     sys.stderr.close();
@@ -71,7 +70,7 @@ def startAndWaitForZ3Instance():
     sys.stdout = open(out, "w")
     sys.stderr = open(err, "w")
 
-    daemon = Daemon();
+    daemon = Pyro4.Daemon();
     uri = daemon.register(Z3ServerInstance)
     sys.stderr.write( "Notify parent of my uri: " + str(uri) )
     q.put(uri)
@@ -92,7 +91,7 @@ class Z3ProxySolver:
     def __init__(s, uri, proc):
       s._uri = uri;
       s._proc = proc;
-      s._remote = Proxy(uri);
+      s._remote = Pyro4.Proxy(uri);
       s._timeout = None
 
     def add(s, p):
@@ -115,8 +114,8 @@ class Z3ProxySolver:
       s._remote._pyroTimeout = timeout;
       try:
         r = s._remote.check()
-      except Pyro4TimeoutError:
-        print "Timeout. Returning unknown and restarting"
+      except Pyro4.errors.TimeoutError:
+        print "Child ", s._proc.pid, "Timedout. Restarting."
         r = "unknown"
         s._restartRemote();
       except Exception,e:
@@ -137,13 +136,12 @@ class Z3ProxySolver:
       return s._remote.model();
 
     def _restartRemote(s):
-        sys.stderr.write("Restarting remote\n");
         # Kill Old Process
         s._proc.terminate();
         s._proc.join();
         # Restart
         s._proc, s._uri = startAndWaitForZ3Instance()
-        s._remote = Proxy(s._uri);
+        s._remote = Pyro4.Proxy(s._uri);
         s.push();
 
 z3ProcessPoolCond = Condition();
