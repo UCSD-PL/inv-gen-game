@@ -27,6 +27,7 @@ pip install pyOpenSSL
 pip install colorama
 pip install sqlalchemy
 pip install tabulate
+pip install Pyro4
 
 if [ ! -d $DIR/third_party ] ; then
   mkdir $DIR/third_party
