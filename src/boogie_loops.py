@@ -126,7 +126,7 @@ def get_loop_header_values(loop, bbs, min_unrolls = 0, max_unrolls = 5, \
 def _unssa_z3_model(m, repl_m):
     updated = map(str, repl_m.keys())
     original = [ x for x in m.keys() if not is_ssa_str(x) and x not in updated ] 
-    return { (unssa_str(x) if is_ssa_str(x) else x) : m[x] for x in
+    return { (unssa_str(x) if is_ssa_str(x) else x) : m.get(x, None) for x in
         original + map(str, repl_m.values()) }
 
 def loop_vc_pre_ctrex(loop, inv, bbs):
@@ -141,7 +141,7 @@ def loop_vc_pre_ctrex(loop, inv, bbs):
       ctr = counterex(q)
     except Unknown:
       assert False
-      return "unknown"
+      return { }
 
     return None if not ctr else _unssa_z3_model(ctr, ssa_env.replm())
 
@@ -158,7 +158,7 @@ def loop_vc_post_ctrex(loop, inv, bbs):
     try:
       ctr = counterex(q)
     except Unknown:
-      return "unknown"
+      return { }
 
     return None if not ctr else _unssa_z3_model(ctr, {})
 
@@ -173,7 +173,7 @@ def loop_vc_ind_ctrex(loop, inv, bbs, timeout=None):
     try:
       ctr = counterex(q, timeout)
     except Unknown:
-      return "unknown"
+      return { }
 
     return None if not ctr else (_unssa_z3_model(ctr, {}), _unssa_z3_model(ctr, ssa_env.replm()))
     

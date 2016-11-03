@@ -40,7 +40,7 @@ def tryAndVerify_impl(bbs, loop, old_sound_invs, invs, timeout=None):
         try:
           ctr = counterex(q, timeout);
         except Unknown:
-          ctr = "unknown"
+          ctr = { }
 
         if (ctr == None):
           rest.append(inv);
