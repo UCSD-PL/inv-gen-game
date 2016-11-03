@@ -9,7 +9,7 @@ import tabulate
 DATA_SET = [
   {
     "trace_dir": "new_summer_benchmarks/sum1.boogie.desugared.fuzz_traces/",
-    "preds": ["i<=n", "sn==n||sn==0", "n>=1", "n>0"],
+    "preds": ["i<=n", "sn==n||sn==0", "n>0"],
     "correct_preds": ["n>0"]
   },
   {
@@ -19,8 +19,8 @@ DATA_SET = [
   },
   {
     "trace_dir": "new_summer_benchmarks/fig1.boogie.desugared.fuzz_traces/",
-    "preds": ["x<0", "y>0", "!(y>0)"],
-    "correct_preds": ["!(y>0)"]
+    "preds": ["x<0", "y>0"],
+    "correct_preds": ["y>0"]
   },
   {
     "trace_dir": "sv_manual_trans/loop-new/half_true-unreach-call.desugared.fuzz_traces/",
