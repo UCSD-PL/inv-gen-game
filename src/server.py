@@ -3,17 +3,13 @@ from flask import Flask
 from flask import request
 from flask_jsonrpc import JSONRPC as rpc
 from os.path import *
-from json import load, dumps
-from js import invJSToZ3, addAllIntEnv, esprimaToZ3, esprimaToBoogie, boogieToEsprima
-from boogie.ast import parseAst, AstBinExpr, AstTrue, AstUnExpr,\
-    ast_and, replace, expr_read
-from boogie_loops import loop_vc_pre_ctrex, loop_vc_post_ctrex, loop_vc_ind_ctrex
-from util import unique, pp_exc, powerset, average, split, nonempty
+from json import dumps
+from js import esprimaToZ3, esprimaToBoogie, boogieToEsprima
+from boogie.ast import AstBinExpr, AstTrue, ast_and
+from boogie_loops import loop_vc_post_ctrex
+from util import pp_exc, powerset, split, nonempty
 from boogie.eval import instantiateAndEval, _to_dict
-from boogie.z3_embed import expr_to_z3, AllIntTypeEnv, ids, z3_expr_to_boogie
-from boogie.paths import sp_nd_ssa_path, nd_bb_path_to_ssa, wp_nd_ssa_path
-from boogie.ssa import SSAEnv
-from graph import strongly_connected_components, collapse_scc, topo_sort
+from boogie.z3_embed import expr_to_z3, AllIntTypeEnv, z3_expr_to_boogie
 from sys import exc_info
 from cProfile import Profile
 from pstats import Stats
@@ -21,7 +17,7 @@ from StringIO import StringIO
 from random import choice
 from vc_check import tryAndVerify_impl, _from_dict
 
-from levels import _tryUnroll, loadBoogies, loadTraces, findNegatingTrace, loadBoogieLvlSet
+from levels import _tryUnroll, findNegatingTrace, loadBoogieLvlSet
 
 import argparse
 import traceback
@@ -31,6 +27,8 @@ from copy import copy
 from colorama import Fore,Back,Style
 from colorama import init as colorama_init
 from time import time
+from models import open_sqlite_db
+from db_util import playersWhoStartedLevel, enteredInvsForLevel, getOrAddSource, addEvent
 
 colorama_init();
 
@@ -39,10 +37,16 @@ p.add_argument('--log', type=str, help='an optional log file to store all user a
 p.add_argument('--port', type=int, help='an optional port number')
 p.add_argument('--ename', type=str, default = 'default', help='Name for experiment; if none provided, use "default"')
 p.add_argument('--lvlset', type=str, default = 'desugared-boogie-benchmarks', help='Lvlset to use for serving benchmarks"')
+p.add_argument('--db', type=str, help='Path to database')
 
 args = p.parse_args();
-
 logF = None;
+
+session = open_sqlite_db(args.db)
+
+invs = { }
+players = { }
+
 if args.log:
     logF = open(args.log,'w')
 
@@ -113,6 +117,10 @@ ROOT_DIR = dirname(MYDIR)
 curLevelSetName, lvls = loadBoogieLvlSet(args.lvlset)
 traces = { curLevelSetName: lvls }
 
+for lvl in lvls:
+  invs[lvl] = enteredInvsForLevel(curLevelSetName, lvl, session)
+  players[lvl] = playersWhoStartedLevel(curLevelSetName, lvl, session)
+
 class Server(Flask):
     def get_send_file_max_age(self, name):
         if (name in [ 'jquery-1.12.0.min.js', 'jquery-migrate-1.2.1.min.js', 'jquery.jsonrpcclient.js']):
@@ -127,6 +135,7 @@ api = rpc(app, '/api')
 @pp_exc
 @log_d(str,str,str,str)
 def logEvent(workerId, name, data):
+    addEvent(workerId, name, time(), args.ename, request.remote_addr, data, session);
     return None
 
 @api.method("App.listData")

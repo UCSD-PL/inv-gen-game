@@ -30,11 +30,11 @@ class Event(Base):
 
 
 def open_sqlite_db(path):
-    engine = create_engine("sqlite:///" + path, echo=False);
+    engine = create_engine("sqlite:///" + path, echo=False,
+      connect_args={'check_same_thread':False});
     Session = sessionmaker(bind=engine)
-    s = Session()
     Base.metadata.create_all(engine);
-    return s;
+    return Session;
 
 def workers(s):
     return [x for x in s.query(Source).all() if workerIDhashRE.match(x.name)]

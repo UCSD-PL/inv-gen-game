@@ -25,12 +25,12 @@ args = p.parse_args()
 
 # Process arguments
 curLevelSetName, lvls = levels.loadBoogieLvlSet(args.lvlset)
-src = open_sqlite_db(args.db);
+session = open_sqlite_db(args.db)();
 
 invs = { lvl_name: set() for lvl_name in lvls }
 
 # Load all found invariants
-for inv_evt in src.query(Event).all():
+for inv_evt in session.query(Event).all():
   if inv_evt.type != "FoundInvariant":  continue
   pl = inv_evt.payl()
   if pl["lvlset"] != curLevelSetName:
