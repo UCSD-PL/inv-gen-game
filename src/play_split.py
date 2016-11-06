@@ -5,6 +5,7 @@ import boogie.eval
 import json
 import os
 import tabulate
+import util
 
 DATA_SET = [
   {
@@ -80,6 +81,10 @@ def prettyPredRanks(pred_ranks):
 
 def evaluatePreds(trace_dir, preds, correct_preds):
   trace_rows = loadTraceRows(trace_dir)
+
+  # Preprocess to test powerset of predicates
+  preds = list("&&".join("(%s)" % e for e in s) if len(s) > 1 else s.pop()
+    for s in filter(len, util.powerset(preds)))
 
   results = []
   for pred in preds:
