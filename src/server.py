@@ -42,7 +42,7 @@ p.add_argument('--db', type=str, help='Path to database')
 args = p.parse_args();
 logF = None;
 
-session = open_sqlite_db(args.db)
+sessionF = open_sqlite_db(args.db)
 
 invs = { }
 players = { }
@@ -117,9 +117,11 @@ ROOT_DIR = dirname(MYDIR)
 curLevelSetName, lvls = loadBoogieLvlSet(args.lvlset)
 traces = { curLevelSetName: lvls }
 
+session = sessionF()
 for lvl in lvls:
   invs[lvl] = enteredInvsForLevel(curLevelSetName, lvl, session)
   players[lvl] = playersWhoStartedLevel(curLevelSetName, lvl, session)
+del session
 
 class Server(Flask):
     def get_send_file_max_age(self, name):
@@ -135,6 +137,7 @@ api = rpc(app, '/api')
 @pp_exc
 @log_d(str,str,str,str)
 def logEvent(workerId, name, data):
+    session = sessionF()
     addEvent(workerId, name, time(), args.ename, request.remote_addr, data, session);
     return None
 
@@ -270,10 +273,13 @@ class IgnoreManager:
 @pp_exc
 @log_d(str, pp_BoogieLvl)
 def loadNextLvl(workerId):
+    session = sessionF();
     exp_dir = join(ROOT_DIR, "logs", args.ename)
     level_names = traces[curLevelSetName].keys();
-    level_names.sort()
-    for lvlId in level_names:
+    num_invs = [len(enteredInvsForLevel(curLevelSetName, x, session)) for x in level_names]
+    ninvs_and_level = zip(num_invs, level_names)
+    ninvs_and_level.sort()
+    for ninvs, lvlId in ninvs_and_level:
         if isfile(join(exp_dir, "done-" + curLevelSetName + "-" + lvlId)):
             continue
         if workerId != "" and ignore.contains(workerId, curLevelSetName, lvlId):
