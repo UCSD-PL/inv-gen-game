@@ -3,15 +3,17 @@
  * From "A Practical and Complete Approach to Predicate Refinement" by McMillan TACAS'06
  */
 
-int main(int i, int j) {
-
-  int x = i;
-  int y = j;
-
+procedure main()
+{
+  var i,j, x,y: int;
+  
+  x  :=  i;
+  y  :=  j;
+  
   while(x!=0) {
-  x--;
-  y--;
+    x := x - 1;
+    y := y - 1;
   }
-  if(i==j)
-  static_assert(y==0);
+  assert((i==j) ==> y==0); 
 }
+

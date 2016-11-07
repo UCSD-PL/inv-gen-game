@@ -1,14 +1,18 @@
 // ../dilig-benchmarks/single/11.c
-void main()
+procedure main()
 {
-  int j=0;
-  int i;
-  int x=100;
+  var j,i,x : int;
 
+  j := 0;
+  x := 100;
+  i := 0;
 
-  for (i =0; i< x ; i++){
-    j = j + 2;
+  while (i< x)
+  invariant j==2*i && i <= x;
+  {
+    j  :=  j + 2;
+    i := i + 1;
   }
-
-  static_assert(j == 2*x);
+  
+  assert(j == 2*x);
 }
