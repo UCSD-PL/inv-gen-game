@@ -31,7 +31,6 @@
     [ "d-43", "../dilig-benchmarks/single/43.desugared.bpl" ],
     [ "d-44", "../dilig-benchmarks/single/44.desugared.bpl" ],
     [ "d-46", "../dilig-benchmarks/single/46.desugared.bpl" ],
-    [ "i-add", "../ice-benchmarks/add.bpl" ],
     [ "i-afnp", "../ice-benchmarks/afnp.bpl" ],
     [ "i-cegar1", "../ice-benchmarks/cegar1.bpl" ],
     [ "i-cegar2", "../ice-benchmarks/single/cegar2.desugared.dimo.bpl" ],
