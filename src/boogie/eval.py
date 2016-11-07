@@ -63,7 +63,7 @@ def instantiateAndEval(inv, vals, var_names = ["x", "y", "z"], const_names = ["a
         m = maybeModel(And(map(lambda s: stmt_to_z3(s, typeEnv), p)))
 
         if (m):
-            const_vals = { AstId(x) : AstNumber(m[Int(x)].as_long()) for x in symConsts }
+            const_vals = { AstId(x) : AstNumber(m[x]) for x in symConsts }
             res.append(replace(inst_inv, const_vals))
 
     return res

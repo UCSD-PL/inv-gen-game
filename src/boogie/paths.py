@@ -90,21 +90,22 @@ def is_nd_bb_path_possible(bbpath, bbs):
     return satisfiable(ssa_path_to_z3(nd_ssa_p, bbs))
 
 def extract_ssa_path_vars(ssa_p, m):
-    argsS = set([str(x) for x in m.decls() if not is_ssa_str(str(x)) and '_split_' not in str(x)])
+    argsS = set([str(x) for x in m if not is_ssa_str(str(x)) and '_split_' not in str(x)])
 
     def _helper(ssa_p):
         concrete_ssa_path = []
         for (ind, arg) in enumerate(ssa_p):
             if (arg[0].startswith("_split_")):
                 choice_var, nd_paths = arg
-                taken_ssa_path = nd_paths[m[Int(choice_var)].as_long()]
+                taken_ssa_path = nd_paths[m[choice_var]]
                 concrete_ssa_path.extend(_helper(taken_ssa_path))
             else:
                 (bb, repl_ms) = arg
                 envs = []
                 for repl_m in repl_ms:
                     vs = set(map(str, repl_m.keys())).union(argsS)
-                    envs.append({ x : m[Int(str(repl_m[AstId(x)] if AstId(x) in repl_m else x))].as_long() for x in vs })
+                    new_env = { orig_name : m.get(ssa_name, None) for (orig_name, ssa_name) in [(x, str(repl_m.get(AstId(x), x))) for x in vs ] }
+                    envs.append(new_env);
 
                 concrete_ssa_path.append((bb,envs)) 
         return concrete_ssa_path
