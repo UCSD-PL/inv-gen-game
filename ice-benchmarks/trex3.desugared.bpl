@@ -19,6 +19,7 @@ implementation main()
     goto anon6_LoopHead;
 
   anon6_LoopHead:
+    assert x1 >= 0 && x2 >= 0 && x3 >= 0;
     goto anon6_LoopDone, anon6_LoopBody;
 
   anon6_LoopBody:

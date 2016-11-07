@@ -20,7 +20,6 @@ implementation run(k0: int)
     goto anon5_LoopHead;
 
   anon5_LoopHead:
-    assert z - int(z / 2) * 2 == 1 && w - int(w / 2) * 2 == 0 && x == y;
     goto anon5_LoopDone, anon5_LoopBody;
 
   anon5_LoopBody:
@@ -30,7 +29,7 @@ implementation run(k0: int)
     goto anon6_Then, anon6_Else;
 
   anon6_Else:
-    assume {:partition} z - int(z / 2) * 2 != 1;
+    assume {:partition} z - z div 2 * 2 != 1;
     goto anon3;
 
   anon3:
@@ -39,7 +38,7 @@ implementation run(k0: int)
     goto anon5_LoopHead;
 
   anon6_Then:
-    assume {:partition} z - int(z / 2) * 2 == 1;
+    assume {:partition} z - z div 2 * 2 == 1;
     x := x + 1;
     goto anon3;
 

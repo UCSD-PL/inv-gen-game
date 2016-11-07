@@ -8,7 +8,7 @@ procedure main()
   i := 0;
 
   while (i< x)
-  invariant j==2*i && i <= x;
+  // invariant j==2*i && i <= x;
   {
     j  :=  j + 2;
     i := i + 1;

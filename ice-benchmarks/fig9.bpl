@@ -5,6 +5,7 @@ procedure main()
 	y := 0;
 
 	while(y >= 0)
+  // invariant y == 0;
 	{
 		y := y + x;	
 	}

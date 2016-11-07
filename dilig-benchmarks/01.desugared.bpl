@@ -1,10 +1,11 @@
-implementation run(n: int)
+implementation run()
 {
   var x: int;
   var y: int;
   var t1: int;
   var t2: int;
   var count: int;
+  var n: int;
 
 
   anon0:
@@ -14,7 +15,6 @@ implementation run(n: int)
     goto anon2_LoopHead;
 
   anon2_LoopHead:
-    assert x == y;
     goto anon2_LoopDone, anon2_LoopBody;
 
   anon2_LoopBody:

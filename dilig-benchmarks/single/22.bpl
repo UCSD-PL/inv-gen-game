@@ -8,7 +8,7 @@ procedure main()
   k  :=  0;
 
   while(*)
-  invariant x == y && y == z && (k mod 3 == 0);
+  // invariant x == y && y == z && (k mod 3 == 0);
   {
      if(k mod 3 == 0) {
        x := x + 1;

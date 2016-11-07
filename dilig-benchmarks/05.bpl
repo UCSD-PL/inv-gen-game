@@ -8,7 +8,7 @@ requires flag == true || flag == false;
   i := 0;
   
   while(*)
-  invariant x == y && (flag ==> j == x + i) && (!flag ==> j == i);
+  // invariant x == y && (flag ==> j == x + i) && (!flag ==> j == i);
   {
     x := x + 1;
     y := y + 1;

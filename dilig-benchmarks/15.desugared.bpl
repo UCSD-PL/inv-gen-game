@@ -11,7 +11,6 @@ implementation run(n: int)
     goto anon3_LoopHead;
 
   anon3_LoopHead:
-    assert j + k > n && j <= n;
     goto anon3_LoopDone, anon3_LoopBody;
 
   anon3_LoopBody:

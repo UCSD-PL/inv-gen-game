@@ -6,7 +6,7 @@ procedure main()
   x := 0;
 
   while(true)
-  invariant sn == x;
+  // invariant sn == x;
   {
     sn := sn + 1;
     x := x + 1;

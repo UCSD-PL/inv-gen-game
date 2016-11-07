@@ -7,7 +7,7 @@ procedure run(n: int) {
   j := 0;
 
   while( j < n )
-  invariant j + k > n  && j <= n;
+  // invariant j + k > n  && j <= n;
   {
     j := j + 1;
     k := k - 1;

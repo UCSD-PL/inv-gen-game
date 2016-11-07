@@ -10,7 +10,6 @@ implementation main()
     goto anon3_LoopHead;
 
   anon3_LoopHead:
-    assert i - j <= 3 && i - j >= -9 && i + j >= 11 && i + j <= 21 && i >= 1 && j <= 10 && j >= 5 && i <= 12 && i - int(i / 2) * 2 == 1 && i * j >= 10 && (j >= i ==> j >= 6);
     goto anon3_LoopDone, anon3_LoopBody;
 
   anon3_LoopBody:

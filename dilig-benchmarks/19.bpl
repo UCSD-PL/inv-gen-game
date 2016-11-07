@@ -7,7 +7,7 @@ procedure run(n: int, m: int)
   x := 0; 
   y := m;
   while (x<n)
-    invariant (x <= n) && (x <= m ==> y == m) && (x > m ==> x == y);
+    // invariant (x <= n) && (x <= m ==> y == m) && (x > m ==> x == y);
   {
     x := x+1;
     if(x>m) {

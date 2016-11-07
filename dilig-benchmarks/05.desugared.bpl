@@ -14,7 +14,6 @@ implementation run(flag: bool)
     goto anon4_LoopHead;
 
   anon4_LoopHead:
-    assert x == y && (flag ==> j == x + i) && (!flag ==> j == i);
     goto anon4_LoopDone, anon4_LoopBody;
 
   anon4_LoopBody:

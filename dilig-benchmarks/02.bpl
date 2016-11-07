@@ -11,12 +11,12 @@ procedure run(k0: int)
   k := k0;
 
   while(k > 0) 
-  invariant z - int(z/2)*2 == 1 && w - int(w/2)*2 == 0 && x == y;
+  // invariant z - (z div 2)*2 == 1 && w - (w div 2)*2 == 0 && x == y;
   {
     z := z + x + y + w;
     y := y + 1;
     
-    if(z - int(z/2) * 2 == 1) 
+    if(z - (z div 2) * 2 == 1) 
     {
       x := x + 1;
     }

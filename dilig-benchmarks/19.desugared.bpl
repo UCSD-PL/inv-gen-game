@@ -13,7 +13,6 @@ implementation run(n: int, m: int)
     goto anon4_LoopHead;
 
   anon4_LoopHead:
-    assert x <= n && (x <= m ==> y == m) && (x > m ==> x == y);
     goto anon4_LoopDone, anon4_LoopBody;
 
   anon4_LoopBody:

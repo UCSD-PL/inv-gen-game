@@ -11,7 +11,6 @@ implementation run()
     goto anon3_LoopHead;
 
   anon3_LoopHead:
-    assert (flag == 0 ==> y == 0) && (flag != 0 ==> x >= y);
     goto anon3_LoopDone, anon3_LoopBody;
 
   anon3_LoopBody:

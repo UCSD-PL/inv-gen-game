@@ -5,7 +5,7 @@ procedure main()
   x := 0;
 
   while (*)
-  invariant n*n == x;
+  // invariant n*n == x;
   {
     n := n + 1;
     x := x + 2*n - 1;

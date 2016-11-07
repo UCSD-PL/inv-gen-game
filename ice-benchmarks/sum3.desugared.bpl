@@ -13,7 +13,6 @@ implementation main()
     goto anon2_LoopHead;
 
   anon2_LoopHead:
-    assert sn == x;
     goto anon2_LoopDone, anon2_LoopBody;
 
   anon2_LoopBody:

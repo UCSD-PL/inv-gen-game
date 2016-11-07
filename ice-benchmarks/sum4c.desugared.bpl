@@ -11,7 +11,6 @@ implementation main()
     goto anon3_LoopHead;
 
   anon3_LoopHead:
-    assert sn == i - 1 && (SIZE <= 0 ==> sn == 0) && (SIZE > 0 ==> sn <= SIZE);
     goto anon3_LoopDone, anon3_LoopBody;
 
   anon3_LoopBody:

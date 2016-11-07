@@ -1,12 +1,12 @@
-procedure run(n: int)
+procedure run()
 {
-  var x, y, t1, t2, count: int;
+  var x, y, t1, t2, count, n: int;
   x := 1;
   y := 1;
   count := n;
   
   while(count > 0)
-  invariant x == y;
+  // invariant x == y;
   {
     t1 := x;
     t2 := y;

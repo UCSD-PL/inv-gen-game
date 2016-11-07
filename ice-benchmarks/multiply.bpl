@@ -8,7 +8,7 @@ procedure main()
   j := 0;
 
   while(j < x)
-  invariant s == y*j && j <= x;
+  // invariant s == y*j && j <= x;
   {
     s := s + y;
     j := j + 1;

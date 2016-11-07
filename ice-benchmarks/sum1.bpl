@@ -8,7 +8,7 @@ procedure main()
   assume n >= 0;
   
   while (i <= n)
-  invariant ((n <= 0 ==> sn == 0) && sn == i - 1 && i <= n + 1);
+  // invariant ((n <= 0 ==> sn == 0) && sn == i - 1 && i <= n + 1);
   {
     sn := sn + 1;
     i := i + 1;

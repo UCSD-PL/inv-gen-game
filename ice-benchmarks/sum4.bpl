@@ -5,7 +5,7 @@ procedure main() {
   i := 1;
   
   while(i <= 8)
-  invariant sn == i - 1;
+  // invariant sn == i - 1;
   {
     sn := sn + 1;
     i := i + 1;
