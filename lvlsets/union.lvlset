@@ -187,6 +187,6 @@
     [ "s-while_infinite_loop_2_true-unreach-call_false-termination",
       "../sv_manual_trans/loops/while_infinite_loop_2_true-unreach-call_false-termination.bpl" ],
     [ "s-while_infinite_loop_3_true-unreach-call_false-termination",
-      "../sv_manual_Trans/loops/while_infinite_loop_3_true-unreach-call_false-termination.bpl" ]
+      "../sv_manual_trans/loops/while_infinite_loop_3_true-unreach-call_false-termination.bpl" ]
   ]
 }
