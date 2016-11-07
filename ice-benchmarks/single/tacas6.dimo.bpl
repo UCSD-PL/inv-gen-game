@@ -6,7 +6,7 @@ procedure main()
   y := j;
 
   while (x != 0)
-  invariant i - j == x - y;
+  // invariant i - j == x - y;
   {
     x := x - 1;
     y := y - 1;

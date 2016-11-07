@@ -13,7 +13,7 @@ procedure main()
   }
 
   while (x != y)
-  invariant (x == y ==> lock == 1);
+  // invariant (x == y ==> lock == 1);
   {
     lock := 1;
     x := y;

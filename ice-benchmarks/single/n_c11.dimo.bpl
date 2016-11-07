@@ -7,7 +7,7 @@ procedure main()
   len := 0;
 
   while ( * )
-  invariant len <= 4;
+  // invariant len <= 4;
   {
     if (len == 4)
     {

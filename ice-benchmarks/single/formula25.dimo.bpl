@@ -16,7 +16,7 @@ procedure main()
   x8 := 0;
 
   while(*)
-  invariant (x1 <= 0 && x1 >= x4 + 1 && x2 == x3 && (x4 >= 0 || x4 <= x3));
+  // invariant (x1 <= 0 && x1 >= x4 + 1 && x2 == x3 && (x4 >= 0 || x4 <= x3));
   {
     havoc x1';
     havoc x2';
