@@ -21,13 +21,14 @@ def _tryUnroll(loop, bbs, min_un, max_un, bad_envs, good_env):
     return (term_vals, False)
 
 def getEnsamble(loop, bbs, exec_limit, tryFind = 100, distr = lambda:  randint(0,5)):
-    traceVs = list(livevars(bbs)[loop.loop_paths[0][0]])
+    loopHdr = loop.loop_paths[0][0]
+    traceVs = list(livevars(bbs)[loopHdr])
     ensamble = []
     tried = set();
     #TODO: Not a smart way for generating random start values. Fix.
     s = 0
+    print "Trying to find ", tryFind, " traces of length up to ", exec_limit
     while s < tryFind:
-        print "Try ", s
         candidate = tuple([ distr() for x in traceVs ])
         if (candidate in tried):
             continue
@@ -37,7 +38,7 @@ def getEnsamble(loop, bbs, exec_limit, tryFind = 100, distr = lambda:  randint(0
         candidate = { x : candidate[i] for (i,x) in enumerate(traceVs) }
         found = False
         for (_,_,_,_,vals) in execute(candidate, entry(bbs), bbs, exec_limit):
-          print "FOUND!"
+          vals = [ envs[0] for (bb, envs) in vals if bb == loopHdr ]
           ensamble.append(vals)
           found = True;
           s += 1
@@ -49,7 +50,7 @@ def getEnsamble(loop, bbs, exec_limit, tryFind = 100, distr = lambda:  randint(0
     return ensamble
 
 def getInitialData(loop, bbs, nunrolls, invs, invVars = None, invConsts = ["a", "b", "c"]):
-    trace_enasmble = getEnsamble(loop, bbs, nunrolls, 100);
+    trace_enasmble = getEnsamble(loop, bbs, nunrolls, 1);
     vals, terminates = _tryUnroll(loop, bbs, 0, nunrolls, None, None)
     if (vals):
         trace_enasmble.append(vals)
