@@ -49,7 +49,7 @@ def getEnsamble(loop, bbs, exec_limit, tryFind = 100, distr = lambda:  randint(0
 
     return ensamble
 
-def getInitialData(loop, bbs, nunrolls, invs, invVars = None, invConsts = ["a", "b", "c"]):
+def getInitialData(loop, bbs, nunrolls, invs, invVars = None, invConsts = ["_sc_a", "_sc_b", "_sc_c"]):
     trace_enasmble = getEnsamble(loop, bbs, nunrolls, 1);
     vals, terminates = _tryUnroll(loop, bbs, 0, nunrolls, None, None)
     if (vals):
@@ -89,7 +89,7 @@ def findNegatingTrace(loop, bbs, nunrolls, invs, invVrs = None):
         #return average([len(set(lst)) / 1.0 * len(lst) for lst in lsts])
 
     for inv in invs:
-        hold_for_data.extend(instantiateAndEval(inv, vals, invVrs, ["a", "b", "c"]))
+        hold_for_data.extend(instantiateAndEval(inv, vals, invVrs, ["_sc_a", "_sc_b", "_sc_c"]))
 
     print "The following invariants hold for initial trace: ", hold_for_data
     hold_for_data = list(set(hold_for_data))
@@ -169,8 +169,8 @@ def loadBoogieFile(fname, multiround):
         assert(header_vals != [])
 
         new_header_vals, new_terminates = getInitialData(loop, bbs, 4,
-          [ parseExprAst(inv)[0] for inv in ["x<y", "x<=y", "x==c", "x==y", "x==0", "x<0"] ],
-          [ "x", "y" ])
+          [ parseExprAst(inv)[0] for inv in ["_sv_x<_sv_y", "_sv_x<=_sv_y", "_sv_x==_sc_c", "_sv_x==_sv_y", "_sv_x==0", "_sv_x<0"] ],
+          [ "_sv_x", "_sv_y" ])
 
         if (new_header_vals != None):
             header_vals = new_header_vals
