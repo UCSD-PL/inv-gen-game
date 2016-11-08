@@ -63,7 +63,7 @@ def startAndWaitForZ3Instance():
     out = "z3_child.%d.out" % os.getpid()
     err = "z3_child.%d.err" % os.getpid()
 
-    #print "Redirecting child", os.getpid(), "streams to", out, err
+    print "Redirecting child", os.getpid(), "streams to", out, err
 
     sys.stdout.close();
     sys.stderr.close();
@@ -74,6 +74,7 @@ def startAndWaitForZ3Instance():
     daemon = Pyro4.Daemon();
     uri = daemon.register(Z3ServerInstance)
     sys.stderr.write( "Notify parent of my uri: " + str(uri) )
+    sys.stderr.flush();
     q.put(uri)
     # Small window for racing
     daemon.requestLoop();
