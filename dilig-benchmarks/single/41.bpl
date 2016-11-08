@@ -22,7 +22,7 @@ procedure main() {
   j := 0;
 
   while(i <= n) 
-  // invariant j >= i;
+  // invariant j >= i && i>=0 && i <= n+1 && k >= 0;
   {
      i := i + 1;
      j := j + i;
