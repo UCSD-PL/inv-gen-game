@@ -36,7 +36,11 @@ class AstNode:
                s._children == other._children
 
     def __hash__(s):
-        return hash((s.__class__,) + s._children)
+        try:
+          return hash((s.__class__,) + s._children)
+        except:
+          print "Can't hash: ", s
+          raise
 
 def replace(ast, m):
     if (not isinstance(ast, AstNode)):
@@ -203,16 +207,23 @@ def stmt_read(ast):
         return expr_read(ast.expr)
     elif isinstance(ast, AstAssignment):
         return expr_read(ast.rhs)
-    else:
+    elif isinstance(ast, AstHavoc):
         return set()
+    else:
+        raise Exception("Unknown statement: " + str(ast))
 
 def stmt_changed(ast):
+    if isinstance(ast, AstLabel):
+        ast = ast.stmt
+
     if isinstance(ast, AstAssignment):
         return expr_read(ast.lhs)
     elif isinstance(ast, AstHavoc):
         return set(ast.ids)
-    else:
+    elif isinstance(ast, AstAssume) or isinstance(ast, AstAssert):
         return set([])
+    else:
+        raise Exception("Unknown statement: " + str(ast))
 
 def ast_group_bin(exprs, op, default):
     return reduce(lambda x,y:   AstBinExpr(x, op, y), exprs, default)
