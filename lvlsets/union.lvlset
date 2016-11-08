@@ -57,7 +57,9 @@
     [ "i-tacas", "../ice-benchmarks/single/tacas6.desugared.dimo.bpl" ],
     [ "i-trex3", "../ice-benchmarks/trex3.dimo.desugared.bpl" ],
     [ "i-w1", "../ice-benchmarks/w1.desugared.bpl" ],
-    [ "i-w2", "../ice-benchmarks/w2.desugared.bpl" ],
+    [ "i-w2", "../ice-benchmarks/w2.desugared.bpl" ]
+  ],
+  "levels_todo": [
     [ "s-const_true-unreach-call1",
       "../sv_manual_trans/loop-acceleration/const_true-unreach-call1.bpl" ],
     [ "s-diamond_true-unreach-call1",
