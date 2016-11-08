@@ -7,7 +7,7 @@ procedure run(flag: int)
   i := 0;
   
   while(*)
-  // invariant x == y && (flag ==> j == x + i) && (!flag ==> j == i);
+  // invariant x == y && ((flag != 0) ==> j == x + i) && ((flag == 0) ==> j == i);
   {
     x := x + 1;
     y := y + 1;

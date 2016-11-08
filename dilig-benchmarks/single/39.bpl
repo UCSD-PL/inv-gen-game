@@ -26,7 +26,7 @@ procedure main()
 
   glob3_dc := 0;
   while (true)
-  // invariant TODO?
+  // invariant true 
   {
     if (glob3_pathend_off + glob3_dc >= glob3_pathlim_off) {
       break;
