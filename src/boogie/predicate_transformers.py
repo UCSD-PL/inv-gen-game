@@ -1,6 +1,7 @@
 from ast import *;
 from boogie.z3_embed import *
 from collections import namedtuple
+import z3
 
 def wp_stmt(stmt, pred, typeEnv):
     if (isinstance(stmt, AstLabel)):
@@ -12,7 +13,7 @@ def wp_stmt(stmt, pred, typeEnv):
         assert(assignee not in expr_read(stmt.rhs))
         lhs = typeEnv[stmt.lhs](assignee)
         rhs = expr_to_z3(stmt.rhs, typeEnv)
-        return substitute(pred, (lhs, rhs))
+        return z3.substitute(pred, (lhs, rhs))
     elif (isinstance(stmt, AstAssert)):
         return And(pred, expr_to_z3(stmt.expr, typeEnv))
     elif (isinstance(stmt, AstAssume)):
