@@ -13,7 +13,7 @@ procedure main() {
   k := 0;
   i := 0;
   while( i < n )
-  // invariant k >= 2000 * i && i <= n;
+  // invariant k >= 2000 * i && i <= n && c1 == 4000 && c2 == 2000 && i >= 0 && n > 0;
   {
     i := i + 1;
     if(*) {

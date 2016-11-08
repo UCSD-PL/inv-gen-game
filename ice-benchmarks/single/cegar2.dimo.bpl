@@ -6,7 +6,7 @@ procedure main() {
   m  :=  0;
   
   while (x < N) 
-  //invariant m >= 0 && ((N>0) ==> x <= N) && (m == 0 || m < x);
+  //invariant m >= 0 && ((N>0) ==> x <= N) && (m == 0 || m < x) && x >= 0;
   {
 
     havoc input; 

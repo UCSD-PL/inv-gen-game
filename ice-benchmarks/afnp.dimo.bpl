@@ -5,7 +5,7 @@ procedure run() {
   y := 0;
 
   while (y < 10 && flag != 0)
-  // invariant ((flag == 0) ==> (y == 0)) && ((flag != 0) ==> x >= y);
+  // invariant ((flag == 0) ==> (y == 0 && x == 1)) && ((flag != 0) ==> (x >= y && x >= 1 && y >= 0));
   {
   	x := x + y;
     y := y + 1;

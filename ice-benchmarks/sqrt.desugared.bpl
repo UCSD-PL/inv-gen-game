@@ -10,6 +10,7 @@ implementation main()
     a := 0;
     su := 1;
     t := 1;
+    assume (n>0);
     goto anon3_LoopHead;
 
   anon3_LoopHead:

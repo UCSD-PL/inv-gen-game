@@ -4,7 +4,7 @@ procedure main() {
     j := 10;
     
     while (j >= i)
-    // invariant i - j <= 3 && i - j >= -9 && i + j >= 11 && i + j <= 21 && i >= 1 && j <= 10 && j >= 5 && i <= 12 && (i - (i div 2) * 2 == 1) && i*j >= 10 && (j >= i ==> j >= 6);
+    // invariant 21 == 2*j + i && j >= i - 3;
     {
     	i := i + 2;
     	j := j - 1;

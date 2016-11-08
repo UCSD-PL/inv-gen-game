@@ -11,7 +11,7 @@ procedure main()
   d3 := 1;
   
   while(x1 > 0 && x2 > 0 && x3 > 0)
-  // invariant x1 >= 0 && x2 >= 0 && x3 >= 0;
+  // invariant x1 >= 0 && x2 >= 0 && x3 >= 0 && d1 == 1 && d2 == 1 && d3 == 1;
   {
     if (c1 != 0)
     {

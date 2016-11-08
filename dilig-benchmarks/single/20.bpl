@@ -7,7 +7,7 @@ procedure main()
     m := 0;
     j := 0;
     while(j<n)
-    // invariant (x+y)==k && m <= j && (j>0 ==> m < j) && (n>0 ==> j <= n);
+    // invariant (x+y)==k && m >= 0 && j >= 0 && (m == 0 || m < n);
     {
       if(j==i)
       {

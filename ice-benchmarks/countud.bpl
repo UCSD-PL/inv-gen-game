@@ -7,7 +7,7 @@ procedure main()
   y := 0;
 
   while(x > 0)
-  // invariant (x + y == n);
+  // invariant (x + y == n) && x >= 0;
   {
     x := x - 1;
     y := y + 1;

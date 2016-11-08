@@ -29,7 +29,7 @@ implementation run(k0: int)
     goto anon6_Then, anon6_Else;
 
   anon6_Else:
-    assume {:partition} z - z div 2 * 2 != 1;
+    assume {:partition} z - (z div 2) * 2 != 1;
     goto anon3;
 
   anon3:
@@ -38,7 +38,7 @@ implementation run(k0: int)
     goto anon5_LoopHead;
 
   anon6_Then:
-    assume {:partition} z - z div 2 * 2 == 1;
+    assume {:partition} z - (z div 2) * 2 == 1;
     x := x + 1;
     goto anon3;
 

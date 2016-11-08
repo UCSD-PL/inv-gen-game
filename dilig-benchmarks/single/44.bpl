@@ -23,7 +23,7 @@ procedure main()
   i := 0;
 
   while (i <= k)
-  // invariant (flag == 1 ==> i == j);
+  // invariant (flag == 1 ==> i == j) && (flag == 1 ==> n == 1);
   {
     i := i + 1;
     j :=  j +n;

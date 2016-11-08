@@ -11,7 +11,7 @@ procedure main() {
   
   assume(m>0);
   while (j <= m)
-  // invariant a < j && a > -j;
+  // invariant a < j && a > -j && m > 0 && j <= m+1
   {
     if (*) {
       a := a + 1;
