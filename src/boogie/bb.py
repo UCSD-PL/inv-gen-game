@@ -73,5 +73,4 @@ def ensureSingleExit(bbs):
     bbs["_exit_"] = BB(e, [ ], []);
     
     for bb_lbl in e:
-      bbs[bb_lbl].stmts[-1] = AstGoto(["_exit_"]);
       bbs[bb_lbl].successors.append("_exit_");
