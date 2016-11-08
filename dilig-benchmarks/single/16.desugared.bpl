@@ -23,6 +23,5 @@ implementation main()
   anon3_LoopDone:
     assume {:partition} x == 0;
     assert i == j ==> y == 0;
-    return;
 }
 

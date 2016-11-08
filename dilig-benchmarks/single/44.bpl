@@ -9,11 +9,16 @@ procedure main()
   i := 0;
   j := 0;
 
+  /*
   if (flag == 1){
      n := 1;
   } else {
      n := 2;
   }
+  */
+  // Encoding if as assumes to avoid loop duplication due to desugaring
+  assume(flag == 1 ==> n == 1);
+  assume(flag != 1 ==> n == 2);
 
   i := 0;
 

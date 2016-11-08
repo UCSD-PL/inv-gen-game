@@ -13,11 +13,13 @@ implementation main()
     goto anon3_LoopDone, anon3_LoopBody;
 
   anon3_LoopBody:
+    assume true;
     n := n + 1;
     x := x + 2 * n - 1;
     goto anon3_LoopHead;
 
   anon3_LoopDone:
+    assume true;
     assert x == n * n;
     return;
 }

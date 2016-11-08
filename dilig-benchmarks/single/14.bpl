@@ -9,10 +9,7 @@ procedure main() {
   a := 0;
   j := 1;
   
-  if(m<=0) {
-    return;   
-  }
-
+  assume(m>0);
   while (j <= m)
   // invariant a < j && a > -j;
   {

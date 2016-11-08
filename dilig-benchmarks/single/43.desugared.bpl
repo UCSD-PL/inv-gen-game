@@ -19,6 +19,7 @@ implementation main()
     goto anon7_LoopDone, anon7_LoopBody;
 
   anon7_LoopBody:
+    assume true;
     goto anon8_Then, anon8_Else;
 
   anon8_Else:
@@ -31,6 +32,7 @@ implementation main()
     goto anon7_LoopHead;
 
   anon7_LoopDone:
+    assume true;
     assert y >= t;
     return;
 

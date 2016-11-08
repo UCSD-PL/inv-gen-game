@@ -8,39 +8,32 @@ implementation main()
   anon0:
     a := 0;
     j := 1;
-    goto anon8_Then, anon8_Else;
+    assume m > 0;
+    goto anon6_LoopHead;
 
-  anon8_Else:
-    assume {:partition} 0 < m;
-    goto anon9_LoopHead;
+  anon6_LoopHead:
+    goto anon6_LoopDone, anon6_LoopBody;
 
-  anon9_LoopHead:
-    goto anon9_LoopDone, anon9_LoopBody;
-
-  anon9_LoopBody:
+  anon6_LoopBody:
     assume {:partition} j <= m;
-    goto anon10_Then, anon10_Else;
+    goto anon7_Then, anon7_Else;
 
-  anon10_Else:
+  anon7_Else:
     a := a - 1;
-    goto anon6;
+    goto anon4;
 
-  anon6:
+  anon4:
     j := j + 1;
-    goto anon9_LoopHead;
+    goto anon6_LoopHead;
 
-  anon10_Then:
+  anon7_Then:
     a := a + 1;
-    goto anon6;
+    goto anon4;
 
-  anon9_LoopDone:
+  anon6_LoopDone:
     assume {:partition} m < j;
     assert a >= -m;
     assert a <= m;
-    return;
-
-  anon8_Then:
-    assume {:partition} m <= 0;
     return;
 }
 

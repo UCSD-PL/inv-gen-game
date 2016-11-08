@@ -16,11 +16,13 @@ implementation main()
     goto anon3_LoopDone, anon3_LoopBody;
 
   anon3_LoopBody:
+    assume true;
     x := x + 2;
     y := y + 2;
     goto anon3_LoopHead;
 
   anon3_LoopDone:
+    assume true;
     assert !(x == 4 && y == 0);
     return;
 }

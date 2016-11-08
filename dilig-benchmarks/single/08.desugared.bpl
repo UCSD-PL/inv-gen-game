@@ -13,15 +13,19 @@ implementation main()
     goto anon8_LoopDone, anon8_LoopBody;
 
   anon8_LoopBody:
+    assume true;
     goto anon9_Then, anon9_Else;
 
   anon9_Else:
+    assume true;
     goto anon10_Then, anon10_Else;
 
   anon10_Else:
+    assume true;
     goto anon8_LoopHead;
 
   anon10_Then:
+    assume true;
     goto anon11_Then, anon11_Else;
 
   anon11_Else:
@@ -47,11 +51,13 @@ implementation main()
     goto anon5;
 
   anon9_Then:
+    assume true;
     x := x + 1;
     y := y + 100;
     goto anon8_LoopHead;
 
   anon8_LoopDone:
+    assume true;
     assert x < 4 || y > 2;
     return;
 }

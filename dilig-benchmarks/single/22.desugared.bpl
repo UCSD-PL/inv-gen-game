@@ -17,6 +17,7 @@ implementation main()
     goto anon5_LoopDone, anon5_LoopBody;
 
   anon5_LoopBody:
+    assume true;
     goto anon6_Then, anon6_Else;
 
   anon6_Else:
@@ -35,6 +36,7 @@ implementation main()
     goto anon3;
 
   anon5_LoopDone:
+    assume true;
     assert x == y;
     assert y == z;
     return;

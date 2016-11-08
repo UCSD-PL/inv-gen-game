@@ -24,6 +24,7 @@ implementation main()
     goto anon4_LoopDone, anon4_LoopBody;
 
   anon4_LoopBody:
+    assume true;
     havoc x1p;
     havoc x2p;
     havoc x3p;
@@ -45,6 +46,7 @@ implementation main()
     goto anon4_LoopHead;
 
   anon4_LoopDone:
+    assume true;
     assert 0 <= x1 && x1 <= x4 + 1 && x2 == x3 && (x2 <= -1 || x4 <= x2 + 2) && x5 == 0;
     return;
 }

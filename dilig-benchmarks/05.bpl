@@ -1,5 +1,4 @@
-procedure run(flag: bool)
-requires flag == true || flag == false;
+procedure run(flag: int)
 {
   var x, y, i, j: int;
   x := 0;
@@ -15,7 +14,7 @@ requires flag == true || flag == false;
     i := i + x;
     j := j + y;
   
-    if(flag) {
+    if(flag == 0) {
       j := j + 1;
     }
   }

@@ -20,7 +20,5 @@ procedure main() {
    }
 
 
-   if(flag != 0) {
-      assert(j==100);
-   }
+   assert((flag != 0) ==> j==100);
 }

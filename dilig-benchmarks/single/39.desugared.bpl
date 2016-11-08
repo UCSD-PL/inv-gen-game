@@ -38,9 +38,11 @@ implementation main()
     goto anon7_Then, anon7_Else;
 
   anon7_Else:
+    assume true;
     goto anon5_LoopHead;
 
   anon7_Then:
+    assume true;
     return;
 
   anon6_Then:
