@@ -20,11 +20,12 @@ def livevars(bbs):
     transformer_m = {
         AstAssert:  lambda stmt, inS: inS.union(stmt_read(stmt)),
         AstAssume:  lambda stmt, inS: inS.union(stmt_read(stmt)),
+        AstHavoc:  lambda stmt, inS: inS - stmt_changed(stmt),
         AstAssignment:  lambda stmt, inS:   (inS - stmt_changed(stmt)).union(stmt_read(stmt)) 
     }
     def union_f(sets):
-        return reduce(lambda x,y:   x.union(y), sets, set([]))
-    return backdflow(bbs, transformer_m, union_f, set([]))
+        return reduce(lambda x,y:   x.union(y), filter(lambda x:  x != None, sets), set([]))
+    return backdflow(bbs, transformer_m, union_f, None)
     
 if __name__ == "__main__":
     bbs = get_bbs("desugared3_no_inv.bpl")
