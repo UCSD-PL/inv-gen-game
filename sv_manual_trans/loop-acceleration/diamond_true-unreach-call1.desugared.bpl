@@ -9,6 +9,7 @@ implementation main()
     goto anon5_LoopHead;
 
   anon5_LoopHead:
+    assert (y mod 2 == 0 ==> x mod 2 == y mod 2) && (y mod 2 == 1 ==> x <= 99);
     goto anon5_LoopDone, anon5_LoopBody;
 
   anon5_LoopBody:

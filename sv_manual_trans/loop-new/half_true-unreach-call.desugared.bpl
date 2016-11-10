@@ -13,6 +13,7 @@ implementation main()
     goto anon5_LoopHead;
 
   anon5_LoopHead:
+    assert (i mod 2 == 0 ==> 2 * n == i) && (i mod 2 == 1 ==> 2 * n - 1 == i) && (k >= 0 ==> i <= 2 * k);
     goto anon5_LoopDone, anon5_LoopBody;
 
   anon5_LoopBody:

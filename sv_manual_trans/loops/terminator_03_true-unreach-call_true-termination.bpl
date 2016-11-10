@@ -10,7 +10,9 @@ procedure main()
   assume(y <= LIMIT);
     
   if (y>0) {
-    while(x<100) {
+    while(x<100)
+    invariant true;
+    {
       x:= x + y; 
     }
   }

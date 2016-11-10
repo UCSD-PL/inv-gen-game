@@ -11,51 +11,42 @@ implementation main()
     a := 0;
     b := 0;
     j := 1;
-    goto anon9_Then, anon9_Else;
+    assume flag != 0 ==> i == 0;
+    assume flag == 0 ==> i == 1;
+    goto anon6_LoopHead;
 
-  anon9_Else:
-    assume {:partition} flag == 0;
-    i := 1;
-    goto anon3;
-
-  anon3:
-    goto anon10_LoopHead;
-
-  anon10_LoopHead:
+  anon6_LoopHead:
     assert flag != 0 ==> j == i + 1 && a == b && i mod 2 == 0;
-    goto anon10_LoopDone, anon10_LoopBody;
+    goto anon6_LoopDone, anon6_LoopBody;
 
-  anon10_LoopBody:
+  anon6_LoopBody:
+    assume true;
     a := a + 1;
     b := b + j - i;
     i := i + 2;
-    goto anon11_Then, anon11_Else;
+    goto anon7_Then, anon7_Else;
 
-  anon11_Else:
+  anon7_Else:
     assume {:partition} i mod 2 != 0;
     j := j + 1;
-    goto anon10_LoopHead;
+    goto anon6_LoopHead;
 
-  anon11_Then:
+  anon7_Then:
     assume {:partition} i mod 2 == 0;
     j := j + 2;
-    goto anon10_LoopHead;
+    goto anon6_LoopHead;
 
-  anon10_LoopDone:
-    goto anon12_Then, anon12_Else;
+  anon6_LoopDone:
+    assume true;
+    goto anon8_Then, anon8_Else;
 
-  anon12_Else:
+  anon8_Else:
     assume {:partition} flag == 0;
     return;
 
-  anon12_Then:
+  anon8_Then:
     assume {:partition} flag != 0;
     assert a == b;
     return;
-
-  anon9_Then:
-    assume {:partition} flag != 0;
-    i := 0;
-    goto anon3;
 }
 

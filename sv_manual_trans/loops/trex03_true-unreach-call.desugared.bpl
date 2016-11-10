@@ -15,82 +15,62 @@ implementation main()
     d1 := 1;
     d2 := 1;
     d3 := 1;
-    goto anon18_Then, anon18_Else;
+    assume c1 == 0 || c1 == 1;
+    assume c2 == 0 || c2 == 1;
+    goto anon12_LoopHead;
 
-  anon18_Else:
-    c1 := 1;
-    goto anon3;
-
-  anon3:
-    goto anon19_Then, anon19_Else;
-
-  anon19_Else:
-    c2 := 1;
-    goto anon6;
-
-  anon6:
-    goto anon20_LoopHead;
-
-  anon20_LoopHead:
+  anon12_LoopHead:
     assert x1 >= 0 && x2 >= 0 && x3 >= 0;
-    goto anon20_LoopDone, anon20_LoopBody;
+    goto anon12_LoopDone, anon12_LoopBody;
 
-  anon20_LoopBody:
+  anon12_LoopBody:
     assume {:partition} x1 > 0 && x2 > 0 && x3 > 0;
-    goto anon21_Then, anon21_Else;
+    goto anon13_Then, anon13_Else;
 
-  anon21_Else:
+  anon13_Else:
     assume {:partition} c1 == 0;
-    goto anon22_Then, anon22_Else;
+    goto anon14_Then, anon14_Else;
 
-  anon22_Else:
+  anon14_Else:
     assume {:partition} c2 == 0;
     x3 := x3 - d3;
-    goto anon11;
+    goto anon5;
 
-  anon11:
-    goto anon23_Then, anon23_Else;
+  anon5:
+    goto anon15_Then, anon15_Else;
 
-  anon23_Else:
+  anon15_Else:
     c1 := 1;
-    goto anon14;
+    goto anon8;
 
-  anon14:
-    goto anon24_Then, anon24_Else;
+  anon8:
+    goto anon16_Then, anon16_Else;
 
-  anon24_Else:
+  anon16_Else:
     c2 := 1;
-    goto anon20_LoopHead;
+    goto anon12_LoopHead;
 
-  anon24_Then:
+  anon16_Then:
     c2 := 0;
-    goto anon20_LoopHead;
+    goto anon12_LoopHead;
 
-  anon23_Then:
+  anon15_Then:
     c1 := 0;
-    goto anon14;
+    goto anon8;
 
-  anon22_Then:
+  anon14_Then:
     assume {:partition} c2 != 0;
     x2 := x2 - d2;
-    goto anon11;
+    goto anon5;
 
-  anon21_Then:
+  anon13_Then:
     assume {:partition} c1 != 0;
     x1 := x1 - d1;
-    goto anon11;
+    goto anon5;
 
-  anon20_LoopDone:
+  anon12_LoopDone:
     assume {:partition} !(x1 > 0 && x2 > 0 && x3 > 0);
     assert x1 == 0 || x2 == 0 || x3 == 0;
     return;
-
-  anon19_Then:
-    c2 := 0;
-    goto anon6;
-
-  anon18_Then:
-    c1 := 0;
-    goto anon3;
 }
 

@@ -9,6 +9,7 @@ procedure main()
   assume(z<100);
   assume(z>-100);
   while(x<100 && 100<z)
+  invariant x <= 100 && z <= 100;
   {
     if (*) {
       x := x + 1;

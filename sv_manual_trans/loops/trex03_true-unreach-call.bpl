@@ -9,6 +9,7 @@ procedure main()
   d2 := 1;
   d3 := 1;
   
+  /*
   if (*) {
     c1 := 0;
   } else {
@@ -20,6 +21,10 @@ procedure main()
   } else {
     c2 := 1;
   }
+  */
+  // Encode ifs as assumes to avoid apparent loop duplication
+  assume(c1 == 0 || c1 == 1);
+  assume(c2 == 0 || c2 == 1);
   
   while(x1>0 && x2>0 && x3>0)
   invariant x1 >= 0 && x2 >= 0 && x3 >= 0;

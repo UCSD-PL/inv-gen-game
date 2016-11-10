@@ -8,12 +8,17 @@ procedure main()
   b := 0;
   j := 1;
   
+  /*
   if (flag != 0) {
     i := 0;
   } else {
     i := 1;
   }
-  
+  */
+  // Encode if as assume to avoid loop duplication in desugaring
+  assume(flag != 0 ==> i == 0);
+  assume(flag == 0 ==> i == 1);  
+
   while (*)
   invariant (flag != 0) ==> (j==i+1 && a == b && i mod 2 == 0);
   {

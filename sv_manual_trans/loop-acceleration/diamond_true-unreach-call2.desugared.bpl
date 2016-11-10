@@ -6,10 +6,10 @@ implementation main()
 
   anon0:
     x := 0;
-    y := 1;
     goto anon32_LoopHead;
 
   anon32_LoopHead:
+    assert (y mod 2 == 0 ==> x mod 2 == 0) && (y mod 2 == 1 ==> x <= 0);
     goto anon32_LoopDone, anon32_LoopBody;
 
   anon32_LoopBody:

@@ -14,7 +14,9 @@ procedure main()
   glob2_pathlim_off := bound_off;
 
   glob2_p_off := glob2_pathbuf_off;
-  while (glob2_p_off <= glob2_pathlim_off) {
+  while (glob2_p_off <= glob2_pathlim_off)
+  invariant true;
+  {
     /* OK */
     assert (0 <= glob2_p_off );
     assert (glob2_p_off < MAXPATHLEN + 1);

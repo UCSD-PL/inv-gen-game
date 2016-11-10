@@ -21,6 +21,7 @@ implementation main()
     goto anon6_LoopDone, anon6_LoopBody;
 
   anon6_LoopBody:
+    assume true;
     goto anon7_Then, anon7_Else;
 
   anon7_Else:
@@ -58,6 +59,7 @@ implementation main()
     goto anon3;
 
   anon6_LoopDone:
+    assume true;
     goto anon5;
 }
 

@@ -6,11 +6,13 @@ implementation main()
 
 
   anon0:
+    assume n > 0;
     x := n;
     y := 0;
     goto anon3_LoopHead;
 
   anon3_LoopHead:
+    assert x + y == n && x >= 0;
     goto anon3_LoopDone, anon3_LoopBody;
 
   anon3_LoopBody:

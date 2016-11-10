@@ -8,6 +8,7 @@ procedure main()
   //int x = __VERIFIER_nondet_int();
   assume(x <= 1000000 && x >= -1000000);
 
+  /*
   if (*) {
     d := d - 1;
   }
@@ -37,8 +38,12 @@ procedure main()
   if (*) {
     d := d - 1;
   }
+  */
+  // Encoding ifs as assumes to avoid loop duplication in desugaring
+  assume(d == 1 || d == 0 || d == -1);
 
   while(x>0)
+  invariant true;
   {
     x:=x-d;
   }

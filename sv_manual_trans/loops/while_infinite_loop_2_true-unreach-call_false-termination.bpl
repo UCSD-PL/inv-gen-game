@@ -4,7 +4,9 @@ procedure main()
 {
   var x: int;
   x := 0;
-  while (true) {
+  while (true)
+  invariant true;
+  {
     assert (x == 0);
   }
   assert(x ==0);

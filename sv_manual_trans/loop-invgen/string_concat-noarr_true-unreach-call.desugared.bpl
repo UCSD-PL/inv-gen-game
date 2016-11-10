@@ -14,6 +14,7 @@ implementation main()
     goto anon9_LoopDone, anon9_LoopBody;
 
   anon9_LoopBody:
+    assume true;
     goto anon10_Then, anon10_Else;
 
   anon10_Else:

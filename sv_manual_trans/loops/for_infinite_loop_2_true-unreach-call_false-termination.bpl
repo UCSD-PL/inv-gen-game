@@ -8,7 +8,9 @@ procedure main()
   y:=0;
   //int n=__VERIFIER_nondet_int();
   assume(n>0);
-  while (true) {
+  while (true)
+  invariant true;
+  {
     assert(x==0);
     i := i + 1;
   }

@@ -8,6 +8,7 @@ implementation main()
     goto anon5_LoopHead;
 
   anon5_LoopHead:
+    assert x >= 65520 ==> x mod 2 == 0;
     goto anon5_LoopDone, anon5_LoopBody;
 
   anon5_LoopBody:
