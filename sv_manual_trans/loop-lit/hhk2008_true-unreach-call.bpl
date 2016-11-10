@@ -12,7 +12,7 @@ procedure main()
   cnt := b;
   
   while (cnt > 0)
-  invariant res == a + b - cnt && cnt >= 0;
+  // invariant res == a + b - cnt && cnt >= 0;
   {
     cnt := cnt - 1;
     res := res + 1;

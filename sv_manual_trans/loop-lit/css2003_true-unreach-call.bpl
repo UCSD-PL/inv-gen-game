@@ -9,7 +9,7 @@ procedure main() {
   //k = __VERIFIER_nondet_int();
   assume(0 <= k && k <= 1);
   while (i < LARGE_INT)
-  invariant 1 <= i + k && i + k <= 2 && i >= 1;
+  // invariant 1 <= i + k && i + k <= 2 && i >= 1;
   {
     i := i + 1;
     j := j + k;

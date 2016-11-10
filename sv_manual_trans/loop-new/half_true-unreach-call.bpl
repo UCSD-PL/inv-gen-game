@@ -7,7 +7,7 @@ procedure main() {
   //int k = __VERIFIER_nondet_int();
   assume(k <= LARGE_INT && k >= -LARGE_INT);
   while (i < 2 * k)
-  invariant (i mod 2 == 0 ==> 2 * n == i) && (i mod 2 == 1 ==> 2 * n - 1 == i) && (k >= 0 ==> i <= 2 * k);
+  // invariant (i mod 2 == 0 ==> 2 * n == i) && (i mod 2 == 1 ==> 2 * n - 1 == i) && (k >= 0 ==> i <= 2 * k);
   {
     if (i mod 2 == 0) {
       n := n + 1;

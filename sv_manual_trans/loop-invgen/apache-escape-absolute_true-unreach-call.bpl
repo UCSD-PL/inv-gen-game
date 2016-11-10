@@ -23,7 +23,7 @@ procedure main()
         assert(cp < urilen);
         assert(0 <= cp);
         while ( cp != urilen-1)
-        invariant cp <= urilen - 1;
+        // invariant cp <= urilen - 1;
         {
             if(*) {
               break;
@@ -48,7 +48,7 @@ procedure main()
               assert(0<=cp);
               while ( cp != urilen-1
                     && c < tokenlen - 1)
-              invariant cp <= urilen - 1;
+              // invariant cp <= urilen - 1;
               {
                 assert(cp < urilen);
                 assert(0<=cp);

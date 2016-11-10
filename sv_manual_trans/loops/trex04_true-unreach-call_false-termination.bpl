@@ -43,7 +43,7 @@ procedure main()
   assume(d == 1 || d == 0 || d == -1);
 
   while(x>0)
-  invariant true;
+  // invariant true;
   {
     x:=x-d;
   }

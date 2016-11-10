@@ -8,7 +8,7 @@ procedure main()
   x:=0;
   
   while(x < 1000000)
-  invariant (sn == x * a);
+  // invariant (sn == x * a);
   {
     sn := sn + a;
     x := x + 1;

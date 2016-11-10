@@ -5,7 +5,7 @@ procedure main() {
   i := 0;
   assume(0 <= LARGE_INT );
   while (i < LARGE_INT)
-  invariant i <= LARGE_INT;
+  // invariant i <= LARGE_INT;
   {
     i := i + 1;
   }

@@ -5,7 +5,7 @@ procedure main() {
   x := 0;
   y := 1;
   while(x < 6)
-  invariant x <= 6;
+  // invariant x <= 6;
   {
     x := x + 1;
     y := y * 2;

@@ -7,7 +7,7 @@ procedure main()
   y := 0;
   
   while (y <  1000 && z == 1)
-  invariant x >= y;
+  // invariant x >= y;
   {
     havoc z;
     x := x + y;

@@ -7,7 +7,7 @@ procedure main()
   y := 50;
   
   while (x < 100)
-  invariant (x < 50 ==> y == 50) && (x >= 50 ==> x == y) && x <= 100;
+  // invariant (x < 50 ==> y == 50) && (x >= 50 ==> x == y) && x <= 100;
   {
     if (x < 50) {
       x := x + 1;

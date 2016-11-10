@@ -11,7 +11,7 @@ procedure main()
     
   if (y>0) {
     while(x<100)
-    invariant true;
+    // invariant true;
     {
       x:= x + y; 
     }

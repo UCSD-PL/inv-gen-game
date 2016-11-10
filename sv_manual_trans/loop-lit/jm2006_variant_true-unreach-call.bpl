@@ -14,7 +14,7 @@ procedure main()
   z := 0;
   
   while (x != 0) 
-  invariant i == j ==> x-y == z;
+  // invariant i == j ==> x-y == z;
   {
     x := x - 1;
     y := y - 2;

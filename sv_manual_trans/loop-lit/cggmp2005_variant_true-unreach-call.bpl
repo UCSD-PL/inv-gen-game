@@ -12,7 +12,7 @@ procedure main()
   hi := 2*mid;
 
   while (mid > 0)
-  invariant hi - lo == 2 * mid && mid >= 0;
+  // invariant hi - lo == 2 * mid && mid >= 0;
   {
     lo := lo + 1;
     hi := hi - 1;

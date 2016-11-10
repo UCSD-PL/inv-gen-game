@@ -10,11 +10,11 @@ procedure main() {
   
   i := 0;
   while (i < n) 
-  invariant k >= i * m; 
+  // invariant k >= i * m; 
   {
     j := 0;
     while (j < m) 
-    invariant k >= i * m + j && j <= m;
+    // invariant k >= i * m + j && j <= m;
     {
       k := k + 1;
       j := j + 1;

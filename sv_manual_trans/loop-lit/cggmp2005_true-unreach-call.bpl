@@ -7,7 +7,7 @@ procedure main()
   j := 10;
   
   while (j >= i) 
-  invariant j >= i-3 && (j-i) mod 3 == 0 && 2* (10 - j) == i - 1; 
+  // invariant j >= i-3 && (j-i) mod 3 == 0 && 2* (10 - j) == i - 1; 
   {
     i := i + 2;
     j := -1 + j;

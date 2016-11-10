@@ -7,7 +7,7 @@ procedure main() {
   k := n;
   i := 0;
   while( i < n )
-  invariant k + i div 2 == n && (n > 0 ==> i <= n + 1);
+  // invariant k + i div 2 == n && (n > 0 ==> i <= n + 1);
   {
     k := k - 1;
     i := i + 2;
@@ -16,7 +16,7 @@ procedure main() {
   j := 0;
 
   while( j < (n div 2) )
-  invariant n > 0 ==> (k + j >= (n div 2));
+  // invariant n > 0 ==> (k + j >= (n div 2));
   {
     assert(k > 0);
     k := k - 1;

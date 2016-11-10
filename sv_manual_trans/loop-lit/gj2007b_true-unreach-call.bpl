@@ -7,7 +7,7 @@ procedure main() {
   //int n = __VERIFIER_nondet_int();
     
   while(x < n)
-  invariant (n > 0 ==> m < x);
+  // invariant (n > 0 ==> m < x);
   {
     if(*) {
       m := x;

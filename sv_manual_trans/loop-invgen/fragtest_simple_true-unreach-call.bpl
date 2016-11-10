@@ -22,7 +22,7 @@ procedure main()
   i := 0;
 
   while ( * ) 
-  invariant i == k;
+  // invariant i == k;
   {
     if (!(i <= LARGE_INT)) {
       break;
@@ -36,7 +36,7 @@ procedure main()
   j := 0;
   n := i;
   while (true)
-  invariant k + j == n && j <= n;
+  // invariant k + j == n && j <= n;
   {
     assert(k >= 0);
     k := k -1;

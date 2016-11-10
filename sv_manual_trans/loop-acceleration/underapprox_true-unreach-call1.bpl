@@ -6,7 +6,7 @@ procedure main() {
   y := 1;
 
   while (x < 6)
-  invariant y mod 3 != 0;
+  // invariant y mod 3 != 0;
   {
     x := x + 1;
     y := y * 2;

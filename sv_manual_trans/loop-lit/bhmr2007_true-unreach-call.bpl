@@ -10,7 +10,7 @@ procedure main() {
   //n = __VERIFIER_nondet_int();
   assume(n >= 0 && n <= LARGE_INT);
   while (i < n) 
-  invariant a + b == 3*i && i <= n;
+  // invariant a + b == 3*i && i <= n;
   {
     if (*) {
       a := a + 1;

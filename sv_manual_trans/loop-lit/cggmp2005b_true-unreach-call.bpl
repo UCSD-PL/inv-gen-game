@@ -6,7 +6,7 @@ procedure main() {
   k := 9;
   j := -100;
   while (i <= 100)
-  invariant (i > 0 ==> k == 4);
+  // invariant (i > 0 ==> k == 4);
   {
     i := i + 1;
     while (j < 20) {

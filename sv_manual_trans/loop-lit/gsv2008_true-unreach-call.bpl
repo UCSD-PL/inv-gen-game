@@ -8,7 +8,7 @@ procedure main() {
   //y = __VERIFIER_nondet_int();
   assume(-1000 < y && y < LARGE_INT);
   while (x < 0)
-  invariant y <= 0 ==> x < 0;
+  // invariant y <= 0 ==> x < 0;
   {
     x := x + y;
     y := y + 1;

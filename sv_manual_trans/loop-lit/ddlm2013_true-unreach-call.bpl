@@ -20,7 +20,7 @@ procedure main()
   assume(flag == 0 ==> i == 1);  
 
   while (*)
-  invariant (flag != 0) ==> (j==i+1 && a == b && i mod 2 == 0);
+  // invariant (flag != 0) ==> (j==i+1 && a == b && i mod 2 == 0);
   {
     a := a + 1;
     b := b + (j - i);

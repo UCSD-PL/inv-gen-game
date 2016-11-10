@@ -5,7 +5,7 @@ procedure main() {
   assume (LARGE_INT > 0 && LARGE_INT mod 2 == 0);
   i := 0;
   while (i < LARGE_INT)
-  invariant i <= LARGE_INT && i mod 2 == 0;
+  // invariant i <= LARGE_INT && i mod 2 == 0;
   {
     i := i + 2;
   }

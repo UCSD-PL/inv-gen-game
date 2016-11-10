@@ -6,7 +6,7 @@ procedure main()
   //x=__VERIFIER_nondet_int(); 
 
   while (x > 0)
-  invariant true;
+  // invariant true;
   {
     if(*) {
       // foo inlined

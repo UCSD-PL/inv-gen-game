@@ -27,7 +27,7 @@ procedure main()
   assume(c2 == 0 || c2 == 1);
   
   while(x1>0 && x2>0 && x3>0)
-  invariant x1 >= 0 && x2 >= 0 && x3 >= 0;
+  // invariant x1 >= 0 && x2 >= 0 && x3 >= 0;
   { 
     if (c1 != 0) {
       x1 := x1-d1;

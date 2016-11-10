@@ -6,7 +6,7 @@ procedure main()
   x:=0;
 
   while(true)
-  invariant true;
+  // invariant true;
   {
    assert(x==0);
   }

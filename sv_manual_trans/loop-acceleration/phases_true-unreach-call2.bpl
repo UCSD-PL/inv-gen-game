@@ -7,7 +7,7 @@ procedure main() {
   assume y > 0;
   
   while (x < y)
-  invariant (x <= y);
+  // invariant (x <= y);
   {
     if (x < y div x) {
       x := x * x;

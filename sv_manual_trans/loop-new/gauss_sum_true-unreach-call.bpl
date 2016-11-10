@@ -7,7 +7,7 @@ procedure main() {
   sum := 0;
   i := 1;
   while (i <= n) 
-  invariant 2 * sum == i * (i - 1) && i <= n + 1;
+  // invariant 2 * sum == i * (i - 1) && i <= n + 1;
   {
     sum := sum + i;
     i := i + 1;

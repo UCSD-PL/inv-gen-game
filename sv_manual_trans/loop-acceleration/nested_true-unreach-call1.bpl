@@ -6,7 +6,7 @@ procedure main() {
   y := 0;
   
   while (x < 268435455) //0x0fffffff
-  invariant x <= 268435455;
+  // invariant x <= 268435455;
   {
     y := 0; 
     

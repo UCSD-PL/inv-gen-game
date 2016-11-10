@@ -5,7 +5,7 @@ procedure main() {
   x := 0;
   
   while (x < 268435455)  //0x0fffffff
-  invariant x >= 65520 ==> (x mod 2 == 0) ;
+  // invariant x >= 65520 ==> (x mod 2 == 0) ;
   {
     if (x < 65520) { // 0xfff0
       x := x + 1; 

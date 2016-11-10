@@ -15,7 +15,7 @@ procedure main()
 
   glob2_p_off := glob2_pathbuf_off;
   while (glob2_p_off <= glob2_pathlim_off)
-  invariant true;
+  // invariant true;
   {
     /* OK */
     assert (0 <= glob2_p_off );

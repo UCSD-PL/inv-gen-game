@@ -6,7 +6,7 @@ procedure main() {
   //unsigned short N = __VERIFIER_nondet_uint();
   
   while (x < N)
-  invariant x mod 2 == 0;
+  // invariant x mod 2 == 0;
   {
     x := x + 2;
   }

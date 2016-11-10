@@ -6,7 +6,7 @@ procedure main() {
   assume (0 <= k && k <= 10);
   i := 0;
   while (i < LARGE_INT * k)
-  invariant i <= LARGE_INT*k && (k>0 ==> i mod k == 0);
+  // invariant i <= LARGE_INT*k && (k>0 ==> i mod k == 0);
   {
     i := i + k;
   }

@@ -16,7 +16,7 @@ procedure main()
   j := 0;
 
   while(*)
-  invariant i < j + 100;
+  // invariant i < j + 100;
   {
     if (i >= LARGE_INT ) {
       break;

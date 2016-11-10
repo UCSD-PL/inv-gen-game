@@ -9,7 +9,7 @@ procedure main()
   i := 1;
   
   while (i <= SIZE)
-  invariant sn == a * (i-1) && i <= SIZE+1;
+  // invariant sn == a * (i-1) && i <= SIZE+1;
   {
     sn := sn + a;
     i := i + 1;

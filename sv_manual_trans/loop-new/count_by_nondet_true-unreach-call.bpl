@@ -6,7 +6,7 @@ procedure main() {
   i := 0;
   k := 0;
   while(i < LARGE_INT)
-  invariant k <= i && k <= LARGE_INT;
+  // invariant k <= i && k <= LARGE_INT;
   {
     havoc j;
     assume(1 <= j && j < LARGE_INT);
