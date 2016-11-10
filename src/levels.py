@@ -66,7 +66,7 @@ def getInitialData(loop, bbs, nunrolls, invs, invVars = None, invConsts = ["_sc_
     hold_for_data = []
     invs_lst = [ reduce(lambda x,y: x+y, 
                         [ instantiateAndEval(inv, trace, invVars, invConsts) for inv in invs ], [])
-                 for trace in trace_enasmble ]
+                 for trace in trace_enasmble if len(trace) > 0 ]
 
     tmp_lst = [ (len(invs), invs, tr) for (invs, tr) in zip(invs_lst, trace_enasmble) ]
 

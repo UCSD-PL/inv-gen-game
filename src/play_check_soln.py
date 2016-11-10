@@ -17,19 +17,16 @@ p.add_argument("--lvlset", type=str, default="single-loop-conditionals",
 args = p.parse_args()
 curLevelSetName, lvls = levels.loadBoogieLvlSet(args.lvlset)
 
-def foo(lvls):
-  for lvl_name, lvl in lvls.items():
-    if "desugared" not in lvl["path"]:  continue;
-    #print "Removing :", lvl["path"].replace(".bpl", ".trace")
-    #os.system("rm " + lvl["path"].replace(".bpl", ".trace"))
-    sol = open(lvl["path"].replace(".bpl", ".sol")).read()
-    sol = parseExprAst(sol)[0];
-    bbs = lvl["program"]
-    loop = lvl["loop"]
-    over, nonind, sound = tryAndVerify_impl(bbs, loop, [], [sol], 10);
-    post_ctrex = loop_vc_post_ctrex(loop, ast_and(sound), bbs)
-    if (post_ctrex != None):
-      print lvl["path"], "not verified with sound = ", sound, " original sol ", sol, "ctrex:", post_ctrex
-      print over, nonind
-
-foo(lvls)
+for lvl_name, lvl in lvls.items():
+  if "desugared" not in lvl["path"]:  continue;
+  #print "Removing :", lvl["path"].replace(".bpl", ".trace")
+  #os.system("rm " + lvl["path"].replace(".bpl", ".trace"))
+  sol = open(lvl["path"].replace(".bpl", ".sol")).read()
+  sol = parseExprAst(sol)[0];
+  bbs = lvl["program"]
+  loop = lvl["loop"]
+  over, nonind, sound = tryAndVerify_impl(bbs, loop, [], [sol], 10);
+  post_ctrex = loop_vc_post_ctrex(loop, ast_and(sound), bbs)
+  if (post_ctrex != None):
+    print lvl["path"], "not verified with sound = ", sound, " original sol ", sol, "ctrex:", post_ctrex
+    print over, nonind
