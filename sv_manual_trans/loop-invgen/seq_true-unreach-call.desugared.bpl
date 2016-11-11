@@ -18,7 +18,6 @@ implementation main()
     goto anon6_LoopHead;
 
   anon6_LoopHead:
-    assert i0 == k && (n0 > 0 ==> i0 <= n0);
     goto anon6_LoopDone, anon6_LoopBody;
 
   anon6_LoopBody:
@@ -33,7 +32,6 @@ implementation main()
     goto anon7_LoopHead;
 
   anon7_LoopHead:
-    assert i0 + i1 == k && (n1 > 0 ==> i1 <= n1);
     goto anon7_LoopDone, anon7_LoopBody;
 
   anon7_LoopBody:
@@ -48,7 +46,6 @@ implementation main()
     goto anon8_LoopHead;
 
   anon8_LoopHead:
-    assert j1 + k >= n0 + n1;
     goto anon8_LoopDone, anon8_LoopBody;
 
   anon8_LoopBody:

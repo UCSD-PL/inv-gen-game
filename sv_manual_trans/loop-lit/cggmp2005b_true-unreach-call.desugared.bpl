@@ -12,7 +12,6 @@ implementation main()
     goto anon6_LoopHead;
 
   anon6_LoopHead:
-    assert i > 0 ==> k == 4;
     goto anon6_LoopDone, anon6_LoopBody;
 
   anon6_LoopBody:

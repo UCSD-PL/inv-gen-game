@@ -32,7 +32,6 @@ implementation main()
     goto anon11_LoopHead;
 
   anon11_LoopHead:
-    assert i < j + 100;
     goto anon11_LoopDone, anon11_LoopBody;
 
   anon11_LoopBody:

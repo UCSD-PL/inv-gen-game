@@ -12,7 +12,6 @@ implementation main()
     goto anon3_LoopHead;
 
   anon3_LoopHead:
-    assert 2 * sum == i * (i - 1) && i <= n + 1;
     goto anon3_LoopDone, anon3_LoopBody;
 
   anon3_LoopBody:

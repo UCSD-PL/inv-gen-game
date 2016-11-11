@@ -16,7 +16,6 @@ implementation main()
     goto anon6_LoopHead;
 
   anon6_LoopHead:
-    assert a + b == 3 * i && i <= n;
     goto anon6_LoopDone, anon6_LoopBody;
 
   anon6_LoopBody:

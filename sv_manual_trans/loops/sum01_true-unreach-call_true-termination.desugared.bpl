@@ -14,7 +14,6 @@ implementation main()
     goto anon3_LoopHead;
 
   anon3_LoopHead:
-    assert sn == (i - 1) * a && (n >= 0 ==> i <= n + 1) && (n < 0 ==> sn == 0);
     goto anon3_LoopDone, anon3_LoopBody;
 
   anon3_LoopBody:

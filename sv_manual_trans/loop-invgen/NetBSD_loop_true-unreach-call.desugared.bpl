@@ -18,7 +18,6 @@ implementation main()
     goto anon2_LoopHead;
 
   anon2_LoopHead:
-    assert true;
     goto anon2_LoopDone, anon2_LoopBody;
 
   anon2_LoopBody:

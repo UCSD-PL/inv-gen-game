@@ -17,7 +17,6 @@ implementation main()
     goto anon6_LoopHead;
 
   anon6_LoopHead:
-    assert buf <= buflim && in <= buf + 1;
     goto anon6_LoopDone, anon6_LoopBody;
 
   anon6_LoopBody:

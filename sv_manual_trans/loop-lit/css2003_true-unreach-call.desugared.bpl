@@ -14,7 +14,6 @@ implementation main()
     goto anon2_LoopHead;
 
   anon2_LoopHead:
-    assert 1 <= i + k && i + k <= 2 && i >= 1;
     goto anon2_LoopDone, anon2_LoopBody;
 
   anon2_LoopBody:

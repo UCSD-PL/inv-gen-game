@@ -18,7 +18,6 @@ implementation main()
     goto anon4_LoopHead;
 
   anon4_LoopHead:
-    assert i == j ==> x - y == z;
     goto anon4_LoopDone, anon4_LoopBody;
 
   anon4_LoopBody:

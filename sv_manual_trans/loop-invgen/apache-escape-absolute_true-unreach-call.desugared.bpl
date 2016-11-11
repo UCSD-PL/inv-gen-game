@@ -31,7 +31,6 @@ implementation main()
     goto anon13_LoopHead;
 
   anon13_LoopHead:
-    assert cp <= urilen - 1;
     goto anon13_LoopDone, anon13_LoopBody;
 
   anon13_LoopBody:
@@ -82,7 +81,6 @@ implementation main()
     goto anon18_LoopHead;
 
   anon18_LoopHead:
-    assert cp <= urilen - 1;
     goto anon18_LoopDone, anon18_LoopBody;
 
   anon18_LoopBody:

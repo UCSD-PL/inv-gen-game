@@ -7,7 +7,6 @@ implementation main()
     goto anon5_LoopHead;
 
   anon5_LoopHead:
-    assert true;
     goto anon5_LoopDone, anon5_LoopBody;
 
   anon5_LoopBody:

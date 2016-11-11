@@ -10,7 +10,6 @@ implementation main()
     goto anon3_LoopHead;
 
   anon3_LoopHead:
-    assert j >= i - 3 && (j - i) mod 3 == 0 && 2 * (10 - j) == i - 1;
     goto anon3_LoopDone, anon3_LoopBody;
 
   anon3_LoopBody:

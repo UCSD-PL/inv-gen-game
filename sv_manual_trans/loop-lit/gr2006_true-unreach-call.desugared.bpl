@@ -10,7 +10,6 @@ implementation main()
     goto anon8_LoopHead;
 
   anon8_LoopHead:
-    assert (x < 50 ==> x == y) && (x >= 50 ==> x - 50 == 50 - y) && y >= 0;
     goto anon8_LoopDone, anon8_LoopBody;
 
   anon8_LoopBody:

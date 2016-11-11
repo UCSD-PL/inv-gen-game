@@ -10,7 +10,6 @@ implementation main()
     goto anon5_LoopHead;
 
   anon5_LoopHead:
-    assert x <= y;
     goto anon5_LoopDone, anon5_LoopBody;
 
   anon5_LoopBody:

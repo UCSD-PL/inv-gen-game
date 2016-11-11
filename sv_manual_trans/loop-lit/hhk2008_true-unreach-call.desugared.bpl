@@ -14,7 +14,6 @@ implementation main()
     goto anon3_LoopHead;
 
   anon3_LoopHead:
-    assert res == a + b - cnt && cnt >= 0;
     goto anon3_LoopDone, anon3_LoopBody;
 
   anon3_LoopBody:

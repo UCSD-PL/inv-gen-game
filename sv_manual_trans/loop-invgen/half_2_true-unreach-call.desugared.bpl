@@ -14,7 +14,6 @@ implementation main()
     goto anon4_LoopHead;
 
   anon4_LoopHead:
-    assert k + i div 2 == n && (n > 0 ==> i <= n + 1);
     goto anon4_LoopDone, anon4_LoopBody;
 
   anon4_LoopBody:
@@ -29,7 +28,6 @@ implementation main()
     goto anon5_LoopHead;
 
   anon5_LoopHead:
-    assert n > 0 ==> k + j >= n div 2;
     goto anon5_LoopDone, anon5_LoopBody;
 
   anon5_LoopBody:

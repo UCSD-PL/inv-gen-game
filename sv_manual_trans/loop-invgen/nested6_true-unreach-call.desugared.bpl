@@ -21,7 +21,6 @@ implementation main()
     goto anon10_LoopHead;
 
   anon10_LoopHead:
-    assert n > 0 ==> i <= n && k == n;
     goto anon10_LoopDone, anon10_LoopBody;
 
   anon10_LoopBody:
@@ -30,7 +29,6 @@ implementation main()
     goto anon11_LoopHead;
 
   anon11_LoopHead:
-    assert j >= 2 * i && k == n;
     goto anon11_LoopDone, anon11_LoopBody;
 
   anon11_LoopBody:
@@ -51,7 +49,6 @@ implementation main()
     goto anon13_LoopHead;
 
   anon13_LoopHead:
-    assert k >= j && k <= n;
     goto anon13_LoopDone, anon13_LoopBody;
 
   anon13_LoopBody:

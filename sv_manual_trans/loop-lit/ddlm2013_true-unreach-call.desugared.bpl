@@ -16,7 +16,6 @@ implementation main()
     goto anon6_LoopHead;
 
   anon6_LoopHead:
-    assert flag != 0 ==> j == i + 1 && a == b && i mod 2 == 0;
     goto anon6_LoopDone, anon6_LoopBody;
 
   anon6_LoopBody:

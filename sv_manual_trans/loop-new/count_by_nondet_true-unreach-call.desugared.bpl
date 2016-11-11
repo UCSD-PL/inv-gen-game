@@ -13,7 +13,6 @@ implementation main()
     goto anon3_LoopHead;
 
   anon3_LoopHead:
-    assert k <= i && k <= LARGE_INT;
     goto anon3_LoopDone, anon3_LoopBody;
 
   anon3_LoopBody:
