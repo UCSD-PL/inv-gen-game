@@ -89,6 +89,8 @@ class Unknown(Exception):
     Exception.__init__(s, str(q) + " returned unknown.")
     s.query = q;
 
+class Crashed(Exception): pass;
+
 class Z3ProxySolver:
     def __init__(s, uri, proc):
       s._uri = uri;
@@ -100,6 +102,7 @@ class Z3ProxySolver:
       dummy = z3.Solver();
       dummy.add(p);
       strP = dummy.to_smt2();
+      strP = strP.replace("(check-sat)\n", "");
       s._remote.add(strP)
       return None;
 
@@ -122,6 +125,13 @@ class Z3ProxySolver:
         s._restartRemote();
       except Exception,e:
         sys.stdout.write("Got exception: " + str(e) + "\n")
+        ecode = s._proc.exitcode
+        s._restartRemote();
+          
+        if (ecode == -11): # Retry Z3 segfaults
+          r = "crashed"
+        else:
+          r = "unknown"
       finally:
         s._remote._pyroTimeout = old_timeout;
 
@@ -131,6 +141,8 @@ class Z3ProxySolver:
         return z3.unsat;
       elif (r == "unknown"):
         raise Unknown("storing query NYI in proxy solver")
+      elif (r == "crashed"):
+        raise Crashed()
       else:
         raise Exception("bad reply to check: " + str(r));
 
@@ -211,9 +223,15 @@ def counterex(pred, timeout=None):
     s = None
     try:
       s = getSolver()
-      s.add(Not(pred))
-      res = s.check(timeout)
-      m = None if res == z3.unsat else s.model()
+      while True:
+        try:
+          s.add(Not(pred))
+          res = s.check(timeout)
+          m = None if res == z3.unsat else s.model()
+        except Crashed:
+          continue;
+        break;
+
       return m;
     finally:
       if (s): releaseSolver(s);
