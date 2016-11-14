@@ -25,7 +25,6 @@
     [ "d-35", "../dilig-benchmarks/single/35.desugared.bpl" ],
     [ "d-37", "../dilig-benchmarks/single/37.desugared.bpl" ],
     [ "d-38", "../dilig-benchmarks/single/38.desugared.bpl" ],
-    [ "d-39", "../dilig-benchmarks/single/39.desugared.bpl" ],
     [ "d-41", "../dilig-benchmarks/single/41.desugared.bpl" ],
     [ "d-42", "../dilig-benchmarks/single/42.desugared.bpl" ],
     [ "d-43", "../dilig-benchmarks/single/43.desugared.bpl" ],
@@ -70,8 +69,6 @@
       "../sv_manual_trans/loop-acceleration/phases_true-unreach-call2.desugared.bpl" ],
     [ "s-simple_true-unreach-call1",
       "../sv_manual_trans/loop-acceleration/simple_true-unreach-call1.desugared.bpl" ],
-    [ "s-simple_true-unreach-call2",
-      "../sv_manual_trans/loop-acceleration/simple_true-unreach-call2.desugared.bpl" ],
     [ "s-simple_true_unreach-call3",
       "../sv_manual_trans/loop-acceleration/simple_true-unreach-call3.desugared.bpl" ],
     [ "s-simple_true_unreach-call4",
@@ -80,8 +77,6 @@
       "../sv_manual_trans/loop-acceleration/underapprox_true-unreach-call1.desugared.bpl" ],
     [ "s-underapprox_true-unreach-call2",
       "../sv_manual_trans/loop-acceleration/underapprox_true-unreach-call2.desugared.bpl" ],
-    [ "s-NetBSD_loop_true-unreach-call",
-      "../sv_manual_trans/loop-invgen/NetBSD_loop_true-unreach-call.desugared.bpl" ],
     [ "s-sendmail-close-angle_true-unreach-call",
       "../sv_manual_trans/loop-invgen/sendmail-close-angle_true-unreach-call.desugared.bpl" ],
     [ "s-afnp2014_true-unreach-call",
@@ -126,10 +121,6 @@
       "../sv_manual_trans/loop-new/half_true-unreach-call.desugared.bpl" ],
     [ "s-count_up_down_true-unreach-call_true-termination",
       "../sv_manual_trans/loops/count_up_down_true-unreach-call_true-termination.desugared.bpl" ],
-    [ "s-for_infinite_loop_1_true-unreach-call_false-termination",
-      "../sv_manual_trans/loops/for_infinite_loop_1_true-unreach-call_false-termination.desugared.bpl" ],
-    [ "s-for_infinite_loop_2_true-unreach-call_false-termination",
-      "../sv_manual_trans/loops/for_infinite_loop_2_true-unreach-call_false-termination.desugared.bpl" ],
     [ "s-sum01_true-unreach-call_true-termination",
       "../sv_manual_trans/loops/sum01_true-unreach-call_true-termination.desugared.bpl" ],
     [ "s-sum03_true-unreach-call_false-termination",
@@ -138,23 +129,33 @@
       "../sv_manual_trans/loops/sum04_true-unreach-call_true-termination.desugared.bpl" ],
     [ "s-terminator_02_true-unreach-call_true-termination",
       "../sv_manual_trans/loops/terminator_02_true-unreach-call_true-termination.desugared.bpl" ],
+    [ "s-trex03_true-unreach-call",
+      "../sv_manual_trans/loops/trex03_true-unreach-call.desugared.bpl" ]
+  ],
+  "lvls-todo": [
+    [ "s-diamond_true-unreach-call2",
+      "../sv_manual_trans/loop-acceleration/diamond_true-unreach-call2.desugared.bpl",
+      "Triggers a bug in loop identification due to combinatorial explosion of paths inside loop" ]
+  ],
+  "trivial": [
+    [ "d-39", "../dilig-benchmarks/single/39.desugared.bpl" ],
+    [ "s-simple_true-unreach-call2",
+      "../sv_manual_trans/loop-acceleration/simple_true-unreach-call2.desugared.bpl" ],
     [ "s-terminator_03_true-unreach-call_true-termination",
       "../sv_manual_trans/loops/terminator_03_true-unreach-call_true-termination.desugared.bpl" ],
+    [ "s-for_infinite_loop_2_true-unreach-call_false-termination",
+      "../sv_manual_trans/loops/for_infinite_loop_2_true-unreach-call_false-termination.desugared.bpl" ],
     [ "s-trex02_true-unreach-call_true-termination",
       "../sv_manual_trans/loops/trex02_true-unreach-call_true-termination.desugared.bpl" ],
-    [ "s-trex03_true-unreach-call",
-      "../sv_manual_trans/loops/trex03_true-unreach-call.desugared.bpl" ],
+    [ "s-for_infinite_loop_1_true-unreach-call_false-termination",
+      "../sv_manual_trans/loops/for_infinite_loop_1_true-unreach-call_false-termination.desugared.bpl" ],
+    [ "s-NetBSD_loop_true-unreach-call",
+      "../sv_manual_trans/loop-invgen/NetBSD_loop_true-unreach-call.desugared.bpl" ],
     [ "s-trex04_true-unreach-call_false-termination",
       "../sv_manual_trans/loops/trex04_true-unreach-call_false-termination.desugared.bpl" ],
     [ "s-while_infinite_loop_1_true-unreach-call_false-termination",
       "../sv_manual_trans/loops/while_infinite_loop_1_true-unreach-call_false-termination.desugared.bpl" ],
     [ "s-while_infinite_loop_2_true-unreach-call_false-termination",
       "../sv_manual_trans/loops/while_infinite_loop_2_true-unreach-call_false-termination.desugared.bpl" ]
-  ],
-  "lvls-todo": [
-    [ "s-diamond_true-unreach-call2",
-      "../sv_manual_trans/loop-acceleration/diamond_true-unreach-call2.desugared.bpl",
-      "Triggers a bug in loop identification due to combinatorial explosion of paths inside loop" ]
   ]
-
 }
