@@ -60,8 +60,6 @@
     [ "i-w2", "../ice-benchmarks/w2.desugared.bpl" ],
     [ "s-diamond_true-unreach-call1",
       "../sv_manual_trans/loop-acceleration/diamond_true-unreach-call1.desugared.bpl" ],
-    [ "s-diamond_true-unreach-call2",
-      "../sv_manual_trans/loop-acceleration/diamond_true-unreach-call2.desugared.bpl" ],
     [ "s-multivar_true-unreach-call1",
       "../sv_manual_trans/loop-acceleration/multivar_true-unreach-call1.desugared.bpl" ],
     [ "s-overflow_true-unreach-call1",
@@ -152,5 +150,11 @@
       "../sv_manual_trans/loops/while_infinite_loop_1_true-unreach-call_false-termination.desugared.bpl" ],
     [ "s-while_infinite_loop_2_true-unreach-call_false-termination",
       "../sv_manual_trans/loops/while_infinite_loop_2_true-unreach-call_false-termination.desugared.bpl" ]
+  ],
+  "lvls-todo": [
+    [ "s-diamond_true-unreach-call2",
+      "../sv_manual_trans/loop-acceleration/diamond_true-unreach-call2.desugared.bpl",
+      "Triggers a bug in loop identification due to combinatorial explosion of paths inside loop" ]
   ]
+
 }

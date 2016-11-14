@@ -25,7 +25,7 @@ for lvl_name, lvl in lvls.items():
   sol = parseExprAst(sol)[0];
   bbs = lvl["program"]
   loop = lvl["loop"]
-  over, nonind, sound = tryAndVerify_impl(bbs, loop, [], [sol], 10);
+  over, nonind, sound = tryAndVerify_impl(bbs, loop, [], [sol], 120);
   post_ctrex = loop_vc_post_ctrex(loop, ast_and(sound), bbs)
   if (post_ctrex != None):
     print lvl["path"], "not verified with sound = ", sound, " original sol ", sol, "ctrex:", post_ctrex
