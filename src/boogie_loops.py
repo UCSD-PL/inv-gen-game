@@ -140,10 +140,9 @@ def loop_vc_pre_ctrex(loop, inv, bbs):
     try:
       ctr = counterex(q)
     except Unknown:
-      assert False
       return { }
 
-    return None if not ctr else _unssa_z3_model(ctr, ssa_env.replm())
+    return None if ctr == None else _unssa_z3_model(ctr, ssa_env.replm())
 
 def loop_vc_post_ctrex(loop, inv, bbs):
     exit_path = unique(loop.exit_paths)
@@ -160,7 +159,7 @@ def loop_vc_post_ctrex(loop, inv, bbs):
     except Unknown:
       return { }
 
-    return None if not ctr else _unssa_z3_model(ctr, {})
+    return None if ctr == None else _unssa_z3_model(ctr, {})
 
 def loop_vc_ind_ctrex(loop, inv, bbs, timeout=None):
     body_ssa, ssa_env = nd_bb_path_to_ssa([loop.loop_paths], bbs, SSAEnv(None, ""))
