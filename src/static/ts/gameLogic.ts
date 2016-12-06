@@ -38,6 +38,7 @@ interface IGameLogic {
   onLvlPassed(cb: ()=>void): void;
   onLvlLoaded(cb: ()=>void): void;
   onCommit(cb: ()=>void): void;
+  skipToNextLvl() : void; 
 }
 
 interface IDynGameLogic extends IGameLogic {
@@ -131,6 +132,7 @@ abstract class BaseGameLogic implements IGameLogic {
   onLvlPassed(cb: ()=>void): void { this.lvlPassedCb = cb; };
   onLvlLoaded(cb: ()=>void): void { this.lvlLoadedCb = cb; };
   onCommit(cb: ()=>void): void { this.commitCb = cb; };
+  skipToNextLvl() : void { }
 }
 
 class StaticGameLogic extends BaseGameLogic implements IGameLogic {
@@ -517,6 +519,16 @@ class PatternGameLogic extends BaseGameLogic {
       this.lvlLoadedCb();
     logEvent("StartLevel", [curLvlSet, this.curLvl.id]);
   }
+
+  skipToNextLvl() : void {
+    this.lvlPassedF = true;
+    logEvent("FinishLevel",
+             [curLvlSet,
+              this.curLvl.id,
+              false,
+              this.foundJSInv.map((x)=>x.rawUserInp),
+              this.foundJSInv.map((x)=>x.canonForm)]);
+  }
 }
 
 abstract class TwoPlayerBaseGameLogic implements IGameLogic {
@@ -596,6 +608,7 @@ abstract class TwoPlayerBaseGameLogic implements IGameLogic {
   onLvlPassed(cb: () => void): void { this.lvlPassedCb = cb; };
   onLvlLoaded(cb: () => void): void { this.lvlLoadedCb = cb; };
   onCommit(cb: () => void): void { this.commitCb = cb; };
+  skipToNextLvl() : void { }
 }
 
 class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {

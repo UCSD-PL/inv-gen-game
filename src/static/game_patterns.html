@@ -278,6 +278,10 @@
       })
 
       $('#quit').click(function () { doneScreen(false) });
+      $('#skip-to-next-lvl').click(function () {
+        gameLogic.skipToNextLvl();
+        nextLvl();
+      });
       $('#quit-overlay').click(function() { doneScreen(false) });
 
       $('#arrows').click(function() {
@@ -482,6 +486,7 @@
         </div>
         <div class='row ' id='quit-div'>
           <button id='quit' class='btn-quit'>Quit</button>
+          <button id='skip-to-next-lvl' class='btn-next'>Next Lvl</button>
         </div>
       </div>
     </div>

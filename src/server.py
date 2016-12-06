@@ -432,7 +432,7 @@ def getRandomCode():
 @log_d(str, str, str)
 def getLogs(inputToken, afterTimestamp, afterId):
   if inputToken != adminToken:
-    raise Exception(inputToken + " not a valid token.");
+    raise Exception(str(inputToken) + " not a valid token.");
 
   s = sessionF();
   if (afterTimestamp != None):

@@ -62,4 +62,5 @@ def levelSolved(session, lvlset, lvlid):
 
 def levelFinishedBy(session, lvlset, lvlid, userId):
   fls = [ x.payl() for x in session.query(Event).filter(Event.type == "FinishLevel").filter(Event.src == userId).all() ]
+  fls = [ x for x in fls if x["lvlset"] == lvlset and x["lvlid"] == lvlid]
   return len(fls) > 0

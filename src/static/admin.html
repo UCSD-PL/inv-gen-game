@@ -84,7 +84,7 @@
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
       adminToken = Args.get_admin_token();
 
-      if (adminToken === null) {
+      if (adminToken === undefined) {
         $("#enter-token").on("click", function() {
           adminToken = $("#admin-token").val();
           $("#tokenInputDialog").modal("hide");
