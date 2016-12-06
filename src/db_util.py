@@ -42,6 +42,9 @@ def addEvent(sourceName, type, time, ename,  addr, data, session):
   elif (type == "FoundInvariant" or type == "TriedInvariant"):
     payl = { "lvlset" : data[0], "lvlid" : data[1],
               "raw": data[2], "canonical": str(esprimaToBoogie(data[3], { }))}
+  elif (type == "PowerupsActivated"):
+    payl = { "lvlset" : data[0], "lvlid" : data[1],
+              "raw": str(esprimaToBoogie(data[2], { })), "powerups": data[3] }
   elif (type == "GameDone"):
     payl = { "numLvlsPassed" : data[0] }
   else:
@@ -52,3 +55,11 @@ def addEvent(sourceName, type, time, ename,  addr, data, session):
  
   session.add(e)
   session.commit();
+
+def levelSolved(session, lvlset, lvlid):
+  fls = [ x.payl() for x in session.query(Event).filter(Event.type == "FinishLevel").all() ]
+  return len([ x for x in  fls if x["lvlset"] == lvlset and x["lvlid"] == lvlid and x["verified"]]) > 0
+
+def levelFinishedBy(session, lvlset, lvlid, userId):
+  fls = [ x.payl() for x in session.query(Event).filter(Event.type == "FinishLevel").filter(Event.src == userId).all() ]
+  return len(fls) > 0

@@ -313,7 +313,9 @@ class PatternGameLogic extends BaseGameLogic {
     let pwups = this.pwupSuggestion.getPwups();
     let hold: IPowerup[] = pwups.filter((pwup)=> pwup.holds(inv))
     let newScore = hold.reduce((score, pwup) => pwup.transform(score), s)
+    let pwupsActivated : [string, number][] = [];
     for (var i in hold) {
+      pwupsActivated.push([hold[i].id, (<MultiplierPowerup>(hold[i])).mult]);
       if (i == ""+(hold.length - 1)) {
         /* After the last powerup is done highlighting,
          * recompute the powerups
@@ -326,6 +328,8 @@ class PatternGameLogic extends BaseGameLogic {
         hold[i].highlight(()=>0);
       }
     }
+
+    logEvent("PowerupsActivated", [curLvlSet, this.curLvl.id, inv, pwupsActivated]);
 
     if (hold.length == 0) {
       this.pwupSuggestion.invariantTried(inv);
@@ -443,9 +447,6 @@ class PatternGameLogic extends BaseGameLogic {
                     var coin = Math.random() > .5;
 
                     if (coin) {
-                      rpc.call("App.addToIgnoreList",
-                               [Args.get_worker_id(), curLvlSet, gl.curLvl.id],
-                               (res) => { }, log);
                       gl.lvlPassedF = true;
                       gl.lvlPassedCb();
                       logEvent("FinishLevel",
@@ -467,7 +468,6 @@ class PatternGameLogic extends BaseGameLogic {
                       if (!sat)
                         return;
 
-                      rpc.call("App.setLvlAsDone", [curLvlSet, preCallCurLvl], (res) => { }, log);
                       /*
                        * Lets try and make sure at least late "gameFinished" events from
                        * previous levels don't impact next level.

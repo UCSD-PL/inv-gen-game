@@ -1,0 +1,145 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- third party libraries -->
+  <script src="jquery-1.12.0.min.js"></script>
+  <script src="jquery.jsonrpcclient.js"></script>
+  <script src="jquery.color-2.1.2.min.js"></script>
+  <script src="jquery-ui-1.11.4/jquery-ui.js"></script>
+  <script src="esprima.js"></script>
+  <link rel="stylesheet" href="bootstrap.min.css">
+  <link rel="stylesheet" href="bootstrap-theme.min.css">
+  <script src="bootstrap.min.js"></script>
+
+  <!-- our code -->
+  <link rel="stylesheet" href="inv.css">
+  <link rel="stylesheet" href="admin.css">
+  <script src="build/ts/container.js"></script>
+  <script src="build/ts/logic.js"></script>
+  <script src="build/ts/level.js"></script>
+  <script src="build/ts/eval.js"></script>
+  <script src="build/ts/pp.js"></script>
+  <script src="build/ts/util.js"></script>
+
+  <script>
+    var curLvlSet;
+    var adminToken;
+    var allLogs = []
+
+    disableBackspaceNav();
+
+    function showError(errMsg) {
+      $("#error-body").html(errMsg);
+      $("#errorDialog").modal("show");
+    }
+
+    function fmtEvent(e) {
+        var fmt = "[" + e.time + "] " +
+                      e.src + "," + 
+                      //e.addr + "," + 
+                      e.type + ":";
+
+        if (e.type == "StartLevel") {
+          fmt = fmt + e.payload["lvlset"] + "," + e.payload["lvlid"];
+        } else if (e.type == "FinishLevel") {
+          fmt = fmt + e.payload["lvlset"] + "," + e.payload["lvlid"] + "," + e.payload["all_found"] + "," + e.payload["verified"]
+
+        } else {
+          fmt = fmt + JSON.stringify(e.payload);
+        }
+
+        return fmt;
+    }
+
+    function addLogs(l) {
+      allLogs = allLogs.concat(l);
+      for (var i in l) {
+        let e = l[i];
+        $("#content").append($("<div class='row " + e.type + "'>" + fmtEvent(e) + "</div>"));
+      }
+    }
+
+    function loadLogs(rpc, afterTimestamp=null, afterId=null) {
+      rpc.call("App.getLogs", [adminToken, afterTimestamp, afterId], function (r) {
+        console.log(r)
+        addLogs(r);
+        setTimeout(function() {
+          var id = 0;
+
+          if (allLogs.length > 0)
+            id = allLogs[allLogs.length - 1].id
+
+
+          loadLogs(rpc, null, id);
+        }, 2000);
+      }, function (err) {
+        showError(err.message);
+      });
+    }
+
+    $(document).ready(function() {
+      rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
+      adminToken = Args.get_admin_token();
+
+      if (adminToken === null) {
+        $("#enter-token").on("click", function() {
+          adminToken = $("#admin-token").val();
+          $("#tokenInputDialog").modal("hide");
+          loadLogs(rpc);
+        })
+        $("#tokenInputDialog").modal("show");
+      } else {
+          loadLogs(rpc);
+      }
+    })
+  </script>
+</head>
+<body>
+  <div class='container'>
+  <div id="tokenInputDialog" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+
+      <!-- Modal content-->
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Admin Token</h4>
+        </div>
+        <div class="modal-body">
+          <p>Enter admin token:</p> <input type="text" id="admin-token"> </input>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" id="enter-token">Enter</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="errorDialog" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+
+      <!-- Modal content-->
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Error:</h4>
+        </div>
+        <div class="modal-body" id="error-body">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" id="errro-close">Close</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+    <div class='row'>
+      <div class='col-md-12' id='content'>
+      </div>
+    </div>
+  </div> 
+</body>
+</html>

@@ -254,6 +254,10 @@ def loadBoogieLvlSet(lvlSetFile):
             lambda row: evalPred(splitterPred, _to_dict(lvl['variables'], row)),
             lvl['data'][0]);
 
+          if (len(lvl['data'][0]) == 0):
+            print "SKIPPING : ", lvlName, " due to no filtered rows."
+            continue
+
           lvl['partialInv'] = remainderInv
           lvl['splitterPreds'] = splitterPreds
 

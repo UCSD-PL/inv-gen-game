@@ -27,17 +27,19 @@ from copy import copy
 from colorama import Fore,Back,Style
 from colorama import init as colorama_init
 from time import time
-from models import open_sqlite_db
-from db_util import playersWhoStartedLevel, enteredInvsForLevel, getOrAddSource, addEvent
+from datetime import datetime
+from models import open_sqlite_db, Event
+from db_util import playersWhoStartedLevel, enteredInvsForLevel, getOrAddSource, addEvent,\
+  levelSolved, levelFinishedBy
 
 colorama_init();
 
 p = argparse.ArgumentParser(description="invariant gen game server")
 p.add_argument('--log', type=str, help='an optional log file to store all user actions. Entries are stored in JSON format.')
-p.add_argument('--port', type=int, help='an optional port number')
+p.add_argument('--port', type=int, help='a optional port number', required=True)
 p.add_argument('--ename', type=str, default = 'default', help='Name for experiment; if none provided, use "default"')
 p.add_argument('--lvlset', type=str, default = 'desugared-boogie-benchmarks', help='Lvlset to use for serving benchmarks"')
-p.add_argument('--db', type=str, help='Path to database')
+p.add_argument('--db', type=str, help='Path to database', required=True)
 
 args = p.parse_args();
 logF = None;
@@ -46,6 +48,9 @@ sessionF = open_sqlite_db(args.db)
 
 invs = { }
 players = { }
+
+alphanum = "".join([chr(ord('a') + i) for i in range(26) ] + [ str(i) for i in range(0,10)])
+adminToken = "".join([ choice(alphanum) for x in xrange(5) ]);
 
 if args.log:
     logF = open(args.log,'w')
@@ -164,58 +169,6 @@ def setTutorialDone(workerId):
     if workerId != "":
         open(join(ROOT_DIR, 'logs', args.ename, "tut-done-" + workerId), "w").close()
 
-# @api.method("App.getMyNextLvl")
-# @pp_exc
-# @log_d()
-# def getMyNextLvl(workerId, levelSet):
-#     if workerId == "":
-#         return "Tutorial"
-#     if (levelSet not in traces):
-#         raise Exception("Unkonwn level set " + levelSet)
-#     fname = join(ROOT_DIR, 'logs', args.ename, workerId)
-#     try:
-#         with open(fname) as f:
-#             last = f.read()
-#     except IOError:
-#         return "Tutorial"
-#     levelIds = traces[levelSet].keys()
-#     levelIds.sort()
-#     levelIds = ["Tutorial"] + levelIds
-#     try:
-#         i = levelIds.index(last)
-#         return levelIds[i+1]
-#     except (ValueError, IndexError):
-#         return "None"
-
-# @api.method("App.getMyLastLvl")
-# @pp_exc
-# @log_d()
-# def getMyLastLvl(workerId, levelSet):
-#     # note that we ignore levelSet -- for now assume each
-#     # experiment uses a single levelSet
-#     if workerId == "":
-#         return "None"
-#     if (levelSet not in traces):
-#         raise Exception("Unkonwn level set " + levelSet)
-#     fname = join(ROOT_DIR, 'logs', args.ename, workerId)
-#     try:
-#         with open(fname) as f:
-#             return f.read()
-#     except IOError:
-#         return "None"
-
-
-# @api.method("App.storeMyLastLvl")
-# @pp_exc
-# @log_d()
-# def storeMyLastLvl(workerId, levelSet, lvlId):
-#     # note that we ignore levelSet -- for now assume each
-#     # experiment uses a single levelSet
-#     if workerId == "":
-#         return
-#     fname = join(ROOT_DIR, 'logs', args.ename, workerId)
-#     with open(fname, "w") as f:
-#         f.write(lvlId)
 
 @api.method("App.loadLvl")
 @pp_exc
@@ -280,27 +233,13 @@ def loadNextLvl(workerId):
     ninvs_and_level = zip(num_invs, level_names)
     ninvs_and_level.sort()
     for ninvs, lvlId in ninvs_and_level:
-        if isfile(join(exp_dir, "done-" + curLevelSetName + "-" + lvlId)):
-            continue
-        if workerId != "" and ignore.contains(workerId, curLevelSetName, lvlId):
+        if levelSolved(session, curLevelSetName, lvlId) or \
+           workerId != "" and levelFinishedBy(session, curLevelSetName, lvlId, workerId):
             continue
         result = loadLvl(curLevelSetName, lvlId)
         result["id"] = lvlId
         result["lvlSet"] = curLevelSetName
         return result
-
-@api.method("App.addToIgnoreList")
-@pp_exc
-@log_d(str, str, str)
-def addToIgnoreList(workerId, levelSet, lvlId):
-    if workerId != "":
-        ignore.add(workerId, levelSet, lvlId)
-
-@api.method("App.setLvlAsDone")
-@pp_exc
-@log_d(str, str)
-def setLvlAsDone(levelSet, lvlId):
-    open(join(ROOT_DIR, "logs", args.ename, "done-" + levelSet + "-" + lvlId), "w").close()
 
 @api.method("App.instantiate")
 @pp_exc
@@ -441,12 +380,14 @@ def tryAndVerify(levelSet, levelId, invs):
 
     # First lets find the invariants that are sound without implication
     overfitted, nonind, sound = tryAndVerify_impl(bbs, loop, partialInvs, boogie_invs)
+    sound = [x for x in sound if not tautology(expr_to_z3(x, AllIntTypeEnv()))]
 
     # Next lets add implication  to all unsound invariants from first pass
     # Also add manually specified partialInvs
     unsound = [ inv_ctr_pair[0] for inv_ctr_pair in overfitted + nonind ]
     p2_invs = [ AstBinExpr(antec, "==>", inv)
       for antec in candidate_antecedents for inv in unsound ] + partialInvs
+    p2_invs = [ x for x in p2_invs if not tautology(expr_to_z3(x, AllIntTypeEnv())) ]
 
     # And look for any new sound invariants
     overfitted, nonind, sound_p2 = tryAndVerify_impl(bbs, loop, sound, p2_invs)
@@ -464,6 +405,11 @@ def tryAndVerify(levelSet, levelId, invs):
     sound = [ boogieToEsprima(inv) for inv in sound ]
 
     res = (overfitted, nonind, sound, post_ctrex)
+    print "Res: ", ([(str(esprimaToBoogie(inv, {})), c) for (inv,c) in overfitted],\
+                    [(str(esprimaToBoogie(inv, {})), c) for (inv,c) in nonind],\
+                    [str(esprimaToBoogie(inv, {})) for inv in sound],\
+                    post_ctrex)
+
     return res
 
 @api.method("App.simplifyInv")
@@ -478,9 +424,30 @@ def simplifyInv(inv):
 @pp_exc
 @log_d(str)
 def getRandomCode():
-    alphanum = "".join([chr(ord('a') + i) for i in range(26) ] + [ str(i) for i in range(0,10)])
     return "".join([ choice(alphanum) for x in range(5) ]);
 
+# Admin Calls:
+@api.method("App.getLogs")
+@pp_exc
+@log_d(str, str, str)
+def getLogs(inputToken, afterTimestamp, afterId):
+  if inputToken != adminToken:
+    raise Exception(inputToken + " not a valid token.");
+
+  s = sessionF();
+  if (afterTimestamp != None):
+    afterT = datetime.strptime(afterTimestamp, "%a, %d %b %Y %H:%M:%S %Z")
+    evts = s.query(Event).filter(Event.time > afterT).all();
+  elif (afterId != None):
+    evts = s.query(Event).filter(Event.id > afterId).all();
+  else:
+    evts = s.query(Event).all();
+
+  return [ { "id": e.id, "type": e.type, "experiment": e.experiment, "src": e.src,
+              "addr": e.addr, "time": e.time, "payload": e.payl() } for e in evts ]
+  
 if __name__ == "__main__":
     ignore = IgnoreManager()
+    print "Admin Token: ", adminToken
+    print "Admin URL: ", "admin.html?adminToken=" + adminToken
     app.run(host='0.0.0.0',port=args.port,ssl_context=(MYDIR + '/cert.pem', MYDIR + '/privkey.pem'), threaded=True)

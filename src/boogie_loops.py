@@ -152,7 +152,10 @@ def loop_vc_post_ctrex(loop, inv, bbs):
     z3_loop_entry_cond = expr_to_z3(loop.entry_cond, AllIntTypeEnv())
     z3_inv = expr_to_z3(inv, AllIntTypeEnv())
 
-    q = Implies(And(z3_inv, Not(z3_loop_entry_cond)), z3_postcondition)
+    #Note: We expect the negation of the z3_loop_entry_cond to be the first
+    #assume in the exit block.
+    #q = Implies(And(z3_inv, Not(z3_loop_entry_cond)), z3_postcondition)
+    q = Implies(And(z3_inv), z3_postcondition)
 
     try:
       ctr = counterex(q)

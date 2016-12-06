@@ -66,8 +66,8 @@ class Args {
   static assignment_id: string = null;
   static turk_submit_to: string = null;
   static tutorial_action: string = null;
+  static admin_token: string = null;
   static parse_args() {
-    console.log(window.location.search);
     let query = window.location.search.substring(1).split("&");
     for (let i = 0; i < query.length; i++) {
       if (query[i] === "") // check for trailing & with no param
@@ -80,6 +80,7 @@ class Args {
     Args.assignment_id = Args.args["assignmentId"];
     Args.turk_submit_to = Args.args["turkSubmitTo"];
     Args.tutorial_action = Args.args["tutorialAction"];
+    Args.admin_token = Args.args["adminToken"];
   }
   static get_hit_id(): string {
     if (Args.hit_id === null)
@@ -105,6 +106,11 @@ class Args {
     if (Args.tutorial_action === null)
       Args.parse_args()
     return Args.tutorial_action;
+  }
+  static get_admin_token(): string {
+    if (Args.admin_token === null)
+      Args.parse_args()
+    return Args.admin_token;
   }
 }
 
