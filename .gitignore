@@ -3,6 +3,8 @@
 *.run
 *.pyc
 .*.sw*
+*.db
+.z3-trace
 
 src/harness/dilig/binding.so
 src/harness/dilig/binding_stdout.so
@@ -26,3 +28,7 @@ src/static/typings
 *.log
 *.pem
 credentials.csv
+
+logs/
+mturk/
+studies/
