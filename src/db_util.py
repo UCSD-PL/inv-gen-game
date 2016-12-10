@@ -33,7 +33,7 @@ def addEvent(sourceName, type, time, ename,  addr, data, session):
     payl = { }
   elif (type == "TutorialDone"):
     payl = { }
-  elif (type == "StartLevel" or type == "FinishLevel"):
+  elif (type == "StartLevel" or type == "FinishLevel" or type == "SkipToNextLevel"):
     payl = { "lvlset" : data[0], "lvlid" : data[1] }
     if type == "FinishLevel":
       payl["verified"] = data[2]
