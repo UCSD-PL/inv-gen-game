@@ -28,6 +28,8 @@
     var curLvlSet;
     var adminToken;
     var allLogs = []
+    var userStats = [ ]
+    var lvlStats = [ ]
 
     disableBackspaceNav();
 
@@ -54,12 +56,71 @@
         return fmt;
     }
 
+    function computeStats() {
+      var users = { }
+      var lvls = { }
+      for (var i in allLogs) {
+        let e = allLogs[i];
+        if (!users.hasOwnProperty(e.src)) {
+          users[e.src] = { completed: 0, solved: 0, skipped: 0, time: 0, invs: 0, lvlD: {} };
+        }
+
+        var ud = users[e.src];
+
+        if (e.type == "StartLevel") {
+          let lvlid = e.payload.lvlset + "," + e.payload.lvlid;
+          ud.lvlD[lvlid] = { started: e.time };
+          if (!lvls.hasOwnProperty(lvlid)) {
+            lvls[lvlid] = { completed: 0, skipped:0, invs: 0, time: 0 }
+          } 
+        } else if (e.type == "FinishLevel") {
+          let lvlid = e.payload.lvlset + "," + e.payload.lvlid;
+          ud.lvlD[lvlid].finished = e.time;
+          ud.completed ++;
+          if (e.payload.verified)
+            ud.solved ++;
+
+          let started = Date.parse(ud.lvlD[lvlid].started)
+          let finished = Date.parse(ud.lvlD[lvlid].finished)
+ 
+          let duration = (finished - started) / 1000.0
+          ud.time += duration
+          lvls[lvlid].time += duration
+
+          ud.invs += e.payload.all_found.length;
+          lvls[lvlid].invs += e.payload.all_found.length
+          lvls[lvlid].completed ++;
+        } else if (e.type == "SkipToNextLevel") {
+          let lvlid = e.payload.lvlset + "," + e.payload.lvlid;
+          ud.skipped ++;
+          lvls[lvlid].skipped ++;
+        }
+      }
+      userStats = users;
+      lvlStats = lvls;
+    }
+
+    function updateTables() {
+      $("#users_tbody").empty();
+      for (var userId in userStats) {
+        let ud = userStats[userId];
+        $("#users_tbody").append("<tr><td>" + [userId, ud.completed, ud.solved, ud.skipped, ud.time, ud.invs, ud.time / ud.completed, ud.invs / ud.completed].join("</td><td>") + "</td></tr>")
+      }
+      $("#levels_tbody").empty();
+      for (var levelId in lvlStats) {
+        let ld = lvlStats[levelId];
+        $("#levels_tbody").append("<tr><td>" + [levelId, ld.completed, ld.skipped, ld.time, ld.time / ld.completed, ld.invs, ld.invs / ld.completed].join("</td><td>") + "</td></tr>")
+      }
+    }
+
     function addLogs(l) {
       allLogs = allLogs.concat(l);
       for (var i in l) {
         let e = l[i];
-        $("#content").append($("<div class='row " + e.type + "'>" + fmtEvent(e) + "</div>"));
+        $("#content_raw").append($("<div class='row " + e.type + "'>" + fmtEvent(e) + "</div>"));
       }
+      computeStats();
+      updateTables();
     }
 
     function loadLogs(rpc, afterTimestamp=null, afterId=null) {
@@ -138,6 +199,51 @@
 
     <div class='row'>
       <div class='col-md-12' id='content'>
+        <ul class="nav nav-tabs">
+          <li class="active"><a href="#content_raw"  data-toggle="tab">Raw Logs</a>
+          </li>
+          <li><a href="#content_users" data-toggle="tab">Users</a></li>
+          <li><a href="#content_levels" data-toggle="tab">Levels</a></li>
+        </ul>
+        <div class="tab-content">
+          <div id="content_raw" class="tab-pane active">
+          </div>
+          <div id="content_users" class="tab-pane ">
+            <table class='table'>
+              <thead>
+                <tr>
+                  <th> UserID </th>
+                  <th> # Lvls Completed </th>
+                  <th> # Lvls Solved </th>
+                  <th> # Lvls Skipped </th>
+                  <th> Total Time </th>
+                  <th> # Invs Total </th>
+                  <th> Avg Time/Lvl </th>
+                  <th> Avg #Invs/Lvl </th>
+                </tr>
+              </thead>
+              <tbody id='users_tbody'>
+              </tbody>
+            </table>
+          </div>
+          <div id="content_levels" class="tab-pane">
+            <table class='table'>
+              <thead>
+                <tr>
+                  <th> LevelId </th>
+                  <th> #Users Completed </th>
+                  <th> #Users Skipped </th>
+                  <th> Total Time </th>
+                  <th> Avg Time/Lvl </th>
+                  <th> #Invs </th>
+                  <th> Avg #Invs/User </th>
+                </tr>
+              </thead>
+              <tbody id='levels_tbody'>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   </div> 
