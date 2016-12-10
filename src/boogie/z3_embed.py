@@ -159,7 +159,7 @@ class Z3ProxySolver:
         s.push();
 
 z3ProcessPoolCond = Condition();
-MAX_Z3_INSTANCES=1;
+MAX_Z3_INSTANCES=10;
 ports = set(range(8100, 8100 + MAX_Z3_INSTANCES))
 z3ProcessPool = { }
 
