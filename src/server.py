@@ -425,8 +425,8 @@ def tryAndVerify(levelSet, levelId, invs):
     addEvent("verifier", "VerifyAttempt", time(), args.ename, "localhost", {
       "lvlset": levelSet,
       "lvlid": levelId,
-      "overfitted":[(str(esprimaToBoogie(inv, {})), c) for (inv,c) in overfitted],
-      "nonind":[(str(esprimaToBoogie(inv, {})), c) for (inv,c) in nonind],
+      "overfitted":[str(esprimaToBoogie(inv, {})) for (inv,c) in overfitted],
+      "nonind":[str(esprimaToBoogie(inv, {})) for (inv,c) in nonind],
       "sound":[str(esprimaToBoogie(inv, {})) for inv in sound],
       "post_ctrex":post_ctrex
     }, s)

@@ -176,15 +176,6 @@
       $('#next-lvl').hide();
 
       gameLogic.onLvlPassed(function() {
-        //rpc.call('App.storeMyLastLvl', [Args.get_worker_id(), curLvlSet, lvls[curLvl]], function(res) {});
-
-        //if (curLvl == lvls.length - 1) {
-        //  $('#next-lvl').html('Finish');
-        //}
-        //$('#next-lvl').show();
-        //curL = label({ of: $('#next-lvl'), at: "right center"},
-        //      "Click Here! (50c bonus!)", "left")
-
         numLvlPassed = numLvlPassed + 1;
         function plural(n,s) { return n == 1? s : s + "s" }
         if (numLvlPassed >= 2) {
@@ -208,6 +199,7 @@
 
       $('#next-lvl').click(function() {
         $('#next-lvl').hide();
+        $('#skip-to-next-lvl').hide();
         if (curL)
           removeLabel(curL);
 
@@ -280,7 +272,6 @@
       $('#quit').click(function () { doneScreen(false) });
       $('#skip-to-next-lvl').click(function () {
         gameLogic.skipToNextLvl();
-        nextLvl();
       });
       $('#quit-overlay').click(function() { doneScreen(false) });
 
@@ -304,6 +295,9 @@
         if (curScript) {
           curScript.cancel()
           curScript = null
+        }
+        if (gameLogic.foundJSInv.length >= 4) {
+          $("#skip-to-next-lvl").show();
         }
       })
     })
@@ -486,7 +480,7 @@
         </div>
         <div class='row ' id='quit-div'>
           <button id='quit' class='btn-quit'>Quit</button>
-          <button id='skip-to-next-lvl' class='btn-next'>Next Lvl</button>
+          <button id='skip-to-next-lvl' class='btn-next' style='display: none;'>Next Lvl</button>
         </div>
       </div>
     </div>
