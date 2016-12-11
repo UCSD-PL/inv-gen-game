@@ -231,7 +231,7 @@ def loadNextLvl(workerId):
     level_names = traces[curLevelSetName].keys();
     num_invs = [len(enteredInvsForLevel(curLevelSetName, x, session)) for x in level_names]
     ninvs_and_level = zip(num_invs, level_names)
-    ninvs_and_level.sort()
+    #ninvs_and_level.sort()
     for ninvs, lvlId in ninvs_and_level:
         if levelSolved(session, curLevelSetName, lvlId) or \
            workerId != "" and levelFinishedBy(session, curLevelSetName, lvlId, workerId):
@@ -351,10 +351,20 @@ def isTautology(inv):
     res = (tautology(esprimaToZ3(inv, {})))
     return res
 
+
+def getLastVerResult(lvlset, lvlid, session):
+    verifyAttempts = session.query(Event).filter(Event.type == "VerifyAttempt").all();
+    verifyAttempts = [x for x in verifyAttempts if x.payl()["lvlset"] == lvlset and x.payl()["lvlid"] == lvlid]
+    if (len(verifyAttempts) > 0):
+      return verifyAttempts[-1].payl();
+    else:
+      return None;
+
 @api.method("App.tryAndVerify")
 @pp_exc
 @log_d(str, str, pp_EsprimaInvs, pp_tryAndVerifyRes)
 def tryAndVerify(levelSet, levelId, invs):
+    s = sessionF();
     if (levelSet not in traces):
         raise Exception("Unkonwn level set " + str(levelSet))
 
@@ -378,8 +388,15 @@ def tryAndVerify(levelSet, levelId, invs):
     boogie_invs = [ esprimaToBoogie(x, {}) for x in invs ]
     candidate_antecedents = [ ast_and(pSet) for pSet in nonempty(powerset(splitterPreds)) ]
 
+    initial_sound = partialInvs 
+
+    lastVer = getLastVerResult(levelSet, levelId, s)
+    if (lastVer):
+      initial_sound += [parseExprAst(x)[0] for x in lastVer["sound"]]
+      boogie_invs += [parseExprAst(x)[0] for x in lastVer["nonind"]]
+
     # First lets find the invariants that are sound without implication
-    overfitted, nonind, sound = tryAndVerify_impl(bbs, loop, partialInvs, boogie_invs)
+    overfitted, nonind, sound = tryAndVerify_impl(bbs, loop, initial_sound, boogie_invs)
     sound = [x for x in sound if not tautology(expr_to_z3(x, AllIntTypeEnv()))]
 
     # Next lets add implication  to all unsound invariants from first pass
@@ -405,10 +422,14 @@ def tryAndVerify(levelSet, levelId, invs):
     sound = [ boogieToEsprima(inv) for inv in sound ]
 
     res = (overfitted, nonind, sound, post_ctrex)
-    print "Res: ", ([(str(esprimaToBoogie(inv, {})), c) for (inv,c) in overfitted],\
-                    [(str(esprimaToBoogie(inv, {})), c) for (inv,c) in nonind],\
-                    [str(esprimaToBoogie(inv, {})) for inv in sound],\
-                    post_ctrex)
+    addEvent("verifier", "VerifyAttempt", time(), args.ename, "localhost", {
+      "lvlset": levelSet,
+      "lvlid": levelId,
+      "overfitted":[(str(esprimaToBoogie(inv, {})), c) for (inv,c) in overfitted],
+      "nonind":[(str(esprimaToBoogie(inv, {})), c) for (inv,c) in nonind],
+      "sound":[str(esprimaToBoogie(inv, {})) for inv in sound],
+      "post_ctrex":post_ctrex
+    }, s)
 
     return res
 

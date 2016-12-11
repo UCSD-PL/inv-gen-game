@@ -61,6 +61,17 @@
       var lvls = { }
       for (var i in allLogs) {
         let e = allLogs[i];
+
+        if (e.src == "verifier") {
+          if (e.type == "VerifyAttempt") {
+            let lvlid = e.payload.lvlset + "," + e.payload.lvlid;
+            lvls[lvlid].sound = e.payload.sound.length;
+            lvls[lvlid].nonind = e.payload.nonind.length;
+            lvls[lvlid].overfitted = e.payload.overfitted.length;
+          }
+          continue;
+        }
+
         if (!users.hasOwnProperty(e.src)) {
           users[e.src] = { completed: 0, solved: 0, skipped: 0, time: 0, invs: 0, lvlD: {} };
         }
@@ -71,10 +82,11 @@
           let lvlid = e.payload.lvlset + "," + e.payload.lvlid;
           ud.lvlD[lvlid] = { started: e.time };
           if (!lvls.hasOwnProperty(lvlid)) {
-            lvls[lvlid] = { completed: 0, skipped:0, invs: 0, time: 0 }
+            lvls[lvlid] = { completed: 0, skipped:0, invs: 0, time: 0, sound: 0, overfitted: 0, nonind: 0 }
           } 
         } else if (e.type == "FinishLevel") {
           let lvlid = e.payload.lvlset + "," + e.payload.lvlid;
+          console.log(e.payload)
           ud.lvlD[lvlid].finished = e.time;
           ud.completed ++;
           if (e.payload.verified)
@@ -109,7 +121,7 @@
       $("#levels_tbody").empty();
       for (var levelId in lvlStats) {
         let ld = lvlStats[levelId];
-        $("#levels_tbody").append("<tr><td>" + [levelId, ld.completed, ld.skipped, ld.time, ld.time / ld.completed, ld.invs, ld.invs / ld.completed].join("</td><td>") + "</td></tr>")
+        $("#levels_tbody").append("<tr><td>" + [levelId, ld.completed, ld.skipped, ld.time, ld.time / ld.completed, ld.invs, ld.invs / ld.completed, ld.sound, ld.nonind, ld.overfitted].join("</td><td>") + "</td></tr>")
       }
     }
 
@@ -237,6 +249,9 @@
                   <th> Avg Time/Lvl </th>
                   <th> #Invs </th>
                   <th> Avg #Invs/User </th>
+                  <th> #Sound</th>
+                  <th> #Overfit</th>
+                  <th> #Nonind</th>
                 </tr>
               </thead>
               <tbody id='levels_tbody'>

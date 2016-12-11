@@ -47,6 +47,8 @@ def addEvent(sourceName, type, time, ename,  addr, data, session):
               "raw": str(esprimaToBoogie(data[2], { })), "powerups": data[3] }
   elif (type == "GameDone"):
     payl = { "numLvlsPassed" : data[0] }
+  elif (type == "VerifyAttempt"):
+    payl = data;
   else:
     print "Unknown event: ", e
     payl = { }
