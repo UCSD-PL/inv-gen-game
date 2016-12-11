@@ -96,13 +96,11 @@ def get_unused_port():
     s.close()
     return port
 
-def start_server(port, experiment_name, srid, lvlset = None):
+def start_server(port, experiment_name, srid, lvlset, db, adminToken):
     server_log = get_server_log_fname(experiment_name, srid)
     event_log = get_event_log_fname(experiment_name, srid)
     with open(server_log, 'w') as output:
-        cmd = [get_server_run_cmd(), "--port", str(port), "--log", event_log, "--ename", experiment_name]
-        if lvlset != None:
-            cmd = cmd + ["--lvlset", lvlset]
+        cmd = [get_server_run_cmd(), "--port", str(port), "--log", event_log, "--ename", experiment_name, "--lvlset", lvlset, "--db", db, "--adminToken", adminToken]
         p = subprocess.Popen(cmd, stdout=output, stderr=subprocess.STDOUT)
     return p
 

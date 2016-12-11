@@ -40,6 +40,7 @@ p.add_argument('--port', type=int, help='a optional port number', required=True)
 p.add_argument('--ename', type=str, default = 'default', help='Name for experiment; if none provided, use "default"')
 p.add_argument('--lvlset', type=str, default = 'desugared-boogie-benchmarks', help='Lvlset to use for serving benchmarks"')
 p.add_argument('--db', type=str, help='Path to database', required=True)
+p.add_argument('--adminToken', type=str, help='Secret token for logging in to admin interface. If omitted will be randomly generated')
 
 args = p.parse_args();
 logF = None;
@@ -50,7 +51,10 @@ invs = { }
 players = { }
 
 alphanum = "".join([chr(ord('a') + i) for i in range(26) ] + [ str(i) for i in range(0,10)])
-adminToken = "".join([ choice(alphanum) for x in xrange(5) ]);
+if (args.adminToken):
+  adminToken = args.adminToken
+else:
+  adminToken = "".join([ choice(alphanum) for x in xrange(5) ]);
 
 if args.log:
     logF = open(args.log,'w')
@@ -465,7 +469,7 @@ def getLogs(inputToken, afterTimestamp, afterId):
     evts = s.query(Event).all();
 
   return [ { "id": e.id, "type": e.type, "experiment": e.experiment, "src": e.src,
-              "addr": e.addr, "time": e.time, "payload": e.payl() } for e in evts ]
+              "addr": e.addr, "time": str(e.time), "payload": e.payl() } for e in evts ]
   
 if __name__ == "__main__":
     ignore = IgnoreManager()
