@@ -521,7 +521,6 @@ class PatternGameLogic extends BaseGameLogic {
   }
 
   skipToNextLvl() : void {
-    this.lvlPassedF = true;
     logEvent("SkipToNextLevel",
              [curLvlSet,
               this.curLvl.id]);
@@ -531,6 +530,8 @@ class PatternGameLogic extends BaseGameLogic {
               false,
               this.foundJSInv.map((x)=>x.rawUserInp),
               this.foundJSInv.map((x)=>x.canonForm)]);
+    this.lvlPassedF = true;
+    this.lvlPassedCb();
   }
 }
 
