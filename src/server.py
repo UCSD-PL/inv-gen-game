@@ -364,6 +364,9 @@ def getLastVerResult(lvlset, lvlid, session):
     else:
       return None;
 
+def nodups(s):
+  return list(set(s))
+
 @api.method("App.tryAndVerify")
 @pp_exc
 @log_d(str, str, pp_EsprimaInvs, pp_tryAndVerifyRes)
@@ -429,9 +432,9 @@ def tryAndVerify(levelSet, levelId, invs):
     addEvent("verifier", "VerifyAttempt", time(), args.ename, "localhost", {
       "lvlset": levelSet,
       "lvlid": levelId,
-      "overfitted":[str(esprimaToBoogie(inv, {})) for (inv,c) in overfitted],
-      "nonind":[str(esprimaToBoogie(inv, {})) for (inv,c) in nonind],
-      "sound":[str(esprimaToBoogie(inv, {})) for inv in sound],
+      "overfitted":nodups([str(esprimaToBoogie(inv, {})) for (inv,c) in overfitted]),
+      "nonind":nodups([str(esprimaToBoogie(inv, {})) for (inv,c) in nonind]),
+      "sound":nodups([str(esprimaToBoogie(inv, {})) for inv in sound]),
       "post_ctrex":post_ctrex
     }, s)
 
