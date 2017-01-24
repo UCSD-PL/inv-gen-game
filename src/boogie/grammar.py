@@ -75,10 +75,10 @@ ParentEdge = O(UNIQUE) + Id
 ParentInfo = S("<:") + csl(ParentEdge)
 OrderSpec = O(ParentInfo) + O(COMPLETE)
 StringLiteral = F(); # TODO
-Trigger = F() # TODO
+Trigger = F()
 
 ####### Attributes
-Expr = F(); # TODO
+Expr = F();
 AttrArg = Expr | StringLiteral
 Attribute = LBRAC + COLN + Id + csl(AttrArg) + RBRAC
 AttrList = ZoM(Attribute)
