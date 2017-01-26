@@ -454,6 +454,39 @@ def simplifyInv(inv):
 def getRandomCode():
     return "".join([ choice(alphanum) for x in range(5) ]);
 
+
+kvStore = { }
+
+@api.method("App.get")
+@pp_exc
+@log_d(str)
+def get(key):
+    if (type(key) != unicode):
+      raise Exception("Key must be string");
+
+    return kvStore[key];
+
+@api.method("App.set")
+@pp_exc
+@log_d(str, str, str)
+def get(key, val, expectedGen):
+    if (type(key) != unicode):
+      raise Exception("Key must be string");
+
+    if (expectedGen != -1):
+      (curGen, curVal) = kvStore[key]
+    else:
+      if (key in kvStore):
+        raise Exception("Trying to add a new key with gen 0 but key already there: " + key);
+
+    if (expectedGen != -1 and curGen != expectedGen):
+      return (curGen, curVal);
+    else:
+      kvStore[key] = (expectedGen + 1, val);
+      return (expectedGen + 1, val)
+
+    return kvStore[key];
+
 # Admin Calls:
 @api.method("App.getLogs")
 @pp_exc
