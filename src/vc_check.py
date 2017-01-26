@@ -1,7 +1,7 @@
-from boogie.ast import ast_and, replace
+from boogie.ast import ast_and, replace, AstBinExpr
 from boogie_loops import loop_vc_pre_ctrex, _unssa_z3_model
-from util import split
-from boogie.z3_embed import expr_to_z3, AllIntTypeEnv, Unknown, counterex, Implies, And
+from util import split, nonempty, powerset
+from boogie.z3_embed import expr_to_z3, AllIntTypeEnv, Unknown, counterex, Implies, And, tautology
 from boogie.paths import nd_bb_path_to_ssa, ssa_path_to_z3
 from boogie.ssa import SSAEnv
 
@@ -58,3 +58,25 @@ def tryAndVerify_impl(bbs, loop, old_sound_invs, invs, timeout=None):
             nonind_invs.append((inv, nonind_ctrex[inv]))
 
     return overfitted, nonind_invs, list(new_sound)
+
+def tryAndVerifyWithSplitterPreds(bbs, loop, old_sound_invs, boogie_invs,
+  splitterPreds, partialInvs, timeout=None):
+    initial_sound = partialInvs + old_sound_invs
+
+    # First lets find the invariants that are sound without implication
+    overfitted, nonind, sound = tryAndVerify_impl(bbs, loop, initial_sound, boogie_invs)
+    sound = [x for x in sound if not tautology(expr_to_z3(x, AllIntTypeEnv()))]
+
+    # Next lets add implication  to all unsound invariants from first pass
+    # Also add manually specified partialInvs
+    unsound = [ inv_ctr_pair[0] for inv_ctr_pair in overfitted + nonind ]
+    candidate_antecedents = [ ast_and(pSet) for pSet in nonempty(powerset(splitterPreds)) ]
+    p2_invs = [ AstBinExpr(antec, "==>", inv)
+      for antec in candidate_antecedents for inv in unsound ] + partialInvs
+    p2_invs = [ x for x in p2_invs if not tautology(expr_to_z3(x, AllIntTypeEnv())) ]
+
+    # And look for any new sound invariants
+    overfitted, nonind, sound_p2 = tryAndVerify_impl(bbs, loop, sound, p2_invs)
+    sound = set(sound).union(sound_p2)
+
+    return (overfitted, nonind, sound)

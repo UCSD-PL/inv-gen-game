@@ -54,5 +54,19 @@ def daikonToBoogieExpr(astn):
     return bast.ast_or([ bast.AstBinExpr(cn, "==", x) for x in
       [ daikonToBoogieExpr(y) for y in astn.options ]
     ])
+  elif (isinstance(astn, dast.AstInRange)):
+    cn = daikonToBoogieExpr(astn.expr)
+    low = astn.lower.num
+    hi = astn.upper.num
+    return bast.ast_and([
+      bast.AstBinExpr(bast.AstNumber(low) , "<=", cn),
+      bast.AstBinExpr(cn , "<=", bast.AstNumber(hi))
+    ])
+  elif (isinstance(astn, dast.AstIsBoolean)):
+    cn = daikonToBoogieExpr(astn.expr)
+    return bast.ast_or([
+        bast.AstBinExpr(cn, "==", bast.AstNumber(0)),
+        bast.AstBinExpr(cn, "==", bast.AstNumber(1))
+    ])
   else:
     raise Exception("Don't know how to translate " + str(astn))

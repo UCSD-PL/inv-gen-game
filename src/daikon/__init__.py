@@ -21,11 +21,16 @@ def toDaikonTrace(vars, trace):
     r += "\n"
   return r;
 
-def runDaikon(vars, trace):
+def runDaikon(vars, trace, nosuppress=False):
   with NamedTemporaryFile(suffix=".dtrace", delete=False) as dtraceF:
     dtraceF.write(toDaikonTrace(vars,trace));
     dtraceF.flush();
-    raw = check_output(["java", "daikon.Daikon", dtraceF.name])
+    args = ["java", "daikon.Daikon"]
+    if (nosuppress):
+      args = args + [ "--config_option", "daikon.inv.filter.ObviousFilter.enabled=false",\
+                      "--config_option", "daikon.inv.filter.OnlyConstantVariablesFilter.enabled=false"]
+    args.append(dtraceF.name)
+    raw = check_output(args)
     call(["rm", basename(dtraceF.name)[:-len(".dtrace")]+".inv.gz"])
     start = raw.index("LoopEntry:::") + len("LoopEntry:::")
     end = raw.index("Exiting Daikon.", start)

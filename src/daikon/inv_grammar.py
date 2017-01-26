@@ -65,5 +65,7 @@ Expr << E0
 
 IsPow2 = Id + S("is a power of 2")
 IsOneOf = Id + S("one of") + LBRAC + csl(E7) + RBRAC
+IsInRange = Number + S(L("<=")) + Id + S(L("<=")) + Number
+IsBoolean = Id + S(L("is boolean"))
 
-Inv = IsPow2 | IsOneOf | Expr
+Inv = IsPow2 | IsOneOf | IsInRange | IsBoolean | Expr

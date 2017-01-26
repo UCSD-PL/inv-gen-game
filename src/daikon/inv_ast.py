@@ -68,6 +68,18 @@ class AstIsOneOf(AstNode):
     @staticmethod
     def __parse__(toks):    return AstIsOneOf(toks[0], toks[1:])
 
+class AstIsBoolean(AstNode):
+    def __init__(s, expr):  AstNode.__init__(s, expr)
+    def __str__(s): return "IsBoolean(" + str(s.expr) + ")"
+    @staticmethod
+    def __parse__(toks):    return AstIsBoolean(toks[0])
+
+class AstInRange(AstNode):
+    def __init__(s, lower, expr, upper):  AstNode.__init__(s, lower, expr, upper)
+    def __str__(s): return str(s.expr) + " in [" + str(s.lower) +  "," + str(s.upper) +  "]"
+    @staticmethod
+    def __parse__(toks):    return AstInRange(toks[0], toks[1], toks[2])
+
 class AstFalse(AstNode): 
     def __init__(s):  AstNode.__init__(s)
     def __str__(s): return "false"
@@ -191,6 +203,9 @@ def parseExprAst(s):
     FALSE.setParseAction(act_wrap(AstFalse))
     IsPow2.setParseAction(act_wrap(AstIsPow2))
     IsOneOf.setParseAction(act_wrap(AstIsOneOf))
+    IsInRange.setParseAction(act_wrap(AstInRange))
+    IsBoolean.setParseAction(act_wrap(AstIsBoolean))
+    
     try:
       return (Inv + StringEnd()).parseString(s)
     except:
