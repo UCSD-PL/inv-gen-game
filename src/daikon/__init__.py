@@ -28,11 +28,21 @@ def runDaikon(vars, trace, nosuppress=False):
     args = ["java", "daikon.Daikon"]
     if (nosuppress):
       args = args + [ "--config_option", "daikon.inv.filter.ObviousFilter.enabled=false",\
-                      "--config_option", "daikon.inv.filter.OnlyConstantVariablesFilter.enabled=false"]
+                      "--config_option", "daikon.inv.filter.OnlyConstantVariablesFilter.enabled=false",\
+                      "--config_option", "daikon.inv.filter.ParentFilter.enabled=false",\
+                      "--config_option", "daikon.inv.filter.SimplifyFilter.enabled=false",\
+                      "--config_option", "daikon.inv.filter.UnjustifiedFilter.enabled=false",\
+                    ]
     args.append(dtraceF.name)
     raw = check_output(args)
     call(["rm", basename(dtraceF.name)[:-len(".dtrace")]+".inv.gz"])
     start = raw.index("LoopEntry:::") + len("LoopEntry:::")
     end = raw.index("Exiting Daikon.", start)
     invs = filter(lambda x: x != "", map(lambda x:  x.strip(), raw[start:end].split("\n")))
-  return map(lambda x:  parseExprAst(x)[0], invs)
+    # I don't understand how LinearTeranry invariants without justification are displayed...
+    invs = filter(lambda x: "warning: too few samples for daikon.inv.ternary.threeScalar.LinearTernary invariant" not in x, invs);
+    try:
+      return map(lambda x:  parseExprAst(x)[0], invs)
+    except:
+      print raw;
+      raise;

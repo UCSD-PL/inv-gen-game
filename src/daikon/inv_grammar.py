@@ -68,4 +68,9 @@ IsOneOf = Id + S("one of") + LBRAC + csl(E7) + RBRAC
 IsInRange = Number + S(L("<=")) + Id + S(L("<=")) + Number
 IsBoolean = Id + S(L("is boolean"))
 
-Inv = IsPow2 | IsOneOf | IsInRange | IsBoolean | Expr
+JustInv = IsPow2 | IsOneOf | IsInRange | IsBoolean | Expr
+
+
+Inv = S(R("warning: too few samples for [a-zA-Z\._]* invariant:")) + JustInv | JustInv 
+
+
