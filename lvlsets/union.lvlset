@@ -111,8 +111,6 @@
       "../sv_manual_trans/loop-new/count_by_2_true-unreach-call.desugared.bpl" ],
     [ "s-count_by_k_true-unreach-call",
       "../sv_manual_trans/loop-new/count_by_k_true-unreach-call.desugared.bpl" ],
-    [ "s-count_by_k_true-unreach-call-noimpl",
-      "../sv_manual_trans/loop-new/count_by_k_true-unreach-call-noimpl.desugared.bpl" ],
     [ "s-count_by_nondet_true-unreach-call",
       "../sv_manual_trans/loop-new/count_by_nondet_true-unreach-call.desugared.bpl" ],
     [ "s-gauss_sum_true-unreach-call",
