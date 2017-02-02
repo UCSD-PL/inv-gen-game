@@ -30,7 +30,7 @@ if (__name__ == "__main__"):
 
   for lvlName, lvl in lvls.iteritems():
     (vs, header_vals) = (lvl["variables"], lvl["data"][0])
-    fuzz_path = lvl["path"][:-len(".bpl")] + ".fuzz_traces"
+    fuzz_path = lvl["path"][0][:-len(".bpl")] + ".fuzz_traces"
     if (exists(fuzz_path)):
       for f in listdir(fuzz_path):
         t = eval(open(fuzz_path + "/" + f).read());

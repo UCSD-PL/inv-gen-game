@@ -239,10 +239,14 @@ def loadBoogieLvlSet(lvlSetFile):
         lvlName = t[0]
         lvlPath = t[1]
 
-        if lvlPath[0] != '/':
-          lvlPath = join(lvlSetDir, lvlPath)
-        print "Loading level: ", lvlPath
-        lvl = loadBoogieFile(lvlPath, False)
+        if lvlPath[0][0] != '/':
+          lvlPath[0] = join(lvlSetDir, lvlPath[0])
+
+        if lvlPath[1][0] != '/':
+          lvlPath[1] = join(lvlSetDir, lvlPath[1])
+
+        print "Loading level: ", lvlPath[0]
+        lvl = loadBoogieFile(lvlPath[0], False)
         lvl["path"] = lvlPath
 
         if (len(t) > 2):

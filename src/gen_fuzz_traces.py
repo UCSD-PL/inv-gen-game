@@ -28,7 +28,7 @@ for lvl_name in lvls:
   print "Found ", len(traces), " traces with ", sum(map(len, traces)), " total rows ",\
     " and ", sum(map(len, traces))*1.0/len(traces), " average length."
 
-  dirN = lvl["path"][:-4] + ".fuzz_traces"
+  dirN = lvl["path"][0][:-4] + ".fuzz_traces"
   try:
     print "Making directory: ", dirN
     mkdir(dirN)
