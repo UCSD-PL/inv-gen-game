@@ -1,9 +1,9 @@
-from boogie.ast import ast_and, replace, AstBinExpr
+from lib.boogie.ast import ast_and, replace, AstBinExpr
 from boogie_loops import loop_vc_pre_ctrex, _unssa_z3_model
 from util import split, nonempty, powerset
-from boogie.z3_embed import expr_to_z3, AllIntTypeEnv, Unknown, counterex, Implies, And, tautology
-from boogie.paths import nd_bb_path_to_ssa, ssa_path_to_z3
-from boogie.ssa import SSAEnv
+from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, Unknown, counterex, Implies, And, tautology
+from lib.boogie.paths import nd_bb_path_to_ssa, ssa_path_to_z3
+from lib.boogie.ssa import SSAEnv
 
 def _from_dict(vs, vals):
     if type(vals) == tuple:

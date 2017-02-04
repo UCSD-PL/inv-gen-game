@@ -1,9 +1,9 @@
-from boogie.ast import parseExprAst, ast_or, ast_and
-from boogie.bb import get_bbs, ensureSingleExit, entry
+from lib.boogie.ast import parseExprAst, ast_or, ast_and
+from lib.boogie.bb import get_bbs, ensureSingleExit, entry
 from boogie_loops import loops, get_loop_header_values, loop_vc_pre_ctrex
-from util import unique, powerset, average
-from boogie.analysis import livevars
-from boogie.eval import instantiateAndEval, evalPred, _to_dict, execute
+from lib.common.util import unique, powerset, average
+from lib.boogie.analysis import livevars
+from lib.boogie.eval import instantiateAndEval, evalPred, _to_dict, execute
 from os import listdir
 from os.path import dirname, join, abspath, realpath
 from json import load, dumps

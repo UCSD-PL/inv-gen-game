@@ -7,9 +7,9 @@ from json import dumps
 from js import esprimaToZ3, esprimaToBoogie, boogieToEsprima
 from boogie.ast import AstBinExpr, AstTrue, ast_and
 from boogie_loops import loop_vc_post_ctrex
-from util import pp_exc, powerset, split, nonempty
-from boogie.eval import instantiateAndEval, _to_dict
-from boogie.z3_embed import expr_to_z3, AllIntTypeEnv, z3_expr_to_boogie
+from lib.common.util import pp_exc, powerset, split, nonempty
+from lib.boogie.eval import instantiateAndEval, _to_dict
+from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, z3_expr_to_boogie
 from sys import exc_info
 from cProfile import Profile
 from pstats import Stats

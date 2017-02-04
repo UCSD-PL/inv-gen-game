@@ -10,7 +10,7 @@ from js import *
 from models import *
 from os import listdir
 from json import load, dumps
-from util import powerset, nonempty
+from lib.common.util import powerset, nonempty
 from time import time, sleep
 from vc_check import tryAndVerify_impl
 from boogie_loops import loop_vc_post_ctrex

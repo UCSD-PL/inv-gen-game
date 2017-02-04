@@ -1,5 +1,5 @@
 from ast import *;
-from boogie.z3_embed import *
+from z3_embed import *
 from bb import *
 from ssa import *
 from predicate_transformers import wp_stmts, sp_stmts

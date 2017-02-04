@@ -1,5 +1,5 @@
 from ast import *;
-from boogie.z3_embed import *
+from z3_embed import *
 from collections import namedtuple
 import z3
 

@@ -1,5 +1,5 @@
-import daikon.inv_ast as dast;
-import boogie.ast as bast;
+import lib.daikon.inv_ast as dast;
+import lib.boogie.ast as bast;
 
 def daikonToBoogieExpr(astn):
   if (isinstance(astn, dast.AstUnExpr)):

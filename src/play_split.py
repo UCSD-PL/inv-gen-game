@@ -5,7 +5,7 @@ import boogie.eval
 import json
 import os
 import tabulate
-import util
+import lib.common.util
 
 DATA_SET = [
   {

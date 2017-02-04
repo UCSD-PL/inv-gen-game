@@ -1,15 +1,14 @@
-from levels import readTrace
-from daikon import toDaikonTrace, runDaikon
-from daikon.inv_grammar import *
-from daikon.inv_ast import *
+from levels import readTrace, loadBoogieLvlSet
+from lib.daikon import toDaikonTrace, runDaikon
+from lib.daikon.inv_grammar import *
+from lib.daikon.inv_ast import *
 from conversions import daikonToBoogieExpr
-from levels import loadBoogieLvlSet, readTrace
 import argparse
 from os.path import exists
 from os import listdir
 from vc_check import tryAndVerify_impl, tryAndVerifyWithSplitterPreds
 from boogie_loops import loop_vc_post_ctrex
-import boogie.ast as bast
+import lib.boogie.ast as bast
 
 if (__name__ == "__main__"):
   p = argparse.ArgumentParser(description="run daikon on a levelset")
