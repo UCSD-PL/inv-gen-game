@@ -1,5 +1,4 @@
 from inv_grammar import *
-from pyparsing import ParseResults, StringEnd
 
 class AstNode:
     def __init__(s, *args):
@@ -45,164 +44,99 @@ def replace(ast, m):
         return ast.__class__(*[replace(x,m) for x in ast._children])
 
 class AstUnExpr(AstNode):
-    def __init__(s, op, expr):  AstNode.__init__(s, op, expr)
+    def __init__(s, op, expr):  AstNode.__init__(s, str(op), expr)
     def __str__(s): return s.op + str(s.expr)
-    @staticmethod
-    def __parse__(toks):    return AstUnExpr(str(toks[0]), toks[1])
 
 class AstIsPow2(AstNode):
     def __init__(s, expr):  AstNode.__init__(s, expr)
     def __str__(s): return "IsPow2(" + str(s.expr) + ")"
-    @staticmethod
-    def __parse__(toks):    return AstIsPow2(toks[0])
 
 class AstIsOneOf(AstNode):
     def __init__(s, expr, options):  AstNode.__init__(s, expr, options)
     def __str__(s): return "IsOneOf(" + str(s.expr) + ",[" + ",".join(map(str, s.options)) + "])"
-    @staticmethod
-    def __parse__(toks):    return AstIsOneOf(toks[0], toks[1:])
 
 class AstIsBoolean(AstNode):
     def __init__(s, expr):  AstNode.__init__(s, expr)
     def __str__(s): return "IsBoolean(" + str(s.expr) + ")"
-    @staticmethod
-    def __parse__(toks):    return AstIsBoolean(toks[0])
 
 class AstInRange(AstNode):
     def __init__(s, lower, expr, upper):  AstNode.__init__(s, lower, expr, upper)
     def __str__(s): return str(s.expr) + " in [" + str(s.lower) +  "," + str(s.upper) +  "]"
-    @staticmethod
-    def __parse__(toks):    return AstInRange(toks[0], toks[1], toks[2])
 
 class AstFalse(AstNode): 
     def __init__(s):  AstNode.__init__(s)
     def __str__(s): return "false"
-    @staticmethod
-    def __parse__(toks):    return AstFalse()
 
 class AstTrue(AstNode):
     def __init__(s):  AstNode.__init__(s)
     def __str__(s): return "true"
-    @staticmethod
-    def __parse__(toks):    return AstTrue()
 
 class AstNumber(AstNode): 
-    def __init__(s, num):   AstNode.__init__(s,num)
+    def __init__(s, num):   AstNode.__init__(s,int(num))
     def __str__(s): return str(s.num)
-    @staticmethod
-    def __parse__(toks):
-        assert(len(toks) == 1)
-        return AstNumber(int(toks[0]))
 
 class AstId(AstNode): 
-    def __init__(s, name):  AstNode.__init__(s, name)
+    def __init__(s, name):  AstNode.__init__(s, str(name))
     def __str__(s): return s.name
-    @staticmethod
-    def __parse__(toks):
-        assert(len(toks) == 1)
-        return AstId(str(toks[0]))
 
 class AstBinExpr(AstNode):
-    def __init__(s, lhs, op, rhs):  AstNode.__init__(s, lhs, op, rhs)
+    def __init__(s, lhs, op, rhs):  AstNode.__init__(s, lhs, str(op), rhs)
     def __str__(s): return "(" + str(s.lhs) + " " + s.op + " " + str(s.rhs) + ")"
-    @staticmethod
-    def __parse__(toks):    return AstBinExpr(toks[0], str(toks[1]), toks[2])
 
-def expr_read(ast):
-    if isinstance(ast, AstId):
-        return set([ast.name])
-    elif isinstance(ast, AstNumber):
-        return set()
-    elif isinstance(ast, AstUnExpr):
-        return expr_read(ast.expr)
-    elif isinstance(ast, AstBinExpr):
-        return expr_read(ast.lhs).union(expr_read(ast.rhs))
-    elif isinstance(ast, AstTrue) or isinstance(ast, AstFalse):
-        return set()
+class AstBuilder(DaikonInvParser):
+  def onAtom(s, prod, st, loc, toks):
+    return [ s.atomM[prod](*toks) ]
+
+  def onUnaryOp(s, prod, st, loc, toks):
+    if (prod == s.IsPow2):
+      return [ AstIsPow2(toks[0]) ]
+    elif (prod == s.IsBoolean):
+      return [ AstIsBoolean(toks[0]) ]
     else:
-        raise Exception("Unknown expression type " + str(ast))
+      return [ AstUnExpr(*toks) ]
 
-def stmt_read(ast):
-    if isinstance(ast, AstLabel):
-        ast = ast.stmt
-
-    if isinstance(ast, AstAssume) or isinstance(ast, AstAssert):
-        return expr_read(ast.expr)
-    elif isinstance(ast, AstAssignment):
-        return expr_read(ast.rhs)
-    elif isinstance(ast, AstHavoc):
-        return set()
+  def onLABinOp(s, prod, st, loc, toks):
+    if (len(toks) == 3):
+      return [ AstBinExpr(*toks) ]
     else:
-        raise Exception("Unknown statement: " + str(ast))
+      assert(len(toks) > 3);
+      base = AstBinExpr(*toks[:3])
+      rest = [ [toks[3+2*k], toks[3+2*k+1]] for k in xrange((len(toks)-3)/2) ]
+      return [ reduce(lambda acc,el:  AstBinExpr(acc, el[0], el[1]), rest, base) ]
 
-def stmt_changed(ast):
-    if isinstance(ast, AstLabel):
-        ast = ast.stmt
-
-    if isinstance(ast, AstAssignment):
-        return expr_read(ast.lhs)
-    elif isinstance(ast, AstHavoc):
-        return set(ast.ids)
-    elif isinstance(ast, AstAssume) or isinstance(ast, AstAssert):
-        return set([])
+  def onRABinOp(s, prod, st, loc, toks):
+    if (len(toks) == 3):
+      return [ AstBinExpr(*toks) ]
     else:
-        raise Exception("Unknown statement: " + str(ast))
+      assert(len(toks) > 3);
+      toks = reversed(toks)
+      base = AstBinExpr(*toks[:3])
+      rest = [ [toks[3+2*k], toks[3+2*k+1]] for k in xrange((len(toks)-3)/2) ]
+      return [ reduce(lambda acc,el:  AstBinExpr(acc, el[0], el[1]), toks[3:], base) ]
+
+  def onNABinOp(s, prod, st, loc, toks):
+    if (prod == s.IsInRange):
+      return [ AstInRange(toks[0], toks[1], toks[2]) ]
+    elif (prod == s.IsOneOf):
+      return [ AstIsOneOf(toks[0], toks[1]) ]
+    else:
+      assert (len(toks) == 3);
+      return [ AstBinExpr(*toks) ]
+
+  def __init__(s):
+    DaikonInvParser.__init__(s);
+    s.atomM = {
+      s.TRUE : AstTrue,
+      s.FALSE : AstFalse,
+      s.Id : AstId,
+      s.Number : AstNumber
+    }
+
+astBuilder = AstBuilder();
 
 def parseExprAst(s):
-    class AstBuilder(DaikonInvParser):
-      def onAtom(s, prod, st, loc, toks):
-        return [ s.atomM[prod].__parse__(toks) ]
-
-      def onUnaryOp(s, prod, st, loc, toks):
-        if (prod == s.IsPow2):
-          return [ AstIsPow2(toks[0]) ]
-        elif (prod == s.IsBoolean):
-          return [ AstIsBoolean(toks[0]) ]
-        else:
-          return [ AstUnExpr.__parse__(toks) ]
-
-      def onLABinOp(s, prod, st, loc, toks):
-        if (len(toks) == 3):
-          return [ AstBinExpr.__parse__(toks) ]
-        else:
-          assert(len(toks) > 3);
-          base = AstBinExpr.__parse__(toks[:3])
-          rest = [ [toks[3+2*k], toks[3+2*k+1]] for k in xrange((len(toks)-3)/2) ]
-          return [ reduce(lambda acc,el:  AstBinExpr.__parse__([acc, el[0], el[1]]), rest, base) ]
-
-      def onRABinOp(s, prod, st, loc, toks):
-        if (len(toks) == 3):
-          return [ AstBinExpr.__parse__(toks) ]
-        else:
-          assert(len(toks) > 3);
-          toks = reversed(toks)
-          base = AstBinExpr.__parse__(toks[:3])
-          rest = [ [toks[3+2*k], toks[3+2*k+1]] for k in xrange((len(toks)-3)/2) ]
-          return [ reduce(lambda acc,el:  AstBinExpr.__parse__([acc, el[0], el[1]]), toks[3:], base) ]
-
-      def onNABinOp(s, prod, st, loc, toks):
-        if (prod == s.IsInRange):
-          return [ AstInRange(toks[0], toks[1], toks[2]) ]
-        elif (prod == s.IsOneOf):
-          return [ AstIsOneOf(toks[0], toks[1]) ]
-        else:
-          assert (len(toks) == 3);
-          return [ AstBinExpr.__parse__(toks) ]
-
-      def __init__(s):
-        DaikonInvParser.__init__(s);
-        s.atomM = {
-          s.TRUE : AstTrue,
-          s.FALSE : AstFalse,
-          s.Id : AstId,
-          s.Number : AstNumber
-        }
-
-    try:
-      astBuilder = AstBuilder();
-      return astBuilder.parse(s);
-    except:
-      import traceback;
-      traceback.print_exc();
-      print "Failed parsing";
-      raise;
+  try:
+    return astBuilder.parse(s);
+  except:
+    print "Failed parsing";
+    raise;
