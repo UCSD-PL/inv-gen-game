@@ -1,12 +1,6 @@
 from inv_grammar import *
 from pyparsing import ParseResults, StringEnd
 
-def _strip(arg):
-    if isinstance(arg, ParseResults):
-        return arg[0]
-    else:
-        return arg
-
 class AstNode:
     def __init__(s, *args):
         s._children = args;
@@ -112,7 +106,7 @@ class AstBinExpr(AstNode):
     def __init__(s, lhs, op, rhs):  AstNode.__init__(s, lhs, op, rhs)
     def __str__(s): return "(" + str(s.lhs) + " " + s.op + " " + str(s.rhs) + ")"
     @staticmethod
-    def __parse__(toks):    return AstBinExpr(_strip(toks[0]), str(toks[1]), _strip(toks[2]))
+    def __parse__(toks):    return AstBinExpr(toks[0], str(toks[1]), toks[2])
 
 def expr_read(ast):
     if isinstance(ast, AstId):
@@ -154,83 +148,61 @@ def stmt_changed(ast):
     else:
         raise Exception("Unknown statement: " + str(ast))
 
-def ast_group_bin(exprs, op, default):
-    return reduce(lambda x,y:   AstBinExpr(x, op, y), exprs, default)
-
-def ast_and(exprs): return ast_group_bin(exprs, "&&", AstTrue())
-def ast_or(exprs): return ast_group_bin(exprs, "||", AstFalse()) 
-
 def parseExprAst(s):
     class AstBuilder(DaikonInvParser):
       def onAtom(s, prod, st, loc, toks):
-        return toks
+        return [ s.atomM[prod].__parse__(toks) ]
+
       def onUnaryOp(s, prod, st, loc, toks):
-        return toks
-      def onLABinOp(s, prod, st, loc, toks):
-        return toks
-      def onRABinOp(s, prod, st, loc, toks):
-        return toks
-      def onNABinOp(s, prod, st, loc, toks):
-        return toks
-      def onTernaryOp(s, prod, st, loc, toks):
-        return toks
-
-    def act_wrap(cl):
-        def act(s, loc, toks):
-            return [ cl.__parse__(toks) ]
-        return act;
-
-    def expr_wrap(cl):
-        def act(s, loc, toks):
-            if (len(toks) > 1):
-                return [ cl.__parse__(toks) ]
-            else:
-                return toks
-        return act
-
-    def act_binary_exprs(s, loc, toks):
-        if (len(toks) == 1):
-            return toks
+        if (prod == s.IsPow2):
+          return [ AstIsPow2(toks[0]) ]
+        elif (prod == s.IsBoolean):
+          return [ AstIsBoolean(toks[0]) ]
         else:
-            ltoks = list(toks)
-            while len(ltoks) > 2:
-                ltoks[-3:] = [AstBinExpr.__parse__(ltoks[-3:])]
+          return [ AstUnExpr.__parse__(toks) ]
 
-            return ltoks
+      def onLABinOp(s, prod, st, loc, toks):
+        if (len(toks) == 3):
+          return [ AstBinExpr.__parse__(toks) ]
+        else:
+          assert(len(toks) > 3);
+          base = AstBinExpr.__parse__(toks[:3])
+          rest = [ [toks[3+2*k], toks[3+2*k+1]] for k in xrange((len(toks)-3)/2) ]
+          return [ reduce(lambda acc,el:  AstBinExpr.__parse__([acc, el[0], el[1]]), rest, base) ]
 
-    """
-    # A minimium set of rules neccessary for the "passive" desugared
-    # boogie programs generated during verification  
-    # Expressions 
-    E7.setParseAction(expr_wrap(AstUnExpr))
-    E65.setParseAction(expr_wrap(AstBinExpr))
-    E6.setParseAction(expr_wrap(AstBinExpr))
-    E5.setParseAction(expr_wrap(AstBinExpr))
-    E3.setParseAction(expr_wrap(AstBinExpr))
-    EAnds.setParseAction(act_binary_exprs)
-    EOrs.setParseAction(act_binary_exprs)
-    E2.setParseAction(expr_wrap(AstBinExpr))
-    E1.setParseAction(expr_wrap(AstBinExpr))
-    E0.setParseAction(expr_wrap(AstBinExpr))
-    Number.setParseAction(act_wrap(AstNumber))
-    Id.setParseAction(act_wrap(AstId))
-    TRUE.setParseAction(act_wrap(AstTrue))
-    FALSE.setParseAction(act_wrap(AstFalse))
-    IsPow2.setParseAction(act_wrap(AstIsPow2))
-    IsOneOf.setParseAction(act_wrap(AstIsOneOf))
-    IsInRange.setParseAction(act_wrap(AstInRange))
-    IsBoolean.setParseAction(act_wrap(AstIsBoolean))
-    """
+      def onRABinOp(s, prod, st, loc, toks):
+        if (len(toks) == 3):
+          return [ AstBinExpr.__parse__(toks) ]
+        else:
+          assert(len(toks) > 3);
+          toks = reversed(toks)
+          base = AstBinExpr.__parse__(toks[:3])
+          rest = [ [toks[3+2*k], toks[3+2*k+1]] for k in xrange((len(toks)-3)/2) ]
+          return [ reduce(lambda acc,el:  AstBinExpr.__parse__([acc, el[0], el[1]]), toks[3:], base) ]
+
+      def onNABinOp(s, prod, st, loc, toks):
+        if (prod == s.IsInRange):
+          return [ AstInRange(toks[0], toks[1], toks[2]) ]
+        elif (prod == s.IsOneOf):
+          return [ AstIsOneOf(toks[0], toks[1]) ]
+        else:
+          assert (len(toks) == 3);
+          return [ AstBinExpr.__parse__(toks) ]
+
+      def __init__(s):
+        DaikonInvParser.__init__(s);
+        s.atomM = {
+          s.TRUE : AstTrue,
+          s.FALSE : AstFalse,
+          s.Id : AstId,
+          s.Number : AstNumber
+        }
 
     try:
       astBuilder = AstBuilder();
       return astBuilder.parse(s);
     except:
+      import traceback;
+      traceback.print_exc();
       print "Failed parsing";
-      raise
-    
-    try:
-      return (Inv + StringEnd()).parseString(s)
-    except:
-      print "Failed parsing: ", s
-      raise
+      raise;

@@ -42,7 +42,7 @@ def runDaikon(vars, trace, nosuppress=False):
     # I don't understand how LinearTeranry invariants without justification are displayed...
     invs = filter(lambda x: "warning: too few samples for daikon.inv.ternary.threeScalar.LinearTernary invariant" not in x, invs);
     try:
-      return map(lambda x:  parseExprAst(x)[0], invs)
+      return map(lambda x:  parseExprAst(x), invs)
     except:
-      print raw;
+      print invs;
       raise;
