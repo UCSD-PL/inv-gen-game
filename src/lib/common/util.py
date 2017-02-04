@@ -28,7 +28,7 @@ def average(vals):
     return sum(vals) / (1.0 * len(vals))
 
 def split(pred, itr):
-  """ Split a list based on a predicate function """
+    """ Split a list based on a predicate function """
     yes,no = [], []
     for i in itr:
         if (pred(i)):
