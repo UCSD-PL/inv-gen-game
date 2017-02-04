@@ -161,6 +161,20 @@ def ast_and(exprs): return ast_group_bin(exprs, "&&", AstTrue())
 def ast_or(exprs): return ast_group_bin(exprs, "||", AstFalse()) 
 
 def parseExprAst(s):
+    class AstBuilder(DaikonInvParser):
+      def onAtom(s, prod, st, loc, toks):
+        return toks
+      def onUnaryOp(s, prod, st, loc, toks):
+        return toks
+      def onLABinOp(s, prod, st, loc, toks):
+        return toks
+      def onRABinOp(s, prod, st, loc, toks):
+        return toks
+      def onNABinOp(s, prod, st, loc, toks):
+        return toks
+      def onTernaryOp(s, prod, st, loc, toks):
+        return toks
+
     def act_wrap(cl):
         def act(s, loc, toks):
             return [ cl.__parse__(toks) ]
@@ -184,6 +198,7 @@ def parseExprAst(s):
 
             return ltoks
 
+    """
     # A minimium set of rules neccessary for the "passive" desugared
     # boogie programs generated during verification  
     # Expressions 
@@ -205,6 +220,14 @@ def parseExprAst(s):
     IsOneOf.setParseAction(act_wrap(AstIsOneOf))
     IsInRange.setParseAction(act_wrap(AstInRange))
     IsBoolean.setParseAction(act_wrap(AstIsBoolean))
+    """
+
+    try:
+      astBuilder = AstBuilder();
+      return astBuilder.parse(s);
+    except:
+      print "Failed parsing";
+      raise
     
     try:
       return (Inv + StringEnd()).parseString(s)
