@@ -1,4 +1,5 @@
-from pyparsing import delimitedList,nums, ParserElement
+from pyparsing import delimitedList,nums, ParserElement, operatorPrecedence, opAssoc, StringEnd
+from ..common.parser import InfixExprParser
 from pyparsing import ZeroOrMore as ZoM,\
     OneOrMore as OoM,\
     Keyword as K,\
@@ -10,238 +11,284 @@ from pyparsing import ZeroOrMore as ZoM,\
     Word as W,\
     Group as G
 
-
 ParserElement.enablePackrat()
-
 csl = delimitedList
 
-LT = L("<")
-GT = L(">")
-EQ = L("=")
-# Braces/Brackets
-LSQBR = S("[")
-RSQBR = S("]")
-LPARN = S("(")
-RPARN = S(")")
-LBRAC = S("{")
-RBRAC = S("}")
-# Various Delimiters
-SEMI = S(";")
-COLN = S(":")
-ASSGN = S(":=")
-STAR = S("*")
+class BoogieParser(InfixExprParser):
+  # Statements
+  def onAssert(s, prod, st, loc, toks): raise Exception("NYI")
+  def onAssume(s, prod, st, loc, toks): raise Exception("NYI")
+  def onReturn(s, prod, st, loc, toks): raise Exception("NYI")
+  def onGoto(s, prod, st, loc, toks): raise Exception("NYI")
+  def onAssignment(s, prod, st, loc, toks): raise Exception("NYI")
+  def onHavoc(s, prod, st, loc, toks): raise Exception("NYI")
+  def onProgram(s, prod, st, loc, toks): raise Exception("NYI")
+  def onImplementationDecl(s, prod, st, loc, toks): raise Exception("NYI")
+  def onBody(s, prod, st, loc, toks): raise Exception("NYI")
+  def onLocalVarDecl(s, prod, st, loc, toks): raise Exception("NYI")
+  def onType(s, prod, st, loc, toks): raise Exception("NYI")
+  def onLabeledStatement(s, prod, st, loc, toks): raise Exception("NYI")
 
-####### Keywords
-INT = K("int")
-BOOL = K("bool")
-TYPE = K("type")
-FINITE = K("finite")
-CONST = K("const")
-UNIQUE = K("unique")
-RETURNS = K("returns")
-FUNCTION = K("function")
-FALSE = K("false")
-TRUE = K("true")
-OLD = K("old")
-AXIOM = K("axiom")
-FORALL = K("forall")
-EXISTS = K("exists")
-VAR = K("var")
-PROCEDURE = K("procedure")
-FREE = K("free")
-RETURNS = K("returns")
-REQUIRES = K("requires")
-MODIFIES = K("modifies")
-ENSURES = K("ensures")
-ASSERT = K("assert")
-COMPLETE = K("complete")
-UNIQUE = K("unique")
-IF = K("if")
-ELSE = K("else")
-FREE = K("free")
-INVARIANT = K("invariant")
-ASSUME = K("assume")
-ASSERT = K("assert")
-HAVOC = K("havoc")
-CALL = K("call")
-WHILE = K("while")
-BREAK = K("break")
-GOTO = K("goto")
-RETURN = K("return")
-IMPLEMENTATION = K("implementation")
+  def __init__(s):
+    s.LT = L("<")
+    s.GT = L(">")
+    s.EQ = L("=")
+    # Braces/Brackets
+    s.LSQBR = S("[")
+    s.RSQBR = S("]")
+    s.LPARN = S("(")
+    s.RPARN = S(")")
+    s.LBRAC = S("{")
+    s.RBRAC = S("}")
+    # Various Delimiters
+    s.SEMI = S(";")
+    s.COLN = S(":")
+    s.ASSGN = S(":=")
+    s.STAR = S("*")
 
-Id = R("[a-zA-Z_][a-zA-Z0-9_#]*")
-ParentEdge = O(UNIQUE) + Id
-ParentInfo = S("<:") + csl(ParentEdge)
-OrderSpec = O(ParentInfo) + O(COMPLETE)
-StringLiteral = F(); # TODO
-Trigger = F()
+    ####### Keywords
+    s.INT = K("int")
+    s.BOOL = K("bool")
+    s.TYPE = K("type")
+    s.FINITE = K("finite")
+    s.CONST = K("const")
+    s.UNIQUE = K("unique")
+    s.RETURNS = K("returns")
+    s.FUNCTION = K("function")
+    s.FALSE = K("false")
+    s.FALSE.setParseAction(lambda st, loc, toks:  s.onAtom(s.FALSE, st, loc, toks))
+    s.TRUE = K("true")
+    s.TRUE.setParseAction(lambda st, loc, toks:  s.onAtom(s.TRUE, st, loc, toks))
+    s.OLD = K("old")
+    s.AXIOM = K("axiom")
+    s.FORALL = K("forall")
+    s.EXISTS = K("exists")
+    s.VAR = K("var")
+    s.PROCEDURE = K("procedure")
+    s.FREE = K("free")
+    s.RETURNS = K("returns")
+    s.REQUIRES = K("requires")
+    s.MODIFIES = K("modifies")
+    s.ENSURES = K("ensures")
+    s.ASSERT = K("assert")
+    s.COMPLETE = K("complete")
+    s.UNIQUE = K("unique")
+    s.IF = K("if")
+    s.ELSE = K("else")
+    s.FREE = K("free")
+    s.INVARIANT = K("invariant")
+    s.ASSUME = K("assume")
+    s.ASSERT = K("assert")
+    s.HAVOC = K("havoc")
+    s.CALL = K("call")
+    s.WHILE = K("while")
+    s.BREAK = K("break")
+    s.GOTO = K("goto")
+    s.RETURN = K("return")
+    s.IMPLEMENTATION = K("implementation")
 
-####### Attributes
-Expr = F();
-AttrArg = Expr | StringLiteral
-Attribute = LBRAC + COLN + Id + csl(AttrArg) + RBRAC
-AttrList = ZoM(Attribute)
+    s.Id = R("[a-zA-Z_][a-zA-Z0-9_#]*")
+    s.Id.setParseAction(lambda st, loc, toks:  s.onAtom(s.Id, st, loc, toks))
+    s.ParentEdge = O(s.UNIQUE) + s.Id
+    s.ParentInfo = S("<:") + csl(s.ParentEdge)
+    s.OrderSpec = O(s.ParentInfo) + O(s.COMPLETE)
+    s.StringLiteral = F(); # TODO
+    s.Trigger = F(); # TODO
 
-####### Types
-Type = F();
-BVType = R("bv[0-9][0-9]*")
-TypeAtom = INT | BOOL | BVType | LPARN + Type + RPARN
-TypeArgs = S(LT) + csl(Type) + S(GT)
-MapType = O(TypeArgs) + LSQBR + csl(Type) + RSQBR + Type 
+    ####### Expressions
+    s.EquivOp = L("<==>")
+    s.ImplOp = L("==>")
+    s.OrOp = L("||")
+    s.AndOp = L("&&")
+    s.AndOrOp = s.AndOp | s.OrOp
+    s.RelOp = (L("!=") | L ("<=") | L(">=") | L("<:")| L("==") |  L("<") | L(">") )
+    s.ConcatOp = L("++")
+    s.AddOp = (L("+") | L("-"))
+    s.MulOp = (L("*") | L("/") | L("div") | L("mod"))
+    s.UnOp = (L("!") | L("-"))
+    s.ArithUnOp = L("-")
+    s.BoolUnOp = L("!")
+    s.QOp = (s.FORALL | s.EXISTS)
+    s.QSep = L("::")
 
-TypeCtorArgs = F()
-TypeCtorArgs = TypeAtom + O(TypeCtorArgs) |\
-               Id + O(TypeCtorArgs) |\
-               MapType
+    s.Expr = F();
 
-Type << (TypeAtom | MapType | Id + O(TypeCtorArgs))
-IdsType = csl(Id) + COLN + Type
+    s.Number = W(nums)
+    s.Number.setParseAction(lambda st, loc, toks:  s.onAtom(s.Number, st, loc, toks))
+    s.BitVector = R("[0-9][0-9]*bv[0-9][0-9]*")
+    s.BitVector.setParseAction(lambda st, loc, toks:  s.onAtom(s.BitVector, st, loc, toks))
+    # TODO
+    # TrigAttr = Trigger | Attribute
+    s.Fun_App = s.Id + s.LPARN + csl(s.Expr) + s.RPARN
+    s.Fun_App.setParseAction(lambda st, loc, toks:  s.onAtom(s.Fun_App, st, loc, toks))
+    s.Old = s.OLD + s.LPARN + s.Expr + s.RPARN
+    s.Old.setParseAction(lambda st, loc, toks:  s.onAtom(s.Old, st, loc, toks))
+    s.Primitive = s.FALSE | s.TRUE | s.Number | s.BitVector 
+    # TODO: Handle TriggerAttrs in Quantified expressions
+    #E9_Quantified = LPARN + QOp + O(TypeArgs) + csl(IdsType) + QSep + ZoM(TrigAttr) + Expr  +  RPARN 
+    #s.Quantified = s.LPARN + s.QOp + O(s.TypeArgs) + csl(s.IdsType) + s.QSep + s.Expr  +  s.RPARN 
 
-####### Expressions
-EquivOp = L("<==>")
-ImplOp = L("==>")
-OrOp = L("||")
-AndOp = L("&&")
-RelOp = (L("!=") | L ("<=") | L(">=") | L("<:")| L("==") |  L("<") | L(">") )
-ConcatOp = L("++")
-AddOp = (L("+") | L("-"))
-MulOp = (L("*") | L("/") | L("div") | L("mod"))
-UnOp = (L("!") | L("-"))
-QOp = (FORALL | EXISTS)
-QSep = L("::")
+    s.Atom = s.Primitive | s.Fun_App | s.Old | s.Id #| s.Quantified
+    s.ArithExpr = operatorPrecedence(s.Atom, [
+      (s.ArithUnOp, 1, opAssoc.RIGHT, lambda st, loc, toks:  s.onUnaryOp(s.ArithUnOp, st, loc, toks[0])),
+      (s.MulOp, 2, opAssoc.LEFT, lambda st, loc, toks: s.onLABinOp(s.MulOp, st, loc, toks[0])),
+      (s.AddOp, 2, opAssoc.LEFT, lambda st, loc, toks: s.onLABinOp(s.AddOp, st, loc, toks[0])),
+    ]);
+    # TODO: Add support for Map operations
+    #MapUpdate = ASSGN + Expr
+    #MapOp = LSQBR + csl(Expr) + O(MapUpdate) + RSQBR | \
+    #        LSQBR + Number + COLN + Number + RSQBR
+    #E8 = E9 + ZoM(MapOp)
+    # TODO: Add support for ConcatOp
+    #E4 << E5 + ZoM(ConcatOp + E4)
+    s.RelExpr = s.ArithExpr + s.RelOp + s.ArithExpr
+    s.RelExpr.setParseAction(lambda st, loc, toks: s.onNABinOp(s.RelExpr, st, loc, toks))
 
-E0 = F();
-E1 = F();
-E4 = F();
-E5 = F();
-E6 = F();
-E7 = F();
+    s.BoolExpr = operatorPrecedence((s.RelExpr | s.Atom), [
+      (s.BoolUnOp, 1, opAssoc.RIGHT, lambda st, loc, toks:  s.onUnaryOp(s.BoolUnOp, st, loc, toks[0])),
+      (s.AndOrOp, 2, opAssoc.LEFT, lambda st, loc, toks:  s.onLABinOp(s.AndOrOp, st, loc, toks[0])),
+      (s.ImplOp, 2, opAssoc.LEFT, lambda st, loc, toks:  s.onLABinOp(s.ImplOp, st, loc, toks[0])),
+      (s.EquivOp, 2, opAssoc.LEFT, lambda st, loc, toks:  s.onLABinOp(s.EquivOp, st, loc, toks[0])),
+    ]);
 
-Number = W(nums)
-BitVector = R("[0-9][0-9]*bv[0-9][0-9]*")
-TrigAttr = Trigger | Attribute
-FuncApplication = LPARN + csl(Expr) + RPARN
+    s.Expr << (s.BoolExpr ^ s.RelExpr ^ s.ArithExpr )
 
-E9_Fun_App = Id + O(FuncApplication)
-E9_Old = OLD + LPARN + Expr + RPARN
-E9_Parns = LPARN + Expr + RPARN
-E9_Primitive = FALSE | TRUE | Number | BitVector 
-E9_Quantified = LPARN + QOp + O(TypeArgs) + csl(IdsType) + QSep + ZoM(TrigAttr) + Expr  +  RPARN 
+    ####### Attributes
+    s.AttrArg = s.Expr | s.StringLiteral
+    s.Attribute = s.LBRAC + s.COLN + s.Id + csl(s.AttrArg) + s.RBRAC
+    s.AttrList = ZoM(s.Attribute)
 
-E9 =  E9_Primitive \
-    | E9_Fun_App \
-    | E9_Old \
-    | E9_Quantified \
-    | E9_Parns
-MapUpdate = ASSGN + Expr
-MapOp = LSQBR + csl(Expr) + O(MapUpdate) + RSQBR | \
-        LSQBR + Number + COLN + Number + RSQBR
-E8 = E9 + ZoM(MapOp)
-E7 = ZoM(UnOp) + E8
-E6 << (E7 + ZoM(MulOp + E6))
-E5 << (E6 + ZoM(AddOp + E5))
-E4 << E5 + ZoM(ConcatOp + E4)
-E3 = (E4 + RelOp + E4| E4 )
-EOr = OrOp + E3
-EAnd = AndOp + E3
-EOrs = OoM(EOr)
-EAnds = OoM(EAnd)
-E2 = (E3 + EOrs | E3 + EAnds | E3)
-E1 << (E2 + ZoM(ImplOp + E1))
-E0 << (E1 + ZoM(EquivOp + E0))
-Expr << E0
+    ####### Types
+    s.Type = F();
+    s.BVType = R("bv[0-9][0-9]*")
+    s.TypeAtom = s.INT | s.BOOL | s.BVType | s.LPARN + s.Type + s.RPARN
+    s.TypeArgs = S(s.LT) + csl(s.Type) + S(s.GT)
+    s.MapType = O(s.TypeArgs) + s.LSQBR + csl(s.Type) + s.RSQBR + s.Type 
 
-####### Type Declarations
-TypeConstructor = TYPE + AttrList + O(FINITE) + OoM(Id) + SEMI
-TypeSynonym = TYPE + AttrList + OoM(Id) + EQ + Type + SEMI 
-TypeDecl = TypeConstructor | TypeSynonym;
+    s.TypeCtorArgs = F()
+    s.TypeCtorArgs = s.TypeAtom + O(s.TypeCtorArgs) |\
+                   s.Id + O(s.TypeCtorArgs) |\
+                   s.MapType
 
-####### Constant Declarations
-ConstantDecl = CONST + O(Attribute) + O(UNIQUE) + IdsType + OrderSpec;
-
-####### Function Declarations
-FArgName = Id + COLN
-FArg = FArgName + Type
-FSig = O(TypeArgs) + LPARN + csl(FArg) + RPARN + RETURNS + LPARN + FArg + RPARN
-FunctionDecl = FUNCTION + ZoM(Attribute) + Id + FSig + SEMI |\
-               FUNCTION + ZoM(Attribute) + Id + FSig + SEMI + LBRAC + Expr + RBRAC
-
-####### Axiom Declarations
-AxiomDecl = AXIOM + ZoM(Attribute) + Expr;
-
-WhereClause = F() # TODO
-
-IdsTypeWhere = IdsType + O(WhereClause)
-VarDecl = VAR + ZoM(Attribute) + IdsTypeWhere;
-
-####### Procedure Declarations
-Spec =  O(FREE) + REQUIRES + Expr + SEMI \
-      | O(FREE) + MODIFIES + csl(Id) + SEMI \
-      | O(FREE) + ENSURES + Expr + SEMI
-
-OutParameters = RETURNS + LPARN + csl(IdsTypeWhere) + RPARN
-PSig = O(TypeArgs) + LPARN + csl(IdsTypeWhere) + RPARN + O(OutParameters)
+    s.Type << (s.TypeAtom | s.MapType | s.Id + O(s.TypeCtorArgs))
+    s.Type.setParseAction(lambda st, loc, toks: s.onType(s.Type, st, loc, toks))
+    s.IdsType = csl(s.Id) + s.COLN + s.Type
 
 
-LocalVarDecl = VAR + ZoM(Attribute) + csl(IdsTypeWhere) + SEMI;
+    ####### Type Declarations
+    s.TypeConstructor = s.TYPE + s.AttrList + O(s.FINITE) + OoM(s.Id) + s.SEMI
+    s.TypeSynonym = s.TYPE + s.AttrList + OoM(s.Id) + s.EQ + s.Type + s.SEMI 
+    s.TypeDecl = s.TypeConstructor | s.TypeSynonym;
 
-StmtList = F()
-WildcardExpr = Expr | STAR
+    ####### Constant Declarations
+    s.ConstantDecl = s.CONST + O(s.Attribute) + O(s.UNIQUE) + s.IdsType + s.OrderSpec;
 
-BlockStmt = LBRAC + StmtList + RBRAC
+    ####### Function Declarations
+    s.FArgName = s.Id + s.COLN
+    s.FArg = s.FArgName + s.Type
+    s.FSig = O(s.TypeArgs) + s.LPARN + csl(s.FArg) + s.RPARN + s.RETURNS + s.LPARN + s.FArg + s.RPARN
+    s.FunctionDecl = s.FUNCTION + ZoM(s.Attribute) + s.Id + s.FSig + s.SEMI |\
+                     s.FUNCTION + ZoM(s.Attribute) + s.Id + s.FSig + s.SEMI + s.LBRAC + s.Expr + s.RBRAC
 
-LoopInv = O(FREE) + INVARIANT + Expr + SEMI
+    ####### Axiom Declarations
+    s.AxiomDecl = s.AXIOM + ZoM(s.Attribute) + s.Expr;
 
-IfStmt = F()
-Else = ELSE + BlockStmt | ELSE + IfStmt
-IfStmt = IF + LBRAC + WildcardExpr + RBRAC + BlockStmt + O(Else)
+    s.WhereClause = F() # TODO
 
-CallLhs = csl(Id) + ASSGN
-MapSelect = LSQBR + csl(Expr) + RSQBR
-Lhs = Id + ZoM(MapSelect)
-Label = Id | Number
+    s.IdsTypeWhere = s.IdsType + O(s.WhereClause)
+    s.VarDecl = s.VAR + ZoM(s.Attribute) + s.IdsTypeWhere;
 
-AssertStmt = ASSERT + Expr + SEMI
-AssumeStmt = ASSUME + O(S("{:partition}")) + Expr + SEMI 
-ReturnStmt = RETURN + SEMI 
-GotoStmt = GOTO + csl(Label) + SEMI
-AssignmentStmt = G(csl(Lhs)) + ASSGN + G(csl(Expr)) + SEMI 
-HavocStmt = HAVOC + csl(Id) + SEMI
-Stmt =  AssertStmt \
-      | AssumeStmt \
-      | HavocStmt \
-      | AssignmentStmt \
-      | CALL + CallLhs + Id + LPARN + csl(Expr) + RPARN + SEMI \
-      | CALL + FORALL + Id + LPARN + csl(WildcardExpr) + RPARN + SEMI \
-      | IfStmt \
-      | WHILE + LPARN + WildcardExpr + RPARN + ZoM(LoopInv) + BlockStmt\
-      | BREAK + O(Id) + SEMI \
-      | ReturnStmt \
-      | GotoStmt
+    ####### Procedure Declarations
+    s.Spec =  O(s.FREE) + s.REQUIRES + s.Expr + s.SEMI \
+          | O(s.FREE) + s.MODIFIES + csl(s.Id) + s.SEMI \
+          | O(s.FREE) + s.ENSURES + s.Expr + s.SEMI
 
-LStmt = F();
-LabeledStatement = Label + COLN + LStmt
-LStmt << (Stmt | LabeledStatement)
-LEmpty = F();
-LEmpty <<(Id + COLN + O(LEmpty))
-StmtList << (ZoM(LStmt) + O(LEmpty))
+    s.OutParameters = s.RETURNS + s.LPARN + csl(s.IdsTypeWhere) + s.RPARN
+    s.PSig = O(s.TypeArgs) + s.LPARN + csl(s.IdsTypeWhere) + s.RPARN + O(s.OutParameters)
 
 
-Body = LBRAC + G(ZoM(G(LocalVarDecl))) + G(StmtList) + RBRAC
-ProcedureDecl = PROCEDURE + ZoM(Attribute) + Id + PSig + SEMI + ZoM(Spec) |\
-                PROCEDURE + ZoM(Attribute) + Id + PSig + ZoM(Spec) + Body
+    s.LocalVarDecl = S(s.VAR) + ZoM(s.Attribute) + csl(s.IdsTypeWhere) + S(s.SEMI);
+    s.LocalVarDecl.setParseAction(lambda st, loc, toks: s.onLocalVarDecl(s.LocalVarDecl, st, loc, toks))
 
-IOutParameters = RETURNS + LPARN + csl(IdsType) + RPARN
-ISig = G(O(TypeArgs)) + LPARN + G(O(csl(IdsType))) + RPARN + G(O(IOutParameters))
-ImplementationDecl = IMPLEMENTATION + G(ZoM(Attribute)) + Id + G(ISig) + G(ZoM(Body))
+    s.StmtList = F()
+    s.WildcardExpr = s.Expr | s.STAR
 
-Decl = TypeDecl | ConstantDecl | FunctionDecl | AxiomDecl | VarDecl | \
-    ProcedureDecl | ImplementationDecl
+    s.BlockStmt = s.LBRAC + s.StmtList + s.RBRAC
 
-Program = ZoM(Decl);
+    s.LoopInv = O(s.FREE) + s.INVARIANT + s.Expr + s.SEMI
 
-if __name__ == "__main__":
-    print Expr.parseString("z#AT#0 == 1 - 0")
-    print Body.parseString(open('desugared.bpl').read())
-    pass
+    s.IfStmt = F()
+    s.Else = s.ELSE + s.BlockStmt | s.ELSE + s.IfStmt
+    s.IfStmt = s.IF + s.LBRAC + s.WildcardExpr + s.RBRAC + s.BlockStmt + O(s.Else)
+
+    s.CallLhs = csl(s.Id) + s.ASSGN
+    s.MapSelect = s.LSQBR + csl(s.Expr) + s.RSQBR
+    s.Lhs = s.Id + ZoM(s.MapSelect)
+    s.Label = s.Id | s.Number
+
+    s.AssertStmt = S(s.ASSERT) + s.Expr + S(s.SEMI)
+    s.AssertStmt.setParseAction(lambda st, loc, toks: s.onAssert(s.AssertStmt, st, loc, toks))
+    s.AssumeStmt = S(s.ASSUME) + O(S("{:partition}")) + s.Expr + S(s.SEMI)
+    s.AssumeStmt.setParseAction(lambda st, loc, toks: s.onAssume(s.AssumeStmt, st, loc, toks))
+    s.ReturnStmt = S(s.RETURN) + S(s.SEMI)
+    s.ReturnStmt.setParseAction(lambda st, loc, toks: s.onReturn(s.ReturnStmt, st, loc, toks))
+    s.GotoStmt = S(s.GOTO) + csl(s.Label) + S(s.SEMI)
+    s.GotoStmt.setParseAction(lambda st, loc, toks: s.onGoto(s.GotoStmt, st, loc, toks))
+    s.AssignmentStmt = G(csl(s.Lhs)) + S(s.ASSGN) + G(csl(s.Expr)) + S(s.SEMI)
+    s.AssignmentStmt.setParseAction(lambda st, loc, toks: s.onAssignment(s.AssignmentStmt, st, loc, toks))
+    s.HavocStmt = S(s.HAVOC) + csl(s.Id) + S(s.SEMI)
+    s.HavocStmt.setParseAction(lambda st, loc, toks: s.onHavoc(s.HavocStmt, st, loc, toks))
+
+    s.CallAssignStmt = s.CALL + O(s.CallLhs) + s.Id + s.LPARN + csl(s.Expr) + s.RPARN + S(s.SEMI)
+    s.CallForallStmt = s.CALL + s.FORALL + s.Id + s.LPARN + csl(s.WildcardExpr) + s.RPARN + S(s.SEMI)
+
+    s.WhileStmt = s.WHILE + s.LPARN + s.WildcardExpr + s.RPARN + ZoM(s.LoopInv) + s.BlockStmt 
+    s.BreakStmt = s.BREAK + O(s.Id) + S(s.SEMI)
+ 
+    s.Stmt = s.AssertStmt \
+          | s.AssumeStmt \
+          | s.HavocStmt \
+          | s.AssignmentStmt \
+          | s.CallAssignStmt \
+          | s.CallForallStmt \
+          | s.IfStmt \
+          | s.WhileStmt \
+          | s.BreakStmt \
+          | s.ReturnStmt \
+          | s.GotoStmt
+
+    s.LStmt = F();
+    s.LabeledStatement = s.Label + S(s.COLN) + s.LStmt
+    s.LStmt << (s.Stmt | s.LabeledStatement)
+    s.LEmpty = F();
+    s.LEmpty <<(s.Id + s.COLN + O(s.LEmpty))
+    s.LabeledStatement.setParseAction(
+      lambda st, loc, toks: s.onLabeledStatement(s.LabeledStatement, st, loc, toks))
+
+    s.StmtList << (ZoM(s.LStmt) + O(s.LEmpty))
+
+
+    s.Body = S(s.LBRAC) + G(ZoM(s.LocalVarDecl)) + G(s.StmtList) + S(s.RBRAC)
+    s.Body.setParseAction(lambda st, loc, toks: s.onBody(s.Body, st, loc, toks))
+
+    s.ProcedureDecl = s.PROCEDURE + ZoM(s.Attribute) + s.Id + s.PSig + s.SEMI + ZoM(s.Spec) |\
+                    s.PROCEDURE + ZoM(s.Attribute) + s.Id + s.PSig + ZoM(s.Spec) + s.Body
+
+    s.IOutParameters = s.RETURNS + s.LPARN + csl(s.IdsType) + s.RPARN
+    s.ISig = G(O(s.TypeArgs)) + s.LPARN + G(O(csl(s.IdsType))) + s.RPARN + G(O(s.IOutParameters))
+    s.ImplementationDecl = S(s.IMPLEMENTATION) + G(ZoM(s.Attribute)) + s.Id + G(s.ISig) + G(ZoM(s.Body))
+    s.ImplementationDecl.setParseAction(
+      lambda st, loc, toks: s.onImplementationDecl(s.ImplementationDecl, st, loc, toks))
+
+
+    s.Decl = s.TypeDecl | s.ConstantDecl | s.FunctionDecl | s.AxiomDecl | s.VarDecl | \
+        s.ProcedureDecl | s.ImplementationDecl
+
+    s.Program = ZoM(s.Decl);
+    s.Program.setParseAction(lambda st, loc, toks: s.onProgram(s.Program, st, loc, toks))
+
+  def parseExpr(s, st):
+    return (s.Expr + StringEnd()).parseString(st)[0]
+
+  def parseProgram(s, st):
+    return (s.Program + StringEnd()).parseString(st)[0]
