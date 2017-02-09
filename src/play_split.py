@@ -88,7 +88,7 @@ def evaluatePreds(trace_dir, preds, correct_preds):
 
   results = []
   for pred in preds:
-    bpred = boogie.ast.parseExprAst(pred)[0]
+    bpred = boogie.ast.parseExprAst(pred)
     t = 0
     f = 0
     for row in trace_rows:

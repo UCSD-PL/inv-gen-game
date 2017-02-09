@@ -80,7 +80,7 @@ def bad_envs_to_expr(bad_envs):
                         for bad_env in bad_envs])
     if (s == ""):
         return AstTrue()
-    return parseExprAst(s)[0]
+    return parseExprAst(s)
 
 # get_loop_header_values tries to unroll the given loop between min_unrolls and max_unrolls.
 #
@@ -178,42 +178,3 @@ def loop_vc_ind_ctrex(loop, inv, bbs, timeout=None):
       return { }
 
     return None if not ctr else (_unssa_z3_model(ctr, {}), _unssa_z3_model(ctr, ssa_env.replm()))
-    
-######################################### TESTING #################################
-if __name__ == "__main__":
-    bbs = get_bbs("desugared3_no_inv.bpl")
-
-    print "Loops: "
-    for loop in loops(bbs):
-        print loop
-        break
-
-    print "Unrolling loop 3 times: "
-    unrolled_p = unroll_loop(loop, 3)
-    unrolled_p = unrolled_p + loop.exit_paths[0]
-    print "Loop unrolled 3 times: ", unrolled_p
-    s = get_path_vars(unrolled_p, bbs)
-    for (bb, envs) in s:
-        for (stmt, vrs) in zip(bbs[bb].stmts, envs):
-            print str(stmt), " // Live Vars: ", vrs
-    print "=================="
-    print "Values at loop header if we unroll 5 times: "
-    print get_loop_header_values(loop, bbs, 0, 5)
-    print get_loop_header_values(loop, bbs, 0, 5, [{ 'k': 6, 'j':0, 'n':5 }, { 'k': 7, 'j': 0, 'n': 6 }])
-    """
-    def tryinv(inv,loop,  bbs):
-        print "Pre counter example for " + inv, str(loop_vc_pre_ctrex(loop, parseExprAst(inv)[0], bbs))
-        print "Post counter example for " + inv, str(loop_vc_post_ctrex(loop, parseExprAst(inv)[0], bbs))
-        print "Ind counter example for " + inv, str(loop_vc_ind_ctrex(loop, parseExprAst(inv)[0], bbs))
-    
-    tryinv("j+k>=n", loop, bbs)
-    tryinv("n < 2", loop, bbs)
-    tryinv("k > 2*n", loop, bbs)
-    tryinv("j+k>=n && j <= n", loop, bbs)
-
-    bbs = get_bbs("desugared_cegar1_noinv.bpl")
-    loop = list(loops(bbs))[0]
-    tryinv("x-y <= 2 && x-y >= -2", loop, bbs)
-    tryinv("x-y != 4", loop, bbs)
-    tryinv("!(x == 4 && y == 0)", loop, bbs)
-    """

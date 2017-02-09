@@ -43,7 +43,7 @@ bbs = lvl['program']
 loop = lvl['loop']
 partialInvs = [ lvl['partialInv'] ] if 'partialInv' in lvl else []
 splitterPreds = lvl['splitterPreds'] if 'splitterPreds' in lvl else [ AstTrue() ]
-boogie_invs = [ parseExprAst(x)[0] for x in args.invs ]
+boogie_invs = [ parseExprAst(x) for x in args.invs ]
 candidate_antecedents = [ ast_and(pSet) for pSet in nonempty(powerset(splitterPreds)) ]
 
 # First lets find the invariants that are sound without implication

@@ -250,9 +250,9 @@ def loadBoogieLvlSet(lvlSetFile):
         lvl["path"] = lvlPath
 
         if (len(t) > 2):
-          splitterPreds = [ parseExprAst(exp)[0] for exp in t[2] ]
+          splitterPreds = [ parseExprAst(exp) for exp in t[2] ]
           splitterPred = ast_and(splitterPreds)
-          remainderInv = parseExprAst(t[3])[0]
+          remainderInv = parseExprAst(t[3])
 
           lvl['data'][0] = filter(
             lambda row: evalPred(splitterPred, _to_dict(lvl['variables'], row)),

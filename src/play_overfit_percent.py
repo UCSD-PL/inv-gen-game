@@ -42,45 +42,8 @@ nchecks = 0
 def reduction(a,b):
   return 100.0 * (a-b)/(1.0 * a)
 
-"""
-precond_ok = { }
-added = { }
-# For each level in the level set
 for lvl in invs:
-  loop = lvls[lvl]["loop"]
-  bbs = lvls[lvl]["program"]
-
-  lvlstr = "[" + lvl + "]:"
-  parseStart = time()
-  invs[lvl] = [ parseExprAst(x)[0] for x in invs[lvl] ]
-  parseEnd = time()
-
-  if (len(invs[lvl]) == 0):       continue
-
-  # Add derived conditional invariants
-  splitterPreds = lvls[lvl]['splitterPreds'] if 'splitterPreds' in lvls[lvl] else [ ] 
-  partialInv = lvls[lvl]['partialInv']
-  candidate_antecedents = [ ast_and(pSet) for pSet in nonempty(powerset(splitterPreds)) ]
-  print lvlstr, "Time to parse: ", parseEnd-parseStart, "parse per inv: ", (parseEnd-parseStart)/len(invs[lvl])
-
-  cond_invs = [ AstBinExpr(antec, "==>", inv)\
-    for antec in candidate_antecedents\
-    for inv in invs[lvl] ]
-
-  print lvlstr, "Starting with ", len(invs[lvl]), " adding ", len(cond_invs), "from implications"
-  invs[lvl] = invs[lvl] + cond_invs
-  added[lvl] = len(cond_invs)
-
-  # Remove any invariants not implied by the precondition
-  overf, nonind, sound = tryAndVerify_impl(bbs, loop, [partialInv], invs[lvl], 10)
-  print lvlstr, len(invs[lvl]), "tried", len(overf), "removed by prec", len(nonind), "nonind", len(sound), "sound"
-  print lvlstr, "sound: ", " && ".join([str(x) for x in sound])
-  post_ctrex = loop_vc_post_ctrex(loop, ast_and(sound + [partialInv]), bbs)
-  print lvlstr, "Solved?:", post_ctrex == None
-"""
-
-for lvl in invs:
-  invs[lvl] = [ parseExprAst(x)[0] for x in invs[lvl] ]
+  invs[lvl] = [ parseExprAst(x) for x in invs[lvl] ]
 
 for lvlGroup in [("03.0", "03.1"), ("02.0", "02.1"), ("05.0", "05.1", "05.2"), ("04.1",), ("07.1",)]:
   allFound = set([])

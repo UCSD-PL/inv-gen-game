@@ -22,7 +22,7 @@ for lvl_name, lvl in lvls.items():
   #print "Removing :", lvl["path"].replace(".bpl", ".trace")
   #os.system("rm " + lvl["path"].replace(".bpl", ".trace"))
   sol = open(lvl["path"][0].replace(".bpl", ".sol")).read()
-  sol = parseExprAst(sol)[0];
+  sol = parseExprAst(sol);
   bbs = lvl["program"]
   loop = lvl["loop"]
   over, nonind, sound = tryAndVerify_impl(bbs, loop, [], [sol], 120);
