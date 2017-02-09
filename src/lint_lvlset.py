@@ -1,23 +1,22 @@
 #!/usr/bin/env python
 
 import argparse
-import boogie.ast
 import levels
 import tabulate
-from boogie.eval import *
-from boogie.ast import *
+from lib.boogie.eval import *
+from lib.boogie.ast import *
 from vc_check import tryAndVerify_impl
 from boogie_loops import *
 import os
 
-p = argparse.ArgumentParser(description="trace dumper")
-p.add_argument("--lvlset", type=str, default="single-loop-conditionals",
-  help="lvlset to use for benchmarks")
+p = argparse.ArgumentParser(description="check a lvlset is correctly built")
+p.add_argument("--lvlset", type=str, help="lvlset to checl", required=True)
 
 args = p.parse_args()
 curLevelSetName, lvls = levels.loadBoogieLvlSet(args.lvlset)
 
 for lvl_name, lvl in lvls.items():
+  print "Checking ", lvl_name
   if "desugared" not in lvl["path"][0]:  continue;
   #print "Removing :", lvl["path"].replace(".bpl", ".trace")
   #os.system("rm " + lvl["path"].replace(".bpl", ".trace"))
