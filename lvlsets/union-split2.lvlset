@@ -73,26 +73,11 @@
       ]
     ],
     [
-      "d-08.0",
+      "d-08",
       [
         "../dilig-benchmarks/single/08.desugared.bpl",
         "../dilig-benchmarks/single/08.c"
-      ],
-      [
-        "x>=1"
-      ],
-      "true"
-    ],
-    [
-      "d-08.1",
-      [
-        "../dilig-benchmarks/single/08.desugared.bpl",
-        "../dilig-benchmarks/single/08.c"
-      ],
-      [
-        "!(x>=1)"
-      ],
-      "(x>=1 ==> y >= 100)"
+      ]
     ],
     [
       "d-10",
@@ -117,7 +102,7 @@
       [
         "flag == 0"
       ],
-      "(flag != 0) ==> k == 0)"
+      "(flag != 0) ==> k == 0"
     ],
     [
       "d-13.1",
@@ -344,7 +329,7 @@
       [
         "i mod 2 == 0"
       ],
-      "((i mod 2 == 1) ==> x - 1 == 2 * y"
+      "(i mod 2 == 1) ==> x - 1 == 2 * y"
     ],
     [
       "d-38.1",
@@ -384,7 +369,7 @@
       [
         "!(flag == 0)"
       ],
-      "flag == 0 ==> (a mod 2 == 1 && (x+y) mod 2 == 0))"
+      "flag == 0 ==> (a mod 2 == 1 && (x+y) mod 2 == 0)"
     ],
     [
       "d-43",
@@ -826,7 +811,7 @@
         "../sv_manual_trans/loop-acceleration/phases_true-unreach-call1.c"
       ],
       [
-        "x >= 65520",
+        "x >= 65520"
       ],
       "true"
     ],
@@ -837,7 +822,7 @@
         "../sv_manual_trans/loop-acceleration/phases_true-unreach-call1.c"
       ],
       [
-        "!(x >= 65520)",
+        "!(x >= 65520)"
       ],
       "x >= 65520 ==> (x mod 2 == 0)",
       "trivial"
@@ -964,7 +949,7 @@
       [
         "m>0"
       ],
-      "(n > 0 => (x <= n && n >= 0))",
+      "(n > 0 ==> (x <= n && n >= 0))",
       "multisplit"
     ],
     [
@@ -976,7 +961,7 @@
       [
         "!(m>0)"
       ],
-      "(m > 0 ==> m < x) && (n > 0 => (x <= n && n >= 0))",
+      "(m > 0 ==> m < x) && (n > 0 ==> (x <= n && n >= 0))",
       "multisplit"
     ],
     [
@@ -1053,7 +1038,7 @@
       [
         "k==0 && i == 0"
       ],
-      "!(k==0 && i==0) ==> i mod k == 0",
+      "!(k==0 && i==0) ==> i mod k == 0"
     ],
     [
       "s-count_by_k_true-unreach-call.1",
@@ -1064,7 +1049,7 @@
       [
         "!(k==0 && i == 0)"
       ],
-      "true",
+      "true"
     ],
     [
       "s-count_by_nondet_true-unreach-call",
@@ -1118,7 +1103,7 @@
         "../sv_manual_trans/loops/sum01_true-unreach-call_true-termination.c"
       ],
       [
-        "n >= 0",
+        "n >= 0"
       ],
       "(n < 0 ==> sn == 0)"
     ],
@@ -1129,7 +1114,7 @@
         "../sv_manual_trans/loops/sum01_true-unreach-call_true-termination.c"
       ],
       [
-        "!(n >= 0)",
+        "!(n >= 0)"
       ],
       "(n >= 0 ==> i <=n+1)"
     ],
