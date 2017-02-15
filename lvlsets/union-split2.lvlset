@@ -442,9 +442,9 @@
         "../ice-benchmarks/afnp.dimo.c"
       ],
       [
-        "((flag == 0) ==> (y == 0 && x == 1))"
+        "!(flag == 0)"
       ],
-      "true"
+      "((flag == 0) ==> (y == 0 && x == 1))"
     ],
     [
       "i-cegar1",
