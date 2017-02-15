@@ -2,8 +2,8 @@ from slimit.parser import Parser
 from slimit.visitors.nodevisitor import ASTVisitor
 from slimit.visitors import nodevisitor
 from slimit import ast
-from boogie.ast import *
-from boogie.z3_embed import *
+from lib.boogie.ast import *
+from lib.boogie.z3_embed import *
 
 def addAllIntEnv(inv, env = {}):
   p = Parser()

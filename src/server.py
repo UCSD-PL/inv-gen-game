@@ -5,7 +5,7 @@ from flask_jsonrpc import JSONRPC as rpc
 from os.path import *
 from json import dumps
 from js import esprimaToZ3, esprimaToBoogie, boogieToEsprima
-from boogie.ast import AstBinExpr, AstTrue, ast_and
+from lib.boogie.ast import AstBinExpr, AstTrue, ast_and
 from boogie_loops import loop_vc_post_ctrex
 from lib.common.util import pp_exc, powerset, split, nonempty
 from lib.boogie.eval import instantiateAndEval, _to_dict
