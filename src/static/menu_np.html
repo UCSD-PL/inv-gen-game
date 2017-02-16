@@ -13,12 +13,46 @@
   <link rel="stylesheet" href="bootstrap-theme.min.css">
   <script src="bootstrap.min.js"></script>
 
-  <!-- our code -->
   <link rel="stylesheet" href="inv.css">
 
   <script>
+    function isGameIdPresent(gameId) {
+      return rpc.call("App.get", [gameId], function(res) {
+        if(res) {
+          return true;
+        }
+        else {
+          return false;
+        }
+      });
+    }
+
     function startNewGame() {
-      window.location.href = "game_np.html";
+      var idLength = 8;
+      generateNewGame(idLength);
+    }
+
+    function generateNewGame(length) {
+      var gameId = Math.round((Math.pow(36, length + 1) - Math.random() * Math.pow(36, length))).toString(36).slice(1);
+
+      res = isGameIdPresent(gameId);
+
+      res.then(function (result) {
+        if(result.error) {
+          init = rpc.call("App.set", [gameId, "", -1], function(result) {
+            if (result) {
+              window.location.href = "game_np.html?game_id=" + gameId;
+            }
+            else {
+              console.log("Error starting game " + gameId);
+              console.log(result);
+            }
+          })
+        }
+        else {
+          generateNewGame(length);
+        }
+      });
     }
 
     function getGameId() {
@@ -45,14 +79,7 @@
     function checkGameId() {
       var gameId = getGameId();
 
-      res = rpc.call("App.get", [gameId], function(res) {
-        if(res) {
-          return true;
-        }
-        else {
-          return false;
-        }
-      });
+      res = isGameIdPresent(gameId);
 
       res.then(function (result) {
         if(result.error) {
@@ -60,13 +87,14 @@
           $("#notFound").html("Sorry, no game found with ID " + gameId + ".");
         }
         else {
-          // load game gameId
+          window.location.href = "game_np.html?game_id=" + gameId;
         }
       });
     }
 
     $(document).ready(function() {
-      rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
+      rpc = new $.JsonRpcClient({ ajaxUrl: "/api" });
+      $("#gameId").val("");
       $("#notFound").hide();
       $("#new").click(startNewGame);
       $("#gameId").keyup(validateGameId);
