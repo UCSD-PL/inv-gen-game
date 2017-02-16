@@ -1036,9 +1036,9 @@
         "../sv_manual_trans/loop-new/count_by_k_true-unreach-call.c"
       ],
       [
-        "k==0 && i == 0"
+        "k==0"
       ],
-      "!(k==0 && i==0) ==> i mod k == 0"
+      "!(k==0) ==> i mod k == 0"
     ],
     [
       "s-count_by_k_true-unreach-call.1",
@@ -1047,9 +1047,9 @@
         "../sv_manual_trans/loop-new/count_by_k_true-unreach-call.c"
       ],
       [
-        "!(k==0 && i == 0)"
+        "!(k==0)"
       ],
-      "true"
+      "k==0 ==> i == 0"
     ],
     [
       "s-count_by_nondet_true-unreach-call",
