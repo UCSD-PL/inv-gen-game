@@ -1,0 +1,92 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- third party libraries -->
+  <script src="jquery-1.12.0.min.js"></script>
+  <script src="jquery.jsonrpcclient.js"></script>
+  <script src="jquery.color-2.1.2.min.js"></script>
+  <script src="jquery-ui-1.11.4/jquery-ui.js"></script>
+  <link rel="stylesheet" href="bootstrap.min.css">
+  <link rel="stylesheet" href="bootstrap-theme.min.css">
+  <script src="bootstrap.min.js"></script>
+
+  <!-- our code -->
+  <link rel="stylesheet" href="inv.css">
+
+  <script>
+    function startNewGame() {
+      window.location.href = "game_np.html";
+    }
+
+    function getGameId() {
+      return $("#gameId").val(function(index, value) {
+        return value;
+      })[0].value;
+    }
+
+    function validateGameId() {
+      var filled = false;
+      var id = getGameId();
+      
+      if(id === "") {
+        filled = false;
+      }
+      else if(id) {
+        filled = true;
+      }
+
+      $("#join").prop("disabled", !filled);
+    }
+
+    function checkGameId() {
+      var gameId = getGameId();
+
+      res = rpc.call("App.get", [gameId], function(res) {
+        if(res) {
+          return true;
+        }
+        else {
+          return false;
+        }
+      });
+
+      res.then(function (result) {
+        if(result.error) {
+          $("#notFound").html("Sorry, no game found with ID " + gameId + ".");
+        }
+        else {
+          // load game gameId
+        }
+      });
+    }
+
+    $(document).ready(function() {
+      rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
+
+      $("#new").click(startNewGame);
+
+      $("#gameId").keyup(validateGameId);
+      $("#join").click(checkGameId);
+
+    })
+  </script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <button id="new" type="button" class="btn btn-primary">Start New Game</button>
+        </div>
+        <div class="row">
+            <label id="lblJoin">Join Existing Game:</label>
+            <input id="gameId" type="text" placeholder="Enter game ID"></input>
+            <button id="join" type="submit" class="btn btn-outline-secondary" disabled="true">Join</button>
+            <br />
+            <label id="notFound" class="error"></label>
+        </div>
+    </div>
+</body>
+</html>
