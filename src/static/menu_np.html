@@ -38,6 +38,7 @@
         filled = true;
       }
 
+      $("#notFound").hide();
       $("#join").prop("disabled", !filled);
     }
 
@@ -55,6 +56,7 @@
 
       res.then(function (result) {
         if(result.error) {
+          $("#notFound").show();
           $("#notFound").html("Sorry, no game found with ID " + gameId + ".");
         }
         else {
@@ -65,12 +67,10 @@
 
     $(document).ready(function() {
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
-
+      $("#notFound").hide();
       $("#new").click(startNewGame);
-
       $("#gameId").keyup(validateGameId);
       $("#join").click(checkGameId);
-
     })
   </script>
 </head>
