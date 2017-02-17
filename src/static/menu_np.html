@@ -16,6 +16,48 @@
   <link rel="stylesheet" href="inv.css">
 
   <script>
+    var idLength = 8;
+    var playerGen = 0;
+    var players = [];
+
+    function initializePlayers() {
+      res = rpc.call("App.set", ["players", "[]", -1], function(res) {
+        if(res) {
+          return true;
+        }
+        else {
+          return false;
+        }
+      });
+
+      res.then(function(success) {
+        if(success) {
+          console.log("players kv store initialized");
+        }
+        else {
+          console.log("unable to initialize players kv store");
+        }
+      });
+    }
+
+    function isPlayerIdPresent(playerId, cb) {
+      res = rpc.call("App.get", ["players"], function(resp) {
+        if(resp) {
+          playerGen = resp[0];
+          players = JSON.parse(resp[1]);
+
+          console.log(players);
+          if(players === undefined || players.indexOf(playerId) === -1) {
+            players = [];
+            cb(false);
+          }
+          else {
+            cb(true);
+          }
+        }
+      });
+    }
+    
     function isGameIdPresent(gameId) {
       return rpc.call("App.get", [gameId], function(res) {
         if(res) {
@@ -28,39 +70,93 @@
     }
 
     function startNewGame() {
-      var idLength = 8;
-      generateNewGame(idLength);
-    }
-
-    function generateNewGame(length) {
-      var gameId = Math.round((Math.pow(36, length + 1) - Math.random() * Math.pow(36, length))).toString(36).slice(1);
-
-      res = isGameIdPresent(gameId);
-
-      res.then(function (result) {
-        if(result.error) {
-          init = rpc.call("App.set", [gameId, "", -1], function(result) {
-            if (result) {
-              window.location.href = "game_np.html?game_id=" + gameId;
-            }
-            else {
-              console.log("Error starting game " + gameId);
-              console.log(result);
-            }
-          })
+      var playerId = getPlayerId();
+      isPlayerIdPresent(playerId, function(result) {
+        var exists = result;
+        if (exists) {
+          $("#notAvailable").show();
+          $("#notAvailable").text("Sorry, " + playerId + " is not available.");
+          return;
         }
+
         else {
-          generateNewGame(length);
+          players.push(playerId);
+          res = rpc.call("App.set", ["players", JSON.stringify(players), playerGen], function(resp) {
+            if(resp) {
+              return resp;
+            }
+          });
         }
+
+        var gameId = Math.round((Math.pow(36, idLength + 1) - Math.random() * Math.pow(36, idLength))).toString(36).slice(1);
+        res = isGameIdPresent(gameId);
+        res.then(function (result) {
+          if(result.error) {
+            init = rpc.call("App.set", [gameId, "{}", -1], function(result) {
+              if (result) {
+                window.location.href = "game_np.html?gameId=" + gameId + "&playerId=" + playerId;
+              }
+              else {
+                console.log("Error starting game " + gameId);
+                console.log(result);
+              }
+            })
+          }
+          else {
+            startNewGame();
+          }
+        });
       });
     }
 
+    function getPlayerId() {
+      return $("#playerId").val(function(index, value) {
+        return value;
+      })[0].value;
+    }
+
+    function getPlayerJoinId() {
+      return $("#playerIdJoin").val(function(index, value) {
+        return value;
+      })[0].value;
+    }
+    
     function getGameId() {
       return $("#gameId").val(function(index, value) {
         return value;
       })[0].value;
     }
 
+    function validatePlayerId() {
+      var filled = false;
+      var id = getPlayerId();
+      
+      if(id === "") {
+        filled = false;
+      }
+      else if(id) {
+        filled = true;
+      }
+
+      $("#notAvailable").hide();
+      $("#start").prop("disabled", !filled);
+    }
+
+    function validatePlayerJoinId() {
+      var filled = false;
+      var id = getPlayerJoinId();
+      
+      if(id === "") {
+        filled = false;
+      }
+      else if(id) {
+        filled = true;
+      }
+
+      $("#notAvailableJoin").hide();
+      return filled;
+    }
+    
     function validateGameId() {
       var filled = false;
       var id = getGameId();
@@ -73,9 +169,9 @@
       }
 
       $("#notFound").hide();
-      $("#join").prop("disabled", !filled);
+      $("#join").prop("disabled", (!filled && validatePlayerJoinId()));
     }
-
+    
     function checkGameId() {
       var gameId = getGameId();
 
@@ -84,19 +180,46 @@
       res.then(function (result) {
         if(result.error) {
           $("#notFound").show();
-          $("#notFound").html("Sorry, no game found with ID " + gameId + ".");
+          $("#notFound").text("Sorry, no game found with ID " + gameId + ".");
         }
         else {
-          window.location.href = "game_np.html?game_id=" + gameId;
+          var playerId = getPlayerJoinId();
+          window.location.href = "game_np.html?gameId=" + gameId + "&playerId=" + playerId;
         }
       });
     }
 
+    function showNew() {
+      $("#options").hide();
+      $("#newGame").show();
+      $("#joinGame").hide();
+    }
+
+    function showJoin() {
+      $("#options").hide();
+      $("#newGame").hide();
+      $("#joinGame").show();
+    }
+
     $(document).ready(function() {
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" });
+      
+      initializePlayers();
+      
+      $("#newGame").hide();
+      $("#joinGame").hide();
+      $("#playerId").val("");
+      $("#playerIdJoin").val("");
       $("#gameId").val("");
+      $("#notAvailable").hide();
+      $("#notAvailableJoin").hide();
       $("#notFound").hide();
-      $("#new").click(startNewGame);
+
+      $("#optStart").click(showNew);
+      $("#optJoin").click(showJoin);
+      $("#start").click(startNewGame);
+      $("#playerId").keyup(validatePlayerId);
+      $("#playerIdJoin").keyup(validatePlayerJoinId);
       $("#gameId").keyup(validateGameId);
       $("#join").click(checkGameId);
     })
@@ -105,13 +228,33 @@
 
 <body>
   <div class="container">
-    <div class="row">
-      <button id="new" type="button" class="btn btn-primary">Start New Game</button>
+    <div class="row" id="options">
+      <button id="optStart" class="btn btn-primary">New Game</button>
+      <br /><br />
+      <button id="optJoin" class="btn btn-primary">Join Game</button>
     </div>
-    <div class="row">
-      <label id="lblJoin">Join Existing Game:</label>
+    
+    <div class="row" id="newGame" hidden="true">
+      <label id="lblStart">Enter Name:</label>
+      <input id="playerId" type="text" placeholder="Enter player ID"></input>
+      <br />
+      <button id="start" type="button" class="btn btn-primary" disabled="true">Start</button>
+      <br />
+      <label id="notAvailable" class="error"></label>
+    </div>
+    
+    <br /><br />
+    
+    <div class="row" id="joinGame" hidden="true">
+      <label id="lblStartJoin">Enter Name:</label>
+      <input id="playerIdJoin" type="text" placeholder="Enter player ID"></input>
+      <br />
+      <label id="notAvailableJoin" class="error"></label>
+      <br />
+      <label id="lblJoin">Enter Game ID:</label>
       <input id="gameId" type="text" placeholder="Enter game ID"></input>
-      <button id="join" type="submit" class="btn btn-outline-secondary" disabled="true">Join</button>
+      <br />
+      <button id="join" type="submit" class="btn btn-primary" disabled="true">Join</button>
       <br />
       <label id="notFound" class="error"></label>
     </div>

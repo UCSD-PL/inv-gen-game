@@ -68,6 +68,8 @@ class Args {
   static tutorial_action: string = null;
   static admin_token: string = null;
   static game_id: string = null;
+  static player_id: string = null;
+
   static parse_args() {
     let query = window.location.search.substring(1).split("&");
     for (let i = 0; i < query.length; i++) {
@@ -83,6 +85,7 @@ class Args {
     Args.tutorial_action = Args.args["tutorialAction"];
     Args.admin_token = Args.args["adminToken"];
     Args.game_id = Args.args["gameId"];
+    Args.player_id = Args.args["playerId"];
   }
   static get_hit_id(): string {
     if (Args.hit_id === null)
@@ -118,6 +121,11 @@ class Args {
     if (Args.game_id === null)
       Args.parse_args()
     return Args.game_id;
+  }
+  static get_player_id(): string {
+    if (Args.player_id === null)
+      Args.parse_args()
+    return Args.player_id;
   }
 }
 
