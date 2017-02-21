@@ -1,4 +1,4 @@
-from pyparsing import delimitedList,nums, ParserElement, operatorPrecedence, opAssoc, StringEnd
+from pyparsing import delimitedList,nums, ParserElement, operatorPrecedence, opAssoc, StringEnd, OneOrMore
 from pyparsing import Keyword as K, Suppress as S, Literal as L, Regex as R, Word as W
 from ..common.parser import InfixExprParser
 
@@ -64,7 +64,17 @@ class DaikonInvParser(InfixExprParser):
     s.IsBoolean = s.Id + S(L("is boolean"))
     s.IsBoolean.setParseAction(lambda st, loc, toks:  s.onUnaryOp(s.IsBoolean, st, loc, toks))
 
-    s.JustInv = s.IsPow2 | s.IsOneOf | s.IsInRange | s.IsBoolean | s.Expr
+    s.IsEven = s.Id + S(L("is even"))
+    s.IsEven.setParseAction(lambda st, loc, toks:  s.onUnaryOp(s.IsEven, st, loc, toks))
+
+    s.IsConstMod = s.Id + S(L("==")) + s.Number + S(L("(mod")) + s.Number + S(L(")"))
+    s.IsConstMod.setParseAction(lambda st, loc, toks:  s.onTernaryOp(s.IsConstMod, st, loc, toks))
+
+    ValFreqPair = s.ArithExpr + S(L("[") + s.Number + L("]"))
+    s.HasValues = s.Id + S(L("has values:")) + OneOrMore(ValFreqPair)
+    s.HasValues.setParseAction(lambda st, loc, toks:  s.onVariaryOp(s.HasValues, st, loc, toks))
+
+    s.JustInv = s.IsPow2 | s.IsOneOf | s.IsInRange | s.IsBoolean | s.IsEven | s.IsConstMod | s.HasValues | s.Expr
 
     s.WarnInv = S(R("warning: too few samples for [a-zA-Z\._]* invariant:")) + s.JustInv | s.JustInv 
     s.OneLine = s.WarnInv + StringEnd();

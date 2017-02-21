@@ -32,6 +32,12 @@ def runDaikon(vars, trace, nosuppress=False):
                       "--config_option", "daikon.inv.filter.ParentFilter.enabled=false",\
                       "--config_option", "daikon.inv.filter.SimplifyFilter.enabled=false",\
                       "--config_option", "daikon.inv.filter.UnjustifiedFilter.enabled=false",\
+                      "--config_option", "daikon.inv.unary.scalar.CompleteOneOfScalar.enabled=true",\
+                      "--config_option", "daikon.inv.unary.sequence.EltRangeInt.Even.enabled=true",\
+                      "--config_option", "daikon.inv.unary.scalar.Modulus.enabled=true",\
+#                      "--config_option", "daikon.inv.unary.scalar.NonModulus.enabled=true",\ Gets Printed weirdly = ? (mod ?)
+                      "--config_option", "daikon.inv.binary.twoScalar.NumericInt.ZeroTrack.enabled=true",\
+                      "--config_option", "daikon.inv.unary.scalar.RangeInt.Even.enabled=true",\
                     ]
     args.append(dtraceF.name)
     raw = check_output(args)
@@ -41,6 +47,7 @@ def runDaikon(vars, trace, nosuppress=False):
     invs = filter(lambda x: x != "", map(lambda x:  x.strip(), raw[start:end].split("\n")))
     # I don't understand how LinearTeranry invariants without justification are displayed...
     invs = filter(lambda x: "warning: too few samples for daikon.inv.ternary.threeScalar.LinearTernary invariant" not in x, invs);
+    invs = filter(lambda x: "(mod 0)" not in x, invs);
     try:
       return map(lambda x:  parseExprAst(x), invs)
     except:
