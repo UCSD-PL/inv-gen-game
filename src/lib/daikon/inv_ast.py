@@ -17,9 +17,21 @@ class AstIsBoolean(AstNode):
     def __init__(s, expr):  AstNode.__init__(s, expr)
     def __str__(s): return "IsBoolean(" + str(s.expr) + ")"
 
+class AstIsEven(AstNode):
+    def __init__(s, expr):  AstNode.__init__(s, expr)
+    def __str__(s): return "IsEven(" + str(s.expr) + ")"
+
 class AstInRange(AstNode):
     def __init__(s, lower, expr, upper):  AstNode.__init__(s, lower, expr, upper)
     def __str__(s): return str(s.expr) + " in [" + str(s.lower) +  "," + str(s.upper) +  "]"
+
+class AstIsConstMod(AstNode):
+    def __init__(s, expr, remainder, modulo):  AstNode.__init__(s, expr, remainder, modulo)
+    def __str__(s): return "IsConstMod(" + str(s.expr) + "," + str(s.remainder) + "," + str(s.modulo) + ")"
+
+class AstHasValues(AstNode):
+    def __init__(s, expr, values):  AstNode.__init__(s, expr, values)
+    def __str__(s): return "HasValues(" + str(s.expr) + "," + str(s.values) + ")"
 
 class AstFalse(AstNode): 
     def __init__(s):  AstNode.__init__(s)
@@ -50,6 +62,8 @@ class AstBuilder(DaikonInvParser):
       return [ AstIsPow2(toks[0]) ]
     elif (prod == s.IsBoolean):
       return [ AstIsBoolean(toks[0]) ]
+    elif (prod == s.IsEven):
+      return [ AstIsEven(toks[0]) ]
     else:
       return [ AstUnExpr(*toks) ]
 
@@ -80,6 +94,21 @@ class AstBuilder(DaikonInvParser):
     else:
       assert (len(toks) == 3);
       return [ AstBinExpr(*toks) ]
+
+  def onTernaryOp(s, prod, st, loc, toks):
+    if (prod == s.IsConstMod):
+      assert(len(toks) == 3)
+      return [ AstIsConstMod(toks[0], toks[1], toks[2]) ]
+    else:
+      raise Exception("Unknown ternary operator: ", prod);
+
+  def onVariaryOp(s, prod, st, loc, toks):
+    if (prod == s.HasValues):
+      assert(len(toks) > 1)
+      return [ AstHasValues(toks[0], toks[1:]) ]
+    else:
+      raise Exception("Unknown ternary operator: ", prod);
+
 
   def __init__(s):
     DaikonInvParser.__init__(s);

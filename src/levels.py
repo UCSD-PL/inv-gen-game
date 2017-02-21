@@ -231,7 +231,14 @@ def loadTraces(dirN):
                 if name.endswith('.out') }
 
 def loadBoogieLvlSet(lvlSetFile):
-    lvlSet = load(open(lvlSetFile, "r"))
+    # Small helper funct to make sure we didn't
+    # accidentally give two levels the same name
+    def assertUniqueKeys(kvs):
+      keys = [x[0] for x in kvs]
+      assert (len(set(keys)) == len(keys))
+      return dict(kvs)
+
+    lvlSet = load(open(lvlSetFile, "r"), object_pairs_hook=assertUniqueKeys)
     lvlSetDir = dirname(abspath(realpath(lvlSetFile)))
     print "Loading level set " + lvlSet["name"] + " from " + lvlSetFile;
     lvls = {}
@@ -254,9 +261,9 @@ def loadBoogieLvlSet(lvlSetFile):
         lvl["path"] = lvlPath
 
         if (len(t) > 2):
-          splitterPreds = [ parseExprAst(exp)[0] for exp in t[2] ]
+          splitterPreds = [ parseExprAst(exp) for exp in t[2] ]
           splitterPred = ast_and(splitterPreds)
-          remainderInv = parseExprAst(t[3])[0]
+          remainderInv = parseExprAst(t[3])
 
           lvl['data'][0] = filter(
             lambda row: evalPred(splitterPred, _to_dict(lvl['variables'], row)),

@@ -19,7 +19,7 @@ class SSAEnv:
 
     def lookup(s, v):
         if v in s._cnt:
-            return v + "_ssa_" + s._prefix + str(s._cnt[v])
+            return str(v) + "_ssa_" + s._prefix + str(s._cnt[v])
         else:
             if (s._parent):
                 return s._parent.lookup(v)

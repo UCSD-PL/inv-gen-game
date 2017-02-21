@@ -33,7 +33,11 @@ procedure main()
     }
   }
   
+  /*
   if (flag != 0) {
     assert (a == b); 
   }
+  */
+  // Encode if as implication so that our hacking postcond identification catches it.
+  assert ((flag != 0) ==> a == b); 
 }

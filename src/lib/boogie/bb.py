@@ -11,7 +11,7 @@ BB = namedtuple("BB", ["predecessors", "stmts", "successors"])
 
 def get_bbs(filename):
     ast = parseAst(open(filename).read())
-    fun = ast[0]._children[0][0]
+    fun = ast._children[0][0]
     assert (isinstance(fun, AstImplementation))
     # Step 1: Break statements into basic blocks
     bbs = {}

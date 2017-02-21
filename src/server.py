@@ -5,7 +5,7 @@ from flask_jsonrpc import JSONRPC as rpc
 from os.path import *
 from json import dumps
 from js import esprimaToZ3, esprimaToBoogie, boogieToEsprima
-from boogie.ast import AstBinExpr, AstTrue, ast_and
+from lib.boogie.ast import AstBinExpr, AstTrue, ast_and
 from boogie_loops import loop_vc_post_ctrex
 from lib.common.util import pp_exc, powerset, split, nonempty
 from lib.boogie.eval import instantiateAndEval, _to_dict
@@ -399,8 +399,8 @@ def tryAndVerify(levelSet, levelId, invs):
 
     lastVer = getLastVerResult(levelSet, levelId, s)
     if (lastVer):
-      initial_sound += [parseExprAst(x)[0] for x in lastVer["sound"]]
-      boogie_invs += [parseExprAst(x)[0] for x in lastVer["nonind"]]
+      initial_sound += [parseExprAst(x) for x in lastVer["sound"]]
+      boogie_invs += [parseExprAst(x) for x in lastVer["nonind"]]
 
     # First lets find the invariants that are sound without implication
     overfitted, nonind, sound = tryAndVerify_impl(bbs, loop, initial_sound, boogie_invs)

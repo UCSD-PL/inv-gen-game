@@ -4,7 +4,7 @@ procedure main() {
 	x := 0;
 
  	while ( 0 == 0 )
-  // invariant x < n;
+  // invariant x <= n;
   {
 		if ( * ) {
 			x := x + 1;

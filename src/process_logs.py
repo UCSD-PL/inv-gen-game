@@ -321,7 +321,7 @@ for s in e.server_runs:
                     try:
                         with open(os.path.join(get_lvlset_dir(lvl_set), lvl_id + ".soln")) as f:
                             for l in f:
-                                boogie_soln_inv = ast.parseExprAst(l)[0]
+                                boogie_soln_inv = ast.parseExprAst(l)
                                 header = "-- Soln " + str(boogie_soln_inv) + ": "
                                 found = False
                                 for boogie_user_inv in boogie_user_invs:

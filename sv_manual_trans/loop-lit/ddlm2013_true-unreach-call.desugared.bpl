@@ -36,16 +36,7 @@ implementation main()
     goto anon6_LoopHead;
 
   anon6_LoopDone:
-    assume true;
-    goto anon8_Then, anon8_Else;
-
-  anon8_Else:
-    assume {:partition} flag == 0;
-    return;
-
-  anon8_Then:
-    assume {:partition} flag != 0;
-    assert a == b;
+    assert ((flag != 0) ==> a == b); 
     return;
 }
 

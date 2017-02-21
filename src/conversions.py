@@ -36,7 +36,8 @@ def daikonToBoogieExpr(astn):
           '-' : '-' ,
           '*' : '*' ,
           '/' : '/' ,
-          '%' : 'mod'
+          '%' : 'mod',
+          '==>' : '==>'
         }[astn.op]
         return bast.AstBinExpr(ln, boogieOp, rn)
       except:
@@ -68,5 +69,23 @@ def daikonToBoogieExpr(astn):
         bast.AstBinExpr(cn, "==", bast.AstNumber(0)),
         bast.AstBinExpr(cn, "==", bast.AstNumber(1))
     ])
+  elif (isinstance(astn, dast.AstIsEven)):
+    cn = daikonToBoogieExpr(astn.expr)
+    return bast.AstBinExpr(
+        bast.AstBinExpr(cn, "mod", bast.AstNumber(2)),
+        "==", bast.AstNumber(0))
+  elif (isinstance(astn, dast.AstIsConstMod)):
+    expr = daikonToBoogieExpr(astn.expr)
+    remainder = daikonToBoogieExpr(astn.remainder)
+    modulo = daikonToBoogieExpr(astn.modulo);
+
+    assert modulo.num != 0;
+
+    return bast.AstBinExpr(
+        bast.AstBinExpr(expr, "mod", modulo), "==", remainder)
+  elif (isinstance(astn, dast.AstHasValues)):
+    cn = daikonToBoogieExpr(astn.expr)
+    values = map(daikonToBoogieExpr, astn.values)
+    return bast.ast_or([bast.AstBinExpr(cn, "==", v) for v in values])
   else:
     raise Exception("Don't know how to translate " + str(astn))

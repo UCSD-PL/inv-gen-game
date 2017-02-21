@@ -64,7 +64,7 @@ def tryAndVerifyWithSplitterPreds(bbs, loop, old_sound_invs, boogie_invs,
     initial_sound = partialInvs + old_sound_invs
 
     # First lets find the invariants that are sound without implication
-    overfitted, nonind, sound = tryAndVerify_impl(bbs, loop, initial_sound, boogie_invs)
+    overfitted, nonind, sound = tryAndVerify_impl(bbs, loop, initial_sound, boogie_invs, timeout)
     sound = [x for x in sound if not tautology(expr_to_z3(x, AllIntTypeEnv()))]
 
     # Next lets add implication  to all unsound invariants from first pass
@@ -76,7 +76,7 @@ def tryAndVerifyWithSplitterPreds(bbs, loop, old_sound_invs, boogie_invs,
     p2_invs = [ x for x in p2_invs if not tautology(expr_to_z3(x, AllIntTypeEnv())) ]
 
     # And look for any new sound invariants
-    overfitted, nonind, sound_p2 = tryAndVerify_impl(bbs, loop, sound, p2_invs)
+    overfitted, nonind, sound_p2 = tryAndVerify_impl(bbs, loop, sound, p2_invs, timeout)
     sound = set(sound).union(sound_p2)
 
     return (overfitted, nonind, sound)
