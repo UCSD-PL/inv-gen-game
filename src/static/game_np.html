@@ -166,6 +166,8 @@
     $(document).ready(function() {
       gameId = Args.get_game_id();
       playerId = Args.get_player_id();
+
+      $("#lblGameId").text(gameId);
       
       if (Args.get_assignment_id() == "ASSIGNMENT_ID_NOT_AVAILABLE") {
         s = "This is just a preview of the HIT. The work you do here will have to be redone when you accept the HIT."
@@ -312,6 +314,13 @@
   </script>
 </head>
 <body>
+  <div class='container'>
+    <div class="row centered" id="shareGameId">
+      <h4>
+        Others can join your game by using this code: <label id="lblGameId" class="success"></label>
+      </h4>
+    </div>
+  </div>
   <div class='container'>
     <div class='row' id='hit-preview-warning'>
     </div>
