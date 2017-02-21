@@ -1,10 +1,10 @@
 {
-  "name" : "test",
+  "name": "test",
   "levels": [
-    [ "1", "../desugared-boogie-benchmarks/01.bpl" ],
-    [ "2", "../desugared-boogie-benchmarks/02.bpl" ]
-    [ "3", "../desugared-boogie-benchmarks/04.bpl" ]
-    [ "4", "../desugared-boogie-benchmarks/05.bpl" ]
-    [ "5", "../desugared-boogie-benchmarks/06.bpl" ]
+    ["1", "../desugared-boogie-benchmarks/01.bpl"],
+    ["2", "../desugared-boogie-benchmarks/02.bpl"],
+    ["3", "../desugared-boogie-benchmarks/04.bpl"],
+    ["4", "../desugared-boogie-benchmarks/05.bpl"],
+    ["5", "../desugared-boogie-benchmarks/06.bpl"]
   ]
 }
