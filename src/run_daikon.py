@@ -17,6 +17,7 @@ if (__name__ == "__main__"):
   p.add_argument('--no-suppression', action="store_true", default=False, help='Wether to have daikon suppress obvious invariants')
   p.add_argument('--check-solved', action="store_true", default=False, help='Wether to check for each level if it was solved')
   p.add_argument('--csv-table', action="store_true", default=False, help='Print results as a csv table')
+  p.add_argument('--timeout', type=int, default=180, help='Timeout in seconds for each z3 query')
   args = p.parse_args();
 
   name,lvls = loadBoogieLvlSet(args.lvlset)
@@ -38,6 +39,7 @@ if (__name__ == "__main__"):
         t_header_vals = [ [ row[1][0][v] for v in vs ] for row in t_loop_headers ]
         header_vals = header_vals + t_header_vals
     invs = runDaikon(vs, header_vals, args.no_suppression)
+
     binvs = [ ]
     for inv in invs:
       try:
@@ -51,9 +53,9 @@ if (__name__ == "__main__"):
     if ("splitterPreds" in lvl and args.use_splitter_predicates):
       splitterPreds = lvl['splitterPreds']
       partialInv = [ lvl['partialInv'] ] if 'partialInv' in lvl else []
-      (overfitted, nonind, soundInvs) = tryAndVerifyWithSplitterPreds(bbs, loop, [], binvs, splitterPreds, partialInv)
+      (overfitted, nonind, soundInvs) = tryAndVerifyWithSplitterPreds(bbs, loop, [], binvs, splitterPreds, partialInv, args.timeout)
     else:
-      (overfitted, nonind, soundInvs) = tryAndVerify_impl(bbs, loop, [], binvs)
+      (overfitted, nonind, soundInvs) = tryAndVerify_impl(bbs, loop, [], binvs, args.timeout)
 
     if (args.check_solved):
       post_ctrex = loop_vc_post_ctrex(loop, bast.ast_and(soundInvs), bbs)
