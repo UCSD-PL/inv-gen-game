@@ -33,6 +33,9 @@
   <script>
     var gameId;
     var playerId;
+    var currentGen = -1;
+    var values = null;
+    var playerLvl = null;
 
 
     var curLvl;
@@ -63,6 +66,7 @@
         else {
           curLvlSet = res[0];
           let lvl = res[1];
+          playerLvl = lvl;
           curLvlId = lvl.id;
           console.log("Just loaded " + curLvlSet + "." + curLvlId);
           if (lvl.hint === null)
@@ -103,18 +107,66 @@
         lvls = res;
         curLvl = -1;
         nextLvl();
-        //if (Args.get_worker_id() === "") {
-        //  curLvl = -1;
-        //  nextLvl();
-        //} else {
-        //  rpc.call('App.getMyLastLvl', [Args.get_worker_id(), lvlset], function(myLastLvl) {
-        //    if (myLastLvl === "None")
-        //      window.location.replace('tutorial_patterns.html' + window.location.search);
-        //    curLvl = lvls.indexOf(myLastLvl);
-        //    nextLvl();
-        //  }, log);
-        //}
       }, log)
+    }
+
+    function newPlayer(currentPlayer, players) {
+      if (players === []) {
+        return true;
+      }
+
+      playerIds = [];
+      for (player in players) {
+        playerIds.push(player.id);
+      }
+      
+      if(playerIds.indexOf(currentPlayer.id) === -1) {
+        return true;
+      }
+      return false;
+    }
+
+    function updateGame(id, logic) {
+      if (id) {
+        res = rpc.call('App.get', [id], function(res) {
+          currentGen = res[0];
+          values = JSON.parse(res[1]);
+          console.log("currentGen:" + currentGen);
+          console.log(values);
+
+          /* TODO: Update current game state using the values */
+          if (values && !values.levelSet && curLvlSet) {
+            values.levelSet = curLvlSet;
+          }
+          if (values && !values.level && playerLvl) {
+            values.level = playerLvl;
+          }
+          if (values && !values.expressions && progW) {
+            values.expressions = progW.invMap;
+          }
+          if (values && playerId) {
+            if (!values.players) {
+              values.players = [];
+            }
+
+            var currentPlayer = {id: "", score: 0};
+            currentPlayer.id = playerId;
+            currentPlayer.score = scoreW ? scoreW.score : 0;
+
+            if (newPlayer(currentPlayer, values.players)) {
+              values.players.push(currentPlayer);
+            }
+          }
+        }, log);
+
+        /* Send updated values to the server */
+        /* TODO: need to know when to send */
+        res = rpc.call('App.set', [id, currentGen, values], function(res) {
+          currentGen = res[0];
+          values = JSON.stringify(res[1]);
+        }, log);
+      }
+      setTimeout(updateGame, 10000);
     }
 
     function doneScreen(alldone) {
@@ -310,6 +362,11 @@
         }
       })
     })
+
+    setInterval(function () {
+      while (!gameId) {}
+      updateGame(gameId, gameLogic);
+    }, 10000);
 
   </script>
 </head>
