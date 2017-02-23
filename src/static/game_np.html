@@ -140,11 +140,8 @@
       var id = gameId;
       if (id) {
         res = rpc.call('App.get', [id], function(res) {
-          console.log("\nGetting server state...");
           currentGen = res[0];
           values = parseValue(res[1]);
-          console.log("SERVER currentGen:" + currentGen);
-          console.log(values);
           return [currentGen, values];
         }, log);
       }
@@ -178,11 +175,8 @@
     function updateServerState(serverState, localState) {
       var id = gameId;
       res = rpc.call('App.set', [id, values, currentGen], function(res) {
-        console.log("\nUpdating server state...");
         currentGen = res[0];
         values = parseValue(res[1]);
-        console.log("Server currentGen:" + currentGen);
-        console.log(values);
         updateLocalState([currentGen, values], localState);
       }, log);
     }
@@ -196,16 +190,38 @@
       /* Server has more recent value */
       if (serverGen > localGen) {
         currentGen = serverGen;
-        values = serverVal;
-        // mergeValues(serverVal, localVal);
+        mergeValues(serverVal, localVal);
       }
     }
 
     function mergeValues(serverValue, localValue) {
       values.levelSet = serverValue.levelSet;
       values.level = serverValue.level;
-      values.players = serverValue.players;  // TODO: merge players
-      values.expressions = serverValue.expressions; // TODO: merge expressions from server to local properly
+      values.players = mergePlayers(serverValue.players, localValue.players);
+      values.expressions = mergeExpressions(serverValue.expressions, localValue.expressions);
+    }
+
+    function mergePlayers(serverPlayers, localPlayers) {
+      var players = serverPlayers;
+      for (var player in localPlayers) {
+        if (isNewPlayer(localPlayers[player], players)) {
+          players.push(localPlayers[player]);
+        }
+        else {
+          var curPlayer = localPlayers[player];
+          for (var sPlayer in players) {
+            if (players[sPlayer].id === curPlayer.id && players[sPlayer].score !== curPlayer.score) {
+              players[sPlayer].score = curPlayer.score > players[sPlayer].score ? curPlayer.score : players[sPlayer].score;
+            }
+          }
+        }
+      }
+      return players;
+    }
+    
+    // TODO: merge expressions from server to local properly
+    function mergeExpressions(serverExpressions, localExpressions) {
+      return serverExpressions;
     }
 
     function isNewPlayer(currentPlayer, players) {
