@@ -115,7 +115,7 @@
       var localState = getLocalState();
 
       if (!equal(serverState, localState)) {
-        updateServerState(serverState, localState);
+        updateServerState(serverState, localState); // TODO: fix this
       }
 
       setTimeout(synchronize, 10000);
@@ -204,7 +204,7 @@
     function mergeValues(serverValue, localValue) {
       values.levelSet = serverValue.levelSet;
       values.level = server.level;
-      values.players = server.players;
+      values.players = server.players;  // TODO: merge players
       values.expressions = server.expressions; // TODO: merge expressions from server to local properly
     }
 
@@ -222,66 +222,6 @@
         return true;
       }
       return false;
-    }
-
-    function updateGame(id) {
-      if (id) {
-        res = rpc.call('App.get', [id], function(res) {
-          console.log("\nGET");
-          currentGen = res[0];
-          if (typeof res[1] === "object") {
-            values = res[1];
-          }
-          else {
-            values = JSON.parse(res[1]);
-          }
-          console.log("currentGen:" + currentGen);
-          console.log(values);
-
-          /* Update current game state using the values */
-          if (values && curLvlSet) {
-            if (values.levelSet === null) {
-              values.levelSet = curLvlSet;
-            }
-          }
-          if (values && playerLvl) {
-            if (values.level === null) {
-              values.level = playerLvl;
-            }
-          }
-          if (values && progW) {
-            if (values.expressions === null) {
-              values.expressions = progW.invMap;
-            }
-          }
-          if (values && playerId) {
-            var currentPlayer = {id: playerId, score: 0};
-            currentPlayer.score = scoreW ? scoreW.score : 0;
-
-            if (isNewPlayer(currentPlayer, values.players)) {
-              values.players.push(currentPlayer);
-            }
-          }
-        }, log);
-
-        /* Send updated values to the server */
-        /* TODO: need to know when to send */
-        if(values) {
-          res = rpc.call('App.set', [id, values, currentGen], function(res) {
-            console.log("\nSET");
-            currentGen = res[0];
-            if (typeof res[1] === "object") {
-              values = res[1];
-            }
-            else {
-              values = JSON.parse(res[1]);
-            }
-            console.log("currentGen:" + currentGen);
-            console.log(values);
-          }, log);
-        }
-      }
-      setTimeout(updateGame, 10000);
     }
 
     function doneScreen(alldone) {
@@ -480,7 +420,6 @@
 
     setInterval(function () {
       while (!gameId) {}
-      // updateGame(gameId);
       synchronize();
     }, 10000);
 
