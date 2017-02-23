@@ -203,9 +203,9 @@
 
     function mergeValues(serverValue, localValue) {
       values.levelSet = serverValue.levelSet;
-      values.level = server.level;
-      values.players = server.players;  // TODO: merge players
-      values.expressions = server.expressions; // TODO: merge expressions from server to local properly
+      values.level = serverValue.level;
+      values.players = serverValue.players;  // TODO: merge players
+      values.expressions = serverValue.expressions; // TODO: merge expressions from server to local properly
     }
 
     function isNewPlayer(currentPlayer, players) {
