@@ -115,7 +115,7 @@
       var localState = getLocalState();
 
       if (!equal(serverState, localState)) {
-        updateServerState(serverState, localState); // TODO: fix this
+        updateServerState(serverState, localState);
       }
 
       setTimeout(synchronize, 10000);
@@ -168,8 +168,20 @@
         if (isNewPlayer(currentPlayer, values.players)) {
           values.players.push(currentPlayer);
         }
+        else {
+          updateScore(currentPlayer);
+        }
       }
       return [currentGen, values];
+    }
+
+    function updateScore(curPlayer) {
+      for (var player in values.players) {
+        if (values.players[player].id === curPlayer.id) {
+          values.players[player].score = curPlayer.score;
+          return;
+        }
+      }
     }
 
     function updateServerState(serverState, localState) {
@@ -187,7 +199,6 @@
       localGen = localState[0];
       localVal = localState[1];
 
-      /* Server has more recent value */
       if (serverGen > localGen) {
         currentGen = serverGen;
         mergeValues(serverVal, localVal);
@@ -199,6 +210,9 @@
       values.level = serverValue.level;
       values.players = mergePlayers(serverValue.players, localValue.players);
       values.expressions = mergeExpressions(serverValue.expressions, localValue.expressions);
+
+      /* update score tab */
+      /* update accepted expressions tab */
     }
 
     function mergePlayers(serverPlayers, localPlayers) {
@@ -212,6 +226,7 @@
           for (var sPlayer in players) {
             if (players[sPlayer].id === curPlayer.id && players[sPlayer].score !== curPlayer.score) {
               players[sPlayer].score = curPlayer.score > players[sPlayer].score ? curPlayer.score : players[sPlayer].score;
+              break;
             }
           }
         }
@@ -219,9 +234,9 @@
       return players;
     }
     
-    // TODO: merge expressions from server to local properly
     function mergeExpressions(serverExpressions, localExpressions) {
-      return serverExpressions;
+      var expressions = $.extend({}, serverExpressions, localExpressions);
+      console.log(expressions);
     }
 
     function isNewPlayer(currentPlayer, players) {
