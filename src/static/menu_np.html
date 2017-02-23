@@ -23,21 +23,12 @@
     function initializePlayers() {
       res = rpc.call("App.set", ["players", "[]", -1], function(res) {
         if(res) {
-          return true;
+          console.log("Players kv store initialized");
         }
         else {
-          return false;
+          console.log("Unable to initialize players kv store");
         }
-      });
-
-      res.then(function(success) {
-        if(success) {
-          console.log("players kv store initialized");
-        }
-        else {
-          console.log("unable to initialize players kv store");
-        }
-      });
+      }, log);
     }
 
     function isPlayerIdPresent(playerId, cb) {
@@ -45,8 +36,6 @@
         if(resp) {
           playerGen = resp[0];
           players = JSON.parse(resp[1]);
-
-          console.log(players);
           if(players === undefined || players.indexOf(playerId) === -1) {
             players = [];
             cb(false);
@@ -55,7 +44,7 @@
             cb(true);
           }
         }
-      });
+      }, log);
     }
     
     function isGameIdPresent(gameId) {
