@@ -28,7 +28,7 @@
         else {
           console.log("Unable to initialize players kv store");
         }
-      }, log);
+      });
     }
 
     function isPlayerIdPresent(playerId, cb) {
@@ -44,7 +44,7 @@
             cb(true);
           }
         }
-      }, log);
+      });
     }
     
     function isGameIdPresent(gameId) {
