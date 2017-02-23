@@ -34,7 +34,7 @@
     var gameId;
     var playerId;
     var currentGen = -1;
-    var values = null;
+    var values = { levelSet: null, level: null, expressions: null, players: [] };
     var playerLvl = null;
 
 
@@ -110,14 +110,112 @@
       }, log)
     }
 
-    function newPlayer(currentPlayer, players) {
-      if (players === []) {
+    function synchronize() {
+      var serverState = getServerState();
+      var localState = getLocalState();
+
+      if (!equal(serverState, localState)) {
+        updateServerState(serverState, localState);
+      }
+
+      setTimeout(synchronize, 10000);
+    }
+
+    function equal(sState, lState) {
+      return sState === lState;
+    }
+
+    function parseValue(val) {
+      var pVal = null;
+      if (typeof val === "object") {
+        pVal = val;
+      }
+      else {
+        pVal = JSON.parse(val);
+      }
+      return pVal;
+    }
+
+    function getServerState() {
+      var id = gameId;
+      if (id) {
+        res = rpc.call('App.get', [id], function(res) {
+          console.log("\nGetting server state...");
+          currentGen = res[0];
+          values = parseValue(res[1]);
+          console.log("SERVER currentGen:" + currentGen);
+          console.log(values);
+          return [currentGen, values];
+        }, log);
+      }
+    }
+
+    function getLocalState() {
+      if (curLvlSet) {
+        values.levelSet = curLvlSet;
+      }
+      if (playerLvl) {
+        values.level = playerLvl;
+      }
+      if (progW) {
+        values.expressions = progW.invMap;
+      }
+      if (playerId) {
+        var currentPlayer = {id: playerId, score: 0};
+        currentPlayer.score = scoreW ? scoreW.score : 0;
+
+        if(values.players === undefined) {
+          values.players = [];
+        }
+
+        if (isNewPlayer(currentPlayer, values.players)) {
+          values.players.push(currentPlayer);
+        }
+      }
+      return [currentGen, values];
+    }
+
+    function updateServerState(serverState, localState) {
+      var id = gameId;
+      res = rpc.call('App.set', [id, values, currentGen], function(res) {
+        console.log("\nUpdating server state...");
+        currentGen = res[0];
+        values = parseValue(res[1]);
+        console.log("Server currentGen:" + currentGen);
+        console.log(values);
+        updateLocalState([currentGen, values], localState);
+      }, log);
+    }
+
+    function updateLocalState(serverState, localState) {
+      serverGen = serverState[0];
+      serverVal = serverState[1];
+      localGen = localState[0];
+      localVal = localState[1];
+
+      /* Server has more recent value */
+      if (serverGen > localGen) {
+        currentGen = serverGen;
+        values = serverVal;
+        // mergeValues(serverVal, localVal);
+      }
+    }
+
+    function mergeValues(serverValue, localValue) {
+      values.levelSet = serverValue.levelSet;
+      values.level = server.level;
+      values.players = server.players;
+      values.expressions = server.expressions; // TODO: merge expressions from server to local properly
+    }
+
+    function isNewPlayer(currentPlayer, players) {
+      if (players.length === 0) {
         return true;
       }
 
       playerIds = [];
-      for (player in players) {
-        playerIds.push(player.id);
+      for (var player in players) {
+        playerIds.push(players[player].id);
       }
       
       if(playerIds.indexOf(currentPlayer.id) === -1) {
@@ -126,34 +224,41 @@
       return false;
     }
 
-    function updateGame(id, logic) {
+    function updateGame(id) {
       if (id) {
         res = rpc.call('App.get', [id], function(res) {
+          console.log("\nGET");
           currentGen = res[0];
-          values = JSON.parse(res[1]);
+          if (typeof res[1] === "object") {
+            values = res[1];
+          }
+          else {
+            values = JSON.parse(res[1]);
+          }
           console.log("currentGen:" + currentGen);
           console.log(values);
 
-          /* TODO: Update current game state using the values */
-          if (values && !values.levelSet && curLvlSet) {
-            values.levelSet = curLvlSet;
+          /* Update current game state using the values */
+          if (values && curLvlSet) {
+            if (values.levelSet === null) {
+              values.levelSet = curLvlSet;
+            }
           }
-          if (values && !values.level && playerLvl) {
-            values.level = playerLvl;
+          if (values && playerLvl) {
+            if (values.level === null) {
+              values.level = playerLvl;
+            }
           }
-          if (values && !values.expressions && progW) {
-            values.expressions = progW.invMap;
+          if (values && progW) {
+            if (values.expressions === null) {
+              values.expressions = progW.invMap;
+            }
           }
           if (values && playerId) {
-            if (!values.players) {
-              values.players = [];
-            }
-
-            var currentPlayer = {id: "", score: 0};
-            currentPlayer.id = playerId;
+            var currentPlayer = {id: playerId, score: 0};
             currentPlayer.score = scoreW ? scoreW.score : 0;
 
-            if (newPlayer(currentPlayer, values.players)) {
+            if (isNewPlayer(currentPlayer, values.players)) {
               values.players.push(currentPlayer);
             }
           }
@@ -161,10 +266,20 @@
 
         /* Send updated values to the server */
         /* TODO: need to know when to send */
-        res = rpc.call('App.set', [id, currentGen, values], function(res) {
-          currentGen = res[0];
-          values = JSON.stringify(res[1]);
-        }, log);
+        if(values) {
+          res = rpc.call('App.set', [id, values, currentGen], function(res) {
+            console.log("\nSET");
+            currentGen = res[0];
+            if (typeof res[1] === "object") {
+              values = res[1];
+            }
+            else {
+              values = JSON.parse(res[1]);
+            }
+            console.log("currentGen:" + currentGen);
+            console.log(values);
+          }, log);
+        }
       }
       setTimeout(updateGame, 10000);
     }
@@ -365,7 +480,8 @@
 
     setInterval(function () {
       while (!gameId) {}
-      updateGame(gameId, gameLogic);
+      // updateGame(gameId);
+      synchronize();
     }, 10000);
 
   </script>

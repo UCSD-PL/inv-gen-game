@@ -32,3 +32,5 @@ credentials.csv
 logs/
 mturk/
 studies/
+
+.vscode
