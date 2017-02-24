@@ -21,11 +21,13 @@ class ProgressWindow implements IProgressWindow {
   };
 
   addInvariant(key: string, invariant: invariantT) : void {
-    let invUl = $(this.container).children("#good-invariants")[0]
-    $(invUl).append("<li class='good-invariant' id='good_" +
+    if (this.invMap[key] === undefined || this.invMap[key] === null) {
+      let invUl = $(this.container).children("#good-invariants")[0]
+      $(invUl).append("<li class='good-invariant' id='good_" +
       this.ctr + "'>" + invToHTML(invariant) + "</li>")
-    this.invMap[key] = $('#good_' + this.ctr)[0]
-    this.ctr ++;
+      this.invMap[key] = $('#good_' + this.ctr)[0]
+      this.ctr ++;
+    }
   }
 
   removeInvariant(key: string): void {

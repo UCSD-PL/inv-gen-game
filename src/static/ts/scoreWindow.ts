@@ -25,6 +25,25 @@ class ScoreWindow {
   }
 }
 
+class NPlayerScoreWindow extends ScoreWindow {
+  players: any = {}
+
+  constructor(public parent: HTMLElement) {
+    super(parent);
+  }
+
+  updatePlayers(players: any) {
+    this.players = players
+    let scoreboard = "<br />";
+    for (let player in this.players) {
+      scoreboard += this.players[player].id + ": " + this.players[player].score + "<br />";
+      console.log(this.players[player].id + ": " + this.players[player].score);
+    }
+    console.log($(scoreboard).html());
+    // $($(this.parent).parent).append($(scoreboard));
+  }
+}
+
 class TwoPlayerScoreWindow extends ScoreWindow {
   player: number = 0;
 

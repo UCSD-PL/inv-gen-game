@@ -34,7 +34,7 @@
     var gameId;
     var playerId;
     var currentGen = -1;
-    var values = { levelSet: null, level: null, expressions: null, players: [] };
+    var values = { levelSet: null, level: null, expressions: [], players: [] };
     var playerLvl = null;
 
 
@@ -118,7 +118,7 @@
         updateServerState(serverState, localState);
       }
 
-      setTimeout(synchronize, 10000);
+      // setTimeout(synchronize, 3000);
     }
 
     function equal(sState, lState) {
@@ -156,6 +156,9 @@
       }
       if (progW) {
         values.expressions = progW.invMap;
+        for (var inv in values.expressions) {
+          progW.addInvariant(inv, esprima.parse(inv));
+        }
       }
       if (playerId) {
         var currentPlayer = {id: playerId, score: 0};
@@ -212,7 +215,12 @@
       values.expressions = mergeExpressions(serverValue.expressions, localValue.expressions);
 
       /* update score tab */
+      scoreW.updatePlayers(values.players);
+      
       /* update accepted expressions tab */
+      for (var inv in values.expressions) {
+          progW.addInvariant(inv, esprima.parse(inv));
+      }
     }
 
     function mergePlayers(serverPlayers, localPlayers) {
@@ -315,7 +323,8 @@
 
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
       progW = new ProgressWindow($('#discovered-invariants-div'));
-      scoreW = new ScoreWindow($('#score-div'));
+      // scoreW = new ScoreWindow($('#score-div'));
+      scoreW = new NPlayerScoreWindow($('#score-div'));
       traceW = new PositiveTracesWindow($('#data-display'));
       //stickyW = new WideStickyWindow($('#sticky'))
       stickyW = new StickyWindow($('#sticky'))
@@ -453,7 +462,7 @@
     setInterval(function () {
       while (!gameId) {}
       synchronize();
-    }, 10000);
+    }, 1000);
 
   </script>
 </head>
