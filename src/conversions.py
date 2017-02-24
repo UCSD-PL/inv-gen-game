@@ -84,6 +84,8 @@ def daikonToBoogieExpr(astn):
     return bast.AstBinExpr(
         bast.AstBinExpr(expr, "mod", modulo), "==", remainder)
   elif (isinstance(astn, dast.AstHasValues)):
+    if (len(astn.values) > 300):
+      raise Exception("Can't convert HasValues: Too many options: " + str(len(astn.values)));
     cn = daikonToBoogieExpr(astn.expr)
     values = map(daikonToBoogieExpr, astn.values)
     return bast.ast_or([bast.AstBinExpr(cn, "==", v) for v in values])

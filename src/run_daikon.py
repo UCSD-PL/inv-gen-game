@@ -17,7 +17,7 @@ if (__name__ == "__main__"):
   p.add_argument('--no-suppression', action="store_true", default=False, help='Wether to have daikon suppress obvious invariants')
   p.add_argument('--check-solved', action="store_true", default=False, help='Wether to check for each level if it was solved')
   p.add_argument('--csv-table', action="store_true", default=False, help='Print results as a csv table')
-  p.add_argument('--timeout', type=int, default=180, help='Timeout in seconds for each z3 query')
+  p.add_argument('--timeout', type=int, default=300, help='Timeout in seconds for each z3 query')
   args = p.parse_args();
 
   name,lvls = loadBoogieLvlSet(args.lvlset)
