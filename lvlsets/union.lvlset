@@ -431,7 +431,7 @@
       "s-phases_true-unreach-call2",
       [
         "../sv_manual_trans/loop-acceleration/phases_true-unreach-call2.desugared.bpl",
-        "../sv_manual_trans/loop-acceleration/phases_true-unreach-call2.c"
+        "../sv_manual_trans/loop-acceleration/phases_true-unreach-call2.dimo.c"
       ]
     ],
     [
@@ -641,7 +641,7 @@
       "s-terminator_02_true-unreach-call_true-termination",
       [
         "../sv_manual_trans/loops/terminator_02_true-unreach-call_true-termination.desugared.bpl",
-        "../sv_manual_trans/loops/terminator_02_true-unreach-call_true-termination.c"
+        "../sv_manual_trans/loops/terminator_02_true-unreach-call_true-termination.dimo.c"
       ]
     ],
     [
