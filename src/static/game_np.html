@@ -237,6 +237,7 @@
     function mergeExpressions(serverExpressions, localExpressions) {
       var expressions = $.extend({}, serverExpressions, localExpressions);
       console.log(expressions);
+      return expressions;
     }
 
     function isNewPlayer(currentPlayer, players) {
