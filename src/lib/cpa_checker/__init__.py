@@ -19,7 +19,6 @@ def runCPAChecker(cppFile, timelimit=100, config="predicateAnalysis-ImpactRefine
       cppFile, processedF.name ]
 
     call(cpp_args);
-    print "Original file:", cppFile, "CPP-ed file in ", processedF.name
     args = [ CPA_PATH + "scripts/cpa.sh",
               "-config", CPA_PATH + "config/" + config,
               "-timelimit", str(timelimit),
