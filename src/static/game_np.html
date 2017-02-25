@@ -36,6 +36,7 @@
     var currentGen = -1;
     var values = { levelSet: null, level: null, expressions: [], players: [] };
     var playerLvl = null;
+    var time = 3000;
 
 
     var curLvl;
@@ -118,7 +119,7 @@
         updateServerState(serverState, localState);
       }
 
-      // setTimeout(synchronize, 3000);
+      setTimeout(synchronize, time);
     }
 
     function equal(sState, lState) {
@@ -179,7 +180,7 @@
     }
 
     function updateScore(curPlayer) {
-      for (var player in values.players) {
+      for (var player = 0, len = values.players.length; player < len; player++) {
         if (values.players[player].id === curPlayer.id) {
           values.players[player].score = curPlayer.score;
           return;
@@ -214,10 +215,8 @@
       values.players = mergePlayers(serverValue.players, localValue.players);
       values.expressions = mergeExpressions(serverValue.expressions, localValue.expressions);
 
-      /* update score tab */
       scoreW.updatePlayers(values.players);
-      
-      /* update accepted expressions tab */
+
       for (var inv in values.expressions) {
           progW.addInvariant(inv, esprima.parse(inv));
       }
@@ -225,13 +224,13 @@
 
     function mergePlayers(serverPlayers, localPlayers) {
       var players = serverPlayers;
-      for (var player in localPlayers) {
+      for (var player = 0, len = localPlayers.length; player < len; player++) {
         if (isNewPlayer(localPlayers[player], players)) {
           players.push(localPlayers[player]);
         }
         else {
           var curPlayer = localPlayers[player];
-          for (var sPlayer in players) {
+          for (var sPlayer = 0, len = players.length; sPlayer < len; sPlayer++) {
             if (players[sPlayer].id === curPlayer.id && players[sPlayer].score !== curPlayer.score) {
               players[sPlayer].score = curPlayer.score > players[sPlayer].score ? curPlayer.score : players[sPlayer].score;
               break;
@@ -244,7 +243,6 @@
     
     function mergeExpressions(serverExpressions, localExpressions) {
       var expressions = $.extend({}, serverExpressions, localExpressions);
-      console.log(expressions);
       return expressions;
     }
 
@@ -254,7 +252,7 @@
       }
 
       playerIds = [];
-      for (var player in players) {
+      for (var player = 0, len = players.length; player < len; player++) {
         playerIds.push(players[player].id);
       }
       
@@ -323,10 +321,8 @@
 
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
       progW = new ProgressWindow($('#discovered-invariants-div'));
-      // scoreW = new ScoreWindow($('#score-div'));
       scoreW = new NPlayerScoreWindow($('#score-div'));
       traceW = new PositiveTracesWindow($('#data-display'));
-      //stickyW = new WideStickyWindow($('#sticky'))
       stickyW = new StickyWindow($('#sticky'))
       gameLogic = new PatternGameLogic(traceW, progW, scoreW, stickyW);
 
@@ -458,11 +454,11 @@
         }
       })
     })
-
+    
     setInterval(function () {
-      while (!gameId) {}
-      synchronize();
-    }, 1000);
+        while (!gameId) {}
+        synchronize();
+      }, time);
 
   </script>
 </head>
