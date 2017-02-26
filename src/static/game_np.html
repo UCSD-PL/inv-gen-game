@@ -36,7 +36,7 @@
     var currentGen = -1;
     var values = { levelSet: null, level: null, expressions: [], players: [] };
     var playerLvl = null;
-    var time = 3000;
+    var time = 2000;
 
 
     var curLvl;
@@ -124,11 +124,8 @@
           currentGen += 1;
         }
       });
-
-      setTimeout(synchronize, time);
     }
 
-    /* need to test this */
     function equal(sState, lState) {
       return sState === lState;
     }
