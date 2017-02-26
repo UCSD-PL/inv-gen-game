@@ -112,16 +112,22 @@
     }
 
     function synchronize() {
-      var serverState = getServerState();
       var localState = getLocalState();
+      var serverState = getServerState(function(state) {
+        console.log("\n\nServer State:");
+        console.log(state);
+        console.log("Local State:");
+        console.log(localState);
 
-      if (!equal(serverState, localState)) {
-        updateServerState(serverState, localState);
-      }
+        if (!equal(state, localState)) {
+          updateStates(state, localState);
+        }
+      });
 
       setTimeout(synchronize, time);
     }
 
+    /* need to test this */
     function equal(sState, lState) {
       return sState === lState;
     }
@@ -137,18 +143,8 @@
       return pVal;
     }
 
-    function getServerState() {
-      var id = gameId;
-      if (id) {
-        res = rpc.call('App.get', [id], function(res) {
-          currentGen = res[0];
-          values = parseValue(res[1]);
-          return [currentGen, values];
-        }, log);
-      }
-    }
-
     function getLocalState() {
+      console.log("1. " + new Date().toLocaleString() + ": getLocalState called");
       if (curLvlSet) {
         values.levelSet = curLvlSet;
       }
@@ -176,7 +172,23 @@
           updateScore(currentPlayer);
         }
       }
+      console.log("1. " + new Date().toLocaleString() + ": getLocalState returning");
       return [currentGen, values];
+    }
+
+    function getServerState(cb) {
+      console.log("2. " + new Date().toLocaleString() + ": getServerState called");
+      var id = gameId;
+      if (id) {
+        res = rpc.call('App.get', [id], function(res) {
+          var currentGenS = res[0];
+          var valuesS = parseValue(res[1]);
+          console.log("2. " + new Date().toLocaleString() + ": getServerState returning this....");
+          console.log(currentGenS);
+          console.log(valuesS);
+          cb([currentGenS, valuesS]);
+        }, log);
+      }
     }
 
     function updateScore(curPlayer) {
@@ -188,16 +200,19 @@
       }
     }
 
-    function updateServerState(serverState, localState) {
+    function updateStates(serverState, localState) {
+      console.log("3. " + new Date().toLocaleString() + ": updateStates called");
       var id = gameId;
       res = rpc.call('App.set', [id, values, currentGen], function(res) {
         currentGen = res[0];
         values = parseValue(res[1]);
         updateLocalState([currentGen, values], localState);
+        console.log("3. " + new Date().toLocaleString() + ": updateStates returning");
       }, log);
     }
 
     function updateLocalState(serverState, localState) {
+      console.log("4. " + new Date().toLocaleString() + ": updateLocalState called");
       serverGen = serverState[0];
       serverVal = serverState[1];
       localGen = localState[0];
@@ -207,6 +222,7 @@
         currentGen = serverGen;
         mergeValues(serverVal, localVal);
       }
+      console.log("4. " + new Date().toLocaleString() + ": updateLocalState returning");
     }
 
     function mergeValues(serverValue, localValue) {
