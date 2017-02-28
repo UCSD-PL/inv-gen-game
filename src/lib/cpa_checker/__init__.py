@@ -1,9 +1,59 @@
 from tempfile import NamedTemporaryFile
 from subprocess import call, check_output, STDOUT
 from os.path import dirname, abspath, relpath
+from pydot import graph_from_dot_file
+from lib.common.util import unique
+from z3 import parse_smt2_string
+import re
 
 MYDIR = dirname(abspath(relpath(__file__)))
 CPA_PATH = MYDIR + "/../../../env/third_party/cpa_checker_1.4/CPAchecker-1.4-svcomp16c-unix/"
+
+def findLoopHeaderLabel(dotFile):
+  g = unique(graph_from_dot_file(dotFile))
+  nodes = g.get_nodes();
+  shapeList = [(n.get_shape(), n.get_label()) for n in nodes]
+  doubleCircles = [t for t in shapeList if t[0] == u'"doublecircle"']
+  # The loop header should be the unique node with a double circle shape
+  # Its label will be a string of the form '"N[0-9]*\\n[0-9]"'. We care
+  # just about the first [0-9]* part.
+  return unique(doubleCircles)[1].split("\\n")[0][2:]
+
+def parseAbstractionFile(fname):
+  lines = filter(lambda x:  x != '', map(lambda x:  x.strip(), open(fname).read().split("\n")))
+  decls = [ ]
+  invs = { }
+  label_re = re.compile("^(?P<n1>[0-9]*) \((?P<n2>[0-9,]*)\) \@(?P<n3>[0-9]*):$");
+  var_re = re.compile("\|[a-zA-Z]*::([a-zA-Z0-9_]*)\|")
+  cur_lbl = None
+  for l in lines:
+    if l.startswith("(declare-fun"):
+      decls.append(var_re.sub(r"\1", l));
+    elif (label_re.match(l)):
+      cur_lbl = label_re.match(l).groupdict()["n3"];
+    else:
+      assert(cur_lbl != None)
+      full_str = "\n".join(decls + [var_re.sub(r"\1", l)])
+      invs[cur_lbl] = invs.get(cur_lbl, []) + [parse_smt2_string(full_str)]
+  return invs
+
+def parseInvariantsFile(fname):
+  lines = filter(lambda x:  x != '', map(lambda x:  x.strip(), open(fname).read().split("\n")))
+  label_re = re.compile("^[^ ]* [^ :]*:$")
+  label_lines = [l for l in lines if label_re.match(l)]
+  assert (len(label_lines) == 1) # Single loop header so single invariant
+
+  lines = [l for l in lines if not label_re.match(l)]
+  var_re = re.compile("\|[a-zA-Z]*::([a-zA-Z0-9_]*)\|")
+
+  full_str = "\n".join([var_re.sub(r"\1",l) for l in lines])
+  return parse_smt2_string(full_str);
+
+def getLoopInvariants(outputDir):
+  loopHeader = findLoopHeaderLabel(outputDir + "/cfa.dot")
+  invs = parseAbstractionFile(outputDir + "/abstractions.txt")
+  inv = parseInvariantsFile(outputDir + "/invariantPrecs.txt")
+  return invs[loopHeader] + [inv]
 
 def runCPAChecker(cppFile, timelimit=100, config="predicateAnalysis-ImpactRefiner-ABEl.properties"):
   contain_assume_def = [ ]
@@ -36,4 +86,7 @@ def runCPAChecker(cppFile, timelimit=100, config="predicateAnalysis-ImpactRefine
                                       x.startswith("More details about the verification run") or
                                       len(x.strip()) == 0) ]
     verified = len([x for x in lines if "Verification result: TRUE." in x]) > 0
-    return (verified, "\n".join(lines))
+
+    headerLabel = findLoopHeaderLabel("output/cfa.dot")
+    invs = getLoopInvariants("output/")
+    return (verified, headerLabel, invs, "\n".join(lines))
