@@ -129,14 +129,11 @@
       if (sState.length !== 2 || lState.length !== 2) {
         return false;
       }
-      var equality = (sState[0] === lState[0]) && equalValues(sState[1], lState[1]);
-      return equality;
+      return (sState[0] === lState[0]) && equalValues(sState[1], lState[1]);
     }
 
     function equalValues(sVal, lVal) {
-      var equality = equalPlayers(sVal.players, lVal.players);
-      equality = (sVal.levelSet === lVal.levelSet) && (sVal.level === lVal.level) && equality;
-      return equality;
+      return (sVal.levelSet === lVal.levelSet) && (sVal.level === lVal.level) && equalPlayers(sVal.players, lVal.players);;
     }
 
     /* FIXME: proper equality checking */
@@ -218,7 +215,6 @@
       }
     }
 
-    /* FIXME - sync issues */
     function updateStates(serverState, localState) {
       updateLocalState(serverState, localState);
 
