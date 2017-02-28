@@ -725,7 +725,7 @@
       "s-phases_true-unreach-call2",
       [
         "../sv_manual_trans/loop-acceleration/phases_true-unreach-call2.desugared.bpl",
-        "../sv_manual_trans/loop-acceleration/phases_true-unreach-call2.c"
+        "../sv_manual_trans/loop-acceleration/phases_true-unreach-call2.dimo.c"
       ]
     ],
     [

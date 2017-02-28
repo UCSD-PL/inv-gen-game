@@ -4,6 +4,7 @@ from threading import Condition
 from time import sleep, time
 from random import randint
 from multiprocessing import Process, Queue as PQueue
+from ..common.util import eprint
 import Pyro4
 import sys
 import atexit
@@ -63,7 +64,7 @@ def startAndWaitForZ3Instance():
     out = "z3_child.%d.out" % os.getpid()
     err = "z3_child.%d.err" % os.getpid()
 
-    print "Redirecting child", os.getpid(), "streams to", out, err
+    eprint("Redirecting child", os.getpid(), "streams to", out, err)
 
     sys.stdout.close();
     sys.stderr.close();
@@ -409,13 +410,15 @@ def z3_expr_to_boogie(expr):
             "div": ("div","left"),
             "mod": ("mod","none"),
             "=": ("==","none"),
-            "!=":("!=","none"),
+            "distinct":("!=","none"),
             "<": ("<","none"),
             ">": (">","none"),
             "<=": ("<=","none"),
             ">=": (">=","none"),
             "and": ("&&","left"),
             "or": ("||","left"),
+            "=>": ("==>", "none"),
+            "Implies": ("==>", "none"),
         }[d.name()]
 
         c = expr.children();
@@ -435,6 +438,15 @@ def z3_expr_to_boogie(expr):
         lhs = z3_expr_to_boogie(c[0]) if (not isinstance(c[0], ast.AstNode)) else c[0]
         rhs = z3_expr_to_boogie(c[1])
         return ast.AstBinExpr(lhs, boogie_op, rhs)
+    elif (d.name() == "if"):
+        # TODO: Check types of branches are bool
+        c = expr.children();
+        cond = z3_expr_to_boogie(c[0])
+        thenB = z3_expr_to_boogie(c[1]);
+        elseB = z3_expr_to_boogie(c[2]);
+        return ast.AstBinExpr(ast.AstBinExpr(cond, "==>", thenB),
+                              "&&",
+                              ast.AstBinExpr(ast.AstUnExpr("!", cond), "==>", elseB));
     else:
         raise Exception("Can't translate z3 expression " + str(expr) +
             " to boogie.") 

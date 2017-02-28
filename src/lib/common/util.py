@@ -1,6 +1,10 @@
 import traceback
 from itertools import chain, combinations
-from sys import exc_info
+from sys import exc_info, stderr
+
+def eprint(*args):
+  stderr.write(" ".join(map(str, args)) + "\n")
+
 
 def unique(iterable, msg=""):
   """ assert that iterable has one element and return it """
