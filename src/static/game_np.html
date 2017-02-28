@@ -133,7 +133,7 @@
     }
 
     function equalValues(sVal, lVal) {
-      return (sVal.levelSet === lVal.levelSet) && (sVal.level === lVal.level) && equalPlayers(sVal.players, lVal.players);;
+      return (sVal.levelSet === lVal.levelSet) && (sVal.level === lVal.level) && equalPlayers(sVal.players, lVal.players);
     }
 
     /* FIXME: proper equality checking */
@@ -256,7 +256,7 @@
       var players = serverPlayers ? serverPlayers : localPlayers;
 
       for (var player = 0, len = localPlayers.length; player < len; player++) {
-        if (isNewPlayer(localPlayers[player], players)) {
+        if (isNewPlayer(localPlayers[player], players)) { // bug here - Cannot read property 'id' of undefined (localPlayers = []?)
           players.push(localPlayers[player]);
         }
         else {
@@ -306,7 +306,7 @@
         playerIds.push(players[player].id);
       }
       
-      if(playerIds.indexOf(currentPlayer.id) === -1) {
+      if(playerIds.indexOf(currentPlayer.id) === -1) {  // error thrown here - currentPlayer.id is undefined 
         return true;
       }
       return false;
