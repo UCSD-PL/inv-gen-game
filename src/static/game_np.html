@@ -255,8 +255,8 @@
     function mergePlayers(serverPlayers, localPlayers) {
       var players = serverPlayers ? serverPlayers : localPlayers;
 
-      for (var player = 0, len = localPlayers.length; player < len; player++) {
-        if (isNewPlayer(localPlayers[player], players)) { // bug here - Cannot read property 'id' of undefined (localPlayers = []?)
+      for (var player = 0; player < localPlayers.length; player++) {
+        if (isNewPlayer(localPlayers[player], players)) {
           players.push(localPlayers[player]);
         }
         else {
@@ -277,25 +277,6 @@
       return expressions;
     }
 
-    /* FIXME
-    Server State:
-    Array[2]0: 4041: Objectexpressions: Objectlevel: ObjectlevelSet: "test"players: Array[2]__proto__: Objectlength: 2__proto__: Array[0]
-    Local State:
-    Array[2]0: 4031: Objectexpressions: Objectlevel: PrepopulatedDynamicLevellevelSet: "test"players: Array[1]__proto__: Objectlength: 2__proto__: Array[0]
-    game_np.html:294 Uncaught TypeError: Cannot read property 'id' of undefined
-    at isNewPlayer (game_np.html:294)
-    at mergePlayers (game_np.html:263)
-    at mergeValues (game_np.html:249)
-    at updateLocalState (game_np.html:239)
-    at updateStates (game_np.html:223)
-    at game_np.html:123
-    at game_np.html:207
-    at Object.success (jquery.jsonrpcclient.js:135)
-    at i (jquery-1.12.0.min.js:2)
-    at Object.fireWith [as resolveWith] (jquery-1.12.0.min.js:2)
-    at y (jquery-1.12.0.min.js:4)
-    at XMLHttpRequest.c (jquery-1.12.0.min.js:4)
-    */
     function isNewPlayer(currentPlayer, players) {
       if (players.length === 0) {
         return true;
@@ -306,7 +287,7 @@
         playerIds.push(players[player].id);
       }
       
-      if(playerIds.indexOf(currentPlayer.id) === -1) {  // error thrown here - currentPlayer.id is undefined 
+      if (playerIds.indexOf(currentPlayer.id) === -1) {
         return true;
       }
       return false;
