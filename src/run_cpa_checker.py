@@ -3,8 +3,9 @@ import argparse
 from vc_check import tryAndVerify_impl, tryAndVerifyWithSplitterPreds
 from lib.cpa_checker import runCPAChecker
 from lib.boogie.z3_embed import *
-from lib.boogie.ast import ast_and
+from lib.boogie.ast import ast_and, parseExprAst
 from lib.common.util import eprint
+from lib.boogie.analysis import propagate_sp
 from boogie_loops import loop_vc_post_ctrex
 from shutil import move
 from z3 import Solver as OriginalSolver
@@ -30,13 +31,16 @@ if (__name__ == "__main__"):
 
   for lvlName, lvl in lvls.iteritems():
     cppFile = lvl["path"][1]
-    if (not args.csv_table):
-      eprint("Running ", lvlName)
+    eprint("Running ", lvlName)
+
     res[lvlName] = runCPAChecker(cppFile, args.time_limit);
 
     move("output", "tmp_outputs/" + lvlName + "");
 
     solved, loopHeaderLbl, loopInvs, rawOutput = res[lvlName]
+    loop_header = lvl["loop"].loop_paths[0][0]
+    sps = list(propagate_sp(lvl["program"])[loop_header])
+    eprint("Added sps: ", sps)
     conf_status = "n/a"
 
     if (solved):
@@ -62,7 +66,7 @@ if (__name__ == "__main__"):
       if (invs != None):
         bbs = lvl["program"]
         loop = lvl["loop"]
-        (overfitted, nonind, sound) = tryAndVerify_impl(bbs, loop, [], invs, args.time_limit)
+        (overfitted, nonind, sound) = tryAndVerify_impl(bbs, loop, [], invs + sps, args.time_limit)
         #assert len(sound) > 0
         post_ctrex = loop_vc_post_ctrex(loop, ast_and(sound), bbs);
         #assert post_ctrex == None
@@ -70,6 +74,7 @@ if (__name__ == "__main__"):
           eprint("Supposedly sound inv: ", invs)
           eprint("Results : ", overfitted, nonind, sound)
           eprint("Level ", lvlName, "false claimed to be sound!")
+          eprint("Raw output: ", rawOutput)
           conf_status = False
         else:
           conf_status = True
