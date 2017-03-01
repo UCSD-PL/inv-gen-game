@@ -23,10 +23,10 @@
     function initializePlayers() {
       res = rpc.call("App.set", ["players", "[]", -1], function(res) {
         if(res) {
-          console.log("Players kv store initialized");
+          console.log("Players KV store initialized");
         }
         else {
-          console.log("Unable to initialize players kv store");
+          console.log("Error: Unable to initialize players KV store");
         }
       });
     }
@@ -217,7 +217,10 @@
 
 <body>
   <div class="container">
-    <div class="row" id="options">
+    <div class="row menu">
+      <h2>Multiplayer inv-gen-game</h2>
+    </div>
+    <div class="row menu" id="options">
       <button id="optStart" class="btn btn-primary">New Game</button>
       <br /><br />
       <button id="optJoin" class="btn btn-primary">Join Game</button>

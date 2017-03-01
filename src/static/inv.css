@@ -551,3 +551,8 @@ form .likert li label {width:100%;}
 .table-borderless th {
     border: 0;
 }
+
+.menu {
+  display: table;
+  margin: 0 auto;
+}
