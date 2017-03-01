@@ -1,9 +1,11 @@
+/* //DIMO: Replaced with __tmp_assert in dummy.h
 void __VERIFIER_assert(int cond) {
   if (!(cond)) {
     ERROR: goto ERROR;
   }
   return;
 }
+*/
 
 int __VERIFIER_nondet_int();
 

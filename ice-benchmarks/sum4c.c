@@ -2,12 +2,14 @@
 #include <time.h>
 #include <stdlib.h>
 
+/*//DIMO: Replaced with __tmp_assert in dummy.h
 void __VERIFIER_assert(int cond) {
   if (!(cond)) {
     ERROR: goto ERROR;
   }
   return;
 }
+*/
 
 int __VERIFIER_nondet_int();
 
@@ -17,7 +19,7 @@ int __VERIFIER_nondet_int();
 int main() { 
   int i, sn=0;
   srand(time(NULL));
-  int SIZE = 0;//rand();//__VERIFIER_nondet_int();
+  int SIZE = __VERIFIER_nondet_int();
 
   for(i=1; i<=SIZE; i++) {
     sn = sn + a;

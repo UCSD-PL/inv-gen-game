@@ -1,12 +1,14 @@
 extern void __VERIFIER_error() __attribute__ ((__noreturn__));
 extern unsigned int __VERIFIER_nondet_uint(void);
 
+/*//DIMO: Replaced with __tmp_assert in dummy.h
 void __VERIFIER_assert(int cond) {
   if (!(cond)) {
     ERROR: __VERIFIER_error();
   }
   return;
 }
+*/
 
 int main(void) {
   unsigned int x = __VERIFIER_nondet_uint();

@@ -2,25 +2,30 @@
 #include <time.h>
 #include <stdlib.h>
 
+/*//DIMO: Replaced with __tmp_assert in dummy.h
 void __VERIFIER_assert(int cond) {
   if (!(cond)) {
     ERROR: goto ERROR;
   }
   return;
 }
+*/
 
 //#define a (2)
 
-int __VERIFIER_nondet_int()
+// DIMO: Ignore body
+int __VERIFIER_nondet_int();
+/*
 {
 	srand(time(NULL));
 	return rand() % 20;
 }
+*/
 
 int main() { 
   int i, n, sn=0;
 
-  n=0;
+  n=__VERIFIER_nondet_int();
 
   for(i=1; i<=n; i++) {
     sn = sn + 1;

@@ -1,15 +1,21 @@
 extern void __VERIFIER_error() __attribute__ ((__noreturn__));
 
+/*//DIMO: Replaced with __tmp_assert in dummy.h
 void __VERIFIER_assert(int cond) {
   if (!(cond)) {
     ERROR: __VERIFIER_error();
   }
   return;
 }
+*/
 #define a (2)
-#define SIZE 8
+//#define SIZE 8
+int __VERIFIER_nondet_int();
 int main() { 
   int i, sn=0;
+  int SIZE = __VERIFIER_nondet_int();
+
+  __VERIFIER_assume(SIZE >= 0);
   for(i=1; i<=SIZE; i++) {
     sn = sn + a;
   }

@@ -2,7 +2,7 @@ from tempfile import NamedTemporaryFile
 from subprocess import call, check_output, STDOUT
 from os.path import dirname, abspath, relpath
 from pydot import graph_from_dot_file
-from lib.common.util import unique
+from lib.common.util import unique, eprint
 from z3 import parse_smt2_string
 import re
 
@@ -24,7 +24,7 @@ def parseAbstractionFile(fname):
   decls = [ ]
   invs = { }
   label_re = re.compile("^(?P<n1>[0-9]*) \((?P<n2>[0-9,]*)\) \@(?P<n3>[0-9]*):$");
-  var_re = re.compile("\|[a-zA-Z]*::([a-zA-Z0-9_]*)\|")
+  var_re = re.compile("\|[a-zA-Z0-9]*::([a-zA-Z0-9_]*)\|")
   cur_lbl = None
   for l in lines:
     if l.startswith("(declare-fun"):
@@ -44,7 +44,7 @@ def parseInvariantsFile(fname):
   assert (len(label_lines) == 1) # Single loop header so single invariant
 
   lines = [l for l in lines if not label_re.match(l)]
-  var_re = re.compile("\|[a-zA-Z]*::([a-zA-Z0-9_]*)\|")
+  var_re = re.compile("\|[a-zA-Z0-9]*::([a-zA-Z0-9_]*)\|")
 
   full_str = "\n".join([var_re.sub(r"\1",l) for l in lines])
   return parse_smt2_string(full_str);
@@ -60,15 +60,17 @@ def runCPAChecker(cppFile, timelimit=100, config="predicateAnalysis-ImpactRefine
   with NamedTemporaryFile(suffix=".cpp", delete=False) as processedF:
     cpp_args = [ "cpp",
       "-include", MYDIR+"/dummy.h",
-      "-D_Static_assert=assert",
-      "-D_static_assert=assert",
-      "-D__VERIFIER_assert=assert",
+      "-D_Static_assert=__tmp_assert",
+      "-D_static_assert=__tmp_assert",
+      "-Dstatic_assert=__tmp_assert",
+      "-D__VERIFIER_assert=__tmp_assert",
       "-D__VERIFIER_assume(a)=assume(a)",
       "-Dassume(a)=if(!(a)) exit(0)",
       "-DLARGE_INT=2147483647",
       cppFile, processedF.name ]
 
     call(cpp_args);
+    eprint("CPP-ed file in ", processedF.name)
     args = [ CPA_PATH + "scripts/cpa.sh",
               "-config", CPA_PATH + "config/" + config,
               "-timelimit", str(timelimit),

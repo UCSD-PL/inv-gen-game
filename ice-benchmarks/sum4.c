@@ -1,11 +1,13 @@
 #include <stdio.h>
 
+/*//DIMO: Replaced with __tmp_assert in dummy.h
 void __VERIFIER_assert(int cond) {
   if (!(cond)) {
     ERROR: goto ERROR;
   }
   return;
 }
+*/
 
 #define a (1)
 #define SIZE 8

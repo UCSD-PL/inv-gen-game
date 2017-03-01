@@ -2,12 +2,14 @@
 // "Verification of Programs by Combining Iterated Specialization with
 // Interpolation", HCVS 2014
 
+/*//DIMO: Replaced with __tmp_assert in dummy.h
 void __VERIFIER_assert(int cond) {
   if (!(cond)) {
     ERROR: goto ERROR;
   }
   return;
 }
+*/
 int __VERIFIER_nondet_int();
 void main() {
     int x = 1;
