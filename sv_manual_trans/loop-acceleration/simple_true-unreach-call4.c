@@ -1,11 +1,13 @@
 extern void __VERIFIER_error() __attribute__ ((__noreturn__));
 
+/*//DIMO: Replaced with __tmp_assert in dummy.h
 void __VERIFIER_assert(int cond) {
   if (!(cond)) {
     ERROR: __VERIFIER_error();
   }
   return;
 }
+*/
 
 int main(void) {
   unsigned int x = 0x0ffffff0;
