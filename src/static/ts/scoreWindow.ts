@@ -30,7 +30,7 @@ class NPlayerScoreWindow extends ScoreWindow {
 
   constructor(public parent: HTMLElement) {
     super(parent);
-    $("#score-div-row").append("<div id=\"scoreboard\"></div>");
+    $("#scoreboard-div-row").append("<div id=\"scoreboard\"></div>");
   }
 
   comparePlayers(a: any, b: any) {
@@ -46,10 +46,13 @@ class NPlayerScoreWindow extends ScoreWindow {
   updatePlayers(players: any) {
     this.players = players.sort(this.comparePlayers);
     let scoreboard: string = "";
+    let playerStats: string = "";
+    let tblHead: string = "Scoreboard<table class='table table-borderless table-condensed'><tr><th>Rank</th><th>Player</th><th>Score</th></tr>";
+    let tblTail: string = "</table>"
     for (let player = 0, len = this.players.length; player < len; player++) {
-      scoreboard = "<li>" + this.players[player].id + ": " + this.players[player].score + "</li>" + scoreboard;
+      playerStats = "<tr><td>" + (len - player) + "</td><td>" + this.players[player].id + "</td><td>" + this.players[player].score + "</td></tr>" + playerStats;
     }
-    scoreboard = "<ul>" + scoreboard + "</ul>";
+    scoreboard = tblHead + playerStats + tblTail;
     $("#scoreboard").html(scoreboard);
   }
 }

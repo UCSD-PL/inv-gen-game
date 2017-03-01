@@ -546,3 +546,8 @@ form .likert li input[type=radio] {
   
 }
 form .likert li label {width:100%;}
+
+.table-borderless td,
+.table-borderless th {
+    border: 0;
+}
