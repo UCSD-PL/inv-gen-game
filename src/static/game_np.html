@@ -36,7 +36,7 @@
     var currentGen = 0;
     var values = { levelSet: null, level: null, expressions: [], players: [] };
     var playerLvl = null;
-    var time = 2000;
+    var time = 1000;
 
 
     var curLvl;
@@ -114,11 +114,6 @@
     function synchronize() {
       var localState = getLocalState();
       var serverState = getServerState(function(state) {
-        console.log("\n\nServer State:");
-        console.log(state);
-        console.log("Local State:");
-        console.log(localState);
-
         if (!equalStates(state, localState)) {
           updateStates(state, localState);
         }
@@ -495,6 +490,9 @@
 </head>
 <body>
   <div class='container'>
+    <div class="row menu">
+      <h2>Multiplayer inv-gen-game</h2>
+    </div>
     <div class="row centered" id="shareGameId">
       <h4>
         Hello, <label id="lblPlayerId"></label>. Invite others to join your game by sending them this code: <label id="lblGameId" class="success"></label>
