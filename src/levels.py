@@ -255,7 +255,7 @@ def loadBoogieLvlSet(lvlSetFile):
         lvlPath = join(lvlSetDir, lvlPath)
 
         # print "Loading level: ", lvlPath[0]
-        eprint()"Loading level: ", lvlPath)
+        eprint("Loading level: ", lvlPath)
         # lvl = loadBoogieFile(lvlPath[0], False)
         lvl = loadBoogieFile(lvlPath, False)
 
