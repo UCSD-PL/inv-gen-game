@@ -19,7 +19,7 @@ int __VERIFIER_nondet_int();
 int main() { 
   int i, sn=0;
   srand(time(NULL));
-  int SIZE = 0;//rand();//__VERIFIER_nondet_int();
+  int SIZE = __VERIFIER_nondet_int();
 
   for(i=1; i<=SIZE; i++) {
     sn = sn + a;

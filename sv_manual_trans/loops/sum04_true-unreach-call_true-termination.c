@@ -9,9 +9,13 @@ void __VERIFIER_assert(int cond) {
 }
 */
 #define a (2)
-#define SIZE 8
+//#define SIZE 8
+int __VERIFIER_nondet_int();
 int main() { 
   int i, sn=0;
+  int SIZE = __VERIFIER_nondet_int();
+
+  __VERIFIER_assume(SIZE >= 0);
   for(i=1; i<=SIZE; i++) {
     sn = sn + a;
   }

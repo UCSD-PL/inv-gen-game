@@ -13,16 +13,19 @@ void __VERIFIER_assert(int cond) {
 
 //#define a (2)
 
-int __VERIFIER_nondet_int()
+// DIMO: Ignore body
+int __VERIFIER_nondet_int();
+/*
 {
 	srand(time(NULL));
 	return rand() % 20;
 }
+*/
 
 int main() { 
   int i, n, sn=0;
 
-  n=0;
+  n=__VERIFIER_nondet_int();
 
   for(i=1; i<=n; i++) {
     sn = sn + 1;
