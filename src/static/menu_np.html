@@ -184,10 +184,22 @@
       $("#joinGame").hide();
     }
 
+    function hideNew() {
+      $("#options").show();
+      $("#newGame").hide();
+      $("#joinGame").hide();
+    }
+
     function showJoin() {
       $("#options").hide();
       $("#newGame").hide();
       $("#joinGame").show();
+    }
+
+    function hideJoin() {
+      $("#options").show();
+      $("#newGame").hide();
+      $("#joinGame").hide();
     }
 
     $(document).ready(function() {
@@ -207,6 +219,8 @@
       $("#optStart").click(showNew);
       $("#optJoin").click(showJoin);
       $("#start").click(startNewGame);
+      $("#optBackStart").click(hideNew);
+      $("#optBackJoin").click(hideJoin);
       $("#playerId").keyup(validatePlayerId);
       $("#playerIdJoin").keyup(validatePlayerJoinId);
       $("#gameId").keyup(validateGameId);
@@ -231,6 +245,7 @@
       <input id="playerId" type="text" placeholder="Enter player ID"></input>
       <br />
       <button id="start" type="button" class="btn btn-primary" disabled="true">Start</button>
+      <button id="optBackStart" type="button" class="btn btn-primary">Back</button>
       <br />
       <label id="notAvailable" class="error"></label>
     </div>
@@ -247,6 +262,7 @@
       <input id="gameId" type="text" placeholder="Enter game ID"></input>
       <br />
       <button id="join" type="submit" class="btn btn-primary" disabled="true">Join</button>
+      <button id="optBackJoin" type="button" class="btn btn-primary">Back</button>
       <br />
       <label id="notFound" class="error"></label>
     </div>
