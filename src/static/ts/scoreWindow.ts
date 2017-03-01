@@ -21,7 +21,7 @@ class ScoreWindow {
 
   clear(): void {
     this.score = 0;
-    $(this.parent).html("<span>0</span>");
+    $(this.parent).html("<span id='scoreNum'>0</span>");
   }
 }
 
