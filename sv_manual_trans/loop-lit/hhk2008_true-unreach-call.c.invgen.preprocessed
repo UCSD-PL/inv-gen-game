@@ -1,0 +1,27 @@
+# 1 "/tmp/tmpDCY7Co.cpp"
+# 1 "<built-in>"
+# 1 "<command-line>"
+# 1 "/usr/include/stdc-predef.h" 1 3 4
+# 1 "<command-line>" 2
+# 1 "/tmp/tmpDCY7Co.cpp"
+
+int NONDET;
+
+
+
+
+int main() {
+    int a;
+    int b;
+    int res, cnt;
+    assume(a <= 1000000);
+    assume(0 <= b && b <= 1000000);
+    res = a;
+    cnt = b;
+    while (cnt > 0) {
+ cnt = cnt - 1;
+ res = res + 1;
+    }
+    assert(res == a + b);
+    return 0;
+}

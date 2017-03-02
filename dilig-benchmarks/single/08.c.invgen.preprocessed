@@ -1,0 +1,34 @@
+# 1 "/tmp/tmpUhFd8R.cpp"
+# 1 "<built-in>"
+# 1 "<command-line>"
+# 1 "/usr/include/stdc-predef.h" 1 3 4
+# 1 "<command-line>" 2
+# 1 "/tmp/tmpUhFd8R.cpp"
+
+int NONDET;
+
+
+
+
+
+
+void main() {
+ int x = 0, y = 0;
+ while(NONDET){
+   if(NONDET){
+      x++;
+      y+=100;
+   }
+   else if (NONDET){
+      if (x >= 4) {
+          x++;
+          y++;
+      }
+      if (x < 0){
+          y--;
+      }
+   }
+
+ }
+ assert(x < 4 || y > 2);
+}

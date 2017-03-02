@@ -1,0 +1,26 @@
+# 1 "/tmp/tmpJ1yCb_.cpp"
+# 1 "<built-in>"
+# 1 "<command-line>"
+# 1 "/usr/include/stdc-predef.h" 1 3 4
+# 1 "<command-line>" 2
+# 1 "/tmp/tmpJ1yCb_.cpp"
+
+int NONDET;
+
+void main(int n)
+{
+  int x=0;
+  int y=0;
+  int i=0;
+  int m=10;
+
+
+  while(i<n) {
+    i++;
+    x++;
+    if(i%2 == 0) y++;
+  }
+
+
+  if(i==m) assert(x==2*y);
+}

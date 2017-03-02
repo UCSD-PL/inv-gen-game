@@ -1,0 +1,26 @@
+# 1 "/tmp/tmpiyr81z.cpp"
+# 1 "<built-in>"
+# 1 "<command-line>"
+# 1 "/usr/include/stdc-predef.h" 1 3 4
+# 1 "<command-line>" 2
+# 1 "/tmp/tmpiyr81z.cpp"
+
+int NONDET;
+
+
+
+
+
+int main(int flag, int a) {
+   int b;
+   int j = 0;
+
+   for (b=0; b < 100 ; ++b){
+      if (flag)
+         j = j +1;
+   }
+
+
+   if(flag)
+      assert(j==100);
+}

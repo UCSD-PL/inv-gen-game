@@ -1,0 +1,10 @@
+#include "assert.h"
+
+int main() {
+    int i, MY_LARGE_INT;
+    __VERIFIER_ASSUME(0 <= MY_LARGE_INT);
+
+    for (i = 0; i < MY_LARGE_INT; i++) ;
+    __VERIFIER_assert(i == MY_LARGE_INT);
+    return 0;
+}

@@ -1,0 +1,39 @@
+# 1 "/tmp/tmp1VS75n.cpp"
+# 1 "<built-in>"
+# 1 "<command-line>"
+# 1 "/usr/include/stdc-predef.h" 1 3 4
+# 1 "<command-line>" 2
+# 1 "/tmp/tmp1VS75n.cpp"
+
+int NONDET;
+
+
+
+
+int main() {
+    unsigned int i,j,a,b;
+    int flag;
+    a = 0;
+    b = 0;
+    j = 1;
+    if (flag) {
+        i = 0;
+    } else {
+        i = 1;
+    }
+
+    while (NONDET) {
+        a++;
+        b += (j - i);
+        i += 2;
+        if (i%2 == 0) {
+            j += 2;
+        } else {
+            j++;
+        }
+    }
+    if (flag) {
+        assert(a == b);
+    }
+    return 0;
+}

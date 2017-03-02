@@ -1,0 +1,44 @@
+# 1 "/tmp/tmpKoQGyg.cpp"
+# 1 "<built-in>"
+# 1 "<command-line>"
+# 1 "/usr/include/stdc-predef.h" 1 3 4
+# 1 "<command-line>" 2
+# 1 "/tmp/tmpKoQGyg.cpp"
+
+int NONDET;
+# 14 "/tmp/tmpKoQGyg.cpp"
+int main() {
+
+ int y;
+ int lock;
+ lock = 0;
+ int x;
+ int input;
+
+
+ {
+  lock = 1;
+  x = y;
+  input;
+  if( input ) {
+
+   lock = 0;
+   y = y + 1;
+  }
+ }
+
+ while(x != y) {
+
+  lock = 1;
+  x = y;
+  input;
+  if ( input ) {
+
+   lock = 0;
+   y = y + 1;
+  }
+ }
+
+ assert(lock == 1);
+
+}

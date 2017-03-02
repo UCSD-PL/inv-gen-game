@@ -1,0 +1,23 @@
+# 1 "/tmp/tmpZb7vTk.cpp"
+# 1 "<built-in>"
+# 1 "<command-line>"
+# 1 "/usr/include/stdc-predef.h" 1 3 4
+# 1 "<command-line>" 2
+# 1 "/tmp/tmpZb7vTk.cpp"
+
+int NONDET;
+
+
+
+
+
+int main() {
+    int x = 1;
+    int y = 0;
+    while (y < 1000 && NONDET) {
+        x = x + y;
+        y = y + 1;
+    }
+    assert(x >= y);
+    return 0;
+}
