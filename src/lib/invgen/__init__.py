@@ -62,14 +62,12 @@ def runInvGen(cppFile, mainRoutine):
     except CalledProcessError,e:
       raw = open(frontOut.name).read();
       outp = raw.split("\n")
-      print outp[-2]
       if outp[-2] == "Fatal error: exception ArmcStmt.NotImplemented(\"Mod\")":
         return ("NYI: Mod", [], outp)
       elif "Fatal error:" in raw and "Not implemented (unsigned int" in raw:
         return ("NYI: Unsigned Int Cast", [], outp)
       elif outp[-2] == "Fatal error: exception Failure(\"Push Negation failed! I am here!\")":
         return ("Frontend Crash", [], outp)
-      print outp
       raise e
     
     eprint("Transitions file in ", transitionsF.name)
@@ -83,7 +81,6 @@ def runInvGen(cppFile, mainRoutine):
         return ("InvGen Crash", [], outp);
       elif outp[-2] == "! pred2coeff('Bad Predicate')":
         return ("InvGen Crash", [], outp);
-      print outp
       raise e;
     lines = raw.split("\n");
 
