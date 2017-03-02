@@ -73,6 +73,9 @@ void __tmp_assert(int cond) {
 int main() {
     int i = 0;
     int k = 0;
+    int LARGE_INT;
+
+    assume(LARGE_INT > 100);
     while(i < LARGE_INT) {
         int j = __VERIFIER_nondet_int();
         if(!(1 <= j && j < LARGE_INT)) exit(0);
