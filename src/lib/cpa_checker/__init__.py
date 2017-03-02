@@ -57,7 +57,8 @@ def getLoopInvariants(outputDir):
 
 def runCPAChecker(cppFile, timelimit=100, config="predicateAnalysis-ImpactRefiner-ABEl.properties"):
   contain_assume_def = [ ]
-  with NamedTemporaryFile(suffix=".cpp", delete=False) as processedF:
+  shouldDelete = True
+  with NamedTemporaryFile(suffix=".cpp", delete=shouldDelete) as processedF:
     cpp_args = [ "cpp",
       "-include", MYDIR+"/dummy.h",
       "-D_Static_assert=__tmp_assert",
