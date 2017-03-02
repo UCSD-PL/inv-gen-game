@@ -1,0 +1,24 @@
+# 1 "/tmp/tmp0hDWHX.cpp"
+# 1 "<built-in>"
+# 1 "<command-line>"
+# 1 "/usr/include/stdc-predef.h" 1 3 4
+# 1 "<command-line>" 2
+# 1 "/tmp/tmp0hDWHX.cpp"
+
+int NONDET;
+
+
+
+
+
+void main(int n) {
+  int x= 0;
+  int m=0;
+  while(x<n) {
+     if(NONDET) {
+ m = x;
+     }
+     x= x+1;
+  }
+  if(n>0) assert(0<=m && m<n);
+}

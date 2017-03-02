@@ -1,0 +1,29 @@
+# 1 "/tmp/tmpR9utan.cpp"
+# 1 "<built-in>"
+# 1 "<command-line>"
+# 1 "/usr/include/stdc-predef.h" 1 3 4
+# 1 "<command-line>" 2
+# 1 "/tmp/tmpR9utan.cpp"
+
+int NONDET;
+
+void main()
+{
+  int x = 0;
+  int y = 0;
+  int z = 0;
+  int k = 0;
+
+  while(NONDET)
+  {
+     if(k%3 == 0)
+       x++;
+     y++;
+     z++;
+     k = x+y+z;
+  }
+
+  assert(x==y);
+  assert(y==z);
+
+}

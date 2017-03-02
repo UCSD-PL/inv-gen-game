@@ -1,0 +1,19 @@
+# 1 "/tmp/tmpPWdiii.cpp"
+# 1 "<built-in>"
+# 1 "<command-line>"
+# 1 "/usr/include/stdc-predef.h" 1 3 4
+# 1 "<command-line>" 2
+# 1 "/tmp/tmpPWdiii.cpp"
+
+int NONDET;
+# 23 "/tmp/tmpPWdiii.cpp"
+int main() {
+  int i, n, sn=0;
+
+  n;
+
+  for(i=1; i<=n; i++) {
+    sn = sn + 1;
+  }
+  assert(sn==n || sn == 0);
+}

@@ -1,0 +1,20 @@
+# 1 "/tmp/tmpXr6PC8.cpp"
+# 1 "<built-in>"
+# 1 "<command-line>"
+# 1 "/usr/include/stdc-predef.h" 1 3 4
+# 1 "<command-line>" 2
+# 1 "/tmp/tmpXr6PC8.cpp"
+
+int NONDET;
+# 12 "/tmp/tmpXr6PC8.cpp"
+int main()
+{
+  unsigned int n;
+  unsigned int x=n, y=0;
+  while(x>0)
+  {
+    x--;
+    y++;
+  }
+  assert(y==n);
+}

@@ -1,0 +1,33 @@
+# 1 "/tmp/tmpBa_IDm.cpp"
+# 1 "<built-in>"
+# 1 "<command-line>"
+# 1 "/usr/include/stdc-predef.h" 1 3 4
+# 1 "<command-line>" 2
+# 1 "/tmp/tmpBa_IDm.cpp"
+
+int NONDET;
+# 14 "/tmp/tmpBa_IDm.cpp"
+int main() {
+
+ int N;
+ int x = 0;
+ int m = 0;
+ int input;
+
+  while (x < N) {
+
+  input;
+  if( input ) {
+
+   m = x;
+  }
+
+  x = x + 1;
+
+ }
+
+ if (N > 0) {
+  assert((0 <= m) && (m < N));
+ }
+
+}

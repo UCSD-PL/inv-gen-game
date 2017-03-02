@@ -1,0 +1,24 @@
+# 1 "/tmp/tmp_Ozz0q.cpp"
+# 1 "<built-in>"
+# 1 "<command-line>"
+# 1 "/usr/include/stdc-predef.h" 1 3 4
+# 1 "<command-line>" 2
+# 1 "/tmp/tmp_Ozz0q.cpp"
+
+int NONDET;
+# 13 "/tmp/tmp_Ozz0q.cpp"
+void main()
+{
+  int x, N;
+  x = 0;
+  N;
+  if (N < 0)
+    return;
+
+  while(x < N)
+  {
+    x = x + 1;
+  }
+  assert(x == N);
+  return;
+}

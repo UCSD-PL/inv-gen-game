@@ -1,0 +1,32 @@
+# 1 "/tmp/tmp8xj58i.cpp"
+# 1 "<built-in>"
+# 1 "<command-line>"
+# 1 "/usr/include/stdc-predef.h" 1 3 4
+# 1 "<command-line>" 2
+# 1 "/tmp/tmp8xj58i.cpp"
+
+int NONDET;
+# 13 "/tmp/tmp8xj58i.cpp"
+int main() {
+
+ int a[5];
+ int len = 0;
+ int i;
+ int input;
+
+ while ( input ) {
+
+  if (len == 4)
+   len = 0;
+
+  if (len < 0 || len >= 5)
+   assert( 0 == 1);
+
+  len++;
+
+  input;
+ }
+
+    return 1;
+
+}

@@ -1,0 +1,17 @@
+# 1 "/tmp/tmpkSdiFk.cpp"
+# 1 "<built-in>"
+# 1 "<command-line>"
+# 1 "/usr/include/stdc-predef.h" 1 3 4
+# 1 "<command-line>" 2
+# 1 "/tmp/tmpkSdiFk.cpp"
+
+int NONDET;
+
+int main() {
+    int i, MY_LARGE_INT;
+    __VERIFIER_ASSUME(0 <= MY_LARGE_INT);
+
+    for (i = 0; i < MY_LARGE_INT; i++) ;
+    assert(i == MY_LARGE_INT);
+    return 0;
+}
