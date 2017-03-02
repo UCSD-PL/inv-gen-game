@@ -60,7 +60,7 @@ if (__name__ == "__main__"):
     eprint("Added sps: ", sps)
     conf_status = "n/a"
 
-    if (solved):
+    if (solved == True):
       eprint("z3 invs: ", len(loopInvs), loopInvs)
       boogieInvs = map(parseInvGenInvariant, loopInvs);
       bbs = lvl["program"]
@@ -87,6 +87,6 @@ if (__name__ == "__main__"):
       boogieInvs = []
 
     if (args.csv_table):
-      print lvlName, ",", loopInvs, boogieInvs, res[lvlName][0], ",", conf_status
+      print lvlName, ",", ";".join(map(str, loopInvs)), ",", ";".join(map(str, boogieInvs)), ",", res[lvlName][0], ",", conf_status
     else:
       print "Level", lvlName, "discovered:", loopInvs, "solved: ", solved, "confirmed?: ", conf_status
