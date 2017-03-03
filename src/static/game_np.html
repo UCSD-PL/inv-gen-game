@@ -34,7 +34,7 @@
     var gameId;
     var playerId;
     var currentGen = 0;
-    var values = { levelSet: null, level: null, expressions: [], players: [] };
+    var values = { level: null, expressions: [], players: [] };
     var playerLvl = null;
     var time = 500;
 
@@ -127,8 +127,9 @@
       return (sState[0] === lState[0]) && equalValues(sState[1], lState[1]);
     }
 
+    /* this will change if players are on different levels */
     function equalValues(sVal, lVal) {
-      return (sVal.levelSet === lVal.levelSet) && (sVal.level === lVal.level) && equalPlayers(sVal.players, lVal.players);
+      return (sVal.level === lVal.level) && equalPlayers(sVal.players, lVal.players);
     }
 
     function equalPlayers(p1, p2) {
@@ -160,12 +161,10 @@
     }
 
     function getLocalState() {
-      if (curLvlSet) {
-        values.levelSet = curLvlSet;
-      }
       if (playerLvl) {
         values.level = playerLvl;
       }
+      /* change values.expressions to store expressions per level */
       if (progW) {
         values.expressions = progW.invMap;
         for (var inv in values.expressions) {
@@ -234,10 +233,9 @@
         return;
       }
 
-      values.levelSet = serverValue.levelSet ? serverValue.levelSet : localValue.levelSet;
       values.level = serverValue.level ? serverValue.level : localValue.level; /* TODO: when level changes */
       values.players = mergePlayers(serverValue.players, localValue.players);
-      values.expressions = mergeExpressions(serverValue.expressions, localValue.expressions);
+      values.expressions = mergeExpressions(serverValue.expressions, localValue.expressions); /* pass values.level too? */
 
       scoreW.updatePlayers(values.players);
 
@@ -266,6 +264,7 @@
       return players;
     }
     
+    /* this will change to expressions[level] = {...} */
     function mergeExpressions(serverExpressions, localExpressions) {
       var expressions = $.extend({}, serverExpressions, localExpressions);
       return expressions;
