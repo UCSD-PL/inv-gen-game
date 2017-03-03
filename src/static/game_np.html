@@ -34,7 +34,7 @@
     var gameId;
     var playerId;
     var currentGen = 0;
-    var values = { level: null, expressions: [], players: [] };
+    var values = { expressions: {}, players: [] };
     var playerLvl = null;
     var time = 500;
 
@@ -127,9 +127,8 @@
       return (sState[0] === lState[0]) && equalValues(sState[1], lState[1]);
     }
 
-    /* this will change if players are on different levels */
     function equalValues(sVal, lVal) {
-      return (sVal.level === lVal.level) && equalPlayers(sVal.players, lVal.players);
+      return equalPlayers(sVal.players, lVal.players);
     }
 
     function equalPlayers(p1, p2) {
@@ -143,8 +142,11 @@
         return false;
       }
       for (var i = p1.length; i--;) {
-        if ((p1[i].id !== p2[i].id) && (p1[i].score !== p2[i].score))
+        if ((p1[i].id !== p2[i].id)
+        || (p1[i].score !== p2[i].score)
+        || (p1[i].level !== p2[i].level)) {
           return false;
+        }
       }
       return true;
     }
@@ -161,18 +163,21 @@
     }
 
     function getLocalState() {
+      var lvlId = null;
+      
       if (playerLvl) {
-        values.level = playerLvl;
+        lvlId = playerLvl.id;
       }
-      /* change values.expressions to store expressions per level */
-      if (progW) {
-        values.expressions = progW.invMap;
-        for (var inv in values.expressions) {
+
+      if (progW && lvlId) {
+        values.expressions[lvlId] = progW.invMap;
+        for (var inv in values.expressions[lvlId]) {
           progW.addInvariant(inv, esprima.parse(inv));
         }
       }
-      if (playerId) {
-        var currentPlayer = {id: playerId, score: 0};
+
+      if (playerId && playerLvl) {
+        var currentPlayer = { id: playerId, score: 0, level: playerLvl };
         currentPlayer.score = scoreW ? scoreW.score : 0;
 
         if(values.players === undefined) {
@@ -233,14 +238,16 @@
         return;
       }
 
-      values.level = serverValue.level ? serverValue.level : localValue.level; /* TODO: when level changes */
       values.players = mergePlayers(serverValue.players, localValue.players);
-      values.expressions = mergeExpressions(serverValue.expressions, localValue.expressions); /* pass values.level too? */
+      values.expressions = mergeExpressions(serverValue.expressions, localValue.expressions);
 
       scoreW.updatePlayers(values.players);
 
-      for (var inv in values.expressions) {
-          progW.addInvariant(inv, esprima.parse(inv));
+      if (playerLvl) {
+        var lvlId = playerLvl.id;
+        for (var inv in values.expressions[lvlId]) {
+            progW.addInvariant(inv, esprima.parse(inv));
+        }
       }
     }
 
@@ -256,6 +263,7 @@
           for (var sPlayer = 0, len = players.length; sPlayer < len; sPlayer++) {
             if (players[sPlayer].id === curPlayer.id && players[sPlayer].score !== curPlayer.score) {
               players[sPlayer].score = curPlayer.score > players[sPlayer].score ? curPlayer.score : players[sPlayer].score;
+              players[sPlayer].level = curPlayer.level > players[sPlayer].level ? curPlayer.level : players[sPlayer].level;
               break;
             }
           }
@@ -264,9 +272,11 @@
       return players;
     }
     
-    /* this will change to expressions[level] = {...} */
     function mergeExpressions(serverExpressions, localExpressions) {
-      var expressions = $.extend({}, serverExpressions, localExpressions);
+      var expressions = localExpressions;
+      for (var level in serverExpressions) {
+        expressions[level] = $.extend({}, serverExpressions[level], localExpressions[level]);
+      }
       return expressions;
     }
 
