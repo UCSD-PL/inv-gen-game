@@ -1,9 +1,12 @@
-from lib.boogie.ast import ast_and, replace, AstBinExpr
+from lib.boogie.ast import ast_and, replace, AstBinExpr, AstAssert, AstAssume, AstTrue
 from boogie_loops import loop_vc_pre_ctrex, _unssa_z3_model
 from util import split, nonempty, powerset
-from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, Unknown, counterex, Implies, And, tautology
-from lib.boogie.paths import nd_bb_path_to_ssa, ssa_path_to_z3
+from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, Unknown, counterex, Implies, And, tautology, Bool, satisfiable, unsatisfiable
+from lib.boogie.paths import nd_bb_path_to_ssa, ssa_path_to_z3, _ssa_stmts
 from lib.boogie.ssa import SSAEnv
+from lib.boogie.predicate_transformers import wp_stmts, sp_stmt
+from copy import copy
+from lib.boogie.bb import entry, exit
 
 def _from_dict(vs, vals):
     if type(vals) == tuple:
@@ -80,3 +83,80 @@ def tryAndVerifyWithSplitterPreds(bbs, loop, old_sound_invs, boogie_invs,
     sound = set(sound).union(sound_p2)
 
     return (overfitted, nonind, sound)
+
+def checkInvNetwork(bbs, preCond, postCond, cutPoints, timeout=None):
+    cps = copy(cutPoints);
+    entryBB = entry(bbs); exitBB = exit(bbs);
+    cps[entryBB] = preCond;
+    aiTyEnv = AllIntTypeEnv()
+
+    for cp in cps:
+      initial_path, intial_ssa_env = nd_bb_path_to_ssa([cp], bbs, SSAEnv())
+      workQ = [(initial_path, intial_ssa_env, expr_to_z3(cps[cp], aiTyEnv))]
+      visited = set()
+      while len(workQ) > 0:
+        path, curFinalSSAEnv, sp = workQ.pop(0);
+
+        nextBB, nextReplMaps = path[-1]
+        processedStmts = []
+        ssa_stmts = _ssa_stmts(bbs[nextBB].stmts, nextReplMaps)
+
+        for s in ssa_stmts:
+          if (isinstance(s, AstAssert)):
+            c = counterex(Implies(sp, expr_to_z3(s.expr, aiTyEnv)), timeout);
+            if (c != None):
+              # Current path can violate assertion
+              return ("unsafe", path, processedStmts + [s], sp, c)
+          elif (isinstance(s, AstAssume)):
+            if (unsatisfiable(And(sp, expr_to_z3(s.expr, aiTyEnv)), timeout)):
+              break;
+          processedStmts.append(s)
+          new_sp = sp_stmt(s, sp, aiTyEnv)
+          #print "SP: {", sp, "} ", s, " {", new_sp, "}"
+          sp = new_sp
+
+        if (len(processedStmts) != len(bbs[nextBB].stmts)):
+          # Didn't make it to the end of the block - path must be unsat
+          continue;
+
+        if (len(bbs[nextBB].successors) == 0): # This is exit
+          assert nextBB == exit(bbs)
+          postSSA = expr_to_z3(replace(postCond, curFinalSSAEnv.replm()), aiTyEnv)
+          c = counterex(Implies(sp, postSSA), timeout)
+          if (c != None):
+            return ("unsafe", path, succ, sp, c)
+        else:
+          for succ in bbs[nextBB].successors:
+            if succ in cps:
+              # Check implication
+              post = cps[succ]
+              postSSA = replace(post, curFinalSSAEnv.replm())
+              postSSAZ3 = expr_to_z3(postSSA, aiTyEnv)
+              c = counterex(Implies(sp, postSSAZ3), timeout)
+              if (c != None):
+                return ("nonind", path, succ, Implies(sp, postSSAZ3), c)
+            else:
+              assert succ not in path; # We should have cutpoints at every loop
+              succSSA, nextFinalSSAEnv = nd_bb_path_to_ssa([succ], bbs, SSAEnv(curFinalSSAEnv));
+              workQ.append((path + succSSA, nextFinalSSAEnv, sp));
+    return True
+
+def checkLoopInv(bbs, loop, invs, timeout=None):
+  loopHdr = loop.loop_paths[0][0]
+  cps = { loopHdr : ast_and(invs) }
+  res = checkInvNetwork(bbs, AstTrue(), AstTrue(), cps, timeout);
+  entryBB = entry(bbs); exitBB = exit(bbs);
+
+  if (res == True):
+    return True
+  else:
+    (failure, path, arg, sp, ctrex) = res
+    if (failure == "unsafe"):
+      return "unsafe"
+    else:
+      if path[0][0] == entryBB:
+        assert arg == loopHdr
+        return "overfitted"
+      else:
+        assert path[0][0] == loopHdr and arg == loopHdr
+        return "non-inductive"

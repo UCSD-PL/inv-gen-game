@@ -5,7 +5,7 @@ import tabulate
 from lib.boogie.eval import *
 import lib.boogie.ast as bast
 from lib.boogie.z3_embed import *
-from vc_check import tryAndVerify_impl
+from vc_check import tryAndVerify_impl, checkLoopInv
 from boogie_loops import *
 from re import compile
 from lib.common.util import unique
@@ -13,6 +13,7 @@ import os
 
 p = argparse.ArgumentParser(description="check a lvlset is correctly built")
 p.add_argument("--lvlset", type=str, help="lvlset to checl", required=True)
+p.add_argument("--timeout", type=int, help="timeout on z3 queries")
 
 args = p.parse_args()
 curLevelSetName, lvls = levels.loadBoogieLvlSet(args.lvlset)
@@ -23,10 +24,15 @@ for lvl_name, lvl in lvls.items():
   sol = parseExprAst(sol);
   bbs = lvl["program"]
   loop = lvl["loop"]
-  over, nonind, sound = tryAndVerify_impl(bbs, loop, [], [sol], 120);
-  post_ctrex = loop_vc_post_ctrex(loop, bast.ast_and(sound), bbs)
-  if (post_ctrex != None):
-    print lvl_name, "failed with solution = ", sol, "of which only ", sound, " are sound.\n Counterexample: ", post_ctrex
+
+  try:
+    res = checkLoopInv(bbs, loop, [sol], args.timeout)
+  except Unknown:
+    print "Can't tell for level ", lvl_name
+    continue
+
+  if (res != True):
+    print lvl_name, "doesn't satisfy solution ", sol, "info: ", res
 
 endsWithNumP = compile(".*\.[0-9]*$")
 justEnd = compile("\.[0-9]*$")
@@ -69,11 +75,10 @@ for lvl_name, lvl in lvls.iteritems():
 
   bbs = lvl["program"]
   loop = lvl["loop"]
-  over, nonind, sound = tryAndVerify_impl(bbs, loop, [], [inv], 120);
-  post_ctrex = loop_vc_post_ctrex(loop, bast.ast_and(sound), bbs)
-  if (post_ctrex == None):
-    print lvl_name, " is trivial."
+  trivial = checkLoopInv(bbs, loop, [AstTrue()], args.timeout);
 
+  if (trivial == True):
+    print lvl_name, " is new trivial."
 
 print "Checking for any levels with < 3 rows"
 for lvl_name, lvl in lvls.iteritems():
