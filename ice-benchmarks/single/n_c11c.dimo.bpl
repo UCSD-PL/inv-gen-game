@@ -9,7 +9,7 @@ procedure main()
 
   assume N > 0;
   while ( * )
-  // invariant len <= N;
+  // invariant len <= N && len >= 0 && N > 0;
   {
     if (len == N)
     {

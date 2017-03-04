@@ -15,7 +15,7 @@ procedure main()
   buflim := bufferlen - 2;
 
   while (*)
-  // invariant buf <= buflim && in <= buf + 1;
+  // invariant 0<=in && in < inlen && 0 <= buf && buf <= buflim && buflim == bufferlen - 2 && bufferlen < inlen && ((buf <= buflim) ==> buf == in);
   {
     if (!(buf == buflim)) {
       assert(0<=buf);

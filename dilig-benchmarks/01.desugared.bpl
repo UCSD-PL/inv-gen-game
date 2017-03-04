@@ -28,6 +28,7 @@ implementation run()
 
   anon2_LoopDone:
     assume {:partition} 0 >= count;
+    assert (y>=1);
     return;
 }
 
