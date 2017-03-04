@@ -237,22 +237,22 @@ def counterex(pred, timeout=None):
     finally:
       if (s): releaseSolver(s);
 
-def satisfiable(pred):
+def satisfiable(pred, timeout=None):
     s = None
     try:
       s = getSolver()
       s.add(pred);
-      res = s.check()
+      res = s.check(timeout)
       return res == z3.sat;
     finally:
       if (s): releaseSolver(s)
 
-def unsatisfiable(pred):
+def unsatisfiable(pred, timeout=None):
     s = None
     try:
       s = getSolver()
       s.add(pred);
-      res = s.check()
+      res = s.check(timeout)
       return res == z3.unsat;
     finally:
       if (s): releaseSolver(s)
@@ -300,9 +300,9 @@ def expr_to_z3(expr, typeEnv):
     elif isinstance(expr, ast.AstId):
         return typeEnv[expr.name](expr.name)
     elif isinstance(expr, ast.AstTrue):
-        return True;
+        return Bool(True);
     elif isinstance(expr, ast.AstFalse):
-        return False;
+        return Bool(False);
     elif isinstance(expr, ast.AstUnExpr):
         z3_inner = expr_to_z3(expr.expr, typeEnv)
         if expr.op == '-':
