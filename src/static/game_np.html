@@ -36,7 +36,7 @@
     var currentGen = 0;
     var values = { expressions: {}, players: [] };
     var playerLvl = null;
-    var time = 500;
+    var time = 1000;
 
 
     var curLvl;
@@ -277,6 +277,9 @@
       for (var level in serverExpressions) {
         expressions[level] = $.extend({}, serverExpressions[level], localExpressions[level]);
       }
+      if (Object.keys(expressions[curLvlId]).length >= 4) {
+          $("#skip-to-next-lvl").show();
+        }
       return expressions;
     }
 
