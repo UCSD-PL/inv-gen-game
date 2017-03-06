@@ -1,6 +1,6 @@
 from levels import loadBoogieLvlSet
 import argparse
-from vc_check import tryAndVerify_impl, tryAndVerifyWithSplitterPreds
+from vc_check import checkLoopInv, tryAndVerify_impl
 from lib.cpa_checker import runCPAChecker, convertCppFileForCPAChecker
 from lib.boogie.z3_embed import *
 from lib.boogie.ast import ast_and, parseExprAst
@@ -72,18 +72,20 @@ if (__name__ == "__main__"):
       if (invs != None):
         bbs = lvl["program"]
         loop = lvl["loop"]
-        (overfitted, nonind, sound) = tryAndVerify_impl(bbs, loop, [], invs + sps, args.time_limit)
-        #assert len(sound) > 0
-        post_ctrex = loop_vc_post_ctrex(loop, ast_and(sound), bbs);
-        #assert post_ctrex == None
-        if (post_ctrex != None):
-          eprint("Supposedly sound inv: ", invs)
-          eprint("Results : ", overfitted, nonind, sound)
-          eprint("Level ", lvlName, "false claimed to be sound!")
-          eprint("Raw output: ", rawOutput)
-          conf_status = False
-        else:
-          conf_status = True
+        try:
+          (overfitted, nonind, sound) = tryAndVerify_impl(bbs, loop, [], invs + sps, args.time_limit)
+
+          eprint ("Out of ", invs+sps, "sound: ", sound)
+
+          if (not checkLoopInv(bbs, loop, sound, args.time_limit)):
+            eprint("Supposedly sound inv: ", invs)
+            eprint("Level ", lvlName, "false claimed to be sound!")
+            eprint("Raw output: ", rawOutput)
+            conf_status = False
+          else:
+            conf_status = True
+        except Unknown:
+            conf_status = "z3 timeout"
 
     if (args.csv_table):
       print lvlName, ",", res[lvlName][0], ",", conf_status
