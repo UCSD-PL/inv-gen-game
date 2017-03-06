@@ -6,7 +6,7 @@ procedure run()
   count := n;
   
   while(count > 0)
-  // invariant x == y;
+  // invariant x == y && x >= 1;
   {
     t1 := x;
     t2 := y;
@@ -14,4 +14,5 @@ procedure run()
     y := t1 + t2;
     count := count - 1;
   }
+  assert (y>=1);
 }

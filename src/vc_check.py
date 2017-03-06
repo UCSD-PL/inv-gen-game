@@ -1,9 +1,13 @@
-from lib.boogie.ast import ast_and, replace, AstBinExpr
-from boogie_loops import loop_vc_pre_ctrex, _unssa_z3_model
+from lib.boogie.ast import ast_and, replace, AstBinExpr, AstAssert, AstAssume, AstTrue
+from boogie_loops import _unssa_z3_model
 from util import split, nonempty, powerset
-from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, Unknown, counterex, Implies, And, tautology
-from lib.boogie.paths import nd_bb_path_to_ssa, ssa_path_to_z3
+from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, Unknown, counterex, Implies, And, tautology, Bool, satisfiable, unsatisfiable
+from lib.boogie.paths import nd_bb_path_to_ssa, ssa_path_to_z3, _ssa_stmts
 from lib.boogie.ssa import SSAEnv
+from lib.boogie.predicate_transformers import wp_stmts, sp_stmt
+from copy import copy
+from lib.boogie.bb import entry, exit
+from lib.boogie.inv_networks import *
 
 def _from_dict(vs, vals):
     if type(vals) == tuple:
@@ -12,52 +16,17 @@ def _from_dict(vs, vals):
         return [ vals[vs[i]] if vs[i] in vals else None for i in xrange(0, len(vs)) ]
 
 def tryAndVerify_impl(bbs, loop, old_sound_invs, invs, timeout=None):
-    # 0. First get the overfitted invariants out of the way. We can check overfitted-ness
-    #    individually for each invariant.
-    pre_ctrexs = map(lambda inv:    (inv, loop_vc_pre_ctrex(loop, inv, bbs)), invs)
-    overfitted, rest = split(lambda ((inv, ctrex)): ctrex != None, pre_ctrexs)
-    rest = map(lambda x:    x[0], rest)
+    loopHdr = loop.loop_paths[0][0]
+    cps = { loopHdr: set(old_sound_invs + invs) }
 
-    nonind_ctrex = { }
+    (overfitted, nonind, sound, violations) =\
+      filterCandidateInvariants(bbs, AstTrue(), AstTrue(), cps, timeout);
 
-    body_ssa, ssa_env = nd_bb_path_to_ssa([loop.loop_paths], bbs, SSAEnv(None, ""))
-    z3_path_pred = ssa_path_to_z3(body_ssa, bbs);
+    overfitted = [(x, None) for x in overfitted[loopHdr]]
+    nonind_invs = [(x, None) for x in nonind[loopHdr]]
+    sound = list(sound[loopHdr])
 
-    rest = list(rest) + old_sound_invs
-    old_rest = []
-
-    # Repeat till quiescence (while rest is shrinking)
-    while (len(old_rest) != len(rest)):
-      old_rest = rest
-      rest = []
-
-      z3_pre_cond = expr_to_z3(ast_and(old_rest), AllIntTypeEnv())
-
-      for inv in old_rest:
-        z3_inv_post = expr_to_z3(replace(inv, ssa_env.replm()), AllIntTypeEnv())
-        q = Implies(And(z3_pre_cond, z3_path_pred), z3_inv_post)
-
-        try:
-          ctr = counterex(q, timeout);
-        except Unknown:
-          ctr = { }
-
-        if (ctr == None):
-          rest.append(inv);
-        else:
-          nonind_ctrex[inv] = (_unssa_z3_model(ctr, {}), _unssa_z3_model(ctr, ssa_env.replm()));
-
-    new_sound = set(rest)
-
-    # 6. Label remainder as non-inductive
-    nonind_invs = [ ]
-    overfitted_set = set([ x[0] for x in overfitted ])
-
-    for inv in invs:
-        if inv not in overfitted_set and inv not in new_sound:
-            nonind_invs.append((inv, nonind_ctrex[inv]))
-
-    return overfitted, nonind_invs, list(new_sound)
+    return overfitted, nonind_invs, sound
 
 def tryAndVerifyWithSplitterPreds(bbs, loop, old_sound_invs, boogie_invs,
   splitterPreds, partialInvs, timeout=None):
@@ -80,3 +49,10 @@ def tryAndVerifyWithSplitterPreds(bbs, loop, old_sound_invs, boogie_invs,
     sound = set(sound).union(sound_p2)
 
     return (overfitted, nonind, sound)
+
+def checkLoopInv(bbs, loop, invs, timeout=None):
+  loopHdr = loop.loop_paths[0][0]
+  cps = { loopHdr : set(invs) }
+  res = checkInvNetwork(bbs, AstTrue(), AstTrue(), cps, timeout);
+  entryBB = entry(bbs); exitBB = exit(bbs);
+  return len(res) == 0

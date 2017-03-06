@@ -1,7 +1,7 @@
 from levels import loadBoogieLvlSet
 import argparse
-from vc_check import tryAndVerify_impl, tryAndVerifyWithSplitterPreds
-from lib.cpa_checker import runCPAChecker
+from vc_check import checkLoopInv, tryAndVerify_impl
+from lib.cpa_checker import runCPAChecker, convertCppFileForCPAChecker
 from lib.boogie.z3_embed import *
 from lib.boogie.ast import ast_and, parseExprAst
 from lib.common.util import eprint
@@ -10,6 +10,8 @@ from boogie_loops import loop_vc_post_ctrex
 from shutil import move
 from z3 import Solver as OriginalSolver
 from signal import signal, SIGALRM,  alarm
+from os.path import exists
+
 def handler(signum, frame):
   raise Exception("timeout")
 signal(SIGALRM, handler);
@@ -31,9 +33,13 @@ if (__name__ == "__main__"):
 
   for lvlName, lvl in lvls.iteritems():
     cppFile = lvl["path"][1]
+    preprocessedFile = cppFile + ".cpachecker.preprocessed"
     eprint("Running ", lvlName)
 
-    res[lvlName] = runCPAChecker(cppFile, args.time_limit);
+    if (not exists(preprocessedFile)):
+      convertCppFileForCPAChecker(cppFile, preprocessedFile);
+
+    res[lvlName] = runCPAChecker(preprocessedFile, args.time_limit);
 
     move("output", "tmp_outputs/" + lvlName + "");
 
@@ -66,18 +72,20 @@ if (__name__ == "__main__"):
       if (invs != None):
         bbs = lvl["program"]
         loop = lvl["loop"]
-        (overfitted, nonind, sound) = tryAndVerify_impl(bbs, loop, [], invs + sps, args.time_limit)
-        #assert len(sound) > 0
-        post_ctrex = loop_vc_post_ctrex(loop, ast_and(sound), bbs);
-        #assert post_ctrex == None
-        if (post_ctrex != None):
-          eprint("Supposedly sound inv: ", invs)
-          eprint("Results : ", overfitted, nonind, sound)
-          eprint("Level ", lvlName, "false claimed to be sound!")
-          eprint("Raw output: ", rawOutput)
-          conf_status = False
-        else:
-          conf_status = True
+        try:
+          (overfitted, nonind, sound) = tryAndVerify_impl(bbs, loop, [], invs + sps, args.time_limit)
+
+          eprint ("Out of ", invs+sps, "sound: ", sound)
+
+          if (not checkLoopInv(bbs, loop, sound, args.time_limit)):
+            eprint("Supposedly sound inv: ", invs)
+            eprint("Level ", lvlName, "false claimed to be sound!")
+            eprint("Raw output: ", rawOutput)
+            conf_status = False
+          else:
+            conf_status = True
+        except Unknown:
+            conf_status = "z3 timeout"
 
     if (args.csv_table):
       print lvlName, ",", res[lvlName][0], ",", conf_status

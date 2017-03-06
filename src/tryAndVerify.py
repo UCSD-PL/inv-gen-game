@@ -7,7 +7,7 @@ from json import load, dumps
 from js import invJSToZ3, addAllIntEnv, esprimaToZ3, esprimaToBoogie, boogieToEsprima
 from boogie.ast import parseAst, AstBinExpr, AstTrue, AstUnExpr,\
     ast_and, replace, expr_read
-from boogie_loops import loop_vc_pre_ctrex, loop_vc_post_ctrex, loop_vc_ind_ctrex
+from boogie_loops import loop_vc_post_ctrex
 from lib.common.util import unique, pp_exc, powerset, average, split, nonempty
 from boogie.eval import instantiateAndEval, _to_dict
 from boogie.z3_embed import expr_to_z3, AllIntTypeEnv, ids, z3_expr_to_boogie, shutdownZ3

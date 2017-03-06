@@ -10,6 +10,7 @@ implementation main()
     assume SIZE >= 0;
     sn := 0;
     i := 1;
+    a := 2;
     goto anon3_LoopHead;
 
   anon3_LoopHead:

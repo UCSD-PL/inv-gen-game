@@ -8,6 +8,7 @@ implementation main()
   anon0:
     sn := 0;
     x := 0;
+    a := 2;
     goto anon2_LoopHead;
 
   anon2_LoopHead:

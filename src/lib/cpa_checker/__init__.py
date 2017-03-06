@@ -55,41 +55,39 @@ def getLoopInvariants(outputDir):
   inv = parseInvariantsFile(outputDir + "/invariantPrecs.txt")
   return invs[loopHeader] + [inv]
 
-def runCPAChecker(cppFile, timelimit=100, config="predicateAnalysis-ImpactRefiner-ABEl.properties"):
+def convertCppFileForCPAChecker(cppFile, outFile):
+  cpp_args = [ "cpp",
+    "-include", MYDIR+"/dummy.h",
+    "-D_Static_assert=__tmp_assert",
+    "-D_static_assert=__tmp_assert",
+    "-Dstatic_assert=__tmp_assert",
+    "-D__VERIFIER_assert=__tmp_assert",
+    "-D__VERIFIER_assume(a)=assume(a)",
+    "-Dassume(a)=if(!(a)) exit(0)",
+    cppFile, outFile ]
+
+  call(cpp_args);
+
+def runCPAChecker(inpFile, timelimit=100, config="predicateAnalysis-ImpactRefiner-ABEl.properties"):
   contain_assume_def = [ ]
-  shouldDelete = True
-  with NamedTemporaryFile(suffix=".cpp", delete=shouldDelete) as processedF:
-    cpp_args = [ "cpp",
-      "-include", MYDIR+"/dummy.h",
-      "-D_Static_assert=__tmp_assert",
-      "-D_static_assert=__tmp_assert",
-      "-Dstatic_assert=__tmp_assert",
-      "-D__VERIFIER_assert=__tmp_assert",
-      "-D__VERIFIER_assume(a)=assume(a)",
-      "-Dassume(a)=if(!(a)) exit(0)",
-      "-DLARGE_INT=2147483647",
-      cppFile, processedF.name ]
+  args = [ CPA_PATH + "scripts/cpa.sh",
+            "-config", CPA_PATH + "config/" + config,
+            "-timelimit", str(timelimit),
+            "-setprop", "cpa.predicate.nondetFunctions=unknown1,unknown2,unknown3,unknown4,unknown5,random,__VERIFIER_nondet_int,__VERIFIER_nondet_uint",
+            inpFile ]
+  raw = check_output(args, stderr=STDOUT);
+  lines = raw.split("\n");
+  lines = [x for x in lines if not (x.startswith("Running CPAchecker with") or
+                                    x.startswith("Using the following resource") or
+                                    x.startswith("CPAchecker 1.4-svcomp16c (OpenJDK") or
+                                    x.startswith("Using predicate analysis with") or
+                                    x.startswith("Using refinement for predicate analysis with") or
+                                    x.startswith("Starting analysis ...") or
+                                    x.startswith("Stopping analysis ...") or
+                                    x.startswith("More details about the verification run") or
+                                    len(x.strip()) == 0) ]
+  verified = len([x for x in lines if "Verification result: TRUE." in x]) > 0
 
-    call(cpp_args);
-    eprint("CPP-ed file in ", processedF.name)
-    args = [ CPA_PATH + "scripts/cpa.sh",
-              "-config", CPA_PATH + "config/" + config,
-              "-timelimit", str(timelimit),
-              "-setprop", "cpa.predicate.nondetFunctions=unknown1,unknown2,unknown3,unknown4,unknown5,random,__VERIFIER_nondet_int,__VERIFIER_nondet_uint",
-              processedF.name ]
-    raw = check_output(args, stderr=STDOUT);
-    lines = raw.split("\n");
-    lines = [x for x in lines if not (x.startswith("Running CPAchecker with") or
-                                      x.startswith("Using the following resource") or
-                                      x.startswith("CPAchecker 1.4-svcomp16c (OpenJDK") or
-                                      x.startswith("Using predicate analysis with") or
-                                      x.startswith("Using refinement for predicate analysis with") or
-                                      x.startswith("Starting analysis ...") or
-                                      x.startswith("Stopping analysis ...") or
-                                      x.startswith("More details about the verification run") or
-                                      len(x.strip()) == 0) ]
-    verified = len([x for x in lines if "Verification result: TRUE." in x]) > 0
-
-    headerLabel = findLoopHeaderLabel("output/cfa.dot")
-    invs = getLoopInvariants("output/")
-    return (verified, headerLabel, invs, "\n".join(lines))
+  headerLabel = findLoopHeaderLabel("output/cfa.dot")
+  invs = getLoopInvariants("output/")
+  return (verified, headerLabel, invs, "\n".join(lines))

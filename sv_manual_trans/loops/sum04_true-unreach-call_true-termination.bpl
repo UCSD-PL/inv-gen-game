@@ -7,6 +7,7 @@ procedure main()
   assume(SIZE >= 0);
   sn:= 0;
   i := 1;
+  a := 2; // #defined to 2 in C code
   
   while (i <= SIZE)
   // invariant sn == a * (i-1) && i <= SIZE+1;
