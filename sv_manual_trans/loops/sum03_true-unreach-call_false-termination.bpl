@@ -4,6 +4,7 @@ procedure main()
 {
   var sn, loop1, n1, x, a: int;
   sn:=0;
+  a := 2;
   //unsigned int loop1=__VERIFIER_nondet_uint(), n1=__VERIFIER_nondet_uint();
   x:=0;
   
