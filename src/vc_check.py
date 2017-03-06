@@ -1,5 +1,4 @@
 from lib.boogie.ast import ast_and, replace, AstBinExpr, AstAssert, AstAssume, AstTrue
-from boogie_loops import _unssa_z3_model
 from util import split, nonempty, powerset
 from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, Unknown, counterex, Implies, And, tautology, Bool, satisfiable, unsatisfiable
 from lib.boogie.paths import nd_bb_path_to_ssa, ssa_path_to_z3, _ssa_stmts
@@ -16,20 +15,32 @@ def _from_dict(vs, vals):
         return [ vals[vs[i]] if vs[i] in vals else None for i in xrange(0, len(vs)) ]
 
 def tryAndVerify_impl(bbs, loop, old_sound_invs, invs, timeout=None):
+    """ Wrapper around checkInvNetwork for the case of a function
+        with a single loop and no pre- post- conditions.
+        Returns a tuple (overfitted, nonind, sound, violations) where
+          overfitted, nonind are each a list of tuples (inv, Violation)
+          sound is a set of sound invariants
+          violations is a (potentially empty) list of safety Violations
+            for the sound invariants.
+    """
     loopHdr = loop.loop_paths[0][0]
     cps = { loopHdr: set(old_sound_invs + invs) }
 
     (overfitted, nonind, sound, violations) =\
       filterCandidateInvariants(bbs, AstTrue(), AstTrue(), cps, timeout);
 
-    overfitted = [(x, None) for x in overfitted[loopHdr]]
-    nonind_invs = [(x, None) for x in nonind[loopHdr]]
+    overfitted = overfitted[loopHdr]
+    nonind_invs = nonind[loopHdr]
     sound = list(sound[loopHdr])
 
-    return overfitted, nonind_invs, sound
+    return overfitted, nonind_invs, sound, violations
 
 def tryAndVerifyWithSplitterPreds(bbs, loop, old_sound_invs, boogie_invs,
   splitterPreds, partialInvs, timeout=None):
+    """ Wrapper around tryAndVerify_impl that adds implication with
+        the splitter predicates to all candidate invariants. Same returns as
+        tryAndVerify_impl.
+    """
     initial_sound = partialInvs + old_sound_invs
 
     # First lets find the invariants that are sound without implication
@@ -48,11 +59,20 @@ def tryAndVerifyWithSplitterPreds(bbs, loop, old_sound_invs, boogie_invs,
     overfitted, nonind, sound_p2 = tryAndVerify_impl(bbs, loop, sound, p2_invs, timeout)
     sound = set(sound).union(sound_p2)
 
-    return (overfitted, nonind, sound)
+    return (overfitted, nonind, sound, violations)
 
-def checkLoopInv(bbs, loop, invs, timeout=None):
+def loopInvOverfittedCtrex(loop, inv, bbs):
+  """ Given a candidate loop invariant inv find 'overfittedness'
+      counterexamples.  I.e. find counterexamples to "precondition ==> inv".
+      Returns a potentially empty set of environments (dicts) that the invariant
+      should satisfy.
+  """
   loopHdr = loop.loop_paths[0][0]
   cps = { loopHdr : set(invs) }
-  res = checkInvNetwork(bbs, AstTrue(), AstTrue(), cps, timeout);
-  entryBB = entry(bbs); exitBB = exit(bbs);
-  return len(res) == 0
+  violations = checkInvNetwork(bbs, AstTrue(), AstTrue(), cps, timeout);
+  entryBB = entry(bbs);
+
+  return set([ x.endEnv() for x in violations
+    if x.isInductive() and # Implication fail
+       x.startBB() == entryBB and # From entry
+       x.endBB() == loopHdr ]) # To loop inv

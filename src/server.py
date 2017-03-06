@@ -6,7 +6,6 @@ from os.path import *
 from json import dumps
 from js import esprimaToZ3, esprimaToBoogie, boogieToEsprima
 from lib.boogie.ast import AstBinExpr, AstTrue, ast_and
-from boogie_loops import loop_vc_post_ctrex
 from lib.common.util import pp_exc, powerset, split, nonempty
 from lib.boogie.eval import instantiateAndEval, _to_dict
 from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, z3_expr_to_boogie
@@ -403,7 +402,8 @@ def tryAndVerify(levelSet, levelId, invs):
       boogie_invs += [parseExprAst(x) for x in lastVer["nonind"]]
 
     # First lets find the invariants that are sound without implication
-    overfitted, nonind, sound = tryAndVerify_impl(bbs, loop, initial_sound, boogie_invs)
+    overfitted, nonind, sound, violations =
+      tryAndVerify_impl(bbs, loop, initial_sound, boogie_invs)
     sound = [x for x in sound if not tautology(expr_to_z3(x, AllIntTypeEnv()))]
 
     # Next lets add implication  to all unsound invariants from first pass
@@ -414,28 +414,31 @@ def tryAndVerify(levelSet, levelId, invs):
     p2_invs = [ x for x in p2_invs if not tautology(expr_to_z3(x, AllIntTypeEnv())) ]
 
     # And look for any new sound invariants
-    overfitted, nonind, sound_p2 = tryAndVerify_impl(bbs, loop, sound, p2_invs)
+    overfitted, nonind, sound_p2, violations =
+      tryAndVerify_impl(bbs, loop, sound, p2_invs)
     sound = set(sound).union(sound_p2)
 
     # Finally see if the sound invariants imply the postcondition. 
+    solved = len(violations) == 0;
     fix = lambda x: _from_dict(lvl['variables'], x)
-    boogie_inv = ast_and(sound)
-    post_ctrex = map(fix, filter(lambda x:    x, [ loop_vc_post_ctrex(loop, boogie_inv, bbs) ]))
     
     # Convert all invariants from Boogie to esprima expressions, and counterexamples to arrays
     # from dictionaries
-    overfitted = [ (boogieToEsprima(inv), fix(ctrex)) for (inv, ctrex) in overfitted ]
-    nonind = [ (boogieToEsprima(inv), map(fix, ctrex)) for (inv, ctrex) in nonind ]
+    overfitted = [ (boogieToEsprima(inv), fix(v.endEnv()))
+      for (inv, v) in overfitted ]
+    nonind = [ (boogieToEsprima(inv), (fix(v.startEnv(), v.endEnv())))
+      for (inv, v) in nonind ]
     sound = [ boogieToEsprima(inv) for inv in sound ]
+    safety_ctrexs = [ fix(v.startEnv()) for v in violations ]
 
-    res = (overfitted, nonind, sound, post_ctrex)
+    res = (overfitted, nonind, sound, safety_ctrexs)
     addEvent("verifier", "VerifyAttempt", time(), args.ename, "localhost", {
       "lvlset": levelSet,
       "lvlid": levelId,
       "overfitted":nodups([str(esprimaToBoogie(inv, {})) for (inv,c) in overfitted]),
       "nonind":nodups([str(esprimaToBoogie(inv, {})) for (inv,c) in nonind]),
       "sound":nodups([str(esprimaToBoogie(inv, {})) for inv in sound]),
-      "post_ctrex":post_ctrex
+      "post_ctrex":safety_ctrexs
     }, s)
 
     return res

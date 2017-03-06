@@ -1,6 +1,6 @@
 from lib.boogie.ast import parseExprAst, ast_or, ast_and
 from lib.boogie.bb import get_bbs, ensureSingleExit, entry
-from boogie_loops import loops, get_loop_header_values, loop_vc_pre_ctrex
+from boogie_loops import loops, get_loop_header_values
 from lib.common.util import unique, powerset, average, eprint
 from lib.boogie.analysis import livevars
 from lib.boogie.eval import instantiateAndEval, evalPred, _to_dict, execute
@@ -8,6 +8,7 @@ from os import listdir
 from os.path import dirname, join, abspath, realpath
 from json import load, dumps
 from random import randint
+from vc_check import loopInvOverfittedCtrex
 
 def _tryUnroll(loop, bbs, min_un, max_un, bad_envs, good_env):
     # Lets first try to find a terminating loop between min and max iterations
@@ -101,12 +102,13 @@ def findNegatingTrace(loop, bbs, nunrolls, invs, invVrs = None):
             continue
         #print "Looking for ctrex for: ", s, " with no_ctrex: ", no_ctrex
         inv = ast_or(s)
-        ctrex = loop_vc_pre_ctrex(loop, inv, bbs)
-        if (ctrex):
-            trace, terminates = _tryUnroll(loop, bbs, 0, nunrolls, None, ctrex)
-            if (len(trace) > 0):
-                print "Ctrexample for ", inv, " is ", trace
-                res.append((diversity(trace), len(s), list(s), ctrex, (trace, terminates)))
+        ctrexs = loopOverfittedCtrex(loop, inv, bbs)
+        if (len(ctrexs) > 0):
+            for ctrex in ctrexs:
+              trace, terminates = _tryUnroll(loop, bbs, 0, nunrolls, None, ctrex)
+              if (len(trace) > 0):
+                  print "Ctrexample for ", inv, " is ", trace
+                  res.append((diversity(trace), len(s), list(s), ctrex, (trace, terminates)))
         else:
             no_ctrex = no_ctrex.union(s)
 

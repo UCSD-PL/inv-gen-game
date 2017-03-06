@@ -7,7 +7,6 @@ import argparse
 from os.path import exists
 from os import listdir
 from vc_check import tryAndVerify_impl, tryAndVerifyWithSplitterPreds
-from boogie_loops import loop_vc_post_ctrex
 import lib.boogie.ast as bast
 
 if (__name__ == "__main__"):
@@ -53,13 +52,14 @@ if (__name__ == "__main__"):
     if ("splitterPreds" in lvl and args.use_splitter_predicates):
       splitterPreds = lvl['splitterPreds']
       partialInv = [ lvl['partialInv'] ] if 'partialInv' in lvl else []
-      (overfitted, nonind, soundInvs) = tryAndVerifyWithSplitterPreds(bbs, loop, [], binvs, splitterPreds, partialInv, args.timeout)
+      (overfitted, nonind, soundInvs, violations) =
+        tryAndVerifyWithSplitterPreds(bbs, loop, [], binvs, splitterPreds, partialInv, args.timeout)
     else:
-      (overfitted, nonind, soundInvs) = tryAndVerify_impl(bbs, loop, [], binvs, args.timeout)
+      (overfitted, nonind, soundInvs, violations) =
+        tryAndVerify_impl(bbs, loop, [], binvs, args.timeout)
 
     if (args.check_solved):
-      post_ctrex = loop_vc_post_ctrex(loop, bast.ast_and(soundInvs), bbs)
-      solved = "," + str((post_ctrex == None))
+      solved = "," + str(len(violations) == 0)
     else:
       solved = "";
 

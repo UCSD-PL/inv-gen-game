@@ -5,7 +5,7 @@ import tabulate
 from lib.boogie.eval import *
 import lib.boogie.ast as bast
 from lib.boogie.z3_embed import *
-from vc_check import tryAndVerify_impl, checkLoopInv
+from vc_check import tryAndVerify_impl
 from boogie_loops import *
 from re import compile
 from lib.common.util import unique
@@ -18,6 +18,15 @@ p.add_argument("--timeout", type=int, help="timeout on z3 queries")
 args = p.parse_args()
 curLevelSetName, lvls = levels.loadBoogieLvlSet(args.lvlset)
 
+def isSolved(lvl, invs):
+  bbs = lvl["program"]
+  loop = lvl["loop"]
+
+  overfitted, nonind, sound, safety_violations =\
+    tryAndVerify_impl(bbs, loop, [], invs, args.timeout)
+
+  return len(safety_violations) == 0
+  
 print "Checking all solutions work..."
 for lvl_name, lvl in lvls.items():
   sol = open(lvl["path"][0].replace(".bpl", ".sol")).read()
@@ -26,20 +35,17 @@ for lvl_name, lvl in lvls.items():
   loop = lvl["loop"]
 
   try:
-    res = checkLoopInv(bbs, loop, [sol], args.timeout)
+    if (not isSolved(lvl, [sol])):
+      print lvl_name, "doesn't satisfy solution ", sol, "info: ", res
   except Unknown:
     print "Can't tell for level ", lvl_name
     continue
-
-  if (res != True):
-    print lvl_name, "doesn't satisfy solution ", sol, "info: ", res
 
 endsWithNumP = compile(".*\.[0-9]*$")
 justEnd = compile("\.[0-9]*$")
 
 originalToSplitM = { }
 splitToOriginal = { }
-
 
 print "Checking that split levels are properly named..."
 for lvl_name, lvl in lvls.items():
@@ -73,12 +79,8 @@ for lvl_name, lvl in lvls.iteritems():
   else:
     inv = bast.AstTrue();
 
-  bbs = lvl["program"]
-  loop = lvl["loop"]
-  trivial = checkLoopInv(bbs, loop, [AstTrue()], args.timeout);
-
-  if (trivial == True):
-    print lvl_name, " is new trivial."
+  if (isSolved(lvl, [AstTrue()])):
+    print lvl_name, " is trivial."
 
 print "Checking for any levels with < 3 rows"
 for lvl_name, lvl in lvls.iteritems():
@@ -91,7 +93,8 @@ for lvl_name, lvl in lvls.iteritems():
 
     bbs = lvl["program"]
     loop = lvl["loop"]
-    over, nonind, sound = tryAndVerify_impl(bbs, loop, [], exactValExpr, 120);
+    over, nonind, sound, violations = \
+      tryAndVerify_impl(bbs, loop, [], exactValExpr, 120);
     if (len(sound) == 0):
       print "Level", lvl_name, "has only", len(lvl["data"][0]), "rows"
 
