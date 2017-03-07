@@ -24,7 +24,7 @@ def parseInvGenInvariant(inv):
 
 if (__name__ == "__main__"):
   p = argparse.ArgumentParser(description="run daikon on a levelset")
-  p.add_argument('--lvlset', type=str, help='Path to lvlset file')
+  p.add_argument('--lvlset', type=str, help='Path to lvlset file', required=True)
   p.add_argument('--time-limit', type=int, help='Timeout for any operation involving InvGen or z3')
   p.add_argument('--csv-table', action="store_true", default=False, help='Print results as a csv table')
   args = p.parse_args();
@@ -65,7 +65,7 @@ if (__name__ == "__main__"):
       bbs = lvl["program"]
       loop = lvl["loop"]
       try:
-        (overfitted, nonind, sound, violations) =
+        (overfitted, nonind, sound, violations) =\
           tryAndVerify_impl(bbs, loop, [], boogieInvs + sps, args.time_limit)
         if (len(violations) > 0):
           eprint("Supposedly sound inv: ", loopInvs)

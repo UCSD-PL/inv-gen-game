@@ -66,7 +66,11 @@ def filterCandidateInvariants(bbs, preCond, postCond, cutPoints, timeout=None):
               candidate_invs = copy(cps[succ])
               for candidate in candidate_invs:
                 candidateSSA = expr_to_z3(replace(candidate, curFinalSSAEnv.replm()), aiTyEnv)
-                c = counterex(Implies(sp, candidateSSA), timeout)
+                try:
+                  c = counterex(Implies(sp, candidateSSA), timeout)
+                except Unknown:
+                  c = { } # On timeout conservatively assume fail
+
                 if (c != None):
                   v = Violation("inductiveness",
                                 path + [( succ, None )],
@@ -115,7 +119,10 @@ def checkInvNetwork(bbs, preCond, postCond, cutPoints, timeout=None):
 
         for (s, replM) in ssa_stmts:
           if (isinstance(s, AstAssert)):
-            c = counterex(Implies(sp, expr_to_z3(s.expr, aiTyEnv)), timeout);
+            try:
+              c = counterex(Implies(sp, expr_to_z3(s.expr, aiTyEnv)), timeout);
+            except Unknown:
+              c = { } # On timeout conservatively assume fail
             if (c != None):
               # Current path can violate assertion
               v = Violation("safety", path, processedStmts + [(s, replM)],
@@ -139,7 +146,10 @@ def checkInvNetwork(bbs, preCond, postCond, cutPoints, timeout=None):
           assert nextBB == exit(bbs)
           postSSA = expr_to_z3(replace(postCond, curFinalSSAEnv.replm()),
                                aiTyEnv)
-          c = counterex(Implies(sp, postSSA), timeout)
+          try:
+            c = counterex(Implies(sp, postSSA), timeout)
+          except Unknown:
+            c = { } # On timeout conservatively assume fail
           if (c != None):
             v = Violation("safety",
                           path,
@@ -154,7 +164,10 @@ def checkInvNetwork(bbs, preCond, postCond, cutPoints, timeout=None):
               post = ast_and(cps[succ])
               postSSA = replace(post, curFinalSSAEnv.replm())
               postSSAZ3 = expr_to_z3(postSSA, aiTyEnv)
-              c = counterex(Implies(sp, postSSAZ3), timeout)
+              try:
+                c = counterex(Implies(sp, postSSAZ3), timeout)
+              except Unknown:
+                c = { } # On timeout conservatively assume fail
               if (c != None):
                 v = Violation("inductiveness",
                   path + [ (succ, None) ],

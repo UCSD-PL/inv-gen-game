@@ -52,10 +52,10 @@ if (__name__ == "__main__"):
     if ("splitterPreds" in lvl and args.use_splitter_predicates):
       splitterPreds = lvl['splitterPreds']
       partialInv = [ lvl['partialInv'] ] if 'partialInv' in lvl else []
-      (overfitted, nonind, soundInvs, violations) =
+      (overfitted, nonind, soundInvs, violations) =\
         tryAndVerifyWithSplitterPreds(bbs, loop, [], binvs, splitterPreds, partialInv, args.timeout)
     else:
-      (overfitted, nonind, soundInvs, violations) =
+      (overfitted, nonind, soundInvs, violations) =\
         tryAndVerify_impl(bbs, loop, [], binvs, args.timeout)
 
     if (args.check_solved):
