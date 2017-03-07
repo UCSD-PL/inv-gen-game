@@ -50,3 +50,9 @@ def is_ssa_str(s):
 
 def unssa_str(s):
     return s[:s.rfind("_ssa_")]
+
+def unssa_z3_model(m, repl_m):
+    updated = map(str, repl_m.keys())
+    original = [ x for x in m.keys() if not is_ssa_str(x) and x not in updated ]
+    return { (unssa_str(x) if is_ssa_str(x) else x) : m.get(x, None) for x in
+        original + map(str, repl_m.values()) }

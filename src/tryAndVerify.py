@@ -7,7 +7,6 @@ from json import load, dumps
 from js import invJSToZ3, addAllIntEnv, esprimaToZ3, esprimaToBoogie, boogieToEsprima
 from boogie.ast import parseAst, AstBinExpr, AstTrue, AstUnExpr,\
     ast_and, replace, expr_read
-from boogie_loops import loop_vc_post_ctrex
 from lib.common.util import unique, pp_exc, powerset, average, split, nonempty
 from boogie.eval import instantiateAndEval, _to_dict
 from boogie.z3_embed import expr_to_z3, AllIntTypeEnv, ids, z3_expr_to_boogie, shutdownZ3
@@ -47,7 +46,8 @@ boogie_invs = [ parseExprAst(x) for x in args.invs ]
 candidate_antecedents = [ ast_and(pSet) for pSet in nonempty(powerset(splitterPreds)) ]
 
 # First lets find the invariants that are sound without implication
-overfitted, nonind, sound = tryAndVerify_impl(bbs, loop, [], boogie_invs)
+overfitted, nonind, sound, violations =
+  tryAndVerify_impl(bbs, loop, [], boogie_invs)
 
 # Next lets add implication  to all unsound invariants from first pass
 # Also add manually specified partialInvs
@@ -56,17 +56,9 @@ p2_invs = [ AstBinExpr(antec, "==>", inv)
   for antec in candidate_antecedents for inv in unsound ] + partialInvs
 
 # And look for any new sound invariants
-overfitted, nonind, sound_p2 = tryAndVerify_impl(bbs, loop, sound, p2_invs)
+overfitted, nonind, sound_p2, violations =
+  tryAndVerify_impl(bbs, loop, sound, p2_invs)
 sound = sound.union(sound_p2)
 
-# Finally see if the sound invariants imply the postcondition. Don't forget to
-# convert any counterexamples from {x:1, y:2} to [1,2]
-fix = lambda x: _from_dict(lvl['variables'], x)
-boogie_inv = ast_and(sound)
-post_ctrex = map(fix, filter(lambda x:    x, [ loop_vc_post_ctrex(loop, boogie_inv, bbs) ]))
-
-# Convert all invariants from Boogie to esprima expressions, and counterexamples to arrays
-# from dictionaries
-
 print "Sound: ", sound
-print "Verified? ", len(sound) > 0 and len(post_ctrex) == 0
+print "Verified? ", len(violations) > 0

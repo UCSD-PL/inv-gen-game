@@ -1,12 +1,11 @@
 from levels import loadBoogieLvlSet
 import argparse
-from vc_check import checkLoopInv, tryAndVerify_impl
+from vc_check import tryAndVerify_impl
 from lib.cpa_checker import runCPAChecker, convertCppFileForCPAChecker
 from lib.boogie.z3_embed import *
 from lib.boogie.ast import ast_and, parseExprAst
 from lib.common.util import eprint
 from lib.boogie.analysis import propagate_sp
-from boogie_loops import loop_vc_post_ctrex
 from shutil import move
 from z3 import Solver as OriginalSolver
 from signal import signal, SIGALRM,  alarm
@@ -73,11 +72,12 @@ if (__name__ == "__main__"):
         bbs = lvl["program"]
         loop = lvl["loop"]
         try:
-          (overfitted, nonind, sound) = tryAndVerify_impl(bbs, loop, [], invs + sps, args.time_limit)
+          (overfitted, nonind, sound, violations) =\
+            tryAndVerify_impl(bbs, loop, [], invs + sps, args.time_limit)
 
           eprint ("Out of ", invs+sps, "sound: ", sound)
 
-          if (not checkLoopInv(bbs, loop, sound, args.time_limit)):
+          if (len(violations) > 0):
             eprint("Supposedly sound inv: ", invs)
             eprint("Level ", lvlName, "false claimed to be sound!")
             eprint("Raw output: ", rawOutput)

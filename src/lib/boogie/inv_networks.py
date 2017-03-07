@@ -1,5 +1,4 @@
 from lib.boogie.ast import ast_and, replace, AstBinExpr, AstAssert, AstAssume, AstTrue
-from boogie_loops import loop_vc_pre_ctrex, _unssa_z3_model
 from util import split, nonempty, powerset
 from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, Unknown, counterex, Implies, And, tautology, Bool, satisfiable, unsatisfiable
 from lib.boogie.paths import nd_bb_path_to_ssa, ssa_path_to_z3, _ssa_stmts
@@ -69,12 +68,16 @@ def filterCandidateInvariants(bbs, preCond, postCond, cutPoints, timeout=None):
                 candidateSSA = expr_to_z3(replace(candidate, curFinalSSAEnv.replm()), aiTyEnv)
                 c = counterex(Implies(sp, candidateSSA), timeout)
                 if (c != None):
-                  print "Removing ", candidate, "Due to path ", (map(lambda x:  x[0], path)),\
-                    "query: ", Implies(sp, candidateSSA), "ctrex:",  c;
+                  v = Violation("inductiveness",
+                                path + [( succ, None )],
+                                [],
+                                Implies(sp, candidateSSA),
+                                c)
+
                   if (start == entryBB):
-                    overfitted[succ].add(candidate);
+                    overfitted[succ].add((candidate, v));
                   else:
-                    nonind[succ].add(candidate);
+                    nonind[succ].add((candidate, v));
 
                   cps[succ].remove(candidate);
               if (len(candidate_invs) != len(cps[succ])):
@@ -89,7 +92,7 @@ def filterCandidateInvariants(bbs, preCond, postCond, cutPoints, timeout=None):
     # Pass 2: Check for safety violations
     violations = checkInvNetwork(bbs, preCond, postCond, sound, timeout)
     for v in violations:
-      assert (v[0] == "safety") # sound should be an inductive network
+      assert (v.isSafety()) # sound should be an inductive network
 
     return (overfitted, nonind, sound, violations) 
 
@@ -108,19 +111,22 @@ def checkInvNetwork(bbs, preCond, postCond, cutPoints, timeout=None):
 
         nextBB, nextReplMaps = path[-1]
         processedStmts = []
-        ssa_stmts = _ssa_stmts(bbs[nextBB].stmts, nextReplMaps)
+        ssa_stmts = zip(_ssa_stmts(bbs[nextBB].stmts, nextReplMaps), nextReplMaps)
 
-        for s in ssa_stmts:
+        for (s, replM) in ssa_stmts:
           if (isinstance(s, AstAssert)):
             c = counterex(Implies(sp, expr_to_z3(s.expr, aiTyEnv)), timeout);
             if (c != None):
               # Current path can violate assertion
-              violations.append(("safety", path, processedStmts + [s], sp, (Implies(sp, expr_to_z3(s.expr, aiTyEnv)), c)))
+              v = Violation("safety", path, processedStmts + [(s, replM)],
+                            Implies(sp, expr_to_z3(s.expr, aiTyEnv)),
+                            c)
+              violations.append(v)
               break;
           elif (isinstance(s, AstAssume)):
             if (unsatisfiable(And(sp, expr_to_z3(s.expr, aiTyEnv)), timeout)):
               break;
-          processedStmts.append(s)
+          processedStmts.append((s, replM))
           new_sp = sp_stmt(s, sp, aiTyEnv)
           #print "SP: {", sp, "} ", s, " {", new_sp, "}"
           sp = new_sp
@@ -131,10 +137,16 @@ def checkInvNetwork(bbs, preCond, postCond, cutPoints, timeout=None):
 
         if (len(bbs[nextBB].successors) == 0): # This is exit
           assert nextBB == exit(bbs)
-          postSSA = expr_to_z3(replace(postCond, curFinalSSAEnv.replm()), aiTyEnv)
+          postSSA = expr_to_z3(replace(postCond, curFinalSSAEnv.replm()),
+                               aiTyEnv)
           c = counterex(Implies(sp, postSSA), timeout)
           if (c != None):
-            violations.append(("safety", path, succ, sp, (Implies(sp, postSSA) ,c)))
+            v = Violation("safety",
+                          path,
+                          processedStmts,
+                          Implies(sp, postSSA),
+                          c)
+            violations.append(v)
         else:
           for succ in bbs[nextBB].successors:
             if succ in cps:
@@ -144,10 +156,40 @@ def checkInvNetwork(bbs, preCond, postCond, cutPoints, timeout=None):
               postSSAZ3 = expr_to_z3(postSSA, aiTyEnv)
               c = counterex(Implies(sp, postSSAZ3), timeout)
               if (c != None):
-                violations.append(("inductiveness", path, succ, Implies(sp, postSSAZ3), c))
+                v = Violation("inductiveness",
+                  path + [ (succ, None) ],
+                  [],
+                  Implies(sp, postSSAZ3),
+                  c)
+                violations.append(v)
             else:
               assert succ not in path; # We should have cutpoints at every loop
               succSSA, nextFinalSSAEnv = nd_bb_path_to_ssa([succ], bbs, SSAEnv(curFinalSSAEnv));
               workQ.append((path + succSSA, nextFinalSSAEnv, sp));
 
     return violations
+
+class Violation:
+  def __init__(s, typ, path, lastBBCompletedStmts, query, ctrex):
+    s._typ = typ;
+    s._path = path;
+    s._lastBBCompletedStmts = lastBBCompletedStmts;
+    s._query = query;
+    s._ctrex = ctrex;
+
+  def isInductive(s): return s._typ == "inductiveness"
+  def isSafety(s): return s._typ == "safety"
+  def startBB(s): return s._path[0][0]
+  def endBB(s): return s._path[-1][0]
+  def startReplM(s):  return s._path[0][1][0]
+  def endReplM(s):
+    if (len(lastBBCompletedStmts) > 0):
+      return lastBBCompletedStmts[-1][1]
+    return s._path[-2][1][-1]
+
+  def startEnv(s):
+    assert {} == s.startReplM()
+    return unssa_model(s._ctrex, s.startReplM())
+
+  def endEnv(s):
+    return unssa_model(s._ctrex, s.endReplM())

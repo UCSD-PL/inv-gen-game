@@ -33,4 +33,5 @@ logs/
 mturk/
 studies/
 
-.vscode
+src/output
+src/tmp_outputs
