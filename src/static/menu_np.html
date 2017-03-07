@@ -58,7 +58,7 @@
       });
     }
 
-    function startNewGame() {
+    function initNewGame() {
       var playerId = getPlayerId();
       isPlayerIdPresent(playerId, function(result) {
         var exists = result;
@@ -77,24 +77,28 @@
           });
         }
 
-        var gameId = Math.round((Math.pow(36, idLength + 1) - Math.random() * Math.pow(36, idLength))).toString(36).slice(1);
-        res = isGameIdPresent(gameId);
-        res.then(function (result) {
-          if(result.error) {
-            init = rpc.call("App.set", [gameId, "{}", -1], function(result) {
-              if (result) {
-                window.location.href = "game_np.html?gameId=" + gameId + "&playerId=" + playerId;
-              }
-              else {
-                console.log("Error starting game " + gameId);
-                console.log(result);
-              }
-            })
-          }
-          else {
-            startNewGame();
-          }
-        });
+        startGame(playerId);
+      });
+    }
+
+    function startGame(playerId) {
+      var gameId = Math.round((Math.pow(36, idLength + 1) - Math.random() * Math.pow(36, idLength))).toString(36).slice(1);
+      res = isGameIdPresent(gameId);
+      res.then(function (result) {
+        if(result.error) {
+          init = rpc.call("App.set", [gameId, "{}", -1], function(result) {
+            if (result) {
+              window.location.href = "game_np.html?gameId=" + gameId + "&playerId=" + playerId;
+            }
+            else {
+              console.log("Error starting game " + gameId);
+              console.log(result);
+            }
+          })
+        }
+        else {
+          startGame(playerId);
+        }
       });
     }
 
@@ -218,7 +222,7 @@
 
       $("#optStart").click(showNew);
       $("#optJoin").click(showJoin);
-      $("#start").click(startNewGame);
+      $("#start").click(initNewGame);
       $("#optBackStart").click(hideNew);
       $("#optBackJoin").click(hideJoin);
       $("#playerId").keyup(validatePlayerId);
