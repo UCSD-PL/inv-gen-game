@@ -402,7 +402,7 @@ def tryAndVerify(levelSet, levelId, invs):
       boogie_invs += [parseExprAst(x) for x in lastVer["nonind"]]
 
     # First lets find the invariants that are sound without implication
-    overfitted, nonind, sound, violations =
+    overfitted, nonind, sound, violations =\
       tryAndVerify_impl(bbs, loop, initial_sound, boogie_invs)
     sound = [x for x in sound if not tautology(expr_to_z3(x, AllIntTypeEnv()))]
 
@@ -414,7 +414,7 @@ def tryAndVerify(levelSet, levelId, invs):
     p2_invs = [ x for x in p2_invs if not tautology(expr_to_z3(x, AllIntTypeEnv())) ]
 
     # And look for any new sound invariants
-    overfitted, nonind, sound_p2, violations =
+    overfitted, nonind, sound_p2, violations =\
       tryAndVerify_impl(bbs, loop, sound, p2_invs)
     sound = set(sound).union(sound_p2)
 
