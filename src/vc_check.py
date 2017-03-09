@@ -44,19 +44,19 @@ def tryAndVerifyWithSplitterPreds(bbs, loop, old_sound_invs, boogie_invs,
     initial_sound = partialInvs + old_sound_invs
 
     # First lets find the invariants that are sound without implication
-    overfitted, nonind, sound = tryAndVerify_impl(bbs, loop, initial_sound, boogie_invs, timeout)
+    overfitted, nonind, sound, violations = tryAndVerify_impl(bbs, loop, initial_sound, boogie_invs, timeout)
     sound = [x for x in sound if not tautology(expr_to_z3(x, AllIntTypeEnv()))]
 
     # Next lets add implication  to all unsound invariants from first pass
     # Also add manually specified partialInvs
-    unsound = [ inv_ctr_pair[0] for inv_ctr_pair in overfitted + nonind ]
+    unsound = [ inv_ctr_pair[0] for inv_ctr_pair in overfitted.union(nonind) ]
     candidate_antecedents = [ ast_and(pSet) for pSet in nonempty(powerset(splitterPreds)) ]
     p2_invs = [ AstBinExpr(antec, "==>", inv)
       for antec in candidate_antecedents for inv in unsound ] + partialInvs
     p2_invs = [ x for x in p2_invs if not tautology(expr_to_z3(x, AllIntTypeEnv())) ]
 
     # And look for any new sound invariants
-    overfitted, nonind, sound_p2 = tryAndVerify_impl(bbs, loop, sound, p2_invs, timeout)
+    overfitted, nonind, sound_p2, violations = tryAndVerify_impl(bbs, loop, sound, p2_invs, timeout)
     sound = set(sound).union(sound_p2)
 
     return (overfitted, nonind, sound, violations)

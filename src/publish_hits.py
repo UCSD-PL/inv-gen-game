@@ -140,7 +140,7 @@ try:
     for i in range(args.num_hits):
         port = get_unused_port()
         srid = exp.create_unique_server_run_id()
-        p = start_server(port, args.ename, srid, args.lvlset, args.db)
+        p = start_server(port, args.ename, srid, args.lvlset, args.db, args.adminToken)
         print "Started server run", srid, "on port", port, "with pid", p.pid 
         if args.ext:
             q = ExternalQuestion("https://zoidberg.ucsd.edu:{0}/start_patterns.html".format(port), 600)
