@@ -9,6 +9,7 @@ from vc_check import tryAndVerify_impl
 from boogie_loops import *
 from re import compile
 from lib.common.util import unique
+from os.path import exists
 import os
 
 p = argparse.ArgumentParser(description="check a lvlset is correctly built")
@@ -26,6 +27,28 @@ def isSolved(lvl, invs):
     tryAndVerify_impl(bbs, loop, [], invs, args.timeout)
 
   return len(safety_violations) == 0
+
+print "Checking paths..."
+for lvl_name, lvl in lvls.items():
+  paths = lvl["path"]
+  if (len(paths) < 3):
+    print "Missing original boogie path for ", lvl_name
+  else:
+    if (not(exists(paths[2]))):
+      print "Original boogie file for ", lvl_name, ":", paths[2], "is missing"
+
+  if (len(paths) < 2):
+    print "Missing C path for ", lvl_name
+  else:
+    if (not(exists(paths[1]))):
+      print "C file for ", lvl_name, ":", paths[1], "is missing"
+
+  if (len(paths) == 0):
+    print "Missing desugared boogie file path for", lvl_name;
+  else:
+    if (not exists(paths[0])):
+      print "Desugared boogie for ", lvl_name, ":", paths[0], "is missing";
+      
   
 print "Checking all solutions work..."
 for lvl_name, lvl in lvls.items():
