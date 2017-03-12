@@ -1,5 +1,5 @@
 from lib.boogie.ast import ast_and, replace, AstBinExpr, AstAssert, AstAssume, AstTrue
-from util import split, nonempty, powerset
+from lib.common.util import split, nonempty, powerset
 from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, Unknown, counterex, Implies, And, tautology, Bool, satisfiable, unsatisfiable
 from lib.boogie.paths import nd_bb_path_to_ssa, ssa_path_to_z3, _ssa_stmts
 from lib.boogie.ssa import SSAEnv
