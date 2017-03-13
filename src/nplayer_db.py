@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship, sessionmaker
 import json
 import re
 
-Base = declarative_base();
+Base = declarative_base()
 
 
 class Login(Base):
@@ -13,7 +13,7 @@ class Login(Base):
     password = Column('password', String)
 
     def toJSON(self):
-        json.dumps({"playerId": self.playerId});
+        json.dumps({"playerId": self.playerId})
 
 
 class Scores(Base):
@@ -62,3 +62,14 @@ def checkPlayerId(id, session):
 def checkPlayerLogin(id, pwd, session):
     players = len([ p for p in session.query(Login).filter(Login.playerId == id, Login.password == pwd).all() ])
     return players == 1
+
+
+def newPlayerScore(id, session):
+    scoreRow = Scores(playerId=id, score=0)
+    session.add(scoreRow)
+    session.commit()
+
+
+def updatePlayerScore(id, score, session):
+    session.query(Scores).update({"playerId": id, "score": score})
+    session.commit()

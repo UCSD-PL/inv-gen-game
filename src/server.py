@@ -31,7 +31,7 @@ from models import open_sqlite_db, Event
 from db_util import playersWhoStartedLevel, enteredInvsForLevel, getOrAddSource, addEvent,\
   levelSolved, levelFinishedBy
 
-from nplayer_db import Login, open_db, addPlayerLogin, checkPlayerLogin, Scores, Badges
+from nplayer_db import Login, Scores, Badges, open_db, addPlayerLogin, checkPlayerLogin, addPlayerScore, updatePlayerScore
 
 colorama_init();
 
@@ -512,6 +512,22 @@ def checkLogin(playerId, password):
         return "valid"
     else:
         return "invalid"
+
+
+@api.method("App.newScore")
+@pp_exc
+# @log_d(str)
+def newScore(playerId):
+    session = sessionN()
+    newPlayerScore(playerId, session)
+
+
+@api.method("App.updateScore")
+@pp_exc
+# @log_d(str, str)
+def updateScore(playerId, score):
+    session = sessionN()
+    updatePlayerScore(playerId, score, session)
 
 
 # Admin Calls:
