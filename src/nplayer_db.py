@@ -30,9 +30,9 @@ class Badges(Base):
 
 def open_db(path):
     engine = create_engine("sqlite:///" + path, echo=False,
-      connect_args={'check_same_thread':False});
+      connect_args={'check_same_thread':False})
     Session = sessionmaker(bind=engine)
-    Base.metadata.create_all(engine);
+    Base.metadata.create_all(engine)
     return Session
 
 
