@@ -499,11 +499,7 @@ def get(key, val, expectedGen):
 # @log_d(str, str)
 def newPlayer(playerId, password):
     session = sessionN()
-    result = addPlayerLogin(playerId, password, session)
-    if result is None:
-        raise Exception("Could not add user")
-    else:
-        return result
+    addPlayerLogin(playerId, password, session)
 
 
 @api.method("App.checkLogin")
