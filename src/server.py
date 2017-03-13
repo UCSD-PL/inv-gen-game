@@ -31,7 +31,7 @@ from models import open_sqlite_db, Event
 from db_util import playersWhoStartedLevel, enteredInvsForLevel, getOrAddSource, addEvent,\
   levelSolved, levelFinishedBy
 
-from nplayer_db import Login, Scores, Badges, open_db, addPlayerLogin, checkPlayerLogin, addPlayerScore, updatePlayerScore
+from nplayer_db import Login, Scores, Badges, open_db, addPlayerLogin, checkPlayerLogin, newPlayerScore, updatePlayerScore
 
 colorama_init();
 
