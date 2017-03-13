@@ -1,0 +1,63 @@
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- third party libraries -->
+  <script src="jquery-1.12.0.min.js"></script>
+  <script src="jquery.jsonrpcclient.js"></script>
+  <script src="jquery.color-2.1.2.min.js"></script>
+  <script src="jquery-ui-1.11.4/jquery-ui.js"></script>
+  <link rel="stylesheet" href="bootstrap.min.css">
+  <link rel="stylesheet" href="bootstrap-theme.min.css">
+  <script src="bootstrap.min.js"></script>
+
+  <link rel="stylesheet" href="inv.css">
+</head>
+
+<body>
+  <div class="container">
+    <div class="row menu">
+      <h2>Multiplayer inv-gen-game</h2>
+    </div>
+
+    <div class="row menu">
+      <div class="col-md-2" id="left">
+      </div>
+      <div class="col-md-4 col-sm-12">
+        <h3>Existing Player</h3>
+        <div class="container">
+          <label><b>Username</b></label>
+          <input type="text" placeholder="Enter Username" id="uname" required>
+          <br />
+          <label><b>Password</b></label>
+          <input type="password" placeholder="Enter Password" id="pwd" required>
+          <br />
+          <button type="submit" id="login" class="btn btn-primary">Login</button>
+        </div>
+      </div>
+
+      <div class="col-md-4 col-sm-12">
+        <h3>New Player</h3>
+          <div class="container">
+            <label><b>Username</b></label>
+            <input type="text" placeholder="Enter Username" id="unameNew" required>
+            <br />
+            <label><b>Password</b></label>
+            <input type="password" placeholder="Enter Password" id="pwdNew" required>
+            <br />
+            <label><b>Confirm Password</b></label>
+            <input type="password" placeholder="Enter Password Again" id="pwdNewConf" required>
+            <br />
+            <button type="submit" id="create" class="btn btn-primary">Create</button>
+          </div>
+      </div>
+
+      <div class="col-md-2" id="right">
+      </div>
+    </div>
+  </div>
+</body>
+</html>
