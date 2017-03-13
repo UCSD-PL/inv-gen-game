@@ -97,9 +97,7 @@
         if (result) {
           $("#invalid").hide();
           $("#invalidNew").hide();
-
-          /* Add player to session */
-
+          localStorage.setItem("playerId", id);
           redirect();
         }
         else {
@@ -118,11 +116,8 @@
       if (validateNewLogin(id, pwd, pwdConf)) {
         $("#invalid").hide();
         $("#invalidNew").hide();
-
         createPlayer(id, pwd);
-
-        /* Add player to session */
-
+        localStorage.setItem("playerId", id);
         redirect();
       }
       else {
@@ -132,8 +127,7 @@
     }
 
     function redirect() {
-      console.log("Redirecting...");
-      // window.location.href = "menu_np.html";
+      window.location.href = "menu_np.html";
     }
 
     function resetExisting() {
