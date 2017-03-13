@@ -179,7 +179,8 @@
 
       if (playerId && playerLvl) {
         var currentPlayer = { id: playerId, score: 0, level: playerLvl };
-        currentPlayer.score = scoreW ? scoreW.score : 0;
+        var score = sessionStorage.getItem("score");
+        currentPlayer.score = score ? score : (scoreW ? scoreW.score : 0);
 
         if(values.players === undefined) {
           values.players = [];
@@ -301,7 +302,20 @@
     }
 
     function logout() {
+      var id = sessionStorage.getItem("playerId");
+      saveState(id);
       window.location.href = "login.html";
+    }
+
+    function saveState(id) {
+      var gameId = sessionStorage.getItem("gameId");
+
+      var gameScore = gameLogic.score;
+      var sessionScore = sessionStorage.getItem("score");
+      gameScore = gameScore > sessionScore ? gameScore : sessionScore;
+      
+      sessionStorage.setItem("score", gameScore);
+      res = rpc.call("App.updateScore", [id, gameId, gameScore], function() {return;})
     }
 
     function doneScreen(alldone) {
@@ -362,6 +376,10 @@
       $("#lblPlayerId").text(playerId);
 
       $("#logout").click(logout);
+
+      $(window).bind("beforeunload", function() { 
+        saveState(playerId);
+      })
       
       if (Args.get_assignment_id() == "ASSIGNMENT_ID_NOT_AVAILABLE") {
         s = "This is just a preview of the HIT. The work you do here will have to be redone when you accept the HIT."
