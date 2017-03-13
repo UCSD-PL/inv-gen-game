@@ -127,7 +127,7 @@
     }
 
     function redirect() {
-      window.location.href = "menu_np.html";
+      window.location.href = "menu.html";
     }
 
     function resetExisting() {
@@ -161,6 +161,8 @@
 
       $("#create").click(createNewPlayer);
       $("#resetNew").click(resetNew);
+
+      sessionStorage.clear();
     });
   </script>
 </head>
