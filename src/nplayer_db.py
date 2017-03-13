@@ -6,21 +6,17 @@ import re
 
 Base = declarative_base();
 
+
 class Login(Base):
     __tablename__ = "login"
     playerId = Column('player_id', String, primary_key=True)
     password = Column('password', String)
 
+
 class Scores(Base):
     __tablename__ = "scores"
     playerId = Column('player_id', String, primary_key=True)
     score = Column('score', Integer)
-    numInvFound = Column('num_inv_found', Integer)
-
-class Badges(Base):
-    __tablename__ = "badges"
-    playerId = Column('player_id', String, primary_key=True)
-    badge = Column('badge', String)
 
 
 def open_db(path):
