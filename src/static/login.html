@@ -67,6 +67,9 @@
 
     function validateNewLogin(id, pwd, pwdConf) {
       if (id.length === 0 || pwd.length === 0 || pwdConf.length === 0) {
+        $("#invalidNew").hide();
+        $("#invalidMatch").hide();
+        $("#invalidEmpty").show();
         return false;
       }
 
@@ -74,6 +77,9 @@
         return true;
       }
       else {
+        $("#invalidNew").hide();
+        $("#invalidMatch").show();
+        $("#invalidEmpty").hide();
         return false;
       }
     }
@@ -97,12 +103,10 @@
         if (result) {
           $("#invalid").hide();
           $("#invalidNew").hide();
+          $("#invalidMatch").hide();
+          $("#invalidEmpty").hide();
           sessionStorage.setItem("playerId", id);
           redirect();
-        }
-        else {
-          $("#invalid").show();
-          $ ("#invalidNew").hide();
         }
       });
 
@@ -116,11 +120,14 @@
       if (validateNewLogin(id, pwd, pwdConf)) {
         $("#invalid").hide();
         $("#invalidNew").hide();
+        $("#invalidMatch").hide();
+        $("#invalidEmpty").hide();
         createPlayer(id, pwd);
         sessionStorage.setItem("playerId", id);
         redirect();
       }
       else {
+        // move this inside validateNewLogin
         $("#invalid").hide();
         $("#invalidNew").show();
       }
@@ -141,6 +148,8 @@
       $("#pwdNew").val("");
       $("#pwdNewConf").val("");
       $("#invalidNew").hide();
+      $("#invalidMatch").hide();
+      $("#invalidEmpty").hide();
     }
 
     function clearFields() {
@@ -155,6 +164,8 @@
 
       $("#invalid").hide();
       $("#invalidNew").hide();
+      $("#invalidMatch").hide();
+      $("#invalidEmpty").hide();
 
       $("#login").click(login);
       $("#reset").click(resetExisting);
@@ -239,7 +250,9 @@
               <button type="submit" id="create" class="btn btn-primary">Create</button>
               <button type="submit" id="resetNew" class="btn btn-primary">Reset</button>
             </div>
-            <label id="invalidNew" class="error">Sorry, the username already exists</label>
+            <label id="invalidNew" class="error">The username already exists</label>
+            <label id="invalidMatch" class="error">The passwords do not match</label>
+            <label id="invalidEmpty" class="error">The fields cannot be empty</label>
           </div>
       </div>
 
