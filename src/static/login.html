@@ -97,7 +97,7 @@
         if (result) {
           $("#invalid").hide();
           $("#invalidNew").hide();
-          localStorage.setItem("playerId", id);
+          sessionStorage.setItem("playerId", id);
           redirect();
         }
         else {
@@ -117,7 +117,7 @@
         $("#invalid").hide();
         $("#invalidNew").hide();
         createPlayer(id, pwd);
-        localStorage.setItem("playerId", id);
+        sessionStorage.setItem("playerId", id);
         redirect();
       }
       else {
