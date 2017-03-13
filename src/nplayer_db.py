@@ -12,6 +12,9 @@ class Login(Base):
     playerId = Column('player_id', String, primary_key=True)
     password = Column('password', String)
 
+    def toJSON(self):
+        json.dumps({"playerId": self.playerId});
+
 
 class Scores(Base):
     __tablename__ = "scores"
@@ -33,21 +36,29 @@ def open_db(path):
     return Session
 
 
+def clearLogins(session):
+    try:
+        session.query(Login).delete()
+        session.commit()
+    except:
+        session.rollback()
+
+
 def addPlayerLogin(id, pwd, session):
-    if checkPlayerId(id, session) == 0:
+    if checkPlayerId(id, session):
         player = Login(playerId=id, password=pwd)
         session.add(player)
         session.commit()
-        return player
+        return player.toJSON()
     else:
-        return None
+        return json.dumps("{}")
 
 
 def checkPlayerId(id, session):
-    players = [ p for p in session.query(Login).filter(Login.playerId == id).all() ]
+    players = len([ p for p in session.query(Login).filter(Login.playerId == id).all() ])
     return players == 0
 
 
 def checkPlayerLogin(id, pwd, session):
-    players = [ p for p in session.query(Login).filter(Login.playerId == id, Login.password == pwd).all() ]
+    players = len([ p for p in session.query(Login).filter(Login.playerId == id, Login.password == pwd).all() ])
     return players == 1
