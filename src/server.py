@@ -516,18 +516,18 @@ def checkLogin(playerId, password):
 
 @api.method("App.newScore")
 @pp_exc
-# @log_d(str)
-def newScore(playerId):
+# @log_d(str, str)
+def newScore(playerId, gameId):
     session = sessionN()
-    newPlayerScore(playerId, session)
+    newPlayerScore(playerId, gameId, session)
 
 
 @api.method("App.updateScore")
 @pp_exc
-# @log_d(str, str)
-def updateScore(playerId, score):
+# @log_d(str, str, str)
+def updateScore(playerId, gameId, score):
     session = sessionN()
-    updatePlayerScore(playerId, score, session)
+    updatePlayerScore(playerId, gameId, score, session)
 
 
 # Admin Calls:

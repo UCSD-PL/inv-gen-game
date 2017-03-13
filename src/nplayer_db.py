@@ -19,6 +19,7 @@ class Login(Base):
 class Scores(Base):
     __tablename__ = "scores"
     playerId = Column('player_id', String, primary_key=True)
+    gameId = Column('game_id', String)
     score = Column('score', Integer)
 
 
@@ -64,12 +65,12 @@ def checkPlayerLogin(id, pwd, session):
     return players == 1
 
 
-def newPlayerScore(id, session):
-    scoreRow = Scores(playerId=id, score=0)
+def newPlayerScore(id, gameId, session):
+    scoreRow = Scores(playerId=id, gameId=gameId, score=0)
     session.add(scoreRow)
     session.commit()
 
 
-def updatePlayerScore(id, score, session):
-    session.query(Scores).update({"playerId": id, "score": score})
+def updatePlayerScore(id, gameId, score, session):
+    session.query(Scores).update({"playerId": id, "gameId": gameId, "score": score})
     session.commit()
