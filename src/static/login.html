@@ -49,18 +49,17 @@
       })[0].value;
     }
 
-    function validateLogin(id, pwd) {
+    function validateLogin(id, pwd, cb) {
       if (id.length === 0 || pwd.length === 0) {
-        return false;
+        cb(false);
       }
 
       r = rpc.call("App.checkLogin", [id, pwd], function(result) {
-        console.log(result);
         if (result === "valid") {
-          return true;
+          cb(true);
         }
         else if (result === "invalid") {
-          return false;
+          cb(false);
         }
       });
 
@@ -81,8 +80,7 @@
 
     function createPlayer(id, pwd) {
       r = rpc.call("App.newPlayer", [id, pwd], function(result) {
-            console.log(result);
-            if (result.error) {
+            if (result) {
               return false;
             }
             else {
@@ -95,18 +93,21 @@
       id = getPlayerId("existing")
       pwd = getPlayerPwd("existing")
 
-      if (validateLogin(id, pwd)) {
-        $("#invalid").hide();
-        $("#invalidNew").hide();
+      validateLogin(id, pwd, function(result) {
+        if (result) {
+          $("#invalid").hide();
+          $("#invalidNew").hide();
 
-        /* Add player to session */
-      }
-      else {
-        $("#invalid").show();
-        $("#invalidNew").hide();
-      }
+          /* Add player to session */
 
-      redirect();
+          redirect();
+        }
+        else {
+          $("#invalid").show();
+          $ ("#invalidNew").hide();
+        }
+      });
+
     }
 
     function createNewPlayer() {
@@ -131,7 +132,8 @@
     }
 
     function redirect() {
-      window.location.href = "menu_np.html";
+      console.log("Redirecting...");
+      // window.location.href = "menu_np.html";
     }
 
     function resetExisting() {
@@ -203,7 +205,7 @@
             <label><b>Password</b></label>
             <input type="password" placeholder="Enter Password" id="pwdNew" required>
             <br />
-            <label><b>Confirm Password</b></label>
+            <label><b>Confirm</b></label>
             <input type="password" placeholder="Enter Password Again" id="pwdNewConf" required>
             <br />
             <button type="submit" id="create" class="btn btn-primary">Create</button>
