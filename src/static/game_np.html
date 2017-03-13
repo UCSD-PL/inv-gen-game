@@ -299,6 +299,10 @@
       return false;
     }
 
+    function logout() {
+      window.location.href = "login.html";
+    }
+
     function doneScreen(alldone) {
       let assignment_id = Args.get_assignment_id();
       if (assignment_id == "ASSIGNMENT_ID_NOT_AVAILABLE") {
@@ -347,10 +351,12 @@
 
     $(document).ready(function() {
       gameId = Args.get_game_id();
-      playerId = Args.get_player_id();
+      playerId = sessionStorage.getItem("playerId");
 
       $("#lblGameId").text(gameId);
       $("#lblPlayerId").text(playerId);
+
+      $("#logout").click(logout);
       
       if (Args.get_assignment_id() == "ASSIGNMENT_ID_NOT_AVAILABLE") {
         s = "This is just a preview of the HIT. The work you do here will have to be redone when you accept the HIT."
@@ -656,6 +662,7 @@
         <div class='row ' id='quit-div'>
           <button id='quit' class='btn-quit'>Quit</button>
           <button id='skip-to-next-lvl' class='btn-next' style='display: none;'>Next Lvl</button>
+          <button id='logout' class='btn-quit'>Logout</button>
         </div>
         <div class='row-md-6'>
 
