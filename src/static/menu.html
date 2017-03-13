@@ -57,7 +57,7 @@
               var id = getPlayerId();
               rpc.call("App.newScore", [id, gameId], function() {
                 sessionStorage.setItem("score", 0);
-                sessionStorage.setItem("gameId", 0);
+                sessionStorage.setItem("gameId", gameId);
                 window.location.href = "game_np.html?gameId=" + gameId;
               });
             }
@@ -74,7 +74,7 @@
     }
 
     function getPlayerId() {
-      sessionStorage.getItem("playerId");
+      return sessionStorage.getItem("playerId");
     }
     
     function getGameId() {
