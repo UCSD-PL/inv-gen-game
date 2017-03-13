@@ -496,7 +496,7 @@ def get(key, val, expectedGen):
 
 @api.method("App.newPlayer")
 @pp_exc
-@log_d(str, str)
+# @log_d(str, str)
 def newPlayer(playerId, password):
     session = sessionN()
     result = addPlayerLogin(playerId, password, session)
@@ -508,7 +508,7 @@ def newPlayer(playerId, password):
 
 @api.method("App.checkLogin")
 @pp_exc
-@log_d(str, str)
+# @log_d(str, str)
 def checkLogin(playerId, password):
     session = sessionN()
     result = checkPlayerLogin(playerId, password, session)

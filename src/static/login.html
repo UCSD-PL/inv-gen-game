@@ -15,6 +15,127 @@
   <script src="bootstrap.min.js"></script>
 
   <link rel="stylesheet" href="inv.css">
+
+  <script>
+    function getPlayerId(type) {
+      if (type === "existing") {
+        return $("#uname").val(function(index, value) {
+          return value;
+        })[0].value;
+      }
+      else {
+        return $("#unameNew").val(function(index, value) {
+          return value;
+        })[0].value;
+      }
+    }
+
+    function getPlayerPwd(type) {
+      if (type === "existing") {
+        return $("#pwd").val(function(index, value) {
+          return value;
+        })[0].value;
+      }
+      else {
+        return $("#pwdNew").val(function(index, value) {
+          return value;
+        })[0].value;
+      }
+    }
+
+    function getPlayerPwdConf() {
+      return $("#pwdNewConf").val(function(index, value) {
+        return value;
+      })[0].value;
+    }
+
+    function validateLogin(id, pwd) {
+      if (id.length === 0 || pwd.length === 0) {
+        return false;
+      }
+
+      r = rpc.call("App.checkLogin", [id, pwd], function(result) {
+        console.log(result);
+        if (result == "invalid") {
+          return false;
+        }
+        else if (result == "valid") {
+          return true;
+        }
+      });
+
+    }
+
+    function validateNewLogin(id, pwd, pwdConf) {
+      if (id.length === 0 || pwd.length === 0 || pwdConf.length === 0) {
+        return false;
+      }
+
+      if (pwd === pwdConf) {
+        return true;
+      }
+      else {
+        return false;
+      }
+    }
+
+    function createPlayer(id, pwd) {
+      r = rpc.call("App.newPlayer", [id, pwd], function(result) {
+            console.log(result);
+            if (result.error) {
+              return false;
+            }
+            else {
+              return true;
+            }
+          });
+    }
+
+    function login() {
+      id = getPlayerId("existing")
+      pwd = getPlayerPwd("existing")
+
+      if (validateLogin(id, pwd)) {
+        $("#invalid").hide();
+        $("#invalidNew").hide();
+
+        /* Add player to session */
+      }
+      else {
+        $("#invalid").show();
+        $("#invalidNew").hide();
+      }
+    }
+
+    function createNewPlayer() {
+      id = getPlayerId("new")
+      pwd = getPlayerPwd("new")
+      pwdConf = getPlayerPwdConf()
+
+      if (validateNewLogin(id, pwd, pwdConf)) {
+        $("#invalid").hide();
+        $("#invalidNew").hide();
+
+        createPlayer(id, pwd);
+
+        /* Add player to session */
+      }
+      else {
+        $("#invalid").hide();
+        $("#invalidNew").show();
+      }
+    }
+
+    $(document).ready(function() {
+      rpc = new $.JsonRpcClient({ ajaxUrl: "/api" });
+
+      $("#invalid").hide();
+      $("#invalidNew").hide();
+
+      $("#login").click(login);
+      $("#create").click(createNewPlayer);
+    });
+  </script>
 </head>
 
 <body>
@@ -36,6 +157,8 @@
           <input type="password" placeholder="Enter Password" id="pwd" required>
           <br />
           <button type="submit" id="login" class="btn btn-primary">Login</button>
+          <br />
+          <label id="invalid" class="error">Incorrect username or password</label>
         </div>
       </div>
 
@@ -52,6 +175,8 @@
             <input type="password" placeholder="Enter Password Again" id="pwdNewConf" required>
             <br />
             <button type="submit" id="create" class="btn btn-primary">Create</button>
+            <br />
+            <label id="invalidNew" class="error">Sorry, the username already exists</label>
           </div>
       </div>
 
