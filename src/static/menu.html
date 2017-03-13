@@ -20,17 +20,6 @@
     var playerGen = 0;
     var players = [];
 
-    function initializePlayers() {
-      res = rpc.call("App.set", ["players", "[]", -1], function(res) {
-        if(res) {
-          console.log("Players KV store initialized");
-        }
-        else {
-          console.log("Error: Unable to initialize players KV store");
-        }
-      });
-    }
-
     function isPlayerIdPresent(playerId, cb) {
       res = rpc.call("App.get", ["players"], function(resp) {
         if(resp) {
@@ -55,27 +44,6 @@
         else {
           return false;
         }
-      });
-    }
-
-    function initNewGame() {
-      var playerId = getPlayerId();
-      isPlayerIdPresent(playerId, function(result) {
-        var exists = result;
-        if (exists) {
-          return;
-        }
-
-        else {
-          players.push(playerId);
-          res = rpc.call("App.set", ["players", JSON.stringify(players), playerGen], function(resp) {
-            if(resp) {
-              return resp;
-            }
-          });
-        }
-
-        startGame();
       });
     }
 
@@ -159,18 +127,16 @@
       var playerId = sessionStorage.getItem("playerId");
 
       if(playerId === null) {
-        window.location.href = "login.html";
+        logout();
       }
 
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" });
-      
-      initializePlayers();
       
       $("#joinGame").hide();
       $("#gameId").val("");
       $("#notFound").hide();
 
-      $("#optStart").click(initNewGame);
+      $("#optStart").click(startGame);
       $("#optJoin").click(showJoin);
       $("#optLogout").click(logout);
       $("#optBackJoin").click(hideJoin);
