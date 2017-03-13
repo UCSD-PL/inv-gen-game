@@ -151,6 +151,10 @@
       $("#joinGame").hide();
     }
 
+    function logout() {
+      window.location.href = "login.html";
+    }
+
     $(document).ready(function() {
       var playerId = sessionStorage.getItem("playerId");
 
@@ -168,6 +172,7 @@
 
       $("#optStart").click(initNewGame);
       $("#optJoin").click(showJoin);
+      $("#optLogout").click(logout);
       $("#optBackJoin").click(hideJoin);
       $("#gameId").keyup(validateGameId);
       $("#join").click(checkGameId);
@@ -184,6 +189,8 @@
       <button id="optStart" class="btn btn-primary">New Game</button>
       <br /><br />
       <button id="optJoin" class="btn btn-primary">Join Game</button>
+      <br /><br />
+      <button id="optLogout" class="btn btn-primary">Log Out</button>
     </div>
     
     <div class="row" id="joinGame" hidden="true">
