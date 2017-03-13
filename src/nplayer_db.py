@@ -49,9 +49,9 @@ def addPlayerLogin(id, pwd, session):
         player = Login(playerId=id, password=pwd)
         session.add(player)
         session.commit()
-        return player.toJSON()
     else:
-        return json.dumps("{}")
+        session.rollback()
+        raise Exception("Could not add " + id)
 
 
 def checkPlayerId(id, session):
