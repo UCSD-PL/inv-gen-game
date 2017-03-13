@@ -179,15 +179,28 @@
       <div class="col-md-4 col-sm-12">
         <h3>Existing Player</h3>
         <div class="container">
-          <label><b>Username</b></label>
-          <input type="text" placeholder="Enter Username" id="uname" required>
+          <div class="row">
+            <div class="col-md-1">
+              <label><b>Username</b></label>
+            </div>
+            <div class="col-md-2">
+              <input type="text" placeholder="Enter Username" id="uname" required>
+            </div>
+          </div>
           <br />
-          <label><b>Password</b></label>
-          <input type="password" placeholder="Enter Password" id="pwd" required>
+          <div class="row">
+            <div class="col-md-1">
+              <label><b>Password</b></label>
+            </div>
+            <div class="col-md-2">
+              <input type="password" placeholder="Enter Password" id="pwd" required>
+            </div>
+          </div>
           <br />
-          <button type="submit" id="login" class="btn btn-primary">Login</button>
-          <button type="submit" id="reset" class="btn btn-primary">Reset</button>
-          <br />
+          <div class="row">
+            <button type="submit" id="login" class="btn btn-primary">Login</button>
+            <button type="submit" id="reset" class="btn btn-primary">Reset</button>
+          </div>
           <label id="invalid" class="error">Incorrect username or password</label>
         </div>
       </div>
@@ -195,18 +208,37 @@
       <div class="col-md-4 col-sm-12">
         <h3>New Player</h3>
           <div class="container">
-            <label><b>Username</b></label>
-            <input type="text" placeholder="Enter Username" id="unameNew" required>
+            <div class="row">
+              <div class="col-md-1">
+                <label><b>Username</b></label>
+              </div>
+              <div class="col-md-2">
+                <input type="text" placeholder="Enter Username" id="unameNew" required>
+              </div>
+            </div>
             <br />
-            <label><b>Password</b></label>
-            <input type="password" placeholder="Enter Password" id="pwdNew" required>
+            <div class="row">
+              <div class="col-md-1">
+                <label><b>Password</b></label>
+              </div>
+              <div class="col-md-2">
+                <input type="password" placeholder="Enter Password" id="pwdNew" required>
+              </div>
+            </div>
             <br />
-            <label><b>Confirm</b></label>
-            <input type="password" placeholder="Enter Password Again" id="pwdNewConf" required>
+            <div class="row">
+              <div class="col-md-1">
+                <label><b>Confirm</b></label>
+              </div>
+              <div class="col-md-2">
+                <input type="password" placeholder="Enter Password Again" id="pwdNewConf" required>
+              </div>
+            </div>
             <br />
-            <button type="submit" id="create" class="btn btn-primary">Create</button>
-            <button type="submit" id="resetNew" class="btn btn-primary">Reset</button>
-            <br />
+            <div class="row">
+              <button type="submit" id="create" class="btn btn-primary">Create</button>
+              <button type="submit" id="resetNew" class="btn btn-primary">Reset</button>
+            </div>
             <label id="invalidNew" class="error">Sorry, the username already exists</label>
           </div>
       </div>
