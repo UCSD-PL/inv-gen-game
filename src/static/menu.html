@@ -152,6 +152,12 @@
     }
 
     $(document).ready(function() {
+      var playerId = sessionStorage.getItem("playerId");
+
+      if(playerId === null) {
+        window.location.href = "login.html";
+      }
+
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" });
       
       initializePlayers();

@@ -353,6 +353,10 @@
       gameId = Args.get_game_id();
       playerId = sessionStorage.getItem("playerId");
 
+      if(playerId === null) {
+        window.location.href = "login.html";
+      }
+
       $("#lblGameId").text(gameId);
       $("#lblPlayerId").text(playerId);
 
