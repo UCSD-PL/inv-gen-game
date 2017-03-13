@@ -31,6 +31,8 @@ from models import open_sqlite_db, Event
 from db_util import playersWhoStartedLevel, enteredInvsForLevel, getOrAddSource, addEvent,\
   levelSolved, levelFinishedBy
 
+from nplayer_db import Login, Scores, Badges, open_db, addPlayerLogin, checkPlayerLogin
+
 colorama_init();
 
 p = argparse.ArgumentParser(description="invariant gen game server")
@@ -45,6 +47,7 @@ args = p.parse_args();
 logF = None;
 
 sessionF = open_sqlite_db(args.db)
+sessionN = open_db('nplayers.db')
 
 invs = { }
 players = { }
@@ -489,6 +492,31 @@ def get(key, val, expectedGen):
       return (expectedGen + 1, val)
 
     return kvStore[key];
+
+
+@api.method("App.newPlayer")
+@pp_exc
+@log_d(str)
+def newPlayer(playerId, password):
+    session = sessionN()
+    result = addPlayerLogin(playerId, password, session)
+    if result is None:
+        raise Exception("Could not add user")
+    else:
+        return result
+
+
+@api.method("App.checkLogin")
+@pp_exc
+@log_d(str)
+def checkLogin(playerId, password):
+    session = sessionN()
+    result = checkPlayerLogin(playerId, password, session)
+    if result == 1:
+        return "valid"
+    else:
+        return "invalid"
+
 
 # Admin Calls:
 @api.method("App.getLogs")
