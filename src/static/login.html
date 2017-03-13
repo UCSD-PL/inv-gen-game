@@ -56,11 +56,11 @@
 
       r = rpc.call("App.checkLogin", [id, pwd], function(result) {
         console.log(result);
-        if (result == "invalid") {
-          return false;
-        }
-        else if (result == "valid") {
+        if (result === "valid") {
           return true;
+        }
+        else if (result === "invalid") {
+          return false;
         }
       });
 
@@ -105,6 +105,8 @@
         $("#invalid").show();
         $("#invalidNew").hide();
       }
+
+      redirect();
     }
 
     function createNewPlayer() {
@@ -119,6 +121,8 @@
         createPlayer(id, pwd);
 
         /* Add player to session */
+
+        redirect();
       }
       else {
         $("#invalid").hide();
@@ -126,14 +130,41 @@
       }
     }
 
+    function redirect() {
+      window.location.href = "menu_np.html";
+    }
+
+    function resetExisting() {
+      $("#uname").val("");
+      $("#pwd").val("");
+      $("#invalid").hide();
+    }
+
+    function resetNew() {
+      $("#unameNew").val("");
+      $("#pwdNew").val("");
+      $("#pwdNewConf").val("");
+      $("#invalidNew").hide();
+    }
+
+    function clearFields() {
+      resetExisting();
+      resetNew();
+    }
+
     $(document).ready(function() {
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" });
+
+      clearFields();
 
       $("#invalid").hide();
       $("#invalidNew").hide();
 
       $("#login").click(login);
+      $("#reset").click(resetExisting);
+
       $("#create").click(createNewPlayer);
+      $("#resetNew").click(resetNew);
     });
   </script>
 </head>
@@ -157,6 +188,7 @@
           <input type="password" placeholder="Enter Password" id="pwd" required>
           <br />
           <button type="submit" id="login" class="btn btn-primary">Login</button>
+          <button type="submit" id="reset" class="btn btn-primary">Reset</button>
           <br />
           <label id="invalid" class="error">Incorrect username or password</label>
         </div>
@@ -175,6 +207,7 @@
             <input type="password" placeholder="Enter Password Again" id="pwdNewConf" required>
             <br />
             <button type="submit" id="create" class="btn btn-primary">Create</button>
+            <button type="submit" id="resetNew" class="btn btn-primary">Reset</button>
             <br />
             <label id="invalidNew" class="error">Sorry, the username already exists</label>
           </div>
