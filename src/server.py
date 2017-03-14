@@ -32,7 +32,7 @@ from db_util import playersWhoStartedLevel, enteredInvsForLevel, getOrAddSource,
   levelSolved, levelFinishedBy
 
 from nplayer_db import Login, Scores, Badges, open_db, addPlayerLogin, checkPlayerLogin,\
-  newPlayerScore, updatePlayerScore, getPlayerTotalScore
+  newPlayerScore, updatePlayerScore, getPlayerTotalScore, getAllPlayerScores
 
 colorama_init();
 
@@ -497,7 +497,6 @@ def get(key, val, expectedGen):
 
 @api.method("App.newPlayer")
 @pp_exc
-# @log_d(str, str)
 def newPlayer(playerId, password):
     session = sessionN()
     addPlayerLogin(playerId, password, session)
@@ -505,7 +504,6 @@ def newPlayer(playerId, password):
 
 @api.method("App.checkLogin")
 @pp_exc
-# @log_d(str, str)
 def checkLogin(playerId, password):
     session = sessionN()
     result = checkPlayerLogin(playerId, password, session)
@@ -517,7 +515,6 @@ def checkLogin(playerId, password):
 
 @api.method("App.newScore")
 @pp_exc
-# @log_d(str, str)
 def newScore(playerId, gameId):
     session = sessionN()
     newPlayerScore(playerId, gameId, session)
@@ -525,7 +522,6 @@ def newScore(playerId, gameId):
 
 @api.method("App.updateScore")
 @pp_exc
-# @log_d(str, str, str)
 def updateScore(playerId, gameId, score):
     session = sessionN()
     updatePlayerScore(playerId, gameId, score, session)
@@ -533,10 +529,16 @@ def updateScore(playerId, gameId, score):
 
 @api.method("App.getTotalScore")
 @pp_exc
-# @log_d(str, str, str)
 def getTotalScore(playerId):
     session = sessionN()
     return getPlayerTotalScore(playerId, session)
+
+
+@api.method("App.getAllScores")
+@pp_exc
+def getAllScores():
+    session = sessionN()
+    return getAllPlayerScores(session)
 
 
 # Admin Calls:

@@ -19,6 +19,7 @@
     var idLength = 8;
     var playerGen = 0;
     var players = [];
+    var rank = null;
 
     function isPlayerIdPresent(playerId, cb) {
       res = rpc.call("App.get", ["players"], function(resp) {
@@ -116,11 +117,13 @@
 
     function showJoin() {
       $("#options").hide();
+      $("#leaderboard").hide();
       $("#joinGame").show();
     }
 
     function hideJoin() {
       $("#options").show();
+      $("#leaderboard").show();
       $("#joinGame").hide();
     }
 
@@ -130,9 +133,29 @@
 
     function setHeader() {
       var pid = sessionStorage.getItem("playerId");
-      res = rpc.call("App.getTotalScore", [pid], function(res) {
+      var res = rpc.call("App.getTotalScore", [pid], function(res) {
         $("#pid").html("Player: " + pid);
         $("#points").html("Points: " + res);
+        $("#rank").html("Rank: " + rank);
+      })
+    }
+
+    function getLeaderboard() {
+      var res = rpc.call("App.getAllScores", [], function(result) {
+        if (result) {
+          var table = "<h4>Leaderboard</h4><table class='tg'><tr><th class='tg-9hbo'>Rank</th><th class='tg-9hbo'>Player</th><th class='tg-9hbo'>Points</th></tr>"
+          var rows = (result.length < 10) ? result.length : 10;
+          for (var i = 0; i < rows; i++) {
+            table += "<tr><td class='tg-yw4l'>" + (i+1) + "</td><td class='tg-yw4l'>" + result[i][0] + "</td><td class='tg-yw4l'>" + result[i][1] + "</td></tr>"
+            var id = sessionStorage.getItem("playerId");
+            if (id === result[i][0]) {
+              rank = i+1;
+            }
+          }
+          table += "</table>"
+          $("#leaderboard").html(table);
+          setHeader();
+        }
       })
     }
 
@@ -145,7 +168,7 @@
 
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" });
 
-      setHeader();
+      getLeaderboard();
       
       $("#joinGame").hide();
       $("#gameId").val("");
@@ -169,9 +192,10 @@
     <div class="row menu">
       <h4 id="pid"></h4>
       <h4 id="points"></h4>
+      <h4 id="rank"></h4>
     </div>
 
-    <br /><br />
+    <br />
 
     <div class="row menu" id="options">
       <button id="optStart" class="btn btn-primary">New Game</button>
@@ -179,7 +203,10 @@
       <button id="optJoin" class="btn btn-primary">Join Game</button>
       <br /><br />
       <button id="optLogout" class="btn btn-primary">Log Out</button>
+      <br /><br />
     </div>
+
+    <div id="leaderboard" class="row menu"></div>
     
     <div class="row" id="joinGame" hidden="true">
       <label id="lblJoin">Enter Game ID:</label>
@@ -190,6 +217,6 @@
       <br />
       <label id="notFound" class="error"></label>
     </div>
-    </div>
+  </div>
 </body>
 </html>

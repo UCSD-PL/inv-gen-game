@@ -1,5 +1,5 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, ForeignKey, create_engine, DateTime, Sequence
+from sqlalchemy import Column, Integer, String, ForeignKey, create_engine, DateTime, Sequence, func, desc
 from sqlalchemy.orm import relationship, sessionmaker
 import json
 import re
@@ -80,3 +80,8 @@ def updatePlayerScore(id, gameId, score, session):
 def getPlayerTotalScore(id, session):
     total = sum([ row.score for row in session.query(Scores).filter(Scores.playerId == id).all() ])
     return total
+
+
+def getAllPlayerScores(session):
+    all = session.query(Scores.playerId, func.sum(Scores.score).label('total')).group_by(Scores.playerId).order_by(desc('total')).all()
+    return all
