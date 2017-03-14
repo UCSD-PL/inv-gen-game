@@ -334,6 +334,12 @@
       window.location.href = "login.html";
     }
 
+    function quit() {
+      var id = sessionStorage.getItem("playerId");
+      saveState(id);
+      window.location.href = "menu.html";
+    }
+
     function saveState(id) {
       var gameId = sessionStorage.getItem("gameId");
 
@@ -516,7 +522,8 @@
         window.open('tutorial_patterns.html?tutorialAction=redo-cond', '_blank').focus();
       })
 
-      $('#quit').click(function () { doneScreen(false) });
+      // $('#quit').click(function () { doneScreen(false) });
+      $('#quit').click(quit);
       $('#skip-to-next-lvl').click(function () {
         gameLogic.skipToNextLvl();
       });
