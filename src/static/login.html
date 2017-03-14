@@ -108,6 +108,9 @@
           sessionStorage.setItem("playerId", id);
           redirect();
         }
+        else {
+          $("#invalid").show();
+        }
       });
 
     }
@@ -212,7 +215,7 @@
             <button type="submit" id="login" class="btn btn-primary">Login</button>
             <button type="submit" id="reset" class="btn btn-primary">Reset</button>
           </div>
-          <label id="invalid" class="error">Incorrect username or password</label>
+          <label id="invalid" class="error">Invalid username or password</label>
         </div>
       </div>
 
