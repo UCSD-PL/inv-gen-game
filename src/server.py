@@ -31,7 +31,8 @@ from models import open_sqlite_db, Event
 from db_util import playersWhoStartedLevel, enteredInvsForLevel, getOrAddSource, addEvent,\
   levelSolved, levelFinishedBy
 
-from nplayer_db import Login, Scores, Badges, open_db, addPlayerLogin, checkPlayerLogin, newPlayerScore, updatePlayerScore
+from nplayer_db import Login, Scores, Badges, open_db, addPlayerLogin, checkPlayerLogin,\
+  newPlayerScore, updatePlayerScore, getPlayerTotalScore
 
 colorama_init();
 
@@ -411,7 +412,7 @@ def tryAndVerify(levelSet, levelId, invs):
 
     # Next lets add implication  to all unsound invariants from first pass
     # Also add manually specified partialInvs
-    unsound = [ inv_ctr_pair[0] for inv_ctr_pair in overfitted + nonind ]
+    unsound = [ inv_ctr_pair[0] for inv_ctr_pair in overfitted | nonind ]
     p2_invs = [ AstBinExpr(antec, "==>", inv)
       for antec in candidate_antecedents for inv in unsound ] + partialInvs
     p2_invs = [ x for x in p2_invs if not tautology(expr_to_z3(x, AllIntTypeEnv())) ]
@@ -528,6 +529,14 @@ def newScore(playerId, gameId):
 def updateScore(playerId, gameId, score):
     session = sessionN()
     updatePlayerScore(playerId, gameId, score, session)
+
+
+@api.method("App.getTotalScore")
+@pp_exc
+# @log_d(str, str, str)
+def getTotalScore(playerId):
+    session = sessionN()
+    return getPlayerTotalScore(playerId, session)
 
 
 # Admin Calls:
