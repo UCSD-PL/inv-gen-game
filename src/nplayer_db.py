@@ -73,7 +73,7 @@ def newPlayerScore(id, gameId, session):
 
 
 def updatePlayerScore(id, gameId, score, session):
-    session.query(Scores).update({"playerId": id, "gameId": gameId, "score": score})
+    session.query(Scores).filter(Scores.playerId == id, Scores.gameId == gameId).update({"score": score})
     session.commit()
 
 
