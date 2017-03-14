@@ -18,7 +18,8 @@ class Login(Base):
 
 class Scores(Base):
     __tablename__ = "scores"
-    playerId = Column('player_id', String, primary_key=True)
+    rowId = Column('id', Integer, primary_key=True, autoincrement=True)
+    playerId = Column('player_id', String)
     gameId = Column('game_id', String)
     score = Column('score', Integer)
 
@@ -74,3 +75,8 @@ def newPlayerScore(id, gameId, session):
 def updatePlayerScore(id, gameId, score, session):
     session.query(Scores).update({"playerId": id, "gameId": gameId, "score": score})
     session.commit()
+
+
+def getPlayerTotalScore(id, session):
+    total = sum([ row.score for row in session.query(Scores).filter(Scores.playerId == id).all() ])
+    return total
