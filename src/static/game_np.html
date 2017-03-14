@@ -163,6 +163,29 @@
       return pVal;
     }
 
+    function getScore() {
+      var sessionScore = sessionStorage.getItem("score");
+      if (scoreW) {
+        if (sessionScore && (sessionStorage.getItem("gameId") == gameId)) {
+          if (scoreW.score >= sessionScore) {
+            return scoreW.score;
+          }
+          else {
+            return sessionScore;
+          }
+        }
+        else {
+          return scoreW.score;
+        }
+      }
+      else if (sessionScore) {
+        return sessionScore;
+      }
+      else {
+        return 0;
+      }
+    }
+
     function getLocalState() {
       var lvlId = null;
       
@@ -179,8 +202,12 @@
 
       if (playerId && playerLvl) {
         var currentPlayer = { id: playerId, score: 0, level: playerLvl };
-        var score = sessionStorage.getItem("score");
-        currentPlayer.score = score ? score : (scoreW ? scoreW.score : 0);
+
+        currentPlayer.score = getScore();
+
+        gameLogic.score = currentPlayer.score;
+        scoreW.score = currentPlayer.score;
+        $("#scoreNum").html(currentPlayer.score);
 
         if(values.players === undefined) {
           values.players = [];
