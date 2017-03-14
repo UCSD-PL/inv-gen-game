@@ -83,5 +83,5 @@ def getPlayerTotalScore(id, session):
 
 
 def getAllPlayerScores(session):
-    all = session.query(Scores.playerId, func.sum(Scores.score).label('total')).group_by(Scores.playerId).order_by(desc('total')).all()
-    return all
+    scores = session.query(Scores.playerId, func.sum(Scores.score).label('total')).group_by(Scores.playerId).order_by(desc('total')).all()
+    return scores
