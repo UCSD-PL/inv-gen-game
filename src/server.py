@@ -408,7 +408,7 @@ def tryAndVerify(levelSet, levelId, invs):
 
     # Next lets add implication  to all unsound invariants from first pass
     # Also add manually specified partialInvs
-    unsound = [ inv_ctr_pair[0] for inv_ctr_pair in overfitted + nonind ]
+    unsound = [ inv_ctr_pair[0] for inv_ctr_pair in overfitted.union(nonind) ]
     p2_invs = [ AstBinExpr(antec, "==>", inv)
       for antec in candidate_antecedents for inv in unsound ] + partialInvs
     p2_invs = [ x for x in p2_invs if not tautology(expr_to_z3(x, AllIntTypeEnv())) ]
@@ -426,7 +426,7 @@ def tryAndVerify(levelSet, levelId, invs):
     # from dictionaries
     overfitted = [ (boogieToEsprima(inv), fix(v.endEnv()))
       for (inv, v) in overfitted ]
-    nonind = [ (boogieToEsprima(inv), (fix(v.startEnv(), v.endEnv())))
+    nonind = [ (boogieToEsprima(inv), (fix(v.startEnv()), fix(v.endEnv())))
       for (inv, v) in nonind ]
     sound = [ boogieToEsprima(inv) for inv in sound ]
     safety_ctrexs = [ fix(v.startEnv()) for v in violations ]
