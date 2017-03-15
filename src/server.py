@@ -8,7 +8,7 @@ from js import esprimaToZ3, esprimaToBoogie, boogieToEsprima
 from lib.boogie.ast import AstBinExpr, AstTrue, ast_and
 from lib.common.util import pp_exc, powerset, split, nonempty
 from lib.boogie.eval import instantiateAndEval, _to_dict
-from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, z3_expr_to_boogie
+from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, z3_expr_to_boogie, Unknown
 from sys import exc_info
 from cProfile import Profile
 from pstats import Stats
@@ -330,7 +330,17 @@ def equivalentPairs(invL1, invL2):
     z3InvL1 = [esprimaToZ3(x, {}) for x in invL1]
     z3InvL2 = [esprimaToZ3(x, {}) for x in invL2]
 
-    res = [(x,y) for x in z3InvL1 for y in z3InvL2 if equivalent(x, y)]
+    res = []
+    for x in z3InvL1:
+      for y in z3InvL2:
+        try:
+          equiv = equivalent(x, y)
+        except Unknown:
+          equiv = False; # Conservative assumption
+
+        if (equiv):
+          res.append((x,y))
+
     res = [(boogieToEsprima(z3_expr_to_boogie(x)),
             boogieToEsprima(z3_expr_to_boogie(y))) for (x,y) in res]
     return res
@@ -342,7 +352,17 @@ def impliedPairs(invL1, invL2):
     z3InvL1 = [esprimaToZ3(x, {}) for x in invL1]
     z3InvL2 = [esprimaToZ3(x, {}) for x in invL2]
 
-    res = [(x,y) for x in z3InvL1 for y in z3InvL2 if implies(x, y)]
+    res = []
+    for x in z3InvL1:
+      for y in z3InvL2:
+        try:
+          impl = implies(x, y)
+        except Unknown:
+          impl = False; # Conservative assumption
+
+        if (impl):
+          res.append((x,y))
+        
     res = [(boogieToEsprima(z3_expr_to_boogie(x)),
             boogieToEsprima(z3_expr_to_boogie(y))) for (x,y) in res]
     return res
@@ -351,8 +371,11 @@ def impliedPairs(invL1, invL2):
 @pp_exc
 @log_d(pp_EsprimaInv, str)
 def isTautology(inv):
-    res = (tautology(esprimaToZ3(inv, {})))
-    return res
+    try:
+      res = (tautology(esprimaToZ3(inv, {})))
+      return res
+    except Unknown:
+      return False; # Conservative assumption
 
 
 def getLastVerResult(lvlset, lvlid, session):
