@@ -1053,12 +1053,16 @@
    ]
   ],
   [
-   "s-ddlm2013_true-unreach-call",
+   "s-ddlm2013_true-unreach-call.0",
    [
     "../sv_manual_trans/loop-lit/ddlm2013_true-unreach-call.desugared.bpl",
     "../sv_manual_trans/loop-lit/ddlm2013_true-unreach-call.c",
     "../sv_manual_trans/loop-lit/ddlm2013_true-unreach-call.bpl"
-   ]
+   ],
+   [
+     "flag != 0"
+   ],
+   "true"
   ],
   [
    "s-gj2007_true-unreach-call.0",

@@ -108,12 +108,16 @@
    "k==0 ==> i == 0"
   ],
   [
-   "s-ddlm2013_true-unreach-call",
+   "s-ddlm2013_true-unreach-call.0",
    [
     "../sv_manual_trans/loop-lit/ddlm2013_true-unreach-call.desugared.bpl",
     "../sv_manual_trans/loop-lit/ddlm2013_true-unreach-call.c",
     "../sv_manual_trans/loop-lit/ddlm2013_true-unreach-call.bpl"
-   ]
+   ],
+   [
+     "flag != 0"
+   ],
+   "true"
   ],
   [
    "s-count_up_down_true-unreach-call_true-termination",
@@ -236,5 +240,4 @@
    "true"
   ]
  ]
- ],
 }
