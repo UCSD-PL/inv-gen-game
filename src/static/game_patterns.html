@@ -173,8 +173,6 @@
       stickyW = new StickyWindow($('#sticky'))
       gameLogic = new PatternGameLogic(traceW, progW, scoreW, stickyW);
 
-      $('#next-lvl').hide();
-
       gameLogic.onLvlPassed(function() {
         numLvlPassed = numLvlPassed + 1;
         function plural(n,s) { return n == 1? s : s + "s" }
@@ -196,15 +194,6 @@
         $("#next-or-quit-screen").fadeOut(1000);
         nextLvl();
       });
-
-      $('#next-lvl').click(function() {
-        $('#next-lvl').hide();
-        $('#skip-to-next-lvl').hide();
-        if (curL)
-          removeLabel(curL);
-
-        nextLvl();
-      })
 
       $('#help').click(function() {
         $('#help-content').slideToggle(200);
@@ -271,6 +260,7 @@
 
       $('#quit').click(function () { doneScreen(false) });
       $('#skip-to-next-lvl').click(function () {
+        $('#skip-to-next-lvl').hide();
         gameLogic.skipToNextLvl();
       });
       $('#quit-overlay').click(function() { doneScreen(false) });
@@ -450,9 +440,6 @@
         <div class='row-md-6'>
 
           <div class='col-md-8' id='hint-col'>
-            <span id='next_lvl_span'>
-              <button id='next-lvl' class='btn-next'>Next Level</button>
-            </span>
           </div>
 
           <!-- <div class='row'> -->
