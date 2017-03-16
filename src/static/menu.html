@@ -166,8 +166,6 @@
       }
 
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" });
-
-      getLeaderboard();
       
       $("#joinGame").hide();
       $("#gameId").val("");
@@ -180,6 +178,7 @@
       $("#gameId").keyup(validateGameId);
       $("#join").click(checkGameId);
       $(".ui-tabs-tab").click(function() {$("#joinGame").hide()});
+      $("#leaderboard").click(getLeaderboard);
 
       $("#tabs").tabs();
     })
