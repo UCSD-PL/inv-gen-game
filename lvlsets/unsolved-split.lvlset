@@ -191,9 +191,9 @@
     "../dilig-benchmarks/single/20.bpl"
    ],
    [
-    "m==0"
+    "n<=0"
    ],
-   "(!(m == 0 )) ==> m < n"
+   "(!(n<=0)) ==> m < n"
   ],
   [
    "d-20.1",
@@ -203,7 +203,7 @@
     "../dilig-benchmarks/single/20.bpl"
    ],
    [
-    "!(m==0)"
+    "!(n<=0)"
    ],
    "true"
   ],
