@@ -409,6 +409,7 @@
 
       $("#lblGameId").text(gameId);
       $("#lblGameURL").text(gameURL);
+      $("#lblPlayerId").text(playerId);
 
       $("#logout").click(logout);
 
@@ -572,7 +573,7 @@
     </div>
     <div class="row centered" id="shareGameId">
       <h4>
-        Invite others to join your game by sharing this code: <label id="lblGameId" class="success"></label>
+        Hi <span id="lblPlayerId"></span>, invite others to join your game by sharing this code: <label id="lblGameId" class="success"></label>
       </h4>
       <h4>
         You can also invite them to join through this URL: <label id="lblGameURL" class="success"></label>

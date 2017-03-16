@@ -153,8 +153,39 @@
           }
           table += "</table>"
           $("#leaderboard").html(table);
-          setHeader();
         }
+      });
+    }
+
+    function getGames() {
+      var res = rpc.call('App.getGames', [], function(res) {
+        allGames = []
+        for (var id in res) {
+          var currentGameId = id;
+          var currentGamePlayers = res[id][1].players.length;
+          var currentGameExpressions = res[id][1].expressions;
+
+          var expr = [];
+          for (var lvl in currentGameExpressions) {
+            for (var inv in currentGameExpressions[lvl]) {
+              expr.push(inv);
+            }
+          }
+          currentGameExpressions = expr;
+          
+          allGames.push({
+            id: currentGameId,
+            players: currentGamePlayers,
+            expr: currentGameExpressions.length,
+          });
+        }
+
+        var table = "<table class='tg'><tr><th class='tg-9hbo'>Game</th><th class='tg-9hbo'># Players</th><th class='tg-9hbo'># Expressions</th></tr>"
+        for (var i = 0, len = allGames.length; i < len; i++) {
+          table += "<tr><td class='tg-yw4l'><a href='" + (window.location.origin + "/game_np.html?gameId=" + allGames[i].id) + "'>" + allGames[i].id + "</a></td><td class='tg-yw4l'>" + allGames[i].players + "</td><td class='tg-yw4l'>" + allGames[i].expr + "</td></tr>"
+        }
+        table += "</table>";
+        $("#gameList").html(table);
       });
     }
 
@@ -166,6 +197,10 @@
       }
 
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" });
+      
+      getLeaderboard();
+      setHeader();
+      getGames();
       
       $("#joinGame").hide();
       $("#gameId").val("");
@@ -179,7 +214,7 @@
       $("#join").click(checkGameId);
       $(".ui-tabs-tab").click(function() {$("#joinGame").hide()});
       $("#leaderboard").click(getLeaderboard);
-
+      $("#profile").click(setHeader);
       $("#tabs").tabs();
     })
   </script>
@@ -220,6 +255,11 @@
         <button id="optBackJoin" type="button" class="btn btn-primary">Back</button>
         <br />
         <label id="notFound" class="error"></label>
+        <br /><br />
+        OR
+        <br /><br />
+        Select a game from below:
+        <div id="gameList"></div>
       </div>
 
       <div id="leaderboard" class="row menu"></div>
