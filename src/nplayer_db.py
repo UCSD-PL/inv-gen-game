@@ -24,12 +24,6 @@ class Scores(Base):
     score = Column('score', Integer)
 
 
-class Badges(Base):
-    __tablename__ = "badges"
-    playerId = Column('player_id', String, primary_key=True)
-    badge = Column('badge', String)
-
-
 def open_db(path):
     engine = create_engine("sqlite:///" + path, echo=False,
       connect_args={'check_same_thread':False})
