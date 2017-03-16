@@ -516,6 +516,12 @@ def get(key, val, expectedGen):
     return kvStore[key];
 
 
+@api.method("App.getGames")
+@pp_exc
+def getGames():
+    return kvStore
+
+
 @api.method("App.newPlayer")
 @pp_exc
 def newPlayer(playerId, password):
