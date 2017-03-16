@@ -43,8 +43,11 @@ def filterCandidateInvariants(bbs, preCond, postCond, cutPoints, timeout=None):
             pass; # During the first pass we ignore safety violations. We just want to get
                   # an inductive invariant network
           elif (isinstance(s, AstAssume)):
-            if (unsatisfiable(And(sp, expr_to_z3(s.expr, aiTyEnv)), timeout)):
-              break;
+            try:
+              if (unsatisfiable(And(sp, expr_to_z3(s.expr, aiTyEnv)), timeout)):
+                break;
+            except Unknown:
+              pass; # Conservatively assume path is possible on timeout
           processedStmts.append(s)
           new_sp = sp_stmt(s, sp, aiTyEnv)
           #print "SP: {", sp, "} ", s, " {", new_sp, "}"
@@ -131,8 +134,11 @@ def checkInvNetwork(bbs, preCond, postCond, cutPoints, timeout=None):
               violations.append(v)
               break;
           elif (isinstance(s, AstAssume)):
-            if (unsatisfiable(And(sp, expr_to_z3(s.expr, aiTyEnv)), timeout)):
-              break;
+            try:
+              if (unsatisfiable(And(sp, expr_to_z3(s.expr, aiTyEnv)), timeout)):
+                break;
+            except Unknown:
+              pass; # Conservatively assume path is possible on timeout
           processedStmts.append((s, replM))
           new_sp = sp_stmt(s, sp, aiTyEnv)
           #print "SP: {", sp, "} ", s, " {", new_sp, "}"
