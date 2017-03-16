@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="bootstrap.min.css">
   <link rel="stylesheet" href="bootstrap-theme.min.css">
   <script src="bootstrap.min.js"></script>
+  <link rel="stylesheet" href="jquery-ui-1.11.4/jquery-ui.css">
 
   <link rel="stylesheet" href="inv.css">
 
@@ -117,13 +118,11 @@
 
     function showJoin() {
       $("#options").hide();
-      $("#leaderboard").hide();
       $("#joinGame").show();
     }
 
     function hideJoin() {
       $("#options").show();
-      $("#leaderboard").show();
       $("#joinGame").hide();
     }
 
@@ -180,6 +179,9 @@
       $("#optBackJoin").click(hideJoin);
       $("#gameId").keyup(validateGameId);
       $("#join").click(checkGameId);
+      $(".ui-tabs-tab").click(function() {$("#joinGame").hide()});
+
+      $("#tabs").tabs();
     })
   </script>
 </head>
@@ -189,33 +191,39 @@
     <div class="row menu">
       <h2>Multiplayer inv-gen-game</h2>
     </div>
-    <div class="row menu">
-      <h4 id="pid"></h4>
-      <h4 id="points"></h4>
-      <h4 id="rank"></h4>
-    </div>
 
-    <br />
+    <div id="tabs" class="ui-tabs">
+      <ul role="tablist" class="ui-tabs-nav">
+        <li role="tab" class="ui-tabs-tab" tabindex="0"><a href="#profile" class="ui-tabs-anchor" role="presentation">Profile</a></li>
+        <li role="tab" class="ui-tabs-tab" tabindex="1"><a href="#options" class="ui-tabs-anchor" role="presentation">Play</a></li>
+        <li role="tab" class="ui-tabs-tab" tabindex="2"><a href="#leaderboard" class="ui-tabs-anchor" role="presentation">Leaderboard</a></li>
+        <li role="tab" class="ui-tabs-tab" tabindex="3"><a id="optLogout" href="#leaderboard" class="ui-tabs-anchor" role="presentation">Logout</a></li>
+      </ul>
+      
+      <div id="profile" class="row menu">
+        <h4 id="pid"></h4>
+        <h4 id="points"></h4>
+        <h4 id="rank"></h4>
+      </div>
 
-    <div class="row menu" id="options">
-      <button id="optStart" class="btn btn-primary">New Game</button>
-      <br /><br />
-      <button id="optJoin" class="btn btn-primary">Join Game</button>
-      <br /><br />
-      <button id="optLogout" class="btn btn-primary">Log Out</button>
-      <br /><br />
-    </div>
+      <div id="options" class="row menu">
+        <button id="optStart" class="btn btn-primary">New Game</button>
+        <br /><br />
+        <button id="optJoin" class="btn btn-primary">Join Game</button>
+        <br /><br />
+      </div>
 
-    <div id="leaderboard" class="row menu"></div>
-    
-    <div class="row" id="joinGame" hidden="true">
-      <label id="lblJoin">Enter Game ID:</label>
-      <input id="gameId" type="text" placeholder="Enter Game ID"></input>
-      <br />
-      <button id="join" type="submit" class="btn btn-primary" disabled="true">Join</button>
-      <button id="optBackJoin" type="button" class="btn btn-primary">Back</button>
-      <br />
-      <label id="notFound" class="error"></label>
+      <div class="row menu" id="joinGame" hidden="true">
+        <label id="lblJoin">Enter Game ID:</label>
+        <input id="gameId" type="text" placeholder="Enter Game ID"></input>
+        <br />
+        <button id="join" type="submit" class="btn btn-primary" disabled="true">Join</button>
+        <button id="optBackJoin" type="button" class="btn btn-primary">Back</button>
+        <br />
+        <label id="notFound" class="error"></label>
+      </div>
+
+      <div id="leaderboard" class="row menu"></div>
     </div>
   </div>
 </body>
