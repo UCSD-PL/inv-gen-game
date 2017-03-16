@@ -220,7 +220,7 @@ def boogieToEsprimaExpr(expr):
             '<=':    ('<=', 'BinaryExpression'),
             '>=':    ('>=', 'BinaryExpression'),
             '==':    ('==', 'BinaryExpression'),
-            '!==':    ('!==', 'BinaryExpression'),
+            '!=':    ('!==', 'BinaryExpression'),
             '&&':    ('&&', 'LogicalExpression'),
             '||':    ('||', 'LogicalExpression'),
         }[expr.op]

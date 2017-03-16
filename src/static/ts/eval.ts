@@ -364,7 +364,7 @@ function esprimaToEvalStr(nd: ESTree.Node): string {
     }
 
     if (nd.type == "Literal") {
-      return "" + (<ESTree.Literal>nd).value
+      return "(" + (<ESTree.Literal>nd).value + ")"
     }
 
     if (nd.type == "Identifier") {

@@ -8,13 +8,14 @@ from js import esprimaToZ3, esprimaToBoogie, boogieToEsprima
 from lib.boogie.ast import AstBinExpr, AstTrue, ast_and
 from lib.common.util import pp_exc, powerset, split, nonempty
 from lib.boogie.eval import instantiateAndEval, _to_dict
-from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, z3_expr_to_boogie
+from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, z3_expr_to_boogie, Unknown
+from lib.boogie.analysis import propagate_sp
 from sys import exc_info
 from cProfile import Profile
 from pstats import Stats
 from StringIO import StringIO
 from random import choice
-from vc_check import tryAndVerify_impl, _from_dict
+from vc_check import tryAndVerify_impl, tryAndVerifyWithSplitterPreds, _from_dict
 
 from levels import _tryUnroll, findNegatingTrace, loadBoogieLvlSet
 
@@ -42,6 +43,7 @@ p.add_argument('--ename', type=str, default = 'default', help='Name for experime
 p.add_argument('--lvlset', type=str, default = 'desugared-boogie-benchmarks', help='Lvlset to use for serving benchmarks"')
 p.add_argument('--db', type=str, help='Path to database', required=True)
 p.add_argument('--adminToken', type=str, help='Secret token for logging in to admin interface. If omitted will be randomly generated')
+p.add_argument('--timeout', type=int, default=60, help='Timeout in seconds for z3 queries.')
 
 args = p.parse_args();
 logF = None;
@@ -333,7 +335,17 @@ def equivalentPairs(invL1, invL2):
     z3InvL1 = [esprimaToZ3(x, {}) for x in invL1]
     z3InvL2 = [esprimaToZ3(x, {}) for x in invL2]
 
-    res = [(x,y) for x in z3InvL1 for y in z3InvL2 if equivalent(x, y)]
+    res = []
+    for x in z3InvL1:
+      for y in z3InvL2:
+        try:
+          equiv = equivalent(x, y)
+        except Unknown:
+          equiv = False; # Conservative assumption
+
+        if (equiv):
+          res.append((x,y))
+
     res = [(boogieToEsprima(z3_expr_to_boogie(x)),
             boogieToEsprima(z3_expr_to_boogie(y))) for (x,y) in res]
     return res
@@ -345,7 +357,17 @@ def impliedPairs(invL1, invL2):
     z3InvL1 = [esprimaToZ3(x, {}) for x in invL1]
     z3InvL2 = [esprimaToZ3(x, {}) for x in invL2]
 
-    res = [(x,y) for x in z3InvL1 for y in z3InvL2 if implies(x, y)]
+    res = []
+    for x in z3InvL1:
+      for y in z3InvL2:
+        try:
+          impl = implies(x, y)
+        except Unknown:
+          impl = False; # Conservative assumption
+
+        if (impl):
+          res.append((x,y))
+        
     res = [(boogieToEsprima(z3_expr_to_boogie(x)),
             boogieToEsprima(z3_expr_to_boogie(y))) for (x,y) in res]
     return res
@@ -354,8 +376,11 @@ def impliedPairs(invL1, invL2):
 @pp_exc
 @log_d(pp_EsprimaInv, str)
 def isTautology(inv):
-    res = (tautology(esprimaToZ3(inv, {})))
-    return res
+    try:
+      res = (tautology(esprimaToZ3(inv, {})))
+      return res
+    except Unknown:
+      return False; # Conservative assumption
 
 
 def getLastVerResult(lvlset, lvlid, session):
@@ -393,10 +418,8 @@ def tryAndVerify(levelSet, levelId, invs):
     bbs = lvl['program']
     loop = lvl['loop']
     partialInvs = [ lvl['partialInv'] ] if 'partialInv' in lvl else []
-    splitterPreds = lvl['splitterPreds'] if 'splitterPreds' in lvl else [ AstTrue() ]
+    splitterPreds = lvl['splitterPreds'] if 'splitterPreds' in lvl else [ ]
     boogie_invs = [ esprimaToBoogie(x, {}) for x in invs ]
-    candidate_antecedents = [ ast_and(pSet) for pSet in nonempty(powerset(splitterPreds)) ]
-
     initial_sound = partialInvs 
 
     lastVer = getLastVerResult(levelSet, levelId, s)
@@ -404,22 +427,21 @@ def tryAndVerify(levelSet, levelId, invs):
       initial_sound += [parseExprAst(x) for x in lastVer["sound"]]
       boogie_invs += [parseExprAst(x) for x in lastVer["nonind"]]
 
-    # First lets find the invariants that are sound without implication
-    overfitted, nonind, sound, violations =\
-      tryAndVerify_impl(bbs, loop, initial_sound, boogie_invs)
-    sound = [x for x in sound if not tautology(expr_to_z3(x, AllIntTypeEnv()))]
+    # Push any SPs that are syntactically unmodified
+    loop_header = loop.loop_paths[0][0]
+    sps = list(propagate_sp(bbs)[loop_header])
 
-    # Next lets add implication  to all unsound invariants from first pass
-    # Also add manually specified partialInvs
-    unsound = [ inv_ctr_pair[0] for inv_ctr_pair in overfitted | nonind ]
-    p2_invs = [ AstBinExpr(antec, "==>", inv)
-      for antec in candidate_antecedents for inv in unsound ] + partialInvs
-    p2_invs = [ x for x in p2_invs if not tautology(expr_to_z3(x, AllIntTypeEnv())) ]
+    print "Adding sps: ", sps
+    initial_sound += sps;
 
-    # And look for any new sound invariants
-    overfitted, nonind, sound_p2, violations =\
-      tryAndVerify_impl(bbs, loop, sound, p2_invs)
-    sound = set(sound).union(sound_p2)
+    # Check for invariants
+    if (len(splitterPreds) > 0):
+      overfitted, nonind, sound, violations =\
+        tryAndVerifyWithSplitterPreds(bbs, loop, initial_sound, boogie_invs,
+        splitterPreds, partialInvs, args.timeout)
+    else:
+      overfitted, nonind, sound, violations =\
+        tryAndVerify_impl(bbs, loop, initial_sound, boogie_invs)
 
     # Finally see if the sound invariants imply the postcondition. 
     solved = len(violations) == 0;
@@ -429,7 +451,7 @@ def tryAndVerify(levelSet, levelId, invs):
     # from dictionaries
     overfitted = [ (boogieToEsprima(inv), fix(v.endEnv()))
       for (inv, v) in overfitted ]
-    nonind = [ (boogieToEsprima(inv), (fix(v.startEnv(), v.endEnv())))
+    nonind = [ (boogieToEsprima(inv), (fix(v.startEnv()), fix(v.endEnv())))
       for (inv, v) in nonind ]
     sound = [ boogieToEsprima(inv) for inv in sound ]
     safety_ctrexs = [ fix(v.startEnv()) for v in violations ]

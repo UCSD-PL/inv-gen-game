@@ -2,7 +2,7 @@ from lib.boogie.ast import ast_and, replace, AstBinExpr, AstAssert, AstAssume, A
 from lib.common.util import split, nonempty, powerset
 from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, Unknown, counterex, Implies, And, tautology, Bool, satisfiable, unsatisfiable
 from lib.boogie.paths import nd_bb_path_to_ssa, ssa_path_to_z3, _ssa_stmts
-from lib.boogie.ssa import SSAEnv
+from lib.boogie.ssa import SSAEnv, unssa_z3_model
 from lib.boogie.predicate_transformers import wp_stmts, sp_stmt
 from copy import copy
 from lib.boogie.bb import entry, exit
@@ -43,8 +43,11 @@ def filterCandidateInvariants(bbs, preCond, postCond, cutPoints, timeout=None):
             pass; # During the first pass we ignore safety violations. We just want to get
                   # an inductive invariant network
           elif (isinstance(s, AstAssume)):
-            if (unsatisfiable(And(sp, expr_to_z3(s.expr, aiTyEnv)), timeout)):
-              break;
+            try:
+              if (unsatisfiable(And(sp, expr_to_z3(s.expr, aiTyEnv)), timeout)):
+                break;
+            except Unknown:
+              pass; # Conservatively assume path is possible on timeout
           processedStmts.append(s)
           new_sp = sp_stmt(s, sp, aiTyEnv)
           #print "SP: {", sp, "} ", s, " {", new_sp, "}"
@@ -131,8 +134,11 @@ def checkInvNetwork(bbs, preCond, postCond, cutPoints, timeout=None):
               violations.append(v)
               break;
           elif (isinstance(s, AstAssume)):
-            if (unsatisfiable(And(sp, expr_to_z3(s.expr, aiTyEnv)), timeout)):
-              break;
+            try:
+              if (unsatisfiable(And(sp, expr_to_z3(s.expr, aiTyEnv)), timeout)):
+                break;
+            except Unknown:
+              pass; # Conservatively assume path is possible on timeout
           processedStmts.append((s, replM))
           new_sp = sp_stmt(s, sp, aiTyEnv)
           #print "SP: {", sp, "} ", s, " {", new_sp, "}"
@@ -196,13 +202,13 @@ class Violation:
   def endBB(s): return s._path[-1][0]
   def startReplM(s):  return s._path[0][1][0]
   def endReplM(s):
-    if (len(lastBBCompletedStmts) > 0):
-      return lastBBCompletedStmts[-1][1]
+    if (len(s._lastBBCompletedStmts) > 0):
+      return s._lastBBCompletedStmts[-1][1]
     return s._path[-2][1][-1]
 
   def startEnv(s):
     assert {} == s.startReplM()
-    return unssa_model(s._ctrex, s.startReplM())
+    return unssa_z3_model(s._ctrex, s.startReplM())
 
   def endEnv(s):
-    return unssa_model(s._ctrex, s.endReplM())
+    return unssa_z3_model(s._ctrex, s.endReplM())
