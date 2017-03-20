@@ -45,13 +45,6 @@
 
     disableBackspaceNav();
 
-    function loadTrace(traceId) {
-      PrepopulatedDynamicLevel.load(curLvlSet, traceId, function(lvl) {
-        curLvlId = traceId
-        gameLogic.loadLvl(lvl)
-      })
-    }
-
     function loadNextTrace() {
       PrepopulatedDynamicLevel.loadNext(function(res) {
         if (res === null)
@@ -76,21 +69,6 @@
         loadNextTrace()
       else
         loadLvl(curLvl + 1);
-    }
-
-    function loadLvl(lvl) {
-      if (lvl == lvls.length) {
-        curLvl = lvl;
-        doneScreen(true);
-      } else {
-        curLvl = lvl;
-
-        if (typeof(lvls[lvl]) == "string") {
-          loadTrace(lvls[curLvl]);
-        } else {
-          gameLogic.loadLvl(lvls[curLvl])
-        }
-      }
     }
 
     function loadLvlSet(lvlset) {

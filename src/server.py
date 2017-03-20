@@ -237,7 +237,7 @@ def loadNextLvl(workerId):
     level_names = traces[curLevelSetName].keys();
     num_invs = [len(enteredInvsForLevel(curLevelSetName, x, session)) for x in level_names]
     ninvs_and_level = zip(num_invs, level_names)
-    #ninvs_and_level.sort()
+    ninvs_and_level.sort()
     for ninvs, lvlId in ninvs_and_level:
         if levelSolved(session, curLevelSetName, lvlId) or \
            workerId != "" and levelFinishedBy(session, curLevelSetName, lvlId, workerId):
