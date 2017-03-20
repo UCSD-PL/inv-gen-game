@@ -220,6 +220,8 @@ def Or(*args):  return z3.Or(*args)
 def And(*args): return z3.And(*args)
 def Not(pred):  return z3.Not(pred)
 def Implies(a,b): return z3.Implies(a,b)
+def IntVal(v):  return z3.IntVal(v)
+def BoolVal(v):  return z3.BoolVal(v)
 
 z3Cache = { }
 z3CacheStats = { }

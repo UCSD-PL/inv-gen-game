@@ -27,9 +27,9 @@ def invJSToZ3(inv, typeEnv):
 def jsNumToZ3(strN):
   try:
     intV = int(strN)
-    return intV
-  except:
-    return float(strN)
+    return IntVal(intV)
+  except Exception,e:
+    raise Exception("Dont' currently support floats");
 
 def jsToZ3Expr(astn, typeEnv):
   if (isinstance(astn, ast.BinOp)):
@@ -106,7 +106,7 @@ def esprimaToZ3Expr(astn, typeEnv):
     return Int(astn["name"]);
   if (astn["type"] == "Literal"):
     if (astn["raw"] in ["true", "false"]):
-      return Or(True) if (astn["raw"] == "true") else And(False);
+      return BoolVal(True) if (astn["raw"] == "true") else BoolVal(False);
     else:
       return jsNumToZ3(astn["raw"])
   else:
