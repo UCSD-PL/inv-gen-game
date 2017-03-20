@@ -8,7 +8,6 @@ from ..common.util import eprint
 import Pyro4
 import sys
 import atexit
-from atexit import register
 
 class WrappedZ3Exception(BaseException):
   def __init__(s, value):
@@ -226,16 +225,6 @@ def BoolVal(v):  return z3.BoolVal(v)
 z3Cache = { }
 z3CacheStats = { }
 
-def printZ3CacheStats():
-  global z3CacheStats;
-  for (func, (hit, miss)) in z3CacheStats.iteritems():
-    total = hit + miss;
-    hitP = 100.0*hit/total
-    missP = 100.0*miss/total
-    print func, "hit:", hit, "(", hitP, "%)", "miss:", miss, "(", missP, "%)"
-
-register(printZ3CacheStats);
-
 def memoize(keyF):
   def decorator(f):
     def decorated(*args, **kwargs):
@@ -247,12 +236,14 @@ def memoize(keyF):
         key = keyF(*args, **kwargs)
         if (key in z3Cache):
           z3CacheStats[fname] = (hit+1, miss)
-          return z3Cache[key];
+          return z3Cache[key][0];
         else:
           z3CacheStats[fname] = (hit, miss+1)
 
+        start = time();
         res = f(*args, **kwargs)
-        z3Cache[keyF(*args, **kwargs)] = res;
+        duration = time() - start
+        z3Cache[keyF(*args, **kwargs)] = (res, duration);
         return res;
       except Unknown, e:
         assert keyF(*args, **kwargs) not in z3Cache

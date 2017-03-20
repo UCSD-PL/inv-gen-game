@@ -8,7 +8,7 @@ from js import esprimaToZ3, esprimaToBoogie, boogieToEsprima
 from lib.boogie.ast import AstBinExpr, AstTrue, ast_and
 from lib.common.util import pp_exc, powerset, split, nonempty
 from lib.boogie.eval import instantiateAndEval, _to_dict
-from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, z3_expr_to_boogie, Unknown
+from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, z3_expr_to_boogie, Unknown, z3CacheStats
 from lib.boogie.analysis import propagate_sp
 from sys import exc_info
 from cProfile import Profile
@@ -31,6 +31,7 @@ from datetime import datetime
 from models import open_sqlite_db, Event
 from db_util import playersWhoStartedLevel, enteredInvsForLevel, getOrAddSource, addEvent,\
   levelSolved, levelFinishedBy
+from atexit import register
 
 colorama_init();
 
@@ -531,6 +532,16 @@ def getLogs(inputToken, afterTimestamp, afterId):
 
   return [ { "id": e.id, "type": e.type, "experiment": e.experiment, "src": e.src,
               "addr": e.addr, "time": str(e.time), "payload": e.payl() } for e in evts ]
+
+def printZ3CacheStats():
+  global z3CacheStats;
+  for (func, (hit, miss)) in z3CacheStats.iteritems():
+    total = hit + miss;
+    hitP = 100.0*hit/total
+    missP = 100.0*miss/total
+    print func, "hit:", hit, "(", hitP, "%)", "miss:", miss, "(", missP, "%)"
+
+register(printZ3CacheStats);
   
 if __name__ == "__main__":
     ignore = IgnoreManager()
