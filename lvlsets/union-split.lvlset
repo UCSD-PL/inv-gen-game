@@ -250,9 +250,9 @@
     "../dilig-benchmarks/single/20.bpl"
    ],
    [
-    "m==0"
+    "n<=0"
    ],
-   "(!(m == 0 )) ==> m < n"
+   "(!(n<=0)) ==> m < n"
   ],
   [
    "d-20.1",
@@ -262,7 +262,7 @@
     "../dilig-benchmarks/single/20.bpl"
    ],
    [
-    "!(m==0)"
+    "!(n<=0)"
    ],
    "true"
   ],
@@ -1074,7 +1074,7 @@
    [
     "x<50"
    ],
-   "(x >= 50 ==> x == y)"
+   "(x >= 50 ==> (x == y && x <= 100))"
   ],
   [
    "s-gj2007_true-unreach-call.1",
@@ -1197,7 +1197,7 @@
    [
     "k==0"
    ],
-   "!(k==0) ==> i mod k == 0"
+   "!(k==0) ==> (i mod k == 0 && i <= LARGE_INT * k)
   ],
   [
    "s-count_by_k_true-unreach-call.1",
