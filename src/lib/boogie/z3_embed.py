@@ -222,7 +222,11 @@ def Implies(a,b): return z3.Implies(a,b)
 def IntVal(v):  return z3.IntVal(v)
 def BoolVal(v):  return z3.BoolVal(v)
 
+# For each successful z3 query store the result, and the time taken
 z3Cache = { }
+# Remember for which z3 queries we got a failure (Unknowns or Crashes)
+z3FailureCache = { }
+# For all memoized z3 funcs stores the # of cache hits/misses
 z3CacheStats = { }
 
 def memoize(keyF):
@@ -246,10 +250,14 @@ def memoize(keyF):
         z3Cache[keyF(*args, **kwargs)] = (res, duration);
         return res;
       except Unknown, e:
-        assert keyF(*args, **kwargs) not in z3Cache
+        key = keyF(*args, **kwargs)
+        assert key not in z3Cache
+        z3FailureCache[key] = "Unknown"
         raise e;
       except Crashed, e:
-        assert keyF(*args, **kwargs) not in z3Cache
+        key = keyF(*args, **kwargs)
+        assert key not in z3Cache
+        z3FailureCache[key] = "Crash"
         raise e;
     return decorated
   return decorator
