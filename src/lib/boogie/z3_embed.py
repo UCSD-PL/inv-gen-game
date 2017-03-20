@@ -160,7 +160,7 @@ class Z3ProxySolver:
         s.push();
 
 z3ProcessPoolCond = Condition();
-MAX_Z3_INSTANCES=10;
+MAX_Z3_INSTANCES=100;
 ports = set(range(8100, 8100 + MAX_Z3_INSTANCES))
 z3ProcessPool = { }
 
@@ -220,6 +220,34 @@ def And(*args): return z3.And(*args)
 def Not(pred):  return z3.Not(pred)
 def Implies(a,b): return z3.Implies(a,b)
 
+z3Cache = { }
+z3CacheStats = { }
+
+def memoize(keyF):
+  def decorator(f):
+    def decorated(*args, **kwargs):
+      global z3Cache
+      fname = f.func_code.co_name
+      hit,miss = z3CacheStats.get(fname, (0,0))
+
+      try:
+        key = keyF(*args, **kwargs)
+        if (key in z3Cache):
+          z3CacheStats[fname] = (hit+1, miss)
+          return z3Cache[key];
+        else:
+          z3CacheStats[fname] = (hit, miss+1)
+
+        res = f(*args, **kwargs)
+        z3Cache[keyF(*args, **kwargs)] = res;
+        return res;
+      except Unknown, e:
+        assert keyF(*args, **kwargs) not in z3Cache
+        raise e;
+    return decorated
+  return decorator
+
+@memoize(lambda pred, timeout:  pred)
 def counterex(pred, timeout=None):
     s = None
     try:
