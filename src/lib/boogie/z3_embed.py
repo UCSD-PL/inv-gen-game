@@ -8,6 +8,7 @@ from ..common.util import eprint
 import Pyro4
 import sys
 import atexit
+from atexit import register
 
 class WrappedZ3Exception(BaseException):
   def __init__(s, value):
@@ -223,6 +224,16 @@ def Implies(a,b): return z3.Implies(a,b)
 z3Cache = { }
 z3CacheStats = { }
 
+def printZ3CacheStats():
+  global z3CacheStats;
+  for (func, (hit, miss)) in z3CacheStats.iteritems():
+    total = hit + miss;
+    hitP = 100.0*hit/total
+    missP = 100.0*miss/total
+    print func, "hit:", hit, "(", hitP, "%)", "miss:", miss, "(", missP, "%)"
+
+register(printZ3CacheStats);
+
 def memoize(keyF):
   def decorator(f):
     def decorated(*args, **kwargs):
@@ -244,10 +255,13 @@ def memoize(keyF):
       except Unknown, e:
         assert keyF(*args, **kwargs) not in z3Cache
         raise e;
+      except Crashed, e:
+        assert keyF(*args, **kwargs) not in z3Cache
+        raise e;
     return decorated
   return decorator
 
-@memoize(lambda pred, timeout:  pred)
+@memoize(lambda pred, timeout=None:  pred)
 def counterex(pred, timeout=None):
     s = None
     try:
@@ -265,6 +279,7 @@ def counterex(pred, timeout=None):
     finally:
       if (s): releaseSolver(s);
 
+@memoize(lambda pred, timeout=None:  pred)
 def satisfiable(pred, timeout=None):
     s = None
     try:
@@ -275,6 +290,7 @@ def satisfiable(pred, timeout=None):
     finally:
       if (s): releaseSolver(s)
 
+@memoize(lambda pred, timeout=None:  pred)
 def unsatisfiable(pred, timeout=None):
     s = None
     try:
@@ -285,6 +301,7 @@ def unsatisfiable(pred, timeout=None):
     finally:
       if (s): releaseSolver(s)
 
+@memoize(lambda pred:  pred)
 def model(pred):
     s = None
     try:
@@ -296,6 +313,7 @@ def model(pred):
     finally:
       if (s): releaseSolver(s);
 
+@memoize(lambda pred:  pred)
 def maybeModel(pred):
     s = None
     try:
@@ -310,12 +328,15 @@ def maybeModel(pred):
 def simplify(pred, *args, **kwargs):
     return z3.simplify(pred, *args, **kwargs)
 
+@memoize(lambda inv1, inv2:  (inv1, inv2))
 def implies(inv1, inv2):
     return unsatisfiable(And(inv1, Not(inv2)))
 
+@memoize(lambda inv1, inv2:  (inv1, inv2))
 def equivalent(inv1, inv2):
     return implies(inv1,inv2) and implies(inv2, inv1)
 
+@memoize(lambda inv:  inv)
 def tautology(inv):
     return unsatisfiable(Not(inv))
 
