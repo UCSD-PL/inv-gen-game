@@ -30,6 +30,7 @@
     var allLogs = []
     var userStats = [ ]
     var lvlStats = [ ]
+    var solutions = null;
 
     disableBackspaceNav();
 
@@ -68,6 +69,9 @@
             lvls[lvlid].sound = e.payload.sound.length;
             lvls[lvlid].nonind = e.payload.nonind.length;
             lvls[lvlid].overfitted = e.payload.overfitted.length;
+            lvls[lvlid].soundSet = e.payload.sound;
+            lvls[lvlid].nonindSet = e.payload.nonind;
+            lvls[lvlid].overfittedSet = e.payload.overfitted;
           }
           continue;
         }
@@ -82,7 +86,7 @@
           let lvlid = e.payload.lvlset + "," + e.payload.lvlid;
           ud.lvlD[lvlid] = { started: e.time };
           if (!lvls.hasOwnProperty(lvlid)) {
-            lvls[lvlid] = { completed: 0, skipped:0, invs: 0, time: 0, sound: 0, overfitted: 0, nonind: 0 }
+            lvls[lvlid] = { completed: 0, skipped:0, invs: 0, time: 0, sound: 0, overfitted: 0, nonind: 0, soundSet: [ ], nonindSet: [ ], overfittedSet: [ ]}
           } 
         } else if (e.type == "FinishLevel") {
           let lvlid = e.payload.lvlset + "," + e.payload.lvlid;
@@ -112,6 +116,10 @@
       lvlStats = lvls;
     }
 
+    function spanify(lst) {
+      return "<span class='inv'>" + lst.join("</span><br><span class='inv'>") + "</span>"
+    }
+
     function updateTables() {
       $("#users_tbody").empty();
       for (var userId in userStats) {
@@ -121,7 +129,24 @@
       $("#levels_tbody").empty();
       for (var levelId in lvlStats) {
         let ld = lvlStats[levelId];
-        $("#levels_tbody").append("<tr><td>" + [levelId, ld.completed, ld.skipped, ld.time, ld.time / ld.completed, ld.invs, ld.invs / ld.completed, ld.sound, ld.nonind, ld.overfitted].join("</td><td>") + "</td></tr>")
+        $("#levels_tbody").append("<tr><td>" + [levelId,
+          ld.completed,
+          ld.skipped,
+          ld.time,
+          ld.time / ld.completed,
+          ld.invs,
+          ld.invs / ld.completed,
+          ld.sound,
+          ld.nonind,
+          ld.overfitted
+        ].join("</td><td>") + "</td></tr>")
+
+        $("#level_invs_tbody").append("<tr><td>" + [levelId,
+          spanify(ld.soundSet),
+          spanify(ld.nonindSet),
+          spanify(ld.overfittedSet),
+          spanify($.map(solutions[levelId], esprimaToEvalStr))
+        ].join("</td><td>") + "</td></tr>")
       }
     }
 
@@ -138,7 +163,8 @@
     function loadLogs(rpc, afterTimestamp=null, afterId=null) {
       rpc.call("App.getLogs", [adminToken, afterTimestamp, afterId], function (r) {
         console.log(r)
-        addLogs(r);
+        if (r.length > 0)
+          addLogs(r);
         setTimeout(function() {
           var id = 0;
 
@@ -153,6 +179,13 @@
       });
     }
 
+    function loadSolutions(rpc) {
+      rpc.call("App.getSolutions", [], function (solns) {
+        solutions = solns; 
+        loadLogs(rpc)
+      })
+    }
+
     $(document).ready(function() {
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
       adminToken = Args.get_admin_token();
@@ -161,11 +194,11 @@
         $("#enter-token").on("click", function() {
           adminToken = $("#admin-token").val();
           $("#tokenInputDialog").modal("hide");
-          loadLogs(rpc);
+          loadSolutions(rpc);
         })
         $("#tokenInputDialog").modal("show");
       } else {
-          loadLogs(rpc);
+          loadSolutions(rpc);
       }
     })
   </script>
@@ -216,6 +249,7 @@
           </li>
           <li><a href="#content_users" data-toggle="tab">Users</a></li>
           <li><a href="#content_levels" data-toggle="tab">Levels</a></li>
+          <li><a href="#content_level_invs" data-toggle="tab">Level Invariants</a></li>
         </ul>
         <div class="tab-content">
           <div id="content_raw" class="tab-pane active">
@@ -255,6 +289,21 @@
                 </tr>
               </thead>
               <tbody id='levels_tbody'>
+              </tbody>
+            </table>
+          </div>
+          <div id="content_level_invs" class="tab-pane">
+            <table class='table'>
+              <thead>
+                <tr>
+                  <th> LevelId </th>
+                  <th> #Sound</th>
+                  <th> #Overfit</th>
+                  <th> #Nonind</th>
+                  <th> #Solution</th>
+                </tr>
+              </thead>
+              <tbody id='level_invs_tbody'>
               </tbody>
             </table>
           </div>
