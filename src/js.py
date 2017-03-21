@@ -112,9 +112,9 @@ def esprimaToZ3Expr(astn, typeEnv):
   else:
     raise Exception("Don't know how to parse " + str(astn))
 
-def esprimaToBoogieExprAst(astn, typeEnv):
+def _esprimaToBoogieExprAst(astn, typeEnv):
   if (astn["type"] == "UnaryExpression"):
-    arg = esprimaToBoogieExprAst(astn["argument"], typeEnv)
+    arg = _esprimaToBoogieExprAst(astn["argument"], typeEnv)
     try:
       if (astn["operator"] == "+"):
         return arg;
@@ -126,7 +126,7 @@ def esprimaToBoogieExprAst(astn, typeEnv):
     except:
       raise Exception("Unknown unary expression " + str(astn))
   elif (astn["type"] == "BinaryExpression"):
-    ln,rn = esprimaToBoogieExprAst(astn["left"], typeEnv), esprimaToBoogieExprAst(astn["right"], typeEnv)
+    ln,rn = _esprimaToBoogieExprAst(astn["left"], typeEnv), _esprimaToBoogieExprAst(astn["right"], typeEnv)
 
     try:
       op = {
@@ -147,7 +147,8 @@ def esprimaToBoogieExprAst(astn, typeEnv):
     except:
       raise Exception("Unkown binary expression " + str(astn))
   elif (astn["type"] == "LogicalExpression"):
-    ln,rn = esprimaToBoogieExprAst(astn["left"], typeEnv), esprimaToBoogieExprAst(astn["right"], typeEnv)
+    ln,rn = _esprimaToBoogieExprAst(astn["left"], typeEnv), \
+            _esprimaToBoogieExprAst(astn["right"], typeEnv)
 
     try:
       op = {
@@ -167,6 +168,9 @@ def esprimaToBoogieExprAst(astn, typeEnv):
       return AstNumber(int(astn["raw"]))
   else:
     raise Exception("Don't know how to parse " + str(astn))
+
+def esprimaToBoogieExprAst(n, typeEnv):
+  return normalize(_esprimaToBoogieExprAst(n, typeEnv))
 
 def esprimaToZ3(inv, typeEnv):
   if (inv["type"] != "Program" or "body" not in inv or \

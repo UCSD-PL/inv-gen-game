@@ -233,3 +233,22 @@ def ast_group_bin(exprs, op):
 
 def ast_and(exprs): return ast_group_bin(list(exprs), "&&")
 def ast_or(exprs): return ast_group_bin(list(exprs), "||")
+
+def normalize(ast):
+  # There are 2 ways to encode "-1" - as an AstUnExpr or an AstNumber. We pick
+  # the AstUnExpr to be the canonical one for compatibility with the grammar
+  # TODO: What happens when we parse -0?
+  if (isinstance(ast, AstNumber) and ast.num < 0):
+    return AstUnExpr("-", AstNumber(abs(ast.num)))
+  # There are 2 ways to encode implication - as a ==> b or (!a) || b. The later
+  # usually comes from the frontend, since JS lacks an explicit ==> operator.
+  # We pick a ==> b to be canonical
+
+  if (isinstance(ast, AstBinExpr) and ast.op == "||" and \
+      isinstance(ast.lhs, AstUnExpr) and ast.lhs.op == "!"):
+    return AstBinExpr(ast.lhs.expr, "==>", ast.rhs)
+
+  if (isinstance(ast, AstNode)):
+    return ast.__class__(*tuple(map(normalize, ast._children)))
+  else:
+    return ast;
