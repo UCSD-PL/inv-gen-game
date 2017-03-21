@@ -224,8 +224,12 @@ def stmt_changed(ast):
     else:
         raise Exception("Unknown statement: " + str(ast))
 
-def ast_group_bin(exprs, op, default):
-    return reduce(lambda x,y:   AstBinExpr(x, op, y), exprs, default)
+def ast_group_bin(exprs, op):
+    assert (len(exprs) > 0)
+    if (len(exprs) == 1):
+      return exprs[0]
 
-def ast_and(exprs): return ast_group_bin(exprs, "&&", AstTrue())
-def ast_or(exprs): return ast_group_bin(exprs, "||", AstFalse()) 
+    return reduce(lambda x,y:   AstBinExpr(x, op, y), exprs[1:], exprs[0])
+
+def ast_and(exprs): return ast_group_bin(list(exprs), "&&")
+def ast_or(exprs): return ast_group_bin(list(exprs), "||")
