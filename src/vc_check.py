@@ -41,7 +41,7 @@ def tryAndVerifyWithSplitterPreds(bbs, loop, old_sound_invs, boogie_invs,
         the splitter predicates to all candidate invariants. Same returns as
         tryAndVerify_impl.
     """
-    initial_sound = partialInvs + old_sound_invs
+    initial_sound = list(set(partialInvs + old_sound_invs))
 
     # First lets find the invariants that are sound without implication
     overfitted, nonind, sound, violations = tryAndVerify_impl(bbs, loop, initial_sound, boogie_invs, timeout)
@@ -56,7 +56,8 @@ def tryAndVerifyWithSplitterPreds(bbs, loop, old_sound_invs, boogie_invs,
     p2_invs = [ x for x in p2_invs if not tautology(expr_to_z3(x, AllIntTypeEnv())) ]
 
     # And look for any new sound invariants
-    overfitted, nonind, sound_p2, violations = tryAndVerify_impl(bbs, loop, sound, p2_invs, timeout)
+    overfitted, nonind, sound_p2, violations = tryAndVerify_impl(bbs, loop, \
+      list(set(sound + partialInvs)), p2_invs, timeout)
     sound = set(sound).union(sound_p2)
 
     return (overfitted, nonind, sound, violations)

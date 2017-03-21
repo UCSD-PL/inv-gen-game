@@ -210,7 +210,6 @@
                  ['#not_op', 'not_ex'],
                  ['#and_op', 'and_ex'],
                  ['#or_op', 'or_ex'],
-                 ['#impl_op', 'impl_ex'],
                  ['#tutorials', 'tutorials_info'],
                  //['#equiv_op', 'equiv_ex'],
       ]
@@ -220,20 +219,12 @@
         }(ops[i][1]))
       }
 
-      $('#see-conditional-tutorial-1, #see-conditional-tutorial-2').click(function() { 
-        logEvent("SeeConditionalTutorial", []);
-        $('#tutorial-video').fadeIn(1000)
-      });
       $('#tutorial-video-done').click(function() { 
         $('#tutorial-video').fadeOut(1000) 
       });
       $('#replay-tutorial-all').click(function() {
         logEvent("ReplayTutorialAll", []);
-        window.open('tutorial_patterns.html?tutorialAction=redo-all', '_blank').focus();
-      })
-      $('#replay-tutorial-cond-1, #replay-tutorial-cond-2').click(function() {
-        logEvent("ReplayTutorialConditional", []);
-        window.open('tutorial_patterns.html?tutorialAction=redo-cond', '_blank').focus();
+        window.open('tutorial_patterns_nond.html?tutorialAction=redo-all', '_blank').focus();
       })
 
       $('#quit').click(function () { doneScreen(false) });
@@ -306,7 +297,6 @@
                       <td class="centered"><a id='not_op'>!</a></td>
                       <td class="centered"><a id='and_op'>&amp;&amp;</a></td>
                       <td class="centered"><a id='or_op'>||</a></td>
-                      <td class="centered"><a id='impl_op'>if</a></td>
                       <td class="centered"><a id='tutorials'>Tutorials</a></td>
 <!--
                       <td class="centered"><a id='equiv_op'>&lt=&gt</a></td>
@@ -397,18 +387,8 @@
                     <span class='bold'>(3 &gt; 0) || (4 &lt;= 5) </span>,
                     <span class='bold'>(i=2) || (j &gt; 0)</span>
                 </div>
-                <div id="impl_ex" style='display: none'>
-                    <p>
-                    If operator: "A if B" is true if A is true whenever B is true. <br> Examples:
-                    <span class='bold'>i=j if i < n</span> ;
-                    <span class='bold'>i=k if i >= n</span></p>
-                    <button id='see-conditional-tutorial-1'>Video of "if" Tutorial</button>
-                    <button id='replay-tutorial-cond-1'>Replay "if" Tutorial</button></p>
-                </div>
                 <div id="tutorials_info" style='display: none'>
-                    <button id='see-conditional-tutorial-2'>Video of "if" Tutorial</button>
-                    <button id='replay-tutorial-cond-2'>Replay "if" Tutorial</button>
-                    <button id='replay-tutorial-all'>Replay Entire Tutorial</button>
+                    <button id='replay-tutorial-all'>Replay Tutorial</button>
                 </div>
                 <div id="equiv_ex" style='display: none'>The equivalence operator. Example: i <=> j checks if i is logically equivalent to j</div>
                       

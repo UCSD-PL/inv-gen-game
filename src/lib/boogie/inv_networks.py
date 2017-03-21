@@ -173,7 +173,19 @@ def checkInvNetwork(bbs, preCond, postCond, cutPoints, timeout=None):
               try:
                 c = counterex(Implies(sp, postSSAZ3), timeout)
               except Unknown:
-                c = { } # On timeout conservatively assume fail
+                try:
+                  # Sometimes its easier to check each post-invariant
+                  # individually rather than all of them at once (similarly
+                  # to the filter case). Try this if the implication of the
+                  # conjunction of all of them fails
+                  for p in cps[succ]:
+                    postSSA = replace(p, curFinalSSAEnv.replm())
+                    postSSAZ3 = expr_to_z3(postSSA, aiTyEnv)
+                    c = counterex(Implies(sp, postSSAZ3), timeout)
+                    # If any of them doesn't hold, neither does their conj
+                    if (c != None): break;
+                except Unknown:
+                  c = { } # On timeout conservatively assume fail
               if (c != None):
                 v = Violation("inductiveness",
                   path + [ (succ, None) ],
