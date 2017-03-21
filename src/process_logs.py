@@ -4,8 +4,8 @@ from pprint import pprint
 from js import esprimaToBoogie
 from mturk_util import *
 from experiments import *
-import boogie.ast
-from boogie.z3_embed import *
+import lib.boogie.ast
+from lib.boogie.z3_embed import *
 from z3 import *
 import os
 import time
