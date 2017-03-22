@@ -59,8 +59,13 @@ def addEvent(sourceName, type, time, ename,  addr, data, session):
   session.commit();
 
 def levelSolved(session, lvlset, lvlid):
-  fls = [ x.payl() for x in session.query(Event).filter(Event.type == "FinishLevel").all() ]
-  return len([ x for x in  fls if x["lvlset"] == lvlset and x["lvlid"] == lvlid and x["verified"]]) > 0
+  verifys = [ x.payl() for x in session.query(Event).filter(Event.type == "VerifyAttempt").all() ]
+  solved_events = [ x for x in verifys if \
+      x["lvlset"] == lvlset and x["lvlid"] == lvlid and len(x["post_ctrex"]) == 0 ]
+  # We can't just look for a successfull "FinishEvent", since sometimes the solver takes a while,
+  # and finishes successfully only after the user has gotten impatient and clicked next. So look for
+  # At least 1 successful VerifyAttempt
+  return len(solved_events) > 0
 
 def levelFinishedBy(session, lvlset, lvlid, userId):
   fls = [ x.payl() for x in session.query(Event).filter(Event.type == "FinishLevel").filter(Event.src == userId).all() ]
