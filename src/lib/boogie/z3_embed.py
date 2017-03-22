@@ -1,6 +1,6 @@
 import ast
 import z3;
-from threading import Condition
+from threading import Condition, local
 from time import sleep, time
 from random import randint
 from multiprocessing import Process, Queue as PQueue
@@ -8,6 +8,17 @@ from ..common.util import eprint
 import Pyro4
 import sys
 import atexit
+from z3 import IntNumRef as Z3IntNumRef, BoolRef as Z3BoolRef
+
+ctxHolder = local();
+
+def getCtx():
+  global ctxHolder
+  ctx = getattr(ctxHolder, "ctx", None)
+  if (ctx == None):
+    ctx = z3.Context();
+    ctxHolder.ctx = ctx;
+  return ctx
 
 class WrappedZ3Exception(BaseException):
   def __init__(s, value):
@@ -23,12 +34,12 @@ def wrapZ3Exc(f):
 
 class Z3ServerInstance(object):
   def __init__(s):
-    s._solver = z3.Solver();
+    s._solver = z3.Solver(ctx=getCtx());
 
   @Pyro4.expose
   @wrapZ3Exc
   def add(s, sPred):
-    pred = z3.parse_smt2_string(sPred)
+    pred = z3.parse_smt2_string(sPred, ctx=s._solver.ctx)
     s._solver.add(pred)
     return 0;
 
@@ -100,7 +111,7 @@ class Z3ProxySolver:
       s._timeout = None
 
     def add(s, p):
-      dummy = z3.Solver();
+      dummy = z3.Solver(ctx=getCtx());
       dummy.add(p);
       strP = dummy.to_smt2();
       strP = strP.replace("(check-sat)\n", "");
@@ -213,14 +224,13 @@ def releaseSolver(solver):
     finally:
         z3ProcessPoolCond.release();
 
-def Int(n): return z3.Int(n);
-def Bool(b):  return z3.BoolVal(b);
-def Or(*args):  return z3.Or(*args)
-def And(*args): return z3.And(*args)
-def Not(pred):  return z3.Not(pred)
-def Implies(a,b): return z3.Implies(a,b)
-def IntVal(v):  return z3.IntVal(v)
-def BoolVal(v):  return z3.BoolVal(v)
+def Int(n): return z3.Int(n, ctx=getCtx());
+def Or(*args):  return z3.Or(*(args + (getCtx(),)))
+def And(*args): return z3.And(*(args + (getCtx(),)))
+def Not(pred):  return z3.Not(pred, ctx=getCtx())
+def Implies(a,b): return z3.Implies(a,b, ctx=getCtx())
+def IntVal(v):  return z3.IntVal(v, ctx=getCtx())
+def BoolVal(v):  return z3.BoolVal(v, ctx=getCtx())
 
 # For each successful z3 query store the result, and the time taken
 z3Cache = { }
@@ -237,7 +247,7 @@ def memoize(keyF):
       hit,miss = z3CacheStats.get(fname, (0,0))
 
       try:
-        key = keyF(*args, **kwargs)
+        key = str(keyF(*args, **kwargs))
         if (key in z3Cache):
           z3CacheStats[fname] = (hit+1, miss)
           return z3Cache[key][0];
@@ -250,14 +260,14 @@ def memoize(keyF):
         z3Cache[key] = (res, duration);
         return res;
       except Unknown, e:
-        key = keyF(*args, **kwargs)
+        key = str(keyF(*args, **kwargs))
         z3FailureCache[key] = "Unknown"
         if (key in z3Cache):
           return z3Cache[key][0] # Race between queries?
 
         raise e;
       except Crashed, e:
-        key = keyF(*args, **kwargs)
+        key = str(keyF(*args, **kwargs))
         z3FailureCache[key] = "Crash"
         if (key in z3Cache):
           return z3Cache[key][0] # Race between queries?
@@ -331,6 +341,7 @@ def maybeModel(pred):
       if (s): releaseSolver(s);
 
 def simplify(pred, *args, **kwargs):
+    # No need to explicitly specify ctx here since z3.simplify gets it from pred
     return z3.simplify(pred, *args, **kwargs)
 
 @memoize(lambda inv1, inv2:  (inv1, inv2))
@@ -354,9 +365,9 @@ def expr_to_z3(expr, typeEnv):
     elif isinstance(expr, ast.AstId):
         return typeEnv[expr.name](expr.name)
     elif isinstance(expr, ast.AstTrue):
-        return Bool(True);
+        return BoolVal(True);
     elif isinstance(expr, ast.AstFalse):
-        return Bool(False);
+        return BoolVal(False);
     elif isinstance(expr, ast.AstUnExpr):
         z3_inner = expr_to_z3(expr.expr, typeEnv)
         if expr.op == '-':
@@ -435,15 +446,15 @@ def z3_expr_to_boogie(expr):
     if (d.arity() == 0):
         #Literals and Identifiers
         if (isinstance(expr.sort(), z3.BoolSortRef)):
-            if (z3.is_true(expr)):
+            if (z3.is_true(expr)): # No need for explicit ctx
                 return ast.AstTrue()
-            elif (z3.is_false(expr)):
+            elif (z3.is_false(expr)): # No need for explicit ctx
                 return ast.AstFalse()
             else:
                 return ast.AstId(d.name())
         else:
             assert isinstance(expr.sort(), z3.ArithSortRef), "For now only handle bools and ints"
-            if (z3.is_int_value(expr)):
+            if (z3.is_int_value(expr)): # No need for explicit ctx
                 return ast.AstNumber(int(str(expr)))
             else:
                 return ast.AstId(d.name())
@@ -504,13 +515,3 @@ def z3_expr_to_boogie(expr):
     else:
         raise Exception("Can't translate z3 expression " + str(expr) +
             " to boogie.") 
-
-if (__name__ == "__main__"):
-    a = z3_expr_to_boogie(Int('a') + Int("b"))
-    print a
-    a = z3_expr_to_boogie(Int('a') * 2)
-    print a
-    a = z3_expr_to_boogie(Or((Bool('x'), Bool('y'))))
-    print a
-    a = z3_expr_to_boogie(And(Or(Bool('x'), True), ((Int('a') - 1) >= Int('b'))))
-    print a
