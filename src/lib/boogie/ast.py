@@ -224,15 +224,16 @@ def stmt_changed(ast):
     else:
         raise Exception("Unknown statement: " + str(ast))
 
-def ast_group_bin(exprs, op):
-    assert (len(exprs) > 0)
+def ast_group_bin(exprs, op, default):
+    if (len(exprs) == 0):
+      return default
     if (len(exprs) == 1):
       return exprs[0]
 
     return reduce(lambda x,y:   AstBinExpr(x, op, y), exprs[1:], exprs[0])
 
-def ast_and(exprs): return ast_group_bin(list(exprs), "&&")
-def ast_or(exprs): return ast_group_bin(list(exprs), "||")
+def ast_and(exprs): return ast_group_bin(list(exprs), "&&", AstTrue())
+def ast_or(exprs): return ast_group_bin(list(exprs), "||", AstFalse())
 
 def normalize(ast):
   # There are 2 ways to encode "-1" - as an AstUnExpr or an AstNumber. We pick
