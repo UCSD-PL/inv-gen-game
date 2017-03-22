@@ -21,6 +21,9 @@ def get_server_log_fname(experiment_name, srid):
 def get_event_log_fname(experiment_name, srid):
     return join(ROOT_DIR, "logs", experiment_name, str(srid) + ".elog" )
 
+def get_db_fname(experiment_name):
+    return join(ROOT_DIR, "logs", experiment_name, "events.db" )
+
 def get_lvlset_dir(lvlset):
     return join(ROOT_DIR, lvlset)
 
@@ -96,9 +99,10 @@ def get_unused_port():
     s.close()
     return port
 
-def start_server(port, experiment_name, srid, lvlset, db, adminToken):
+def start_server(port, experiment_name, srid, lvlset, adminToken):
     server_log = get_server_log_fname(experiment_name, srid)
     event_log = get_event_log_fname(experiment_name, srid)
+    db = get_db_fname(experiment_name)
     with open(server_log, 'w') as output:
         cmd = [get_server_run_cmd(), "--port", str(port), "--log", event_log, "--ename", experiment_name, "--lvlset", lvlset, "--db", db, "--adminToken", adminToken]
         p = subprocess.Popen(cmd, stdout=output, stderr=subprocess.STDOUT)

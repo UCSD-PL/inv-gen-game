@@ -13,8 +13,8 @@ p = mkParser("Run experiment", True)
 p.add_argument('--num_hits', type=int, default=1, help='number of HITs to create')
 p.add_argument('--ext', action='store_const', const=True, default=False, help='if specified run ExternalQuestion')
 p.add_argument('--lvlset', type=str, default = 'desugared-boogie-benchmarks', help='Lvlset to use for serving benchmarks"')
-p.add_argument('--db', type=str, help='path to database file to use', required=True)
 p.add_argument('--adminToken', type=str, help='Token to use to login to admin interfaces', required=True)
+p.add_argument('--no-ifs', action='store_const', const=True, default=False, help='Play version of the game without ifs')
 
 args = parse_args(p)
 
@@ -54,7 +54,7 @@ Begin recording your screen.
 </li>
 
 <li>
-Use Google Chrome to navigate to <a target='_blank' href='https://zoidberg.ucsd.edu:{0}/tutorial_patterns.html'> the following link</a>
+Use Google Chrome to navigate to <a target='_blank' href='https://zoidberg.ucsd.edu:{0}/tutorial_patterns""" + ("_nond" if args.no_ifs else "") + """.html'> the following link</a>
 </li>
 
 <li>
@@ -140,10 +140,12 @@ try:
     for i in range(args.num_hits):
         port = get_unused_port()
         srid = exp.create_unique_server_run_id()
-        p = start_server(port, args.ename, srid, args.lvlset, args.db, args.adminToken)
+        p = start_server(port, args.ename, srid, args.lvlset, args.adminToken)
         print "Started server run", srid, "on port", port, "with pid", p.pid 
         if args.ext:
-            q = ExternalQuestion("https://zoidberg.ucsd.edu:{0}/start_patterns.html".format(port), 600)
+            start_url = "https://zoidberg.ucsd.edu:{0}/start_patterns_nond.html" if args.no_ifs else \
+                        "https://zoidberg.ucsd.edu:{0}/start_patterns.html"
+            q = ExternalQuestion(start_url.format(port), 600)
             kind = "ExternalQuestion"
         else:
             q = question_form(port)
