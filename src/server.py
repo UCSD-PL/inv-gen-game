@@ -563,7 +563,7 @@ def printZ3CacheStats():
 
   with open("z3FailureCache.csv", "w") as f:
     for k in z3FailureCache:
-      f.write(str(k) + "|" + str(z3Cache[k]) + "<EOL>\n")
+      f.write(str(k) + "|" + str(z3FailureCache[k]) + "<EOL>\n")
 
 register(printZ3CacheStats);
 
