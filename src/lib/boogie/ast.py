@@ -225,7 +225,31 @@ def stmt_changed(ast):
         raise Exception("Unknown statement: " + str(ast))
 
 def ast_group_bin(exprs, op, default):
-    return reduce(lambda x,y:   AstBinExpr(x, op, y), exprs, default)
+    if (len(exprs) == 0):
+      return default
+    if (len(exprs) == 1):
+      return exprs[0]
 
-def ast_and(exprs): return ast_group_bin(exprs, "&&", AstTrue())
-def ast_or(exprs): return ast_group_bin(exprs, "||", AstFalse()) 
+    return reduce(lambda x,y:   AstBinExpr(x, op, y), exprs[1:], exprs[0])
+
+def ast_and(exprs): return ast_group_bin(list(exprs), "&&", AstTrue())
+def ast_or(exprs): return ast_group_bin(list(exprs), "||", AstFalse())
+
+def normalize(ast):
+  # There are 2 ways to encode "-1" - as an AstUnExpr or an AstNumber. We pick
+  # the AstUnExpr to be the canonical one for compatibility with the grammar
+  # TODO: What happens when we parse -0?
+  if (isinstance(ast, AstNumber) and ast.num < 0):
+    return AstUnExpr("-", AstNumber(abs(ast.num)))
+  # There are 2 ways to encode implication - as a ==> b or (!a) || b. The later
+  # usually comes from the frontend, since JS lacks an explicit ==> operator.
+  # We pick a ==> b to be canonical
+
+  if (isinstance(ast, AstBinExpr) and ast.op == "||" and \
+      isinstance(ast.lhs, AstUnExpr) and ast.lhs.op == "!"):
+    return AstBinExpr(ast.lhs.expr, "==>", ast.rhs)
+
+  if (isinstance(ast, AstNode)):
+    return ast.__class__(*tuple(map(normalize, ast._children)))
+  else:
+    return ast;

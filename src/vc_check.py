@@ -23,44 +23,61 @@ def tryAndVerify_impl(bbs, loop, old_sound_invs, invs, timeout=None):
           violations is a (potentially empty) list of safety Violations
             for the sound invariants.
     """
+    assert isinstance(old_sound_invs, set)
+    assert isinstance(invs, set)
     loopHdr = loop.loop_paths[0][0]
-    cps = { loopHdr: set(old_sound_invs + invs) }
+    cps = { loopHdr: set(old_sound_invs).union(set(invs)) }
 
     (overfitted, nonind, sound, violations) =\
       filterCandidateInvariants(bbs, AstTrue(), AstTrue(), cps, timeout);
 
-    overfitted = overfitted[loopHdr]
-    nonind_invs = nonind[loopHdr]
-    sound = list(sound[loopHdr])
+    overfitted = list(overfitted[loopHdr])
+    nonind_invs = list(nonind[loopHdr])
+    sound = sound[loopHdr]
 
     return overfitted, nonind_invs, sound, violations
 
 def tryAndVerifyWithSplitterPreds(bbs, loop, old_sound_invs, boogie_invs,
   splitterPreds, partialInvs, timeout=None):
     """ Wrapper around tryAndVerify_impl that adds implication with
-        the splitter predicates to all candidate invariants. Same returns as
-        tryAndVerify_impl.
+        the splitter predicates to all candidate invariants. Returns
+          ((p1_overfit, p2_overfit), (p1_nonindg, p2_nonind), sound, violations)
+
+        Where
+        
+          p1_overfit, p2_ovefit are lists of pairs of overfittted invariants and their
+              respective counterexamples from passes 1 and 2
+          p1_nonind, p2_ovefit are lists of pairs of noninductive invariants and their
+              respective counterexamples from passes 1 and 2
+          sound is a set of sound invariants
+          violations is a list of any safety violations permitted by the sound invariants
     """
-    initial_sound = list(set(partialInvs + old_sound_invs))
+    assert isinstance(old_sound_invs, set)
+    assert isinstance(boogie_invs, set)
+    assert isinstance(partialInvs, list)
+    assert isinstance(splitterPreds, list)
+
+    initial_sound = old_sound_invs.union(partialInvs)
 
     # First lets find the invariants that are sound without implication
-    overfitted, nonind, sound, violations = tryAndVerify_impl(bbs, loop, initial_sound, boogie_invs, timeout)
-    sound = [x for x in sound if not tautology(expr_to_z3(x, AllIntTypeEnv()))]
+    p1_overfitted, p1_nonind, p1_sound, violations =\
+      tryAndVerify_impl(bbs, loop, initial_sound, boogie_invs, timeout)
+    p1_sound = set([x for x in p1_sound if not tautology(expr_to_z3(x, AllIntTypeEnv()))])
 
     # Next lets add implication  to all unsound invariants from first pass
     # Also add manually specified partialInvs
-    unsound = [ inv_ctr_pair[0] for inv_ctr_pair in overfitted.union(nonind) ]
-    candidate_antecedents = [ ast_and(pSet) for pSet in nonempty(powerset(splitterPreds)) ]
-    p2_invs = [ AstBinExpr(antec, "==>", inv)
-      for antec in candidate_antecedents for inv in unsound ] + partialInvs
-    p2_invs = [ x for x in p2_invs if not tautology(expr_to_z3(x, AllIntTypeEnv())) ]
+    unsound = [ inv_ctr_pair[0] for inv_ctr_pair in p1_overfitted + p1_nonind ]
+    candidate_precedents = [ ast_and(pSet) for pSet in nonempty(powerset(splitterPreds)) ]
+    p2_invs = [ AstBinExpr(precc, "==>", inv)
+      for precc in candidate_precedents for inv in unsound] + partialInvs
+    p2_invs = set([ x for x in p2_invs if not tautology(expr_to_z3(x, AllIntTypeEnv())) ])
 
     # And look for any new sound invariants
-    overfitted, nonind, sound_p2, violations = tryAndVerify_impl(bbs, loop, \
-      list(set(sound + partialInvs)), p2_invs, timeout)
-    sound = set(sound).union(sound_p2)
+    p2_overfitted, p2_nonind, p2_sound, violations = tryAndVerify_impl(bbs, loop, \
+      p1_sound.union(set(partialInvs)), p2_invs, timeout)
+    sound = p1_sound.union(p2_sound)
 
-    return (overfitted, nonind, sound, violations)
+    return ((p1_overfitted, p2_overfitted), (p1_nonind, p2_nonind), sound, violations)
 
 def loopInvOverfittedCtrex(loop, inv, bbs):
   """ Given a candidate loop invariant inv find 'overfittedness'
