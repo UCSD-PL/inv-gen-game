@@ -232,7 +232,7 @@ z3CacheStats = { }
 def memoize(keyF):
   def decorator(f):
     def decorated(*args, **kwargs):
-      global z3Cache
+      global z3Cache, z3FailureCache, z3CacheStats
       fname = f.func_code.co_name
       hit,miss = z3CacheStats.get(fname, (0,0))
 
@@ -247,21 +247,21 @@ def memoize(keyF):
         start = time();
         res = f(*args, **kwargs)
         duration = time() - start
-        z3Cache[keyF(*args, **kwargs)] = (res, duration);
+        z3Cache[key] = (res, duration);
         return res;
       except Unknown, e:
         key = keyF(*args, **kwargs)
-        if (key in z3Cache):
-          return z3Cache[key] # Race between queries?
-
         z3FailureCache[key] = "Unknown"
+        if (key in z3Cache):
+          return z3Cache[key][0] # Race between queries?
+
         raise e;
       except Crashed, e:
         key = keyF(*args, **kwargs)
-        if (key in z3Cache):
-          return z3Cache[key] # Race between queries?
-
         z3FailureCache[key] = "Crash"
+        if (key in z3Cache):
+          return z3Cache[key][0] # Race between queries?
+
         raise e;
     return decorated
   return decorator
