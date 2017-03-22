@@ -15,7 +15,6 @@ from cProfile import Profile
 from pstats import Stats
 from StringIO import StringIO
 from random import choice
-from vc_check import tryAndVerify_impl, tryAndVerifyWithSplitterPreds, _from_dict
 
 from levels import _tryUnroll, findNegatingTrace, loadBoogieLvlSet
 
@@ -160,7 +159,6 @@ def getLogs(inputToken, afterTimestamp, afterId):
   return [ { "id": e.id, "type": e.type, "experiment": e.experiment, "src": e.src,
               "addr": e.addr, "time": str(e.time), "payload": e.payl() } for e in evts ]
 
-# Admin Calls:
 @api.method("App.getSolutions")
 @pp_exc
 @log_d()

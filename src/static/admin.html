@@ -127,6 +127,7 @@
         $("#users_tbody").append("<tr><td>" + [userId, ud.completed, ud.solved, ud.skipped, ud.time, ud.invs, ud.time / ud.completed, ud.invs / ud.completed].join("</td><td>") + "</td></tr>")
       }
       $("#levels_tbody").empty();
+      $("#level_invs_tbody").empty();
       for (var levelId in lvlStats) {
         let ld = lvlStats[levelId];
         $("#levels_tbody").append("<tr><td>" + [levelId,

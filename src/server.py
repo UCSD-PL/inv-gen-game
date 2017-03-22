@@ -6,7 +6,7 @@ from os.path import *
 from json import dumps
 from js import esprimaToZ3, esprimaToBoogie, boogieToEsprima
 from lib.boogie.ast import AstBinExpr, AstTrue, ast_and
-from lib.common.util import pp_exc, powerset, split, nonempty
+from lib.common.util import pp_exc, powerset, split, nonempty, nodups
 from lib.boogie.eval import instantiateAndEval, _to_dict
 from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, z3_expr_to_boogie, Unknown, z3CacheStats
 from lib.boogie.analysis import propagate_sp
@@ -389,9 +389,6 @@ def getLastVerResult(lvlset, lvlid, session):
     else:
       return None;
 
-def nodups(s):
-  return list(set(s))
-
 @api.method("App.tryAndVerify")
 @pp_exc
 @log_d(str, str, pp_EsprimaInvs, pp_tryAndVerifyRes)
@@ -537,6 +534,18 @@ def getLogs(inputToken, afterTimestamp, afterId):
 
   return [ { "id": e.id, "type": e.type, "experiment": e.experiment, "src": e.src,
               "addr": e.addr, "time": str(e.time), "payload": e.payl() } for e in evts ]
+
+@api.method("App.getSolutions")
+@pp_exc
+@log_d()
+def getSolutions(): # Lvlset is assumed to be current by default
+  res = { }
+  for lvlId in lvls:
+    solnFile = lvls[lvlId]["path"][0][:-len(".bpl")] + ".sol"
+    soln = open(solnFile).read().strip();
+    boogieSoln = parseExprAst(soln)
+    res[curLevelSetName + "," + lvlId] = [boogieToEsprimaExpr(boogieSoln)]
+  return res
 
 def printZ3CacheStats():
   global z3CacheStats;

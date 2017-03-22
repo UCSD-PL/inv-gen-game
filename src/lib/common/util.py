@@ -46,3 +46,7 @@ def nonempty(lst):
     """ Filter out the empty elements of a list (where empty is len(x) == 0)
     """
     return filter(lambda x: len(x) > 0, lst)
+
+def nodups(s):
+  return list(set(s))
+
