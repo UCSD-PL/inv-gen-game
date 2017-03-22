@@ -429,12 +429,17 @@ def tryAndVerify(levelSet, levelId, invs):
     loop_header = loop.loop_paths[0][0]
     sps = list(propagate_sp(bbs)[loop_header])
 
-    print "Adding sps: ", sps
     initial_sound += sps;
+
+    initial_sound = set(initial_sound)
+    boogie_invs = set(boogie_invs)
 
     # Check for invariants
     if (len(splitterPreds) > 0):
-      overfitted, nonind, sound, violations =\
+      # Note we purposefully ignore the overfitted/nonind invariants with splitter preds.
+      # Otherwise if we remember them for next time, we will keep on prepedning split=> to the
+      # front.
+      ((overfitted, overfitted_ignore), (nonind, nonind_ignore), sound, violations) =\
         tryAndVerifyWithSplitterPreds(bbs, loop, initial_sound, boogie_invs,
         splitterPreds, partialInvs, args.timeout)
     else:
