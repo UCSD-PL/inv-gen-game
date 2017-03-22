@@ -251,12 +251,16 @@ def memoize(keyF):
         return res;
       except Unknown, e:
         key = keyF(*args, **kwargs)
-        assert key not in z3Cache
+        if (key in z3Cache):
+          return z3Cache[key] # Race between queries?
+
         z3FailureCache[key] = "Unknown"
         raise e;
       except Crashed, e:
         key = keyF(*args, **kwargs)
-        assert key not in z3Cache
+        if (key in z3Cache):
+          return z3Cache[key] # Race between queries?
+
         z3FailureCache[key] = "Crash"
         raise e;
     return decorated
