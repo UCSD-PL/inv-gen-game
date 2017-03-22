@@ -546,3 +546,7 @@ form .likert li input[type=radio] {
   
 }
 form .likert li label {width:100%;}
+
+.highlight {
+  color:  red;
+}
