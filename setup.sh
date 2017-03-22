@@ -48,8 +48,8 @@ if [ ! -e $DIR/third_party/daikon ]; then
   pushd $DIR/third_party
   mkdir daikon
   cd daikon
-  wget http://plse.cs.washington.edu/daikon/download/daikon-5.4.6.tar.gz
-  tar zxf daikon-5.4.6.tar.gz
+  wget https://plse.cs.washington.edu/daikon/download/daikon-5.5.2.tar.gz
+  tar zxf daikon-5.5.2.tar.gz
   popd 
 fi
 
@@ -73,9 +73,9 @@ fi
 
 npm install
 
-echo "export DAIKONDIR=$DIR/third_party/daikon/daikon-5.4.6" >> $DIR/bin/activate
+echo "export DAIKONDIR=$DIR/third_party/daikon/daikon-5.5.2" >> $DIR/bin/activate
 echo "export JAVA_HOME=\${JAVA_HOME:-\$(dirname \$(dirname \$(dirname \$(readlink -f \$(/usr/bin/which java)))))}" >> $DIR/bin/activate
-echo "source \$DAIKONDIR/scripts/daikon.bashrc" >> DIR/bin/activate
+echo "source \$DAIKONDIR/scripts/daikon.bashrc" >> $DIR/bin/activate
 echo "export PATH=\$PATH:$MYDIR/node_modules/.bin/" >> $DIR/bin/activate
 echo "export PATH=\$PATH:$DIR/third_party/invgen/:$DIR/third_party/cpa_checker_1.4/CPAchecker-1.4-svcomp16c-unix/scripts/" >> $DIR/bin/activate
 
