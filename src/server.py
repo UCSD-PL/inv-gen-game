@@ -8,7 +8,7 @@ from js import esprimaToZ3, esprimaToBoogie, boogieToEsprima
 from lib.boogie.ast import AstBinExpr, AstTrue, ast_and
 from lib.common.util import pp_exc, powerset, split, nonempty, nodups
 from lib.boogie.eval import instantiateAndEval, _to_dict
-from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, z3_expr_to_boogie, Unknown, z3CacheStats
+from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, z3_expr_to_boogie, Unknown
 from lib.boogie.analysis import propagate_sp
 from sys import exc_info
 from cProfile import Profile
@@ -603,15 +603,33 @@ def getSolutions(): # Lvlset is assumed to be current by default
     res[curLevelSetName + "," + lvlId] = [boogieToEsprimaExpr(boogieSoln)]
   return res
 
+from lib.boogie.z3_embed import z3Cache, z3FailureCache, z3CacheStats
+
 def printZ3CacheStats():
-  global z3CacheStats;
+  global z3CacheStats, z3FailureCache, z3Cache;
   for (func, (hit, miss)) in z3CacheStats.iteritems():
     total = hit + miss;
     hitP = 100.0*hit/total
     missP = 100.0*miss/total
     print func, "hit:", hit, "(", hitP, "%)", "miss:", miss, "(", missP, "%)"
 
+  with open("z3Cache.csv", "w") as f:
+    for k in z3Cache:
+      f.write(str(k) + "|" + str(z3Cache[k][1]) + "|" + str(z3Cache[k][0]) + "<EOL>\n")
+
+  with open("z3FailureCache.csv", "w") as f:
+    for k in z3FailureCache:
+      f.write(str(k) + "|" + str(z3FailureCache[k]) + "<EOL>\n")
+
 register(printZ3CacheStats);
+
+from signal import signal, SIGUSR1
+
+def handle_usr1(signum, stack):
+  print "Received signal", signum
+  printZ3CacheStats()
+
+signal(SIGUSR1, handle_usr1);
   
 if __name__ == "__main__":
     ignore = IgnoreManager()

@@ -1,5 +1,4 @@
 from z3_embed import *
-from z3 import IntNumRef, BoolRef
 from ast import *
 from paths import get_path_vars, nd_bb_path_to_ssa, sp_nd_ssa_path, extract_ssa_path_vars
 from predicate_transformers import sp_stmts
@@ -8,9 +7,9 @@ from itertools import permutations
 from copy import deepcopy
 
 def val_to_boogie(v):
-    if (isinstance(v, IntNumRef)):
+    if (isinstance(v, Z3IntNumRef)):
         return AstNumber(v.as_long())
-    elif (isinstance(v, BoolRef)):
+    elif (isinstance(v, Z3BoolRef)):
         return AstTrue() if is_true(v) else AstFalse()
     elif (v == "true"):
         return AstTrue()
