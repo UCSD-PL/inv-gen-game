@@ -35,3 +35,5 @@ studies/
 
 src/output
 src/tmp_outputs
+
+z3*.csv
