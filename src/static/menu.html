@@ -186,6 +186,7 @@
         }
         table += "</table>";
         $("#gameList").html(table);
+        setHeader();
       });
     }
 
@@ -199,7 +200,6 @@
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" });
       
       getLeaderboard();
-      setHeader();
       getGames();
       
       $("#joinGame").hide();
