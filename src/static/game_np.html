@@ -307,8 +307,11 @@
         expressions[level] = $.extend({}, serverExpressions[level], localExpressions[level]);
       }
       if (expressions[curLvlId] && Object.keys(expressions[curLvlId]).length >= numReqExpr) {
-          $("#skip-to-next-lvl").show();
-        }
+        $("#skip-to-next-lvl").show();
+      }
+      else {
+        $("#skip-to-next-lvl").hide();
+      }
       return expressions;
     }
 
@@ -555,6 +558,9 @@
         }
         if (gameLogic.foundJSInv.length >= numReqExpr) {
           $("#skip-to-next-lvl").show();
+        }
+        else {
+          $("#skip-to-next-lvl").hide();
         }
       })
     })
