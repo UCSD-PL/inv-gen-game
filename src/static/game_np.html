@@ -531,7 +531,8 @@
       // $('#quit').click(function () { doneScreen(false) });
       $('#quit').click(quit);
       $('#skip-to-next-lvl').click(function () {
-        gameLogic.skipToNextLvl();
+        nextLvl();
+        // gameLogic.skipToNextLvl();
       });
       $('#quit-overlay').click(function() { doneScreen(false) });
 
