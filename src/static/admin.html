@@ -72,6 +72,7 @@
             lvls[lvlid].soundSet = e.payload.sound;
             lvls[lvlid].nonindSet = e.payload.nonind;
             lvls[lvlid].overfittedSet = e.payload.overfitted;
+            lvls[lvlid].solved = lvls[lvlid].solved || (e.payload.post_ctrex.length == 0);
           }
           continue;
         }
@@ -131,6 +132,7 @@
       for (var levelId in lvlStats) {
         let ld = lvlStats[levelId];
         $("#levels_tbody").append("<tr><td>" + [levelId,
+          ld.solved,
           ld.completed,
           ld.skipped,
           ld.time,
@@ -278,6 +280,7 @@
               <thead>
                 <tr>
                   <th> LevelId </th>
+                  <th> Solved </th>
                   <th> #Users Completed </th>
                   <th> #Users Skipped </th>
                   <th> Total Time </th>
@@ -298,10 +301,10 @@
               <thead>
                 <tr>
                   <th> LevelId </th>
-                  <th> #Sound</th>
-                  <th> #Overfit</th>
-                  <th> #Nonind</th>
-                  <th> #Solution</th>
+                  <th> Sound</th>
+                  <th> Overfit</th>
+                  <th> Nonind</th>
+                  <th> Solution</th>
                 </tr>
               </thead>
               <tbody id='level_invs_tbody'>
