@@ -13,7 +13,7 @@ class ProgressWindow implements IProgressWindow {
   ctr: number = 0;
 
   constructor(public parent:  HTMLDivElement) {
-    $(this.parent).html("<div class='progressWindow box good centered positioned'>" +
+    $(this.parent).html("<div id='progWin' class='progressWindow box good centered positioned'>" +
                       "Accepted expressions<br>" +
                       "<ul id='good-invariants'></ul>" +
                    "</div>");
