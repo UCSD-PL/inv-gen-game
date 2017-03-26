@@ -117,6 +117,7 @@
     }
 
     function showJoin() {
+      getGames();
       $("#options").hide();
       $("#joinGame").show();
     }
@@ -162,8 +163,9 @@
         allGames = []
         for (var id in res) {
           var currentGameId = id;
-          var currentGamePlayers = res[id][1].players.length;
-          var currentGameExpressions = res[id][1].expressions;
+          var result = res[id][1];
+          var currentGamePlayers = result ? result.players.length : 0;
+          var currentGameExpressions = result ? result.expressions : {};
 
           var expr = [];
           for (var lvl in currentGameExpressions) {
