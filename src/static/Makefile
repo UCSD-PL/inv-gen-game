@@ -5,9 +5,8 @@ THIRD_PARTY_DEPS=bootstrap.min.css \
 								 jquery.jsonrpcclient.js\
 								 jquery.color-2.1.2.min.js\
 								 jquery-ui-1.11.4\
-								 help-icon.png
-#								 doge.jpg\
-								 crafty-min.js
+								 notify.js\
+								 ion.sound-3.0.7
 
 all: $(THIRD_PARTY_DEPS) ts-files
 
@@ -35,19 +34,20 @@ jquery.jsonrpcclient.js:
 jquery.color-2.1.2.min.js:
 	wget http://code.jquery.com/color/jquery.color-2.1.2.min.js
 
-#crafty-min.js:
-#	wget https://github.com/craftyjs/Crafty/releases/download/0.7.0/crafty-min.js
-
 jquery-ui-1.11.4:
 	wget http://jqueryui.com/resources/download/jquery-ui-1.11.4.zip
 	unzip jquery-ui-1.11.4.zip
 	rm jquery-ui-1.11.4.zip
 
-#doge.jpg:
-#	wget -O doge.jpg https://pbs.twimg.com/profile_images/378800000822867536/3f5a00acf72df93528b6bb7cd0a4fd0c.jpeg
+notify.js:
+	wget https://rawgit.com/notifyjs/notifyjs/master/dist/notify.js
 
-help-icon.png:
-	wget http://cseweb.ucsd.edu/~r1jha/images/help-icon.png
+ion.sound-3.0.7:
+	wget http://ionden.com/a/plugins/ion.sound/ion.sound-3.0.7.zip
+	unzip ion.sound-3.0.7.zip
+	rm ion.sound-3.0.7.zip
+	rm -r __MACOSX
+	rm ion.sound-3.0.7/.DS_Store
 
 clean:
 	rm -r $(THIRD_PARTY_DEPS)

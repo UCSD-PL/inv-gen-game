@@ -37,3 +37,6 @@ src/output
 src/tmp_outputs
 
 z3*.csv
+
+src/static/ion.sound-3.0.7
+src/static/notify.js

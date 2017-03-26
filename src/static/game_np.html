@@ -13,6 +13,8 @@
   <link rel="stylesheet" href="bootstrap.min.css">
   <link rel="stylesheet" href="bootstrap-theme.min.css">
   <script src="bootstrap.min.js"></script>
+  <script src="notify.js"></script>
+  <script src="ion.sound-3.0.7/ion.sound.min.js"></script>
 
   <!-- our code -->
   <link rel="stylesheet" href="inv.css">
@@ -268,7 +270,9 @@
       }
 
       values.players = mergePlayers(serverValue.players, localValue.players);
+      /* Get difference between localValue.players and values.players and show notification and alert for new players joined */
       values.expressions = mergeExpressions(serverValue.expressions, localValue.expressions);
+      /* Get difference between localValue.expressions and values.expressions and show notification and alert for new expressions found */
 
       scoreW.updatePlayers(values.players);
 
