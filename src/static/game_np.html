@@ -40,6 +40,7 @@
     var playerLvl = null;
     var time = 1000;
     var numReqExpr = 4;
+    var numExpFound = 0;
 
 
     var curLvl;
@@ -271,6 +272,7 @@
 
       values.players = mergePlayers(serverValue.players, localValue.players);
       /* Get difference between localValue.players and values.players and show notification and alert for new players joined */
+      
       values.expressions = mergeExpressions(serverValue.expressions, localValue.expressions);
       /* Get difference between localValue.expressions and values.expressions and show notification and alert for new expressions found */
 
@@ -302,6 +304,12 @@
           }
         }
       }
+
+      if (players && localPlayers &&
+          players.length > localPlayers.length) {
+        $("#scoreboard").notify("New player joined!", "info");
+      }
+
       return players;
     }
     
@@ -309,13 +317,20 @@
       var expressions = localExpressions;
       for (var level in serverExpressions) {
         expressions[level] = $.extend({}, serverExpressions[level], localExpressions[level]);
-      }
+      }      
       if (expressions[curLvlId] && Object.keys(expressions[curLvlId]).length >= numReqExpr) {
         $("#skip-to-next-lvl").show();
       }
       else {
         $("#skip-to-next-lvl").hide();
       }
+
+      var numFound = Object.keys(expressions[curLvlId]) ? Object.keys(expressions[curLvlId]).length : 0;
+      if (numFound > numExpFound) {
+        $("#progWin").notify("New expression found!", "success");
+        numExpFound = numFound;
+      }
+
       return expressions;
     }
 
