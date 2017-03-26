@@ -308,6 +308,7 @@
       if (players && localPlayers &&
           players.length > localPlayers.length) {
         $("#scoreboard").notify("New player joined!", "info");
+        ion.sound.play("button_tiny");
       }
 
       return players;
@@ -328,6 +329,7 @@
       var numFound = Object.keys(expressions[curLvlId]) ? Object.keys(expressions[curLvlId]).length : 0;
       if (numFound > numExpFound) {
         $("#progWin").notify("New expression found!", "success");
+        ion.sound.play("water_droplet_3");
         numExpFound = numFound;
       }
 
@@ -437,6 +439,26 @@
 
       $(window).bind("beforeunload", function() { 
         saveState(playerId);
+      })
+
+      ion.sound({
+        sounds: [
+          {
+            name: "button_tiny"
+          },
+          {
+            name: "glass"
+          },
+          {
+            name: "metal_plate"
+          },
+          {
+            name: "water_droplet_3"
+          }
+        ],
+        volume: 1.0,
+        path: "ion.sound-3.0.7/sounds/",
+        preload: true
       })
       
       if (Args.get_assignment_id() == "ASSIGNMENT_ID_NOT_AVAILABLE") {
