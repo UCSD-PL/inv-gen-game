@@ -105,6 +105,31 @@
       if (turk_submit_to !== undefined) {
           document.getElementById("turk-form").action = turk_submit_to + "/mturk/externalSubmit";
       }
+
+      function getSelected(category) {
+        return $('#turk-form input[name=' + category + ']:checked')
+      }
+
+      $("#final-submit").click(function(evt) {
+        $("label").removeClass("highlight")
+        $('#turk-form-error').html("");
+        var categories = ["fun", "challenging", "prog_experience", "math_experience"];
+        var selected = $.map(categories, getSelected);
+        var answered = $.map(selected, (s)=> s.length > 0);
+
+        var missing = false;
+        for (var i in answered) {
+          if (!answered[i]) {
+            $("label." + categories[i]).addClass("highlight")
+            missing = true;
+          }
+        }
+
+        if (missing) {
+          $('#turk-form-error').html("Please answer the required questions (highlighted in red)");
+          evt.preventDefault()
+        }
+      })
       msg = "Good job! You finished " + numLvlPassed + " level(s)! Your score is: " + gameLogic.score  + "!";
       if (alldone) {
          msg = "There are no more levels to play at this moment.<br>" + msg
@@ -229,6 +254,7 @@
 
       $('#quit').click(function () { doneScreen(false) });
       $('#skip-to-next-lvl').click(function () {
+        $('#skip-to-next-lvl').prop("disable", true);
         $('#skip-to-next-lvl').hide();
         gameLogic.skipToNextLvl();
       });
@@ -257,6 +283,7 @@
         }
         if (gameLogic.foundJSInv.length >= 4) {
           $("#skip-to-next-lvl").show();
+          $('#skip-to-next-lvl').prop("disable", false);
         }
       })
     })
@@ -447,9 +474,9 @@
   </div> 
   <div class='overlay' style='display: none;' id='done-screen'>
     <div class="container">
-      <h2 class='text-center'>Please answer a few questions and click on Finish HIT below</h2>
+      <h2 class='text-center'>Please answer a few questions and click on Finish HIT below.(* means required) </h2>
       <form action="" id="turk-form">
-        <label class="statement">This sesssion was fun to play.</label>
+        <label class="statement fun">This sesssion was fun to play.*</label>
         <ul class='likert'>
           <li>
             <input type="radio" name="fun" value="5">
@@ -472,7 +499,7 @@
             <label>Strongly disagree</label>
           </li>
         </ul>
-        <label class="statement">This session was challenging.</label>
+        <label class="statement challenging">This session was challenging.*</label>
         <ul class='likert'>
           <li>
             <input type="radio" name="challenging" value="5">
@@ -495,12 +522,59 @@
             <label>Strongly disagree</label>
           </li>
         </ul>
+        <label class="statement prog_experience">What is your level of expertise in programming?*</label>
+        <ul class='likert'>
+          <li>
+            <input type="radio" name="prog_experience" value="1">
+            <label>None</label>
+          </li>
+          <li>
+            <input type="radio" name="prog_experience" value="2">
+            <label>Novice</label>
+          </li>
+          <li>
+            <input type="radio" name="prog_experience" value="3">
+            <label>Intermediate</label>
+          </li>
+          <li>
+            <input type="radio" name="prog_experience" value="4">
+            <label>Advanced</label>
+          </li>
+          <li>
+            <input type="radio" name="prog_experience" value="5">
+            <label>Professional</label>
+          </li>
+        </ul>
+        <label class="statement math_experience">What is the highest education level, at which you took a math course?*</label>
+        <ul class='likert'>
+          <li>
+            <input type="radio" name="math_experience" value="1">
+            <label>Middle-school or less (class &lt;9)</label>
+          </li>
+          <li>
+            <input type="radio" name="math_experience" value="2">
+            <label>High-school (class 9-12)</label>
+          </li>
+          <li>
+            <input type="radio" name="math_experience" value="3">
+            <label>Bachelors</label>
+          </li>
+          <li>
+            <input type="radio" name="math_experience" value="4">
+            <label>Masters</label>
+          </li>
+          <li>
+            <input type="radio" name="math_experience" value="5">
+            <label>PhD</label>
+          </li>
+        </ul>
         <fieldset class="form-group">
           <label for="likes_input">Any comments? Likes, Dislikes?</label>
           <textarea name="likes" class="form-control" rows="2" id="likes_input"></textarea>
         </fieldset>
         <input type="hidden" name="assignmentId" id="assignment-id-in-form" value="">
-        <button type="submit" class="btn-next">Finish HIT</button>
+        <div class='highlight' id='turk-form-error'> </div>
+        <button id="final-submit" class="btn-next">Finish HIT</button>
       </form>
     </div>
   </div> 

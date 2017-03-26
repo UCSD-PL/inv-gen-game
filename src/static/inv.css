@@ -600,3 +600,7 @@ form .likert li label {width:100%;}
     color: green;
     text-decoration: none;
 }
+
+.highlight {
+  color:  red;
+}

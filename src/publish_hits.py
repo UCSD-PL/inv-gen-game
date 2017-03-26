@@ -145,7 +145,7 @@ try:
         if args.ext:
             start_url = "https://zoidberg.ucsd.edu:{0}/start_patterns_nond.html" if args.no_ifs else \
                         "https://zoidberg.ucsd.edu:{0}/start_patterns.html"
-            q = ExternalQuestion(start_url.format(port), 600)
+            q = ExternalQuestion(start_url.format(port), 1024)
             kind = "ExternalQuestion"
         else:
             q = question_form(port)
