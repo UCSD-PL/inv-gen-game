@@ -270,11 +270,8 @@
         return;
       }
 
-      values.players = mergePlayers(serverValue.players, localValue.players);
-      /* Get difference between localValue.players and values.players and show notification and alert for new players joined */
-      
+      values.players = mergePlayers(serverValue.players, localValue.players);      
       values.expressions = mergeExpressions(serverValue.expressions, localValue.expressions);
-      /* Get difference between localValue.expressions and values.expressions and show notification and alert for new expressions found */
 
       scoreW.updatePlayers(values.players);
 
@@ -307,11 +304,15 @@
 
       if (players && localPlayers &&
           players.length > localPlayers.length) {
-        $("#scoreboard").notify("New player joined!", "info");
-        ion.sound.play("button_tiny");
+        notifyNewPlayer();
       }
 
       return players;
+    }
+
+    function notifyNewPlayer() {
+      $("#scoreboard-div-row").notify("New player joined!");
+      ion.sound.play("button_tiny");
     }
     
     function mergeExpressions(serverExpressions, localExpressions) {
@@ -326,14 +327,18 @@
         $("#skip-to-next-lvl").hide();
       }
 
-      var numFound = Object.keys(expressions[curLvlId]) ? Object.keys(expressions[curLvlId]).length : 0;
+      var numFound = (expressions && expressions[curLvlId] && Object.keys(expressions[curLvlId])) ? Object.keys(expressions[curLvlId]).length : 0;
       if (numFound > numExpFound) {
-        $("#progWin").notify("New expression found!", "success");
-        ion.sound.play("water_droplet_3");
+        notifyNewExpression();
         numExpFound = numFound;
       }
 
       return expressions;
+    }
+
+    function notifyNewExpression() {
+      $("#progWin").notify("New expression found!");
+      ion.sound.play("water_droplet_3");
     }
 
     function isNewPlayer(currentPlayer, players) {
@@ -440,6 +445,12 @@
       $(window).bind("beforeunload", function() { 
         saveState(playerId);
       })
+
+      var notifyOptions = {
+        elementPosition: 'right bottom',
+        className: 'success',
+      }
+      $.notify.defaults(notifyOptions)
 
       ion.sound({
         sounds: [
