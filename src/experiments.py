@@ -45,6 +45,7 @@ class Experiment:
             else:
                 raise IOError
         self.fname = join(ROOT_DIR, 'logs', experiment_name, 'server_runs')
+        self.dirname = dirname;
         self.server_runs = self.read_server_runs()
     def read_server_runs(self):
         self.server_runs = []
