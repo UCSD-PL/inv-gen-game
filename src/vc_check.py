@@ -8,6 +8,12 @@ from copy import copy
 from lib.boogie.bb import entry, exit
 from lib.boogie.inv_networks import *
 
+def conservative_tautology(q):
+  try:
+    return tautology(q);
+  except Unknown:
+    return False;
+
 def _from_dict(vs, vals):
     if type(vals) == tuple:
         return ( _from_dict(vs, vals[0]), _from_dict(vs, vals[1]) )
@@ -62,7 +68,7 @@ def tryAndVerifyWithSplitterPreds(bbs, loop, old_sound_invs, boogie_invs,
     # First lets find the invariants that are sound without implication
     p1_overfitted, p1_nonind, p1_sound, violations =\
       tryAndVerify_impl(bbs, loop, initial_sound, boogie_invs, timeout)
-    p1_sound = set([x for x in p1_sound if not tautology(expr_to_z3(x, AllIntTypeEnv()))])
+    p1_sound = set([x for x in p1_sound if not conservative_tautology(expr_to_z3(x, AllIntTypeEnv()))])
 
     # Next lets add implication  to all unsound invariants from first pass
     # Also add manually specified partialInvs
@@ -70,7 +76,8 @@ def tryAndVerifyWithSplitterPreds(bbs, loop, old_sound_invs, boogie_invs,
     candidate_precedents = [ ast_and(pSet) for pSet in nonempty(powerset(splitterPreds)) ]
     p2_invs = [ AstBinExpr(precc, "==>", inv)
       for precc in candidate_precedents for inv in unsound] + partialInvs
-    p2_invs = set([ x for x in p2_invs if not tautology(expr_to_z3(x, AllIntTypeEnv())) ])
+
+    p2_invs = set([ x for x in p2_invs if not conservative_tautology(expr_to_z3(x, AllIntTypeEnv())) ])
 
     # And look for any new sound invariants
     p2_overfitted, p2_nonind, p2_sound, violations = tryAndVerify_impl(bbs, loop, \
