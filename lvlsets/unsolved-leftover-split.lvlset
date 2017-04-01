@@ -1,0 +1,45 @@
+{
+ "name": "unsolved-leftover-split",
+ "levels": [
+  [
+   "i-sqrt",
+   [
+    "../ice-benchmarks/sqrt.desugared.bpl",
+    "../ice-benchmarks/sqrt.c",
+    "../ice-benchmarks/sqrt.bpl"
+   ]
+  ],
+  [
+   "s-count_by_k_true-unreach-call.1",
+   [
+    "../sv_manual_trans/loop-new/count_by_k_true-unreach-call.desugared.bpl",
+    "../sv_manual_trans/loop-new/count_by_k_true-unreach-call.c",
+    "../sv_manual_trans/loop-new/count_by_k_true-unreach-call.bpl"
+   ],
+   [
+    "!(k==0)"
+   ],
+   "k==0 ==> (i == 0 && i <= LARGE_INT * k)"
+  ],
+  [
+   "s-gauss_sum_true-unreach-call",
+   [
+    "../sv_manual_trans/loop-new/gauss_sum_true-unreach-call.desugared.bpl",
+    "../sv_manual_trans/loop-new/gauss_sum_true-unreach-call.c",
+    "../sv_manual_trans/loop-new/gauss_sum_true-unreach-call.bpl"
+   ]
+  ],
+  [
+   "d-38.1",
+   [
+    "../dilig-benchmarks/single/38.desugared.bpl",
+    "../dilig-benchmarks/single/38.c",
+    "../dilig-benchmarks/single/38.bpl"
+   ],
+   [
+    "!(i mod 2 == 0)"
+   ],
+   "((i mod 2 == 0) ==> x == 2*y)"
+  ]
+ ]
+}
