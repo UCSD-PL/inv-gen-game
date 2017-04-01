@@ -18,5 +18,5 @@ invariant b0(a, t, su, n);
     su := su + t;
   }
 
-  assert(((a+1)*(a+1) == su));
+  assert((a*a <= n) && ((a+1)*(a+1) > n));
 }

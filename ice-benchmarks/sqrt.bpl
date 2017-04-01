@@ -9,12 +9,12 @@ procedure main()
   assume(n>0);
 
   while (su <= n)
-  // invariant su == (a+1)*(a+1)  && t == 2*a + 1 && su <= n + t;
+  // invariant su == (a+1)*(a+1) && t == 2*a+1
   {
     a := a + 1;
     t := t + 2;
     su := su + t;
   }
 
-  assert((a*a <= n) && ((a+1)*(a+1) > n));
+  assert(((a+1)*(a+1) == su));
 }

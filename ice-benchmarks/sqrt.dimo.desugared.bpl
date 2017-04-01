@@ -25,7 +25,7 @@ implementation main()
 
   anon3_LoopDone:
     assume {:partition} n < su;
-    assert (a + 1) * (a + 1) == su;
+    assert a * a <= n && (a + 1) * (a + 1) > n;
     return;
 }
 

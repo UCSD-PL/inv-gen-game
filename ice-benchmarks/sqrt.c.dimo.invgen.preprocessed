@@ -25,5 +25,5 @@ int main(int argc, char* argv[])
     su = su + t;
   }
 
-  assert(((a+1)*(a+1) == su));
+  assert((a*a <= n) && ((a+1)*(a+1) > n));
 }

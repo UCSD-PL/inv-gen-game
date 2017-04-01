@@ -61,7 +61,7 @@ for lvl_name, lvl in lvls.items():
 
   try:
     if (not isSolved(lvl, [sol])):
-      print lvl_name, "doesn't satisfy solution ", sol, "info: ", res
+      print lvl_name, "doesn't satisfy solution ", sol, "details:", verify(lvl, [sol])
   except Unknown:
     print "Can't tell for level ", lvl_name
     continue

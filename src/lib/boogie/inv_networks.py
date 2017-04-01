@@ -224,3 +224,12 @@ class Violation:
 
   def endEnv(s):
     return unssa_z3_model(s._ctrex, s.endReplM())
+
+  def __str__(s):
+    if (s.isSafety()):
+      return "Safety@" + str(s.endBB()) + ":" + str(s.endEnv())
+    else:
+      return "Inductiveness@" + str([x[0] for x in s._path]) + ":" + str(s.startEnv()) + "->" + str(s.endEnv())
+
+  def __repr__(s):
+    return s.__str__()
