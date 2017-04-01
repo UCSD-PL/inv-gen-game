@@ -41,3 +41,5 @@ def replace(ast, m):
     else:
         return ast.__class__(*[replace(x,m) for x in ast._children])
 
+def reduce_nodes(node, cb):
+    return cb(node, [ reduce_nodes(x, cb) for x in node._children if isinstance(x, AstNode) ])
