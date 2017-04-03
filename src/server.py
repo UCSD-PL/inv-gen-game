@@ -5,7 +5,7 @@ from flask_jsonrpc import JSONRPC as rpc
 from os.path import *
 from json import dumps
 from js import esprimaToZ3, esprimaToBoogie, boogieToEsprima
-from lib.boogie.ast import AstBinExpr, AstTrue, ast_and
+from lib.boogie.ast import AstBinExpr, AstTrue, ast_and, AstId, AstNumber
 from lib.common.util import pp_exc, powerset, split, nonempty, nodups
 from lib.boogie.eval import instantiateAndEval, _to_dict
 from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, z3_expr_to_boogie, Unknown
@@ -17,7 +17,7 @@ from StringIO import StringIO
 from random import choice
 from vc_check import tryAndVerify_impl, tryAndVerifyWithSplitterPreds, _from_dict
 
-from levels import _tryUnroll, findNegatingTrace, loadBoogieLvlSet
+from levels import _tryUnroll, findNegatingTrace, loadBoogieLvlSet, traceConstantVars
 
 import argparse
 import traceback
@@ -389,6 +389,24 @@ def getLastVerResult(lvlset, lvlid, session):
     else:
       return None;
 
+def substitutions(expr, relMs):
+  family = set([expr])
+  for replM in replMs:
+    family = family.add(replace(expr, replM))
+
+  return family
+
+def generalizeConstTraceVars(lvl):
+  """ Given an expression and a set of pairs (Var, Num) where Var is always equal to Num
+      in the traces presented to the user, add all variations of expr with Num
+      substituded for Var and vice-versa. Note we don't do combinations of multiple
+      substitutions where that is possible.
+  """
+  varNums = traceConstantVars(lvl)
+  replMs = set([ { AstId(v[0]) : AstNumber(v[1]) for v in varNums } ] + \
+           [ { AstNumber(v[1]) : AstId(v[0]) for v in varNums } ])
+  return replMs
+
 @api.method("App.tryAndVerify")
 @pp_exc
 @log_d(str, str, pp_EsprimaInvs, pp_tryAndVerifyRes)
@@ -415,6 +433,8 @@ def tryAndVerify(levelSet, levelId, invs):
     partialInvs = [ lvl['partialInv'] ] if 'partialInv' in lvl else []
     splitterPreds = lvl['splitterPreds'] if 'splitterPreds' in lvl else [ ]
     boogie_invs = [ esprimaToBoogie(x, {}) for x in invs ]
+    replMaps = generalizeConstTraceVars(lvl);
+    boogie_invs = flattenSet([generalizeConstTraceVars(x, replMaps) for x in boogie_invs])
     initial_sound = partialInvs 
 
     lastVer = getLastVerResult(levelSet, levelId, s)

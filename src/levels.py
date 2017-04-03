@@ -277,3 +277,11 @@ def loadBoogieLvlSet(lvlSetFile):
         lvls[lvlName] = lvl;
 
     return (lvlSet["name"], lvls)
+
+def traceConstantVars(lvl):
+  vs = lvl['variables']
+  table = lvl['data'][0]
+  cInds = [ (x[0], list(x[1])[0]) for x in
+    enumerate([set([table[row][col] for row in xrange(len(table))])
+                for col in xrange(len(vs))]) if len(x[1]) == 1 ]
+  return [ (vs[x[0]], x[1])  for x in cInds ]

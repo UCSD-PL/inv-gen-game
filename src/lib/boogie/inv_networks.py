@@ -1,6 +1,6 @@
 from lib.boogie.ast import ast_and, replace, AstBinExpr, AstAssert, AstAssume, AstTrue
 from lib.common.util import split, nonempty, powerset
-from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, Unknown, counterex, Implies, And, tautology, satisfiable, unsatisfiable
+from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, Unknown, counterex, Implies, And, tautology, satisfiable, unsatisfiable, to_smt2
 from lib.boogie.paths import nd_bb_path_to_ssa, ssa_path_to_z3, _ssa_stmts
 from lib.boogie.ssa import SSAEnv, unssa_z3_model
 from lib.boogie.predicate_transformers import wp_stmts, sp_stmt
@@ -70,7 +70,7 @@ def filterCandidateInvariants(bbs, preCond, postCond, cutPoints, timeout=None):
               for candidate in candidate_invs:
                 candidateSSA = expr_to_z3(replace(candidate, curFinalSSAEnv.replm()), aiTyEnv)
                 try:
-                  c = counterex(Implies(sp, candidateSSA), timeout)
+                  c = counterex(Implies(sp, candidateSSA), timeout, "Candidate: " + str(candidate))
                 except Unknown:
                   c = { } # On timeout conservatively assume fail
 
@@ -99,6 +99,8 @@ def filterCandidateInvariants(bbs, preCond, postCond, cutPoints, timeout=None):
     # Pass 2: Check for safety violations
     violations = checkInvNetwork(bbs, preCond, postCond, sound, timeout)
     for v in violations:
+      if (not v.isSafety()):
+        print v
       assert (v.isSafety()) # sound should be an inductive network
 
     return (overfitted, nonind, sound, violations) 
@@ -229,7 +231,7 @@ class Violation:
     if (s.isSafety()):
       return "Safety@" + str(s.endBB()) + ":" + str(s.endEnv())
     else:
-      return "Inductiveness@" + str([x[0] for x in s._path]) + ":" + str(s.startEnv()) + "->" + str(s.endEnv())
+      return "Inductiveness@" + str([x[0] for x in s._path]) + ":" + str(s.startEnv()) + "->" + str(s.endEnv()) + ":" + to_smt2(s._query)
 
   def __repr__(s):
     return s.__str__()

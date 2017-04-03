@@ -5,7 +5,6 @@ from sys import exc_info, stderr
 def eprint(*args):
   stderr.write(" ".join(map(str, args)) + "\n")
 
-
 def unique(iterable, msg=""):
   """ assert that iterable has one element and return it """
   l = list(iterable)
@@ -50,3 +49,5 @@ def nonempty(lst):
 def nodups(s):
   return list(set(s))
 
+def flattenSet(s):
+  return reduce(lambda x,y: set(x).union(y), s, set([]))

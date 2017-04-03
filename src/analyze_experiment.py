@@ -10,8 +10,9 @@ from sys import exit
 from lib.common.util import eprint
 from lib.boogie.analysis import propagate_sp
 from lib.boogie.ast import parseExprAst
+from lib.boogie.z3_embed import Unknown, tautology, expr_to_z3, AllIntTypeEnv
 from vc_check import tryAndVerify_impl, tryAndVerifyWithSplitterPreds, _from_dict
-
+import csv
 
 p = ArgumentParser(description="Compute stats over an experiment");
 p.add_argument('--ename', type=str, help='Name for experiment', required=True);
@@ -21,6 +22,7 @@ p.add_argument('--usrStats', action="store_const", const=True, default=False,
                help='If set print user stats');
 p.add_argument('--lvlset', type=str, help='Path to levelset used in experiment', required=True);
 p.add_argument('--timeout', type=int, default=10, help='Timeout in seconds for z3 queries.')
+p.add_argument('--additionalInvs', type=str, help='Path to a .csv file with additional invariants.')
 
 def error(msg):
     eprint(msg);
@@ -34,6 +36,26 @@ if __name__ == "__main__":
 
     s = open_sqlite_db("../logs/" + args.ename + "/events.db")()
     lvlsetName, lvls = loadBoogieLvlSet(args.lvlset)
+
+    otherInvs = { }
+    if (args.additionalInvs):
+      with open(args.additionalInvs) as f:
+        r = csv.reader(f, delimiter=",");
+        for row in r:
+          (lvl, invs) = row
+          bInvs = []
+          for inv in [x for x in invs.split(";") if len(x.strip()) != 0]:
+            try:
+              bInv = parseExprAst(inv)
+              if (tautology(expr_to_z3(bInv, AllIntTypeEnv()))): continue
+              bInvs.append(bInv)
+            except RuntimeError:
+              # Some invariants are just too large for parsing :(
+              pass
+            except Unknown:
+              bInvs.append(bInv)
+
+          otherInvs[lvl]=bInvs
 
     lvlStats = { lvlN: {
           "usersStarted": set(),\
@@ -147,6 +169,9 @@ if __name__ == "__main__":
       sps = list(propagate_sp(bbs)[loop_header])
       boogie_invs = boogie_invs.union(sps)
       boogie_invs = boogie_invs.union(partialInvs)
+
+      if (lvlName in otherInvs):
+        boogie_invs = boogie_invs.union(otherInvs[lvlName])
 
       for b in boogie_invs:
         if str(b) not in invM:

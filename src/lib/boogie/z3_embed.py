@@ -45,7 +45,8 @@ class Z3ServerInstance(object):
 
   @Pyro4.expose
   @wrapZ3Exc
-  def check(s):
+  def check(s, comm):
+    sys.stderr.write("check(" + comm + "):" + s._solver.to_smt2() + "\n");
     return str(s._solver.check());
 
   @Pyro4.expose
@@ -85,7 +86,7 @@ def startAndWaitForZ3Instance():
 
     daemon = Pyro4.Daemon();
     uri = daemon.register(Z3ServerInstance)
-    sys.stderr.write( "Notify parent of my uri: " + str(uri) )
+    sys.stderr.write( "Notify parent of my uri: " + str(uri) + "\n")
     sys.stderr.flush();
     q.put(uri)
     # Small window for racing
@@ -126,11 +127,11 @@ class Z3ProxySolver:
       s._remote.pop();
       return None
 
-    def check(s, timeout = None):
+    def check(s, timeout = None, comm = ""):
       old_timeout = s._timeout
       s._remote._pyroTimeout = timeout;
       try:
-        r = s._remote.check()
+        r = s._remote.check(comm)
       except Pyro4.errors.TimeoutError:
         sys.stderr.write("Child " + str(s._proc.pid) + "Timedout. Restarting.\n")
         r = "unknown"
@@ -160,6 +161,14 @@ class Z3ProxySolver:
 
     def model(s):
       return s._remote.model();
+
+    def to_smt2(s, p):
+      dummy = z3.Solver(ctx=getCtx());
+      dummy.add(p);
+      strP = dummy.to_smt2();
+      strP = strP.replace("(check-sat)\n", "");
+      strP = strP.replace("; benchmark generated from python API\n(set-info :status unknown)\n","");
+      return strP
 
     def _restartRemote(s):
         # Kill Old Process
@@ -276,15 +285,15 @@ def memoize(keyF):
     return decorated
   return decorator
 
-@memoize(lambda pred, timeout=None:  pred)
-def counterex(pred, timeout=None):
+@memoize(lambda pred, timeout=None, comm= "":  to_smt2(pred))
+def counterex(pred, timeout=None, comm = ""):
     s = None
     try:
       s = getSolver()
       while True:
         try:
           s.add(Not(pred))
-          res = s.check(timeout)
+          res = s.check(timeout, comm)
           m = None if res == z3.unsat else s.model()
         except Crashed:
           continue;
@@ -294,7 +303,7 @@ def counterex(pred, timeout=None):
     finally:
       if (s): releaseSolver(s);
 
-@memoize(lambda pred, timeout=None:  pred)
+@memoize(lambda pred, timeout=None:  to_smt2(pred))
 def satisfiable(pred, timeout=None):
     s = None
     try:
@@ -305,7 +314,7 @@ def satisfiable(pred, timeout=None):
     finally:
       if (s): releaseSolver(s)
 
-@memoize(lambda pred, timeout=None:  pred)
+@memoize(lambda pred, timeout=None:  to_smt2(pred))
 def unsatisfiable(pred, timeout=None):
     s = None
     try:
@@ -316,7 +325,7 @@ def unsatisfiable(pred, timeout=None):
     finally:
       if (s): releaseSolver(s)
 
-@memoize(lambda pred:  pred)
+@memoize(lambda pred:  to_smt2(pred))
 def model(pred):
     s = None
     try:
@@ -328,7 +337,7 @@ def model(pred):
     finally:
       if (s): releaseSolver(s);
 
-@memoize(lambda pred:  pred)
+@memoize(lambda pred:  to_smt2(pred))
 def maybeModel(pred):
     s = None
     try:
@@ -344,15 +353,15 @@ def simplify(pred, *args, **kwargs):
     # No need to explicitly specify ctx here since z3.simplify gets it from pred
     return z3.simplify(pred, *args, **kwargs)
 
-@memoize(lambda inv1, inv2:  (inv1, inv2))
+@memoize(lambda inv1, inv2:  (to_smt2(inv1), to_smt2(inv2)))
 def implies(inv1, inv2):
     return unsatisfiable(And(inv1, Not(inv2)))
 
-@memoize(lambda inv1, inv2:  (inv1, inv2))
+@memoize(lambda inv1, inv2:  (to_smt2(inv1), to_smt2(inv2)))
 def equivalent(inv1, inv2):
     return implies(inv1,inv2) and implies(inv2, inv1)
 
-@memoize(lambda inv:  inv)
+@memoize(lambda inv:  to_smt2(inv))
 def tautology(inv):
     return unsatisfiable(Not(inv))
 
@@ -515,3 +524,9 @@ def z3_expr_to_boogie(expr):
     else:
         raise Exception("Can't translate z3 expression " + str(expr) +
             " to boogie.") 
+
+def to_smt2(p):
+  s = getSolver();
+  res = s.to_smt2(p)
+  releaseSolver(s);
+  return res
