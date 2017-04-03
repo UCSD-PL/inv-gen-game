@@ -4,7 +4,7 @@ from threading import Condition, local
 from time import sleep, time
 from random import randint
 from multiprocessing import Process, Queue as PQueue
-from ..common.util import eprint
+from ..common.util import error
 import Pyro4
 import sys
 import atexit
@@ -76,7 +76,7 @@ def startAndWaitForZ3Instance():
     out = "z3_child.%d.out" % os.getpid()
     err = "z3_child.%d.err" % os.getpid()
 
-    eprint("Redirecting child", os.getpid(), "streams to", out, err)
+    error("Redirecting child", os.getpid(), "streams to", out, err)
 
     sys.stdout.close();
     sys.stderr.close();

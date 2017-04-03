@@ -1,7 +1,7 @@
 from lib.boogie.ast import parseExprAst, ast_or, ast_and
 from lib.boogie.bb import get_bbs, ensureSingleExit, entry
 from boogie_loops import loops, get_loop_header_values
-from lib.common.util import unique, powerset, average, eprint
+from lib.common.util import unique, powerset, average, error
 from lib.boogie.analysis import livevars
 from lib.boogie.eval import instantiateAndEval, evalPred, _to_dict, execute
 from os import listdir
@@ -242,7 +242,7 @@ def loadBoogieLvlSet(lvlSetFile):
 
     lvlSet = load(open(lvlSetFile, "r"), object_pairs_hook=assertUniqueKeys)
     lvlSetDir = dirname(abspath(realpath(lvlSetFile)))
-    eprint("Loading level set " + lvlSet["name"] + " from " + lvlSetFile);
+    error("Loading level set " + lvlSet["name"] + " from " + lvlSetFile);
     lvls = {}
     for t in lvlSet["levels"]:
         lvlName = t[0]
@@ -254,7 +254,7 @@ def loadBoogieLvlSet(lvlSetFile):
         if lvlPath[1][0] != '/':
           lvlPath[1] = join(lvlSetDir, lvlPath[1])
 
-        eprint("Loading level: ", lvlPath[0])
+        error("Loading level: ", lvlPath[0])
         lvl = loadBoogieFile(lvlPath[0], False)
         lvl["path"] = lvlPath
 
@@ -268,7 +268,7 @@ def loadBoogieLvlSet(lvlSetFile):
             lvl['data'][0]);
 
           if (len(lvl['data'][0]) == 0):
-            eprint("SKIPPING : ", lvlName, " due to no filtered rows.")
+            error("SKIPPING : ", lvlName, " due to no filtered rows.")
             continue
 
           lvl['partialInv'] = remainderInv
@@ -277,11 +277,3 @@ def loadBoogieLvlSet(lvlSetFile):
         lvls[lvlName] = lvl;
 
     return (lvlSet["name"], lvls)
-
-def traceConstantVars(lvl):
-  vs = lvl['variables']
-  table = lvl['data'][0]
-  cInds = [ (x[0], list(x[1])[0]) for x in
-    enumerate([set([table[row][col] for row in xrange(len(table))])
-                for col in xrange(len(vs))]) if len(x[1]) == 1 ]
-  return [ (vs[x[0]], x[1])  for x in cInds ]

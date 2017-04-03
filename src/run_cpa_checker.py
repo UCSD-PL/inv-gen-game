@@ -4,7 +4,7 @@ from vc_check import tryAndVerify_impl
 from lib.cpa_checker import runCPAChecker, convertCppFileForCPAChecker
 from lib.boogie.z3_embed import *
 from lib.boogie.ast import ast_and, parseExprAst
-from lib.common.util import eprint
+from lib.common.util import error
 from lib.boogie.analysis import propagate_sp
 from shutil import move
 from z3 import Solver as OriginalSolver
@@ -33,7 +33,7 @@ if (__name__ == "__main__"):
   for lvlName, lvl in lvls.iteritems():
     cppFile = lvl["path"][1]
     preprocessedFile = cppFile + ".cpachecker.preprocessed"
-    eprint("Running ", lvlName)
+    error("Running ", lvlName)
 
     if (not exists(preprocessedFile)):
       convertCppFileForCPAChecker(cppFile, preprocessedFile);
@@ -45,11 +45,11 @@ if (__name__ == "__main__"):
     solved, loopHeaderLbl, loopInvs, rawOutput = res[lvlName]
     loop_header = lvl["loop"].loop_paths[0][0]
     sps = list(propagate_sp(lvl["program"])[loop_header])
-    eprint("Added sps: ", sps)
+    error("Added sps: ", sps)
     conf_status = "n/a"
 
     if (solved):
-      eprint("z3 invs: ", len(loopInvs), loopInvs)
+      error("z3 invs: ", len(loopInvs), loopInvs)
       try:
         alarm(args.time_limit)
         # On lvl d-14 for example the invariants explode exponentially due to
@@ -63,7 +63,7 @@ if (__name__ == "__main__"):
           for i in loopInvs:
             s = OriginalSolver();
             s.add(i);
-            eprint(s.to_smt2())
+            error(s.to_smt2())
             del s
           raise
       finally:
@@ -75,12 +75,12 @@ if (__name__ == "__main__"):
           (overfitted, nonind, sound, violations) =\
             tryAndVerify_impl(bbs, loop, [], invs + sps, args.time_limit)
 
-          eprint ("Out of ", invs+sps, "sound: ", sound)
+          error ("Out of ", invs+sps, "sound: ", sound)
 
           if (len(violations) > 0):
-            eprint("Supposedly sound inv: ", invs)
-            eprint("Level ", lvlName, "false claimed to be sound!")
-            eprint("Raw output: ", rawOutput)
+            error("Supposedly sound inv: ", invs)
+            error("Level ", lvlName, "false claimed to be sound!")
+            error("Raw output: ", rawOutput)
             conf_status = False
           else:
             conf_status = True

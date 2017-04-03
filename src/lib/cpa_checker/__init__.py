@@ -2,7 +2,7 @@ from tempfile import NamedTemporaryFile
 from subprocess import call, check_output, STDOUT
 from os.path import dirname, abspath, relpath
 from pydot import graph_from_dot_file
-from lib.common.util import unique, eprint
+from lib.common.util import unique
 from z3 import parse_smt2_string
 import re
 

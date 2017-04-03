@@ -231,7 +231,7 @@ class Violation:
     if (s.isSafety()):
       return "Safety@" + str(s.endBB()) + ":" + str(s.endEnv())
     else:
-      return "Inductiveness@" + str([x[0] for x in s._path]) + ":" + str(s.startEnv()) + "->" + str(s.endEnv()) + ":" + to_smt2(s._query)
+      return "Inductiveness@" + str([x[0] for x in s._path]) + ":" + str(s.startEnv()) + "->" + str(s.endEnv())# + ":" + to_smt2(s._query)
 
   def __repr__(s):
     return s.__str__()

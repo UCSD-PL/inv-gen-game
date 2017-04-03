@@ -1,9 +1,10 @@
-from lib.boogie.ast import ast_and, replace, AstBinExpr, AstAssert, AstAssume, AstTrue
-from lib.common.util import split, nonempty, powerset
+from lib.boogie.ast import ast_and, replace, AstBinExpr, AstAssert, AstAssume, AstTrue, AstNumber, AstId
+from lib.common.util import split, nonempty, powerset, flattenSet
 from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, Unknown, counterex, Implies, And, tautology, satisfiable, unsatisfiable
 from lib.boogie.paths import nd_bb_path_to_ssa, ssa_path_to_z3, _ssa_stmts
 from lib.boogie.ssa import SSAEnv
 from lib.boogie.predicate_transformers import wp_stmts, sp_stmt
+from lib.boogie.analysis import propagate_sp
 from copy import copy
 from lib.boogie.bb import entry, exit
 from lib.boogie.inv_networks import *
@@ -19,6 +20,57 @@ def _from_dict(vs, vals):
         return ( _from_dict(vs, vals[0]), _from_dict(vs, vals[1]) )
     else:
         return [ vals[vs[i]] if vs[i] in vals else None for i in xrange(0, len(vs)) ]
+
+def traceConstantVars(lvl):
+  vs = lvl['variables']
+  table = lvl['data'][0]
+  cInds = [ (x[0], list(x[1])[0]) for x in
+    enumerate([set([table[row][col] for row in xrange(len(table))])
+                for col in xrange(len(vs))]) if len(x[1]) == 1 ]
+  return [ (vs[x[0]], x[1])  for x in cInds ]
+
+def substitutions(expr, replMs):
+  family = set([expr])
+  for replM in replMs:
+    family.add(replace(expr, replM))
+
+  return family
+
+def generalizeConstTraceVars(lvl):
+  """ Given an expression and a set of pairs (Var, Num) where Var is always equal to Num
+      in the traces presented to the user, add all variations of expr with Num
+      substituded for Var and vice-versa. Note we don't do combinations of multiple
+      substitutions where that is possible.
+  """
+  varNums = traceConstantVars(lvl)
+  replMs = [ { AstId(v[0]) : AstNumber(int(v[1])) for v in varNums } ] + \
+           [ { AstNumber(int(v[1])) : AstId(v[0]) for v in varNums } ]
+  return replMs
+
+def tryAndVerify(bbs, loop, splitterPreds, partialInvs, userInvs, otherInvs, replMaps, timeout=None):
+    userInvs = flattenSet([substitutions(x, replMaps) for x in userInvs])
+    invs = userInvs.union(otherInvs)
+    invs = invs.union(partialInvs);
+
+    if (len(splitterPreds) == 0):
+      assert(len(partialInvs) == 0);
+      (ovrefitted, nonind, sound, violations) = tryAndVerify_impl(bbs, loop, set(), invs, timeout)
+      return ((ovrefitted, []), (nonind, []), sound, violations)
+    else:
+      return tryAndVerifyWithSplitterPreds(bbs, loop, set(), invs, splitterPreds, partialInvs, timeout)
+
+def tryAndVerifyLvl(lvl, userInvs, otherInvs, timeout = None):
+    bbs = lvl['program']
+    loop = lvl['loop']
+    partialInvs = [ lvl['partialInv'] ] if 'partialInv' in lvl else []
+    splitterPreds = lvl['splitterPreds'] if 'splitterPreds' in lvl else [ ]
+    replMaps = generalizeConstTraceVars(lvl);
+
+    # Push any SPs that are syntactically unmodified
+    loop_header = loop.loop_paths[0][0]
+    sps = propagate_sp(bbs)[loop_header]
+
+    return tryAndVerify(bbs, loop, splitterPreds, partialInvs, userInvs, sps.union(otherInvs), replMaps, timeout);
 
 def tryAndVerify_impl(bbs, loop, old_sound_invs, invs, timeout=None):
     """ Wrapper around checkInvNetwork for the case of a function

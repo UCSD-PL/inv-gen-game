@@ -2,7 +2,7 @@ from tempfile import NamedTemporaryFile
 from subprocess import call, check_output, STDOUT, check_call, CalledProcessError
 from os.path import dirname, abspath, relpath
 from pydot import graph_from_dot_file
-from lib.common.util import unique, eprint
+from lib.common.util import unique, error
 from z3 import parse_smt2_string
 import re
 
@@ -29,7 +29,7 @@ def convertCppFileForInvGen(cppFile, outFile):
     processedF.write("\n".join(lines))
     processedF.flush();
 
-    eprint("De-included file in ", processedF.name)
+    error("De-included file in ", processedF.name)
     cpp_args = [ "cpp",
       "-D_Static_assert=assert",
       "-D_static_assert=assert",
@@ -46,7 +46,7 @@ def convertCppFileForInvGen(cppFile, outFile):
       processedF.name, outFile ]
 
     call(cpp_args, stderr=STDOUT);
-    eprint("CPP-ed file in ", outFile)
+    error("CPP-ed file in ", outFile)
 
 def runInvGen(cppFile, mainRoutine):
   with NamedTemporaryFile(suffix=".front.out", delete=False) as frontOut,\
@@ -56,7 +56,7 @@ def runInvGen(cppFile, mainRoutine):
               "-main", mainRoutine,
               cppFile,
               "-o", transitionsF.name]
-    eprint("Frontend output in ", frontOut.name)
+    error("Frontend output in ", frontOut.name)
     try:
       check_call(args, stderr=STDOUT, stdout=frontOut);
     except CalledProcessError,e:
@@ -70,9 +70,9 @@ def runInvGen(cppFile, mainRoutine):
         return ("Frontend Crash", [], outp)
       raise e
     
-    eprint("Transitions file in ", transitionsF.name)
+    error("Transitions file in ", transitionsF.name)
     args = [ INVGEN_PATH + "/invgen", transitionsF.name]
-    eprint("Invgen output in ", invgenOut.name)
+    error("Invgen output in ", invgenOut.name)
     try:
       raw = check_output(args, stderr=STDOUT);
     except CalledProcessError,e:

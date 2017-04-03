@@ -15,7 +15,7 @@ from cProfile import Profile
 from pstats import Stats
 from StringIO import StringIO
 from random import choice
-from vc_check import tryAndVerify_impl, tryAndVerifyWithSplitterPreds, _from_dict
+from vc_check import _from_dict, tryAndVerifyLvl
 
 from levels import _tryUnroll, findNegatingTrace, loadBoogieLvlSet, traceConstantVars
 
@@ -389,24 +389,6 @@ def getLastVerResult(lvlset, lvlid, session):
     else:
       return None;
 
-def substitutions(expr, relMs):
-  family = set([expr])
-  for replM in replMs:
-    family = family.add(replace(expr, replM))
-
-  return family
-
-def generalizeConstTraceVars(lvl):
-  """ Given an expression and a set of pairs (Var, Num) where Var is always equal to Num
-      in the traces presented to the user, add all variations of expr with Num
-      substituded for Var and vice-versa. Note we don't do combinations of multiple
-      substitutions where that is possible.
-  """
-  varNums = traceConstantVars(lvl)
-  replMs = set([ { AstId(v[0]) : AstNumber(v[1]) for v in varNums } ] + \
-           [ { AstNumber(v[1]) : AstId(v[0]) for v in varNums } ])
-  return replMs
-
 @api.method("App.tryAndVerify")
 @pp_exc
 @log_d(str, str, pp_EsprimaInvs, pp_tryAndVerifyRes)
@@ -427,43 +409,18 @@ def tryAndVerify(levelSet, levelId, invs):
       # Not a boogie level - error
       raise Exception("Level " + str(levelId) + " " + str(levelSet) + " not a dynamic boogie level.")
 
-    boogie_invs = [ esprimaToBoogie(x, {}) for x in invs ]
-    bbs = lvl['program']
-    loop = lvl['loop']
-    partialInvs = [ lvl['partialInv'] ] if 'partialInv' in lvl else []
-    splitterPreds = lvl['splitterPreds'] if 'splitterPreds' in lvl else [ ]
-    boogie_invs = [ esprimaToBoogie(x, {}) for x in invs ]
-    replMaps = generalizeConstTraceVars(lvl);
-    boogie_invs = flattenSet([generalizeConstTraceVars(x, replMaps) for x in boogie_invs])
-    initial_sound = partialInvs 
-
+    userInvs = set([ esprimaToBoogie(x, {}) for x in invs ])
+    otherInvs = set([])
     lastVer = getLastVerResult(levelSet, levelId, s)
+
     if (lastVer):
-      initial_sound += [parseExprAst(x) for x in lastVer["sound"]]
-      boogie_invs += [parseExprAst(x) for x in lastVer["nonind"]]
+      otherInvs = otherInvs.union([parseExprAst(x) for x in lastVer["sound"]])
+      otherInvs = otherInvs.union([parseExprAst(x) for x in lastVer["nonind"]])
 
-    # Push any SPs that are syntactically unmodified
-    loop_header = loop.loop_paths[0][0]
-    sps = list(propagate_sp(bbs)[loop_header])
+    ((overfitted, overfitted_ignore), (nonind, nonind_ignore), sound, violations) =\
+      tryAndVerifyLvl(lvl, userInvs, otherInvs, args.timeout)
 
-    initial_sound += sps;
-
-    initial_sound = set(initial_sound)
-    boogie_invs = set(boogie_invs)
-
-    # Check for invariants
-    if (len(splitterPreds) > 0):
-      # Note we purposefully ignore the overfitted/nonind invariants with splitter preds.
-      # Otherwise if we remember them for next time, we will keep on prepedning split=> to the
-      # front.
-      ((overfitted, overfitted_ignore), (nonind, nonind_ignore), sound, violations) =\
-        tryAndVerifyWithSplitterPreds(bbs, loop, initial_sound, boogie_invs,
-        splitterPreds, partialInvs, args.timeout)
-    else:
-      overfitted, nonind, sound, violations =\
-        tryAndVerify_impl(bbs, loop, initial_sound, boogie_invs)
-
-    # Finally see if the sound invariants imply the postcondition. 
+    # See if the level is solved
     solved = len(violations) == 0;
     fix = lambda x: _from_dict(lvl['variables'], x)
     
@@ -501,7 +458,6 @@ def simplifyInv(inv):
 @log_d(str)
 def getRandomCode():
     return "".join([ choice(alphanum) for x in range(5) ]);
-
 
 kvStore = { }
 
