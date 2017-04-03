@@ -78,7 +78,16 @@
         }
 
         if (!users.hasOwnProperty(e.src)) {
-          users[e.src] = { completed: 0, solved: 0, skipped: 0, time: 0, invs: 0, lvlD: {} };
+          users[e.src] = {
+            completed: 0,
+            solved: 0,
+            skipped: 0,
+            time: 0,
+            invs: 0,
+            lvlD: {},
+            gamesDone: 0,
+            tutorialsDone: 0,
+          };
         }
 
         var ud = users[e.src];
@@ -87,8 +96,25 @@
           let lvlid = e.payload.lvlset + "," + e.payload.lvlid;
           ud.lvlD[lvlid] = { started: e.time };
           if (!lvls.hasOwnProperty(lvlid)) {
-            lvls[lvlid] = { completed: 0, skipped:0, invs: 0, time: 0, sound: 0, overfitted: 0, nonind: 0, soundSet: [ ], nonindSet: [ ], overfittedSet: [ ]}
-          } 
+            lvls[lvlid] = { completed: 0,
+                            started:0,
+                            skipped:0,
+                            invs: 0,
+                            time: 0,
+                            sound: 0,
+                            overfitted: 0,
+                            nonind: 0,
+                            soundSet: [ ],
+                            nonindSet: [ ],
+                            overfittedSet: [ ],
+                            completedUsers: {},
+                            skippedUsers: {},
+                            startedUsers: {},
+                            finishedUsers: {},
+            }
+          };
+          lvls[lvlid].started ++;
+          lvls[lvlid].startedUsers[e.src] = 1; 
         } else if (e.type == "FinishLevel") {
           let lvlid = e.payload.lvlset + "," + e.payload.lvlid;
           console.log(e.payload)
@@ -107,10 +133,18 @@
           ud.invs += e.payload.all_found.length;
           lvls[lvlid].invs += e.payload.all_found.length
           lvls[lvlid].completed ++;
+          lvls[lvlid].completedUsers[e.src] = 1;
+          lvls[lvlid].finishedUsers[e.src] = 1;
         } else if (e.type == "SkipToNextLevel") {
           let lvlid = e.payload.lvlset + "," + e.payload.lvlid;
           ud.skipped ++;
           lvls[lvlid].skipped ++;
+          lvls[lvlid].skippedUsers[e.src] = 1;
+          lvls[lvlid].finishedUsers[e.src] = 1;
+        } else if (e.type == "GameDone") {
+          ud.gamesDone ++;
+        } else if (e.type == "TutorialDone") {
+          ud.tutorialsDone ++;
         }
       }
       userStats = users;
@@ -125,7 +159,17 @@
       $("#users_tbody").empty();
       for (var userId in userStats) {
         let ud = userStats[userId];
-        $("#users_tbody").append("<tr><td>" + [userId, ud.completed, ud.solved, ud.skipped, ud.time, ud.invs, ud.time / ud.completed, ud.invs / ud.completed].join("</td><td>") + "</td></tr>")
+        $("#users_tbody").append("<tr><td>" +
+            [userId,
+             ud.gamesDone,
+             ud.tutorialsDone,
+             ud.completed,
+             ud.solved,
+             ud.skipped,
+             ud.time,
+             ud.invs,
+             ud.time / ud.completed,
+             ud.invs / ud.completed].join("</td><td>") + "</td></tr>")
       }
       $("#levels_tbody").empty();
       $("#level_invs_tbody").empty();
@@ -135,6 +179,8 @@
           ld.solved,
           ld.completed,
           ld.skipped,
+          Object.keys(ld.startedUsers).length,
+          Object.keys(ld.finishedUsers).length,
           ld.time,
           ld.time / ld.completed,
           ld.invs,
@@ -262,6 +308,8 @@
               <thead>
                 <tr>
                   <th> UserID </th>
+                  <th> # Hits Finished</th>
+                  <th> # Tutorials Finished</th>
                   <th> # Lvls Completed </th>
                   <th> # Lvls Solved </th>
                   <th> # Lvls Skipped </th>
@@ -283,6 +331,8 @@
                   <th> Solved </th>
                   <th> #Users Completed </th>
                   <th> #Users Skipped </th>
+                  <th> #Unique users started</th>
+                  <th> #Unique users finished</th>
                   <th> Total Time </th>
                   <th> Avg Time/Lvl </th>
                   <th> #Invs </th>

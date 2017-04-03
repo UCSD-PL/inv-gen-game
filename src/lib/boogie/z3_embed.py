@@ -132,7 +132,7 @@ class Z3ProxySolver:
       try:
         r = s._remote.check()
       except Pyro4.errors.TimeoutError:
-        print "Child ", s._proc.pid, "Timedout. Restarting."
+        sys.stderr.write("Child " + str(s._proc.pid) + "Timedout. Restarting.\n")
         r = "unknown"
         s._restartRemote();
       except Exception,e:

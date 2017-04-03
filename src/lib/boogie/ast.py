@@ -1,6 +1,6 @@
 from grammar import *
 from pyparsing import ParseResults
-from ..common.ast import AstNode, replace
+from ..common.ast import AstNode, replace, reduce_nodes
 
 def _strip(arg):
     if isinstance(arg, ParseResults):
@@ -253,3 +253,36 @@ def normalize(ast):
     return ast.__class__(*tuple(map(normalize, ast._children)))
   else:
     return ast;
+
+def ast_constants(n):
+  def cb(node, children):
+    if isinstance(node, AstNumber):
+      return set([node.num])
+    else:
+      return reduce(lambda x,y: x.union(y), children, set())
+  return reduce_nodes(n, cb);
+
+
+def ast_boolean_exprs(n):
+  def cb(node, children):
+    relOps = [ "<", ">", "<=", ">=", "==",  "!=" ]
+    boolOps = [ "||", "&&", "==>", "<==>" ]
+    isBoolean = (isinstance(node, AstUnExpr) and node.op == "!") or \
+                (isinstance(node, AstBinExpr) and node.op in (relOps + boolOps))
+    boolSubexp = reduce(lambda x,y: x.union(y), children, set([]))
+    if (isBoolean):
+      boolSubexp.add(node)
+    return boolSubexp
+
+  return reduce_nodes(n, cb)
+
+def ast_primitive_boolean_exprs(n):
+  def cb(node, children):
+    relOps = [ "<", ">", "<=", ">=", "==",  "!=" ]
+    isBoolean = (isinstance(node, AstBinExpr) and node.op in relOps)
+    boolSubexp = reduce(lambda x,y: x.union(y), children, set([]))
+    if (isBoolean):
+      boolSubexp.add(node)
+    return boolSubexp
+
+  return reduce_nodes(n, cb)

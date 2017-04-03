@@ -35,17 +35,22 @@ from atexit import register
 colorama_init();
 
 p = argparse.ArgumentParser(description="invariant gen game server")
-p.add_argument('--port', type=int, help='a optional port number', required=True)
+p.add_argument('--port', type=int, help='a optional port number', default=12345)
 p.add_argument('--ename', type=str, default = 'default', help='Name for experiment; if none provided, use "default"')
 p.add_argument('--lvlset', type=str, default = 'desugared-boogie-benchmarks', help='Lvlset to use for serving benchmarks"')
-p.add_argument('--db', type=str, help='Path to database', required=True)
+p.add_argument('--db', type=str, help='Path to database', default=None)
 p.add_argument('--adminToken', type=str, help='Secret token for logging in to admin interface. If omitted will be randomly generated')
 p.add_argument('--timeout', type=int, default=60, help='Timeout in seconds for z3 queries.')
 
 args = p.parse_args();
 logF = None;
 
-sessionF = open_sqlite_db(args.db)
+if (not args.db):
+  db = join("..", "logs", args.ename, "events.db")
+else:
+  db = args.db
+
+sessionF = open_sqlite_db(db)
 
 invs = { }
 players = { }

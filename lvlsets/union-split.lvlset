@@ -788,6 +788,14 @@
    ]
   ],
   [
+   "i-sqrt.dimo",
+   [
+    "../ice-benchmarks/sqrt.dimo.desugared.bpl",
+    "../ice-benchmarks/sqrt.dimo.c",
+    "../ice-benchmarks/sqrt.dimo.bpl"
+   ]
+  ],
+  [
    "i-square",
    [
     "../ice-benchmarks/square.desugared.bpl",

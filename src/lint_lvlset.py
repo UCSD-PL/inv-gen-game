@@ -19,13 +19,15 @@ p.add_argument("--timeout", type=int, help="timeout on z3 queries")
 args = p.parse_args()
 curLevelSetName, lvls = levels.loadBoogieLvlSet(args.lvlset)
 
-def isSolved(lvl, invs):
+def verify(lvl, invs):
   bbs = lvl["program"]
   loop = lvl["loop"]
 
-  overfitted, nonind, sound, safety_violations =\
-    tryAndVerify_impl(bbs, loop, [], invs, args.timeout)
+  return tryAndVerify_impl(bbs, loop, set([]), set(invs), args.timeout)
 
+
+def isSolved(lvl, invs):
+  (overfitted, nonind, sound, safety_violations) = verify(lvl, invs)
   return len(safety_violations) == 0
 
 print "Checking paths..."
@@ -59,7 +61,7 @@ for lvl_name, lvl in lvls.items():
 
   try:
     if (not isSolved(lvl, [sol])):
-      print lvl_name, "doesn't satisfy solution ", sol, "info: ", res
+      print lvl_name, "doesn't satisfy solution ", sol, "details:", verify(lvl, [sol])
   except Unknown:
     print "Can't tell for level ", lvl_name
     continue
@@ -94,6 +96,24 @@ for origName in originalToSplitM.keys():
     for j in xrange(i+1, len(preds)):
       if (not unsatisfiable(expr_to_z3(bast.ast_and([preds[i], preds[j]]), AllIntTypeEnv()))):
         print "Predicates ", preds[i], "and", preds[j], "from split of ", origName, "are not independent"
+
+print "Checking conjunction of partial predicates is a solution"
+for origName in originalToSplitM.keys():
+  # For now we assume each split level has a single splitterPred
+  preds = [ lvls[x]["partialInv"] for x in originalToSplitM[origName] ]
+  if (len(preds) == 1):
+    print "Skipping ", origName, " with only 1 split level (missing other side of split)"
+    continue
+  conj = bast.ast_and(preds);
+  lvl = lvls[originalToSplitM[origName][0]]
+  try:
+    if (not isSolved(lvl, [conj])):
+      (a,b,c,d) = verify(lvl, [conj])
+      print origName, "not solved by partial conjunction ", conj
+      #print "nonind: ", map(lambda x:  (x[0], x[1].startEnv(), x[1].endEnv(), x[1]._path), b)
+  except Unknown:
+    print "Can't tell if partials solve level for ", lvl_name
+    continue
 
 print "Checking for any trivial levels"
 for lvl_name, lvl in lvls.iteritems():

@@ -33,6 +33,6 @@ int main(int argc, char* argv[])
     su = su + t;
   }
 
-  __VERIFIER_assert(((a+1)*(a+1) == su));    
+  __VERIFIER_assert((a*a <= n) && ((a+1)*(a+1) > n));    
 }
 

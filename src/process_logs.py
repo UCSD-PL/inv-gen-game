@@ -273,11 +273,12 @@ for s in e.server_runs:
         for ans in assn.answers[0]:
             if (len(ans.fields) > 0):
                 answers[ans.qid] = ans.fields[0]
-        q = ["fun", "challenging", "likes", "dislikes", "suggestions", "experience"]
+        q = ["fun", "challenging", "prog_experience", "math_experience", "likes", "dislikes", "suggestions", "experience"]
         print "\n".join(["-- " + n + ": " + str(answers[n]) for n in q if n in answers])
 
     # process logs
     fname = get_event_log_fname(args.ename, s.srid)
+    lvlPayments = { }
     with open(fname) as f:
         for line in f:
             data = json.loads(line)
@@ -340,6 +341,11 @@ for s in e.server_runs:
                     if need_to_pay and worker_id == assn_worker_id:
                         found_game_done = True
                         add_payment(LevelsPayment(worker_id, assn_id, num_levels))
+                        if worker_id in lvlPayments:
+                          print "!! ERROR: Multiple GameDone events for ", worker_id, "for run", s.srid
+                        else:
+                          add_payment(LevelsPayment(worker_id, assn_id, num_levels))
+                          lvlPayments[worker_id] = True
 
                 if event_name == "TutorialStart":
                     print bold_green("++ " + worker_id + " started tutorial")
