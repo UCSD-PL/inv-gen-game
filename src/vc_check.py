@@ -59,18 +59,23 @@ def tryAndVerify(bbs, loop, splitterPreds, partialInvs, userInvs, otherInvs, rep
     else:
       return tryAndVerifyWithSplitterPreds(bbs, loop, set(), invs, splitterPreds, partialInvs, timeout)
 
-def tryAndVerifyLvl(lvl, userInvs, otherInvs, timeout = None):
+def tryAndVerifyLvl(lvl, userInvs, otherInvs, timeout = None, userSplitters = True, addSPs = True, generalizeUserInvs = True):
     bbs = lvl['program']
     loop = lvl['loop']
-    partialInvs = [ lvl['partialInv'] ] if 'partialInv' in lvl else []
-    splitterPreds = lvl['splitterPreds'] if 'splitterPreds' in lvl else [ ]
-    replMaps = generalizeConstTraceVars(lvl);
+    partialInvs = [ lvl['partialInv'] ] if ('partialInv' in lvl) and userSplitters else []
+    splitterPreds = lvl['splitterPreds'] if ('splitterPreds' in lvl) and userSplitters else [ ]
+    if (generalizeUserInvs):
+      replMaps = generalizeConstTraceVars(lvl);
+    else:
+      replMaps = []
 
     # Push any SPs that are syntactically unmodified
-    loop_header = loop.loop_paths[0][0]
-    sps = propagate_sp(bbs)[loop_header]
+    if (addSPs):
+      loop_header = loop.loop_paths[0][0]
+      sps = propagate_sp(bbs)[loop_header]
+      otherInvs = otherInvs.union(sps)
 
-    return tryAndVerify(bbs, loop, splitterPreds, partialInvs, userInvs, sps.union(otherInvs), replMaps, timeout);
+    return tryAndVerify(bbs, loop, splitterPreds, partialInvs, userInvs, otherInvs, replMaps, timeout);
 
 def tryAndVerify_impl(bbs, loop, old_sound_invs, invs, timeout=None):
     """ Wrapper around checkInvNetwork for the case of a function

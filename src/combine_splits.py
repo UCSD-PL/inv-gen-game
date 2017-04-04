@@ -1,19 +1,12 @@
 #!/usr/bin/env python
 import argparse
 import levels
-import tabulate
-from lib.boogie.eval import *
 import lib.boogie.ast as bast
-from lib.boogie.z3_embed import *
 from lib.boogie.analysis import propagate_sp
-from vc_check import tryAndVerify_impl
+from vc_check import tryAndVerifyLvl
 from boogie_loops import *
 from re import compile
-from lib.common.util import unique
-from os.path import exists
-import os
-from models import open_sqlite_db, Source, Event, workers, done_tutorial,\
-  finished_levels, found_invs, experiments
+from models import open_sqlite_db, Event
 from datetime import datetime, timedelta
 
 p = argparse.ArgumentParser(description="given an experiment ran over a split levelset see if the combined found invariants for each split solve the original level")
@@ -24,17 +17,6 @@ p.add_argument("--timeout", type=int, help="timeout on z3 queries")
 args = p.parse_args()
 lvlsetName, lvls = levels.loadBoogieLvlSet(args.lvlset)
 s = open_sqlite_db("../logs/" + args.ename + "/events.db")()
-
-def verify(lvl, invs):
-  bbs = lvl["program"]
-  loop = lvl["loop"]
-
-  return tryAndVerify_impl(bbs, loop, set([]), set(invs), args.timeout)
-
-
-def isSolved(lvl, invs):
-  (overfitted, nonind, sound, safety_violations) = verify(lvl, invs)
-  return len(safety_violations) == 0
 
 endsWithNumP = compile(".*\.[0-9]*$")
 justEnd = compile("\.[0-9]*$")
@@ -111,8 +93,11 @@ for origName in originalToSplitM:
   nsps = len(sps)
   invs = found.union(sps).union(implied)
   
-  overfitted, nonind, sound, violations =\
-      tryAndVerify_impl(bbs, loop, set(), invs, args.timeout)
+  (overfitted, dummy1), (nonind, dummy2), sound, violations =\
+      tryAndVerifyLvl(lvl, invs, set(), args.timeout, \
+        userSplitters=False, addSPs=False, generalizeUserInvs=False)
+
+  assert (len(dummy2) == 0 and len(dummy1) == 0);
 
   solved = len(violations) == 0
   print ",".join(map(str, [
