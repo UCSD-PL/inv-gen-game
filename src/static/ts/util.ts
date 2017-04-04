@@ -53,7 +53,7 @@ function assert(c: boolean, msg?: any): void {
     throw msg || "Assertion failed.";
 }
 function logEvent(name: string, data: any): void {
-  rpc.call("App.logEvent", [Args.get_worker_id(), name, data], (res) => { }, log);
+  rpc_logEvent(Args.get_worker_id(), name, data);
 }
 
 function fst<T1, T2>(x: [T1, T2]): T1 { return x[0]; }
