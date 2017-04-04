@@ -659,7 +659,7 @@
                      .join('\n') +
                     '</tbody></table></h3>' +
                     '</div>');
-                    if (Args.get_tutorial_action() != "redo-cond" && Args.get_tutorial_action() != "redo-all")
+                    if (Args.get_tutorial_action() != "redo-cond" && Args.get_tutorial_action() != "redo-all" && Args.get_tutorial_action() != "redo-all-nond")
                       cs.nextStep()
                }
       },
@@ -692,7 +692,7 @@
 
     if (Args.get_tutorial_action() == "redo-cond")
        tutorialScript = conditionalsScript
-    else if (Args.get_tutorial_action() == "nond")
+    else if (Args.get_tutorial_action() == "nond" || Args.get_tutorial_action() == "redo-all-nond")
        tutorialScript = mainScript.concat(conclusionScript)
     else
        tutorialScript = mainScript.concat(conditionalsScript).concat(conclusionScript)
