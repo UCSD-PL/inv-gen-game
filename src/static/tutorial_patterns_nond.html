@@ -53,7 +53,7 @@
 
     function addSuccessfulInvariant(inv) {
       jsfound.push(invToJS(inv))
-      progW.addInvariant(inv, esprima.parse(inv));
+      progW.addInvariant(inv, esprima.parse(invToJS(inv)));
     }
 
     function updateUI() {
@@ -367,6 +367,91 @@
                  curL = label({ of: $("#sticky"), at: "center bottom" },
                               "Bonuses change<br>based on what you try.", "up");
                  cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      // Show Mod-----------------------------------------------
+      { setup: function (cs) {
+                  $('.overlay').html("<h1>Lets try this <br> with a more complicated operation. </h1>")
+                  $('.overlay').fadeIn(fadeDelay, function () {
+                    cs.nextStepOnKeyClickOrTimeout(stepTimeout, ()=>0, 32)
+                  })
+               }
+      },
+      { setup: function (cs) {
+                  logEvent("TutorialStart", null);
+                  $(".overlay").fadeOut(fadeDelay, function () {
+                    var lvl = {
+
+                      id: "tutorial",
+                      variables: [ "j" ],
+                      data: [ [ [ 2 ], [ 4 ], [ 6 ], [ 8 ] ], [], [] ],
+                      goal: { },
+                      hint: "",
+                      supports_pos_ex: false,
+                      supports_neg_ex: false,
+                      supports_ind_ex: false,
+                    }
+
+                    curLvl = lvl;
+                    tracesW = new PositiveTracesWindow($('#data-display'));
+                    tracesW.onChanged(function() {
+                      if (errorTimer) {
+                        window.clearTimeout(errorTimer);
+                        errorTimer = null;
+                      }
+                      updateUI();
+                    })
+                    tracesW.setVariables(lvl)
+                    tracesW.addData(lvl.data);
+
+                    pwups = [ 
+                              new UseOpsPwup(["%"], "%", "remainder after division"),
+                              new UseOpsPwup(["=="], "=", "equality"), 
+                              new UseOpsPwup(["+", "-"], "&plusmn;", "addition or subtraction"),
+                            ]
+                    stickyW.setPowerups(pwups);
+                    progW.clear();
+                    updateUI()
+                    cs.nextStep();
+                  })
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#formula-entry"), "Try j % 2", "left")
+                 nextStepOnInvariant(cs, "j%2", labelRemover(curL));
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#formula-entry"), "% means <br>'reminder of division'", "left")
+                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#formula-entry"), "j always has reminder <br> 0 divided by 2", "left")
+                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#formula-entry"), "Try j % 2 = 0", "left")
+                 nextStepOnInvariant(cs, "j%2=0", labelRemover(curL));
+               }
+      },
+      { setup: function (cs) {
+                 tracesW.msg("Press Enter...")
+                 curL = label($("#formula-entry"), "Press enter...", "left")
+                 cs.nextStepOnKeyClickOrTimeout(-1, labelRemover(curL), 13)
+               }
+      },
+      { setup: function (cs) {
+                 var inv = invPP(tracesW.curExp().trim());
+                 tracesW.msg("")
+                 pwups[0].highlight(() => 0)
+                 pwups[1].highlight(() => 0)
+                 scoreW.add(4)
+                 addSuccessfulInvariant(inv);
+                 curL = label({ of: $("#score-div-row"), at: "right center" },
+                              "Hurray! <br> You learned to use %!", "left");
+                 cs.nextStepOnKeyClickOrTimeout(-1, labelRemover(curL), 13)
                }
       },
       // Tutorial Levels for UI-----------------------------------------------

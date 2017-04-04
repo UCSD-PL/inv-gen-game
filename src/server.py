@@ -17,7 +17,7 @@ from StringIO import StringIO
 from random import choice
 from vc_check import _from_dict, tryAndVerifyLvl
 
-from levels import _tryUnroll, findNegatingTrace, loadBoogieLvlSet, traceConstantVars
+from levels import _tryUnroll, findNegatingTrace, loadBoogieLvlSet
 
 import argparse
 import traceback
