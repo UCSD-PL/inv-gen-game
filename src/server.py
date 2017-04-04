@@ -76,12 +76,27 @@ def log(action, *pps):
         else:
           assert(len(action['kwargs']) == 0);
           assert(len(pps) >= len(action['args']));
-          prompt = "[" + Fore.GREEN + str(action['ip']) + Style.RESET_ALL + '] ' + \
+          ppArgs = [pps[ind](arg) for (ind, arg) in enumerate(action["args"])]
+          # See if one of the ppArgs is a mturkId
+          hitId, assignmentId, workerId = (None, None, None)
+          mturkArgInd = None
+          for (i, ppArg) in enumerate(ppArgs):
+            if (pps[i] == pp_mturkId):
+              workerId, hitId, assignmentId = action["args"][i]
+              mturkArgInd = i
+
+          if (mturkArgInd != None):
+            ppArgs.pop(mturkArgInd)
+
+          prompt = "[" + Fore.GREEN + str(action['ip']) + Style.RESET_ALL + \
+              Fore.RED + ":" + Fore.GREEN + str(hitId) + Style.RESET_ALL + \
+              Fore.RED + ":" + Fore.GREEN + str(assignmentId) + Style.RESET_ALL + \
+              Fore.RED + ":" + Fore.GREEN + str(workerId) + Style.RESET_ALL + \
+              '] ' + \
               Style.DIM + str(action['time']) + Style.RESET_ALL + ':'
 
           call = Fore.RED + action['method'] + "(" + Style.RESET_ALL \
-              + (Fore.RED + "," + Style.RESET_ALL).join(\
-                  [pps[ind](arg) for (ind, arg) in enumerate(action["args"])]) + \
+              + (Fore.RED + "," + Style.RESET_ALL).join(ppArgs) + \
                Fore.RED + ")" + Style.RESET_ALL
 
           if (len(action['args']) + 1 == len(pps) and 'res' in action):
@@ -146,10 +161,10 @@ api = rpc(app, '/api')
 
 @api.method("App.logEvent")
 @pp_exc
-@log_d(str,str,str,str)
-def logEvent(workerId, name, data):
+@log_d(str,str,str,pp_mturkId, str)
+def logEvent(workerId, name, data, mturkId):
     session = sessionF()
-    addEvent(workerId, name, time(), args.ename, request.remote_addr, data, session);
+    addEvent(workerId, name, time(), args.ename, request.remote_addr, data, session, mturkId);
     return None
 
 @api.method("App.listData")
@@ -178,8 +193,8 @@ def setTutorialDone(workerId):
 
 @api.method("App.loadLvl")
 @pp_exc
-@log_d(str, str, pp_BoogieLvl)
-def loadLvl(levelSet, lvlId):
+@log_d(str, str, pp_mturkId, pp_BoogieLvl)
+def loadLvl(levelSet, lvlId, mturkId):
     if (levelSet not in traces):
         raise Exception("Unkonwn level set " + levelSet)
 
@@ -230,8 +245,8 @@ class IgnoreManager:
 
 @api.method("App.loadNextLvl")
 @pp_exc
-@log_d(str, pp_BoogieLvl)
-def loadNextLvl(workerId):
+@log_d(str, pp_mturkId, pp_BoogieLvl)
+def loadNextLvl(workerId, mturkId):
     session = sessionF();
     exp_dir = join(ROOT_DIR, "logs", args.ename)
     level_names = traces[curLevelSetName].keys();
@@ -242,15 +257,15 @@ def loadNextLvl(workerId):
         if levelSolved(session, curLevelSetName, lvlId) or \
            workerId != "" and levelFinishedBy(session, curLevelSetName, lvlId, workerId):
             continue
-        result = loadLvl(curLevelSetName, lvlId)
+        result = loadLvl(curLevelSetName, lvlId, mturkId)
         result["id"] = lvlId
         result["lvlSet"] = curLevelSetName
         return result
 
 @api.method("App.instantiate")
 @pp_exc
-@log_d(pp_EsprimaInvs, str, str)
-def instantiate(invs, traceVars, trace):
+@log_d(pp_EsprimaInvs, str, str, pp_mturkId, pp_EsprimaInvs)
+def instantiate(invs, traceVars, trace, mturkId):
     res = []
     z3Invs = []
     templates = [ (esprimaToBoogie(x[0], {}), x[1], x[2]) for x in invs]
@@ -328,8 +343,8 @@ def getPositiveExamples(levelSet, levelId, cur_expl_state, overfittedInvs, num):
 
 @api.method("App.equivalentPairs")
 @pp_exc
-@log_d(pp_EsprimaInvs, pp_EsprimaInvs, pp_EsprimaInvPairs)
-def equivalentPairs(invL1, invL2):
+@log_d(pp_EsprimaInvs, pp_EsprimaInvs, pp_mturkId, pp_EsprimaInvPairs)
+def equivalentPairs(invL1, invL2, mturkId):
     z3InvL1 = [esprimaToZ3(x, {}) for x in invL1]
     z3InvL2 = [esprimaToZ3(x, {}) for x in invL2]
 
@@ -350,8 +365,8 @@ def equivalentPairs(invL1, invL2):
 
 @api.method("App.impliedPairs")
 @pp_exc
-@log_d(pp_EsprimaInvs, pp_EsprimaInvs, pp_EsprimaInvPairs)
-def impliedPairs(invL1, invL2):
+@log_d(pp_EsprimaInvs, pp_EsprimaInvs, pp_mturkId, pp_EsprimaInvPairs)
+def impliedPairs(invL1, invL2, mturkId):
     z3InvL1 = [esprimaToZ3(x, {}) for x in invL1]
     z3InvL2 = [esprimaToZ3(x, {}) for x in invL2]
 
@@ -372,8 +387,8 @@ def impliedPairs(invL1, invL2):
 
 @api.method("App.isTautology")
 @pp_exc
-@log_d(pp_EsprimaInv, str)
-def isTautology(inv):
+@log_d(pp_EsprimaInv, pp_mturkId, str)
+def isTautology(inv, mturkId):
     try:
       res = (tautology(esprimaToZ3(inv, {})))
       return res
@@ -391,8 +406,8 @@ def getLastVerResult(lvlset, lvlid, session):
 
 @api.method("App.tryAndVerify")
 @pp_exc
-@log_d(str, str, pp_EsprimaInvs, pp_tryAndVerifyRes)
-def tryAndVerify(levelSet, levelId, invs):
+@log_d(str, str, pp_EsprimaInvs, pp_mturkId, pp_tryAndVerifyRes)
+def tryAndVerify(levelSet, levelId, invs, mturkId):
     s = sessionF();
     if (levelSet not in traces):
         raise Exception("Unkonwn level set " + str(levelSet))
@@ -447,8 +462,8 @@ def tryAndVerify(levelSet, levelId, invs):
 
 @api.method("App.simplifyInv")
 @pp_exc
-@log_d(pp_EsprimaInv, pp_EsprimaInv)
-def simplifyInv(inv):
+@log_d(pp_EsprimaInv, pp_mturkId, pp_EsprimaInv)
+def simplifyInv(inv, mturkId):
     z3_inv = esprimaToZ3(inv, {});
     simpl_z3_inv = simplify(z3_inv, arith_lhs=True);
     return boogieToEsprima(z3_expr_to_boogie(simpl_z3_inv));

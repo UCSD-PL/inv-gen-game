@@ -1,3 +1,5 @@
+/* This file defines the RPC interface between server and client */
+
 interface loadLvlBasicRes {
   id: string;
   variables: string[];
@@ -24,33 +26,33 @@ function mturkId(): [string, string, string] {
 }
 
 function rpc_loadLvlBasic(lvlSet: string, id: string, cb:(res: loadLvlBasicRes) => void) {
-  rpc.call("App.loadLvl", [lvlSet, id], (data:any) => cb(<loadLvlBasicRes>data), log);
+  rpc.call("App.loadLvl", [lvlSet, id, mturkId()], (data:any) => cb(<loadLvlBasicRes>data), log);
 }
 
 function rpc_loadLvlDynamic(lvlSet: string, id: string, cb:(res: loadLvlDynamicRes) => void) {
-  rpc.call("App.loadLvl", [lvlSet, id], (data:any) => cb(<loadLvlDynamicRes>data), log);
+  rpc.call("App.loadLvl", [lvlSet, id, mturkId()], (data:any) => cb(<loadLvlDynamicRes>data), log);
 }
 
 function rpc_loadNextLvlDynamic(workerkId: string, cb:(res: loadNextLvlDynamicRes) => void) {
-  rpc.call("App.loadNextLvl", [workerkId], (data:any) => cb(<loadNextLvlDynamicRes>data), log);
+  rpc.call("App.loadNextLvl", [workerkId, mturkId()], (data:any) => cb(<loadNextLvlDynamicRes>data), log);
 }
 
 function rpc_equivalentPairs(invL1: invariantT[], invL2: invariantT[],
                              cb: (arg:[ESTree.Node, ESTree.Node][])=>void): void {
-  rpc.call("App.equivalentPairs", [ invL1, invL2 ], cb, log)
+  rpc.call("App.equivalentPairs", [ invL1, invL2, mturkId() ], cb, log)
 }
 
 function rpc_impliedPairs(invL1: invariantT[], invL2: invariantT[],
                              cb: (arg:[ESTree.Node, ESTree.Node][])=>void): void {
-  rpc.call("App.impliedPairs", [ invL1, invL2 ], cb, log)
+  rpc.call("App.impliedPairs", [ invL1, invL2, mturkId() ], cb, log)
 }
 
 function rpc_isTautology(inv: invariantT, cb:(res:boolean)=>void): void {
-  rpc.call("App.isTautology", [ inv ], cb, log)
+  rpc.call("App.isTautology", [ inv, mturkId() ], cb, log)
 }
 
 function rpc_simplify(inv:string, cb:(res:ESTree.Node)=>void): void {
-  rpc.call("App.simplifyInv", [ esprima.parse(inv) ], cb, log)
+  rpc.call("App.simplifyInv", [ esprima.parse(inv), mturkId() ], cb, log)
 }
 
 function rpc_tryAndVerify(lvlSet: string, lvlId: string, invs: invariantT[],
@@ -58,7 +60,7 @@ function rpc_tryAndVerify(lvlSet: string, lvlId: string, invs: invariantT[],
                                      [ESTree.Node, [any[], any[]]][], // Nonind. invs & counterexample
                                      ESTree.Node[], // Sound Invariants
                                      any[]]) => void) {  // Post cond. counterexample to sound invariants
-  rpc.call("App.tryAndVerify", [ lvlSet, lvlId, invs ], cb, log)
+  rpc.call("App.tryAndVerify", [ lvlSet, lvlId, invs, mturkId() ], cb, log)
 }
 
 function rpc_instantiate(templates: templateT[],
@@ -68,9 +70,9 @@ function rpc_instantiate(templates: templateT[],
   let uniq_templates = unique(templates, (x)=> esprimaToStr(x[0]))
   console.log("Instantiating " + templates.length + " templates " +
               uniq_templates.length + " unique ones.");
-  rpc.call("App.instantiate", [uniq_templates, lvlVars, data], cb, log);
+  rpc.call("App.instantiate", [uniq_templates, lvlVars, data, mturkId()], cb, log);
 }
 
 function rpc_logEvent(workerId: string, name: string, data: any): void {
-  rpc.call("App.logEvent", [workerId, name, data], (res) => { }, log);
+  rpc.call("App.logEvent", [workerId, name, data, mturkId()], (res) => { }, log);
 }
