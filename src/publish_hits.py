@@ -54,7 +54,7 @@ Begin recording your screen.
 </li>
 
 <li>
-Use Google Chrome to navigate to <a target='_blank' href='https://zoidberg.ucsd.edu:{0}/tutorial_patterns""" + ("_nond" if args.no_ifs else "") + """.html'> the following link</a>
+Use Google Chrome to navigate to <a target='_blank' href='https://zoidberg.ucsd.edu:{0}/tutorial_patterns.html""" + ("?tutorialAction=nond" if args.no_ifs else "") + """'> the following link</a>
 </li>
 
 <li>
