@@ -8,10 +8,11 @@ import argparse
 from os.path import exists
 from os import listdir
 from vc_check import tryAndVerifyLvl
+import sys
 
 if (__name__ == "__main__"):
   p = argparse.ArgumentParser(description="run daikon on a levelset")
-  p.add_argument('--lvlset', type=str, help='Path to lvlset file')
+  p.add_argument('--lvlset', type=str, help='Path to lvlset file', required=True)
   p.add_argument('--use-splitter-predicates', action="store_true", default=False, help='Wether to try inductive invariants with the splitter predicates')
   p.add_argument('--no-suppression', action="store_true", default=False, help='Wether to have daikon suppress obvious invariants')
   p.add_argument('--check-solved', action="store_true", default=False, help='Wether to check for each level if it was solved')
@@ -45,10 +46,10 @@ if (__name__ == "__main__"):
         binvs.append(daikonToBoogieExpr(inv))
       except:
         if (not args.csv_table):
-          print "Can't translate ", inv;
+          sys.stderr.write("Can't translate " + str(inv) + "\n");
 
     ((overfitted, overfitted_p2), (nonind, nonind_p2), soundInvs, violations) =\
-      tryAndVerifyLvl(lvl, binvs, set(), args.timeout)
+      tryAndVerifyLvl(lvl, binvs, set(), args.timeout, useSplitters = args.use_splitter_predicates)
     overfitted += overfitted_p2
     nonind += nonind_p2
 

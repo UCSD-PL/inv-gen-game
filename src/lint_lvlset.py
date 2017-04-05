@@ -21,7 +21,7 @@ curLevelSetName, lvls = levels.loadBoogieLvlSet(args.lvlset)
 def verify(lvl, invs):
   ((overfit, overfit2), (nonind, nonind2), sound, violations) =\
     tryAndVerifyLvl(lvl, set(invs), set(), args.timeout,
-      addSPs = False, userSplitters = False, generalizeUserInvs = False);
+      addSPs = False, useSplitters = False, generalizeUserInvs = False);
   assert (len(overfit2) == 0 and len(nonind2) == 0)
   return (overfit, nonind, sound, violations)
 
