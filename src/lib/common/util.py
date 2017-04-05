@@ -1,11 +1,20 @@
 import traceback
 from itertools import chain, combinations
-from sys import exc_info, stderr
+from sys import exc_info, stderr, exit
 
-def eprint(*args):
-  stderr.write(" ".join(map(str, args)) + "\n")
+def error(*args):
+  if (len(args) > 0 and str(args[0]) and '%' in args[0]):
+    fmt = args[0]
+    rest = args[1:]
+    if '\n' not in fmt: fmt += '\n'
+    stderr.write(fmt % typle(rest))
+  else:
+    stderr.write(" ".join(map(str, args)) + "\n")
 
-
+def fatal(*args):
+  error(*args)
+  exit(-1)
+      
 def unique(iterable, msg=""):
   """ assert that iterable has one element and return it """
   l = list(iterable)
@@ -50,3 +59,5 @@ def nonempty(lst):
 def nodups(s):
   return list(set(s))
 
+def flattenSet(s):
+  return reduce(lambda x,y: set(x).union(y), s, set([]))

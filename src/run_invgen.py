@@ -1,20 +1,12 @@
+#! /usr/bin/env python
 from levels import loadBoogieLvlSet
 import argparse
-from vc_check import tryAndVerify_impl
+from vc_check import tryAndVerifyLvl
 from lib.invgen import runInvGen, convertCppFileForInvGen
-from lib.boogie.z3_embed import *
-from lib.boogie.ast import ast_and, parseExprAst
-from lib.common.util import eprint
-from lib.boogie.analysis import propagate_sp
-from shutil import move
-from z3 import Solver as OriginalSolver
-from signal import signal, SIGALRM,  alarm
+from lib.boogie.ast import parseExprAst
+from lib.common.util import error
 from os.path import exists
 import re
-
-def handler(signum, frame):
-  raise Exception("timeout")
-signal(SIGALRM, handler);
 
 def parseInvGenInvariant(inv):
   replaceEq = re.compile("([^<>=])=([^<>=])")
@@ -48,30 +40,28 @@ if (__name__ == "__main__"):
 
       convertCppFileForInvGen(src, invgenCppFile);
 
-    eprint("Running ", lvlName)
+    error("Running ", lvlName)
 
     mainRoutine = "main" if lvlName !="i-cegar1" else "cegar1"
     res[lvlName] = runInvGen(invgenCppFile, mainRoutine);
 
     solved, loopInvs, rawOutput = res[lvlName]
-    loop_header = lvl["loop"].loop_paths[0][0]
-    sps = list(propagate_sp(lvl["program"])[loop_header])
-    eprint("Added sps: ", sps)
     conf_status = "n/a"
 
     if (solved == True):
-      eprint("z3 invs: ", len(loopInvs), loopInvs)
+      error("z3 invs: ", len(loopInvs), loopInvs)
       boogieInvs = map(parseInvGenInvariant, loopInvs);
       bbs = lvl["program"]
       loop = lvl["loop"]
       try:
-        (overfitted, nonind, sound, violations) =\
-          tryAndVerify_impl(bbs, loop, [], boogieInvs + sps, args.time_limit)
+        ((overfitted, overfitted2), (nonind, nonind2), sound, violations) =\
+          tryAndVerifyLvl(bbs, loop, set(boogieInvs), set(), args.time_limit, addSPs=True, useSplitters=False, generalizeUserInvs = False)
+        assert (len(overfitted2) == 0 and len(nonind2) == 0);
         if (len(violations) > 0):
-          eprint("Supposedly sound inv: ", loopInvs)
-          eprint("Results : ", overfitted, nonind, sound)
-          eprint("Level ", lvlName, "false claimed to be sound!")
-          eprint("Raw output: ", rawOutput)
+          error("Supposedly sound inv: ", loopInvs)
+          error("Results : ", overfitted, nonind, sound)
+          error("Level ", lvlName, "false claimed to be sound!")
+          error("Raw output: ", rawOutput)
           conf_status = False
         else:
           conf_status = True

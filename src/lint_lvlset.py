@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 import argparse
 import levels
-import tabulate
 from lib.boogie.eval import *
 import lib.boogie.ast as bast
 from lib.boogie.z3_embed import *
-from vc_check import tryAndVerify_impl
+from vc_check import tryAndVerifyLvl
 from boogie_loops import *
 from re import compile
 from lib.common.util import unique
@@ -20,15 +19,11 @@ args = p.parse_args()
 curLevelSetName, lvls = levels.loadBoogieLvlSet(args.lvlset)
 
 def verify(lvl, invs):
-  bbs = lvl["program"]
-  loop = lvl["loop"]
-
-  return tryAndVerify_impl(bbs, loop, set([]), set(invs), args.timeout)
-
-
-def isSolved(lvl, invs):
-  (overfitted, nonind, sound, safety_violations) = verify(lvl, invs)
-  return len(safety_violations) == 0
+  ((overfit, overfit2), (nonind, nonind2), sound, violations) =\
+    tryAndVerifyLvl(lvl, set(invs), set(), args.timeout,
+      addSPs = False, userSplitters = False, generalizeUserInvs = False);
+  assert (len(overfit2) == 0 and len(nonind2) == 0)
+  return (overfit, nonind, sound, violations)
 
 print "Checking paths..."
 for lvl_name, lvl in lvls.items():
@@ -60,8 +55,9 @@ for lvl_name, lvl in lvls.items():
   loop = lvl["loop"]
 
   try:
-    if (not isSolved(lvl, [sol])):
-      print lvl_name, "doesn't satisfy solution ", sol, "details:", verify(lvl, [sol])
+    (overfit, nonind, sound, violations) = verify(lvl, [sol])
+    if (not len(violations) == 0):
+      print lvl_name, "doesn't satisfy solution ", sol, "details:", (overfit, nonind, sound, violations)
   except Unknown:
     print "Can't tell for level ", lvl_name
     continue
@@ -107,10 +103,10 @@ for origName in originalToSplitM.keys():
   conj = bast.ast_and(preds);
   lvl = lvls[originalToSplitM[origName][0]]
   try:
-    if (not isSolved(lvl, [conj])):
-      (a,b,c,d) = verify(lvl, [conj])
+    (overfit, nonind, sound, violations) = verify(lvl, [conj])
+    if (not len(violations) == 0):
       print origName, "not solved by partial conjunction ", conj
-      #print "nonind: ", map(lambda x:  (x[0], x[1].startEnv(), x[1].endEnv(), x[1]._path), b)
+      #print "nonind: ", map(lambda x:  (x[0], x[1].startEnv(), x[1].endEnv(), x[1]._path), nonind)
   except Unknown:
     print "Can't tell if partials solve level for ", lvl_name
     continue
@@ -122,7 +118,9 @@ for lvl_name, lvl in lvls.iteritems():
   else:
     inv = bast.AstTrue();
 
-  if (isSolved(lvl, [AstTrue()])):
+  (overfit, nonind, sound, violations) = verify(lvl, [AstTrue()])
+
+  if (len(violations) == 0):
     print lvl_name, " is trivial."
 
 print "Checking for any levels with < 3 rows"
@@ -136,8 +134,7 @@ for lvl_name, lvl in lvls.iteritems():
 
     bbs = lvl["program"]
     loop = lvl["loop"]
-    over, nonind, sound, violations = \
-      tryAndVerify_impl(bbs, loop, [], exactValExpr, 120);
+    ((over, over2), (nonind, nonind2), sound, violations) = verify(lvl, [exactValExpr])
     if (len(sound) == 0):
       print "Level", lvl_name, "has only", len(lvl["data"][0]), "rows"
 

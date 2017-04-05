@@ -1,4 +1,5 @@
-from levels import readTrace, loadBoogieLvlSet
+#! /usr/bin/env python
+from levels import loadBoogieLvlSet
 from lib.daikon import toDaikonTrace, runDaikon
 from lib.daikon.inv_grammar import *
 from lib.daikon.inv_ast import *
@@ -6,8 +7,7 @@ from conversions import daikonToBoogieExpr
 import argparse
 from os.path import exists
 from os import listdir
-from vc_check import tryAndVerify_impl, tryAndVerifyWithSplitterPreds
-import lib.boogie.ast as bast
+from vc_check import tryAndVerifyLvl
 
 if (__name__ == "__main__"):
   p = argparse.ArgumentParser(description="run daikon on a levelset")
@@ -47,18 +47,10 @@ if (__name__ == "__main__"):
         if (not args.csv_table):
           print "Can't translate ", inv;
 
-    bbs = lvl["program"]
-    loop = lvl["loop"]
-    if ("splitterPreds" in lvl and args.use_splitter_predicates):
-      splitterPreds = lvl['splitterPreds']
-      partialInv = [ lvl['partialInv'] ] if 'partialInv' in lvl else []
-      ((overfitted, overfitted_p2), (nonind, nonind_p2), soundInvs, violations) =\
-        tryAndVerifyWithSplitterPreds(bbs, loop, [], binvs, splitterPreds, partialInv, args.timeout)
-      overfitted += overfitted_p2
-      nonind += nonind_p2
-    else:
-      (overfitted, nonind, soundInvs, violations) =\
-        tryAndVerify_impl(bbs, loop, [], binvs, args.timeout)
+    ((overfitted, overfitted_p2), (nonind, nonind_p2), soundInvs, violations) =\
+      tryAndVerifyLvl(lvl, binvs, set(), args.timeout)
+    overfitted += overfitted_p2
+    nonind += nonind_p2
 
     if (args.check_solved):
       solved = "," + str(len(violations) == 0)

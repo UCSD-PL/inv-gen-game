@@ -1,17 +1,14 @@
 #! /usr/bin/env python
-from json import loads, dumps
-from js import esprimaToBoogie
-from datetime import datetime, timedelta
-from models import open_sqlite_db, Source, Event, workers, done_tutorial,\
-    finished_levels, found_invs, experiments
-from argparse import *
+from datetime import timedelta
+from models import open_sqlite_db, Event
+from argparse import ArgumentParser
 from levels import loadBoogieLvlSet
-from sys import exit
-from lib.common.util import eprint
+from lib.common.util import error, fatal
 from lib.boogie.analysis import propagate_sp
 from lib.boogie.ast import parseExprAst
-from vc_check import tryAndVerify_impl, tryAndVerifyWithSplitterPreds, _from_dict
-
+from lib.boogie.z3_embed import Unknown, tautology, expr_to_z3, AllIntTypeEnv
+from vc_check import tryAndVerifyLvl
+import csv
 
 p = ArgumentParser(description="Compute stats over an experiment");
 p.add_argument('--ename', type=str, help='Name for experiment', required=True);
@@ -21,10 +18,7 @@ p.add_argument('--usrStats', action="store_const", const=True, default=False,
                help='If set print user stats');
 p.add_argument('--lvlset', type=str, help='Path to levelset used in experiment', required=True);
 p.add_argument('--timeout', type=int, default=10, help='Timeout in seconds for z3 queries.')
-
-def error(msg):
-    eprint(msg);
-    exit(-1)
+p.add_argument('--additionalInvs', type=str, help='Path to a .csv file with additional invariants.')
 
 def isSrcUser(src):
     return src != 'verifier'
@@ -34,6 +28,26 @@ if __name__ == "__main__":
 
     s = open_sqlite_db("../logs/" + args.ename + "/events.db")()
     lvlsetName, lvls = loadBoogieLvlSet(args.lvlset)
+
+    otherInvs = { }
+    if (args.additionalInvs):
+      with open(args.additionalInvs) as f:
+        r = csv.reader(f, delimiter=",");
+        for row in r:
+          (lvl, invs) = row
+          bInvs = []
+          for inv in [x for x in invs.split(";") if len(x.strip()) != 0]:
+            try:
+              bInv = parseExprAst(inv)
+              if (tautology(expr_to_z3(bInv, AllIntTypeEnv()))): continue
+              bInvs.append(bInv)
+            except RuntimeError:
+              # Some invariants are just too large for parsing :(
+              pass
+            except Unknown:
+              bInvs.append(bInv)
+
+          otherInvs[lvl]=bInvs
 
     lvlStats = { lvlN: {
           "usersStarted": set(),\
@@ -56,10 +70,10 @@ if __name__ == "__main__":
       typ, src, ename, time, p = e.type, e.src, e.experiment, e.time, e.payl()
 
       if ('lvlset' in p and p['lvlset'] != lvlsetName):
-        error("Logs refer to levelset " + p['lvlset'] + " which is not loaded.")
+        fatal("Logs refer to levelset " + p['lvlset'] + " which is not loaded.")
 
       if ('lvlid' in p and p['lvlid'] not in lvls):
-        error("Logs refer to level " + p['lvlid'] + " which is not found in current lvlset.")
+        fatal("Logs refer to level " + p['lvlid'] + " which is not found in current lvlset.")
 
       if ('lvlid' in p):
         lvl = lvls[p['lvlid']]
@@ -88,7 +102,7 @@ if __name__ == "__main__":
       """
       # This assertion doesn't hold due to experiment merging
       if (ename != args.ename):
-        error("Logs refer to experiment " + ename +
+        fatal("Logs refer to experiment " + ename +
           " which is different from specified experiment " + args.ename)
       """
 
@@ -132,33 +146,21 @@ if __name__ == "__main__":
       elif (typ == "ReplayTutorialAll"):
         usrS['replayTutorial'] += 1
       else:
-        error("Unknown type: " + typ)
+        fatal("Unknown type: " + typ)
 
     for lvlName in lvls:
       lvlS = lvlStats[lvlName]
       lvl = lvls[lvlName]
-      bbs = lvl['program']
-      loop = lvl['loop']
-      partialInvs = [ lvl['partialInv'] ] if 'partialInv' in lvl else []
-      splitterPreds = lvl['splitterPreds'] if 'splitterPreds' in lvl else [ ]
       invM = { str(parseExprAst(b)) : raw for (raw, b) in lvlS["invariantsFound"] }
-      boogie_invs = set([parseExprAst(x[1]) for x in lvlS["invariantsFound"]])
-      loop_header = loop.loop_paths[0][0]
-      sps = list(propagate_sp(bbs)[loop_header])
-      boogie_invs = boogie_invs.union(sps)
-      boogie_invs = boogie_invs.union(partialInvs)
+      userInvs = set([parseExprAst(x[1]) for x in lvlS["invariantsFound"]])
 
-      for b in boogie_invs:
-        if str(b) not in invM:
-          invM[str(b)] = str(b);
-
-      if (len(splitterPreds) > 0):
-        ((overfitted, overfitted_ignore), (nonind, nonind_ignore), sound, violations) =\
-            tryAndVerifyWithSplitterPreds(bbs, loop, set(), boogie_invs,
-            splitterPreds, partialInvs, args.timeout)
+      if (lvlName in otherInvs):
+        oInvs = set(otherInvs[lvlName])
       else:
-        overfitted, nonind, sound, violations =\
-            tryAndVerify_impl(bbs, loop, set(), boogie_invs, args.timeout)
+        oInvs = set([])
+
+      ((overfitted, overfitted_ignore), (nonind, nonind_ignore), sound, violations) =\
+        tryAndVerifyLvl(lvl, userInvs, oInvs, args.timeout)
 
       lvlS["solved"] = (len(violations) == 0)
       lvlS["sound"] = [invM.get(str(x), str(x)) for x in sound];

@@ -1,13 +1,11 @@
-from levels import loadBoogieLvlSet
+#! /usr/bin/env python
 import argparse
-from vc_check import tryAndVerify_impl
+from levels import loadBoogieLvlSet
+from vc_check import tryAndVerifyLvl
 from lib.cpa_checker import runCPAChecker, convertCppFileForCPAChecker
-from lib.boogie.z3_embed import *
-from lib.boogie.ast import ast_and, parseExprAst
-from lib.common.util import eprint
-from lib.boogie.analysis import propagate_sp
+from lib.boogie.z3_embed import to_smt2, z3_expr_to_boogie
+from lib.common.util import error
 from shutil import move
-from z3 import Solver as OriginalSolver
 from signal import signal, SIGALRM,  alarm
 from os.path import exists
 
@@ -17,9 +15,7 @@ signal(SIGALRM, handler);
 
 if (__name__ == "__main__"):
   p = argparse.ArgumentParser(description="run daikon on a levelset")
-  p.add_argument('--lvlset', type=str, help='Path to lvlset file')
-  #p.add_argument('--use-splitter-predicates', action="store_true", default=False, help='Wether to try inductive invariants with the splitter predicates')
-  #p.add_argument('--check-solved', action="store_true", default=False, help='Wether to check for each level if it was solved')
+  p.add_argument('--lvlset', type=str, help='Path to lvlset file', required=True)
   p.add_argument('--csv-table', action="store_true", default=False, help='Print results as a csv table')
   p.add_argument('--time-limit', type=int, default=300, help='Time limit for CPAChecker')
   args = p.parse_args();
@@ -33,7 +29,7 @@ if (__name__ == "__main__"):
   for lvlName, lvl in lvls.iteritems():
     cppFile = lvl["path"][1]
     preprocessedFile = cppFile + ".cpachecker.preprocessed"
-    eprint("Running ", lvlName)
+    error("Running ", lvlName)
 
     if (not exists(preprocessedFile)):
       convertCppFileForCPAChecker(cppFile, preprocessedFile);
@@ -43,13 +39,10 @@ if (__name__ == "__main__"):
     move("output", "tmp_outputs/" + lvlName + "");
 
     solved, loopHeaderLbl, loopInvs, rawOutput = res[lvlName]
-    loop_header = lvl["loop"].loop_paths[0][0]
-    sps = list(propagate_sp(lvl["program"])[loop_header])
-    eprint("Added sps: ", sps)
     conf_status = "n/a"
 
     if (solved):
-      eprint("z3 invs: ", len(loopInvs), loopInvs)
+      error("z3 invs: ", len(loopInvs), loopInvs)
       try:
         alarm(args.time_limit)
         # On lvl d-14 for example the invariants explode exponentially due to
@@ -61,26 +54,21 @@ if (__name__ == "__main__"):
           conf_status = "timeout"
         else:
           for i in loopInvs:
-            s = OriginalSolver();
-            s.add(i);
-            eprint(s.to_smt2())
-            del s
+            error(to_smt2(i))
           raise
       finally:
         alarm(0)
       if (invs != None):
-        bbs = lvl["program"]
-        loop = lvl["loop"]
         try:
           (overfitted, nonind, sound, violations) =\
-            tryAndVerify_impl(bbs, loop, [], invs + sps, args.time_limit)
+            tryAndVerifyLvl(lvl, set(invs), set(), args.time_limit, addSps=True)
 
-          eprint ("Out of ", invs+sps, "sound: ", sound)
+          error ("Out of ", invs, "sound: ", sound)
 
           if (len(violations) > 0):
-            eprint("Supposedly sound inv: ", invs)
-            eprint("Level ", lvlName, "false claimed to be sound!")
-            eprint("Raw output: ", rawOutput)
+            error("Supposedly sound inv: ", invs)
+            error("Level ", lvlName, "false claimed to be sound!")
+            error("Raw output: ", rawOutput)
             conf_status = False
           else:
             conf_status = True
