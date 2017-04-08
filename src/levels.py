@@ -161,7 +161,7 @@ def loadBoogieFile(fname, multiround):
     terminates = False;
     try:
         (vs, header_vals) = readTrace(fname[:-4] + '.trace')
-        hint = open(fname[:-4] + '.hint').read()
+        hint = load(open(fname[:-4] + '.hint'))
     except: 
         pass
 

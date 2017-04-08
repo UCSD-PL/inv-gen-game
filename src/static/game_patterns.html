@@ -55,12 +55,36 @@
           let lvl = res[1];
           curLvlId = lvl.id;
           console.log("Just loaded " + curLvlSet + "." + curLvlId);
-          if (lvl.hint === null)
-            $("#hint-row").html("");
-          else
-            $("#hint-row").html("<p class='lead'><b>" + lvl.hint + "</b></p>");
-          console.log("Sorin " + lvl.hint);
           gameLogic.loadLvl(lvl);
+          if (lvl.hint === null) {
+            $("#hint-row").html("");
+          } else {
+            if (lvl.hint.type == "plain") {
+              $("#hint-row").html("<p class='lead'><b>" + lvl.hint + "</b></p>");
+            } else if (lvl.hint.type == "post-assert") {
+              var pos_res = invEval(lvl.hint.assert, lvl.variables, lvl.data[0])
+              if (evalResultBool(pos_res)) {
+                var holdsOnLast = pos_res[pos_res.length-1];
+                var holdsOnAll = pos_res.reduce((acc,val)=> acc && val, true)
+
+                if (holdsOnAll) {
+                  $("#hint-row").html("<p class='lead'><b>Hint: Check out: " +
+                    lvl.hint.assert + 
+                    "</b></p>");
+                  traceW.setExp(lvl.hint.assert);
+                } else if (holdsOnLast) {
+                  $("#hint-row").html("<p class='lead'><b>Hint: " +
+                    lvl.hint.assert + 
+                    " holds for the last row. Can you change it to work for all rows?</b></p>");
+                  traceW.setExp(lvl.hint.assert);
+                } else {
+                  // TODO
+                }
+              } else {
+                // TODO
+              }
+            }
+          }
         }
       })
     }
