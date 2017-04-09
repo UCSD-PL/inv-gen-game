@@ -218,6 +218,13 @@
       $("#leaderboard").click(getLeaderboard);
       $("#profile").click(setHeader);
       $("#tabs").tabs();
+
+      $('#tutorial').click(function() {
+        window.open('tutorial_patterns.html?tutorialAction=redo-all', '_blank').focus();
+      })
+      $('#if-tutorial').click(function() {
+        window.open('tutorial_patterns.html?tutorialAction=redo-cond', '_blank').focus();
+      })
     })
   </script>
 </head>
@@ -231,8 +238,9 @@
     <div id="tabs" class="ui-tabs">
       <ul role="tablist" class="ui-tabs-nav">
         <li role="tab" class="ui-tabs-tab" tabindex="0"><a href="#profile" class="ui-tabs-anchor" role="presentation">Profile</a></li>
-        <li role="tab" class="ui-tabs-tab" tabindex="1"><a href="#options" class="ui-tabs-anchor" role="presentation">Play</a></li>
-        <li role="tab" class="ui-tabs-tab" tabindex="2"><a href="#leaderboard" class="ui-tabs-anchor" role="presentation">Leaderboard</a></li>
+        <li role="tab" class="ui-tabs-tab" tabindex="1"><a href="#tutorials" class="ui-tabs-anchor" role="presentation">How To Play</a></li>
+        <li role="tab" class="ui-tabs-tab" tabindex="2"><a href="#options" class="ui-tabs-anchor" role="presentation">Play</a></li>
+        <li role="tab" class="ui-tabs-tab" tabindex="3"><a href="#leaderboard" class="ui-tabs-anchor" role="presentation">Leaderboard</a></li>
       </ul>
       
       <div id="profile" class="row menu">
@@ -241,6 +249,13 @@
         <h4 id="rank"></h4>
         <br />
         <button id="optLogout" class="btn-quit">Logout</button>
+      </div>
+
+      <div id="tutorials" class="row menu">
+        <button id="tutorial" class="btn-quit">Tutorial</button>
+        <br /><br />
+        <button id="if-tutorial" class="btn-quit">Advanced Tutorial</button>
+        <br /><br />
       </div>
 
       <div id="options" class="row menu">
