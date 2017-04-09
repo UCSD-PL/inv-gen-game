@@ -46,6 +46,7 @@
     "ts/powerups.ts",
     "ts/pp.ts",
     "ts/progressWindow.ts",
+    "ts/rpc.ts",
     "ts/scoreWindow.ts",
     "ts/stickyWindow.ts",
     "ts/traceWindow.ts",

@@ -241,51 +241,6 @@ def Implies(a,b): return z3.Implies(a,b, ctx=getCtx())
 def IntVal(v):  return z3.IntVal(v, ctx=getCtx())
 def BoolVal(v):  return z3.BoolVal(v, ctx=getCtx())
 
-# For each successful z3 query store the result, and the time taken
-z3Cache = { }
-# Remember for which z3 queries we got a failure (Unknowns or Crashes)
-z3FailureCache = { }
-# For all memoized z3 funcs stores the # of cache hits/misses
-z3CacheStats = { }
-
-def memoize(keyF):
-  def decorator(f):
-    def decorated(*args, **kwargs):
-      global z3Cache, z3FailureCache, z3CacheStats
-      fname = f.func_code.co_name
-      hit,miss = z3CacheStats.get(fname, (0,0))
-
-      try:
-        key = str(keyF(*args, **kwargs))
-        if (key in z3Cache):
-          z3CacheStats[fname] = (hit+1, miss)
-          return z3Cache[key][0];
-        else:
-          z3CacheStats[fname] = (hit, miss+1)
-
-        start = time();
-        res = f(*args, **kwargs)
-        duration = time() - start
-        z3Cache[key] = (res, duration);
-        return res;
-      except Unknown, e:
-        key = str(keyF(*args, **kwargs))
-        z3FailureCache[key] = "Unknown"
-        if (key in z3Cache):
-          return z3Cache[key][0] # Race between queries?
-
-        raise e;
-      except Crashed, e:
-        key = str(keyF(*args, **kwargs))
-        z3FailureCache[key] = "Crash"
-        if (key in z3Cache):
-          return z3Cache[key][0] # Race between queries?
-
-        raise e;
-    return decorated
-  return decorator
-
-@memoize(lambda pred, timeout=None, comm= "":  to_smt2(pred))
 def counterex(pred, timeout=None, comm = ""):
     s = None
     try:
@@ -303,7 +258,6 @@ def counterex(pred, timeout=None, comm = ""):
     finally:
       if (s): releaseSolver(s);
 
-@memoize(lambda pred, timeout=None:  to_smt2(pred))
 def satisfiable(pred, timeout=None):
     s = None
     try:
@@ -314,7 +268,6 @@ def satisfiable(pred, timeout=None):
     finally:
       if (s): releaseSolver(s)
 
-@memoize(lambda pred, timeout=None:  to_smt2(pred))
 def unsatisfiable(pred, timeout=None):
     s = None
     try:
@@ -325,7 +278,6 @@ def unsatisfiable(pred, timeout=None):
     finally:
       if (s): releaseSolver(s)
 
-@memoize(lambda pred:  to_smt2(pred))
 def model(pred):
     s = None
     try:
@@ -337,7 +289,6 @@ def model(pred):
     finally:
       if (s): releaseSolver(s);
 
-@memoize(lambda pred:  to_smt2(pred))
 def maybeModel(pred):
     s = None
     try:
@@ -353,15 +304,12 @@ def simplify(pred, *args, **kwargs):
     # No need to explicitly specify ctx here since z3.simplify gets it from pred
     return z3.simplify(pred, *args, **kwargs)
 
-@memoize(lambda inv1, inv2:  (to_smt2(inv1), to_smt2(inv2)))
 def implies(inv1, inv2):
     return unsatisfiable(And(inv1, Not(inv2)))
 
-@memoize(lambda inv1, inv2:  (to_smt2(inv1), to_smt2(inv2)))
 def equivalent(inv1, inv2):
     return implies(inv1,inv2) and implies(inv2, inv1)
 
-@memoize(lambda inv:  to_smt2(inv))
 def tautology(inv):
     return unsatisfiable(Not(inv))
 

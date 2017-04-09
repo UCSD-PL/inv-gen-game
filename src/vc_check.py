@@ -59,11 +59,11 @@ def tryAndVerify(bbs, loop, splitterPreds, partialInvs, userInvs, otherInvs, rep
     else:
       return tryAndVerifyWithSplitterPreds(bbs, loop, set(), invs, splitterPreds, partialInvs, timeout)
 
-def tryAndVerifyLvl(lvl, userInvs, otherInvs, timeout = None, userSplitters = True, addSPs = True, generalizeUserInvs = True):
+def tryAndVerifyLvl(lvl, userInvs, otherInvs, timeout = None, useSplitters = True, addSPs = True, generalizeUserInvs = True):
     bbs = lvl['program']
     loop = lvl['loop']
-    partialInvs = [ lvl['partialInv'] ] if ('partialInv' in lvl) and userSplitters else []
-    splitterPreds = lvl['splitterPreds'] if ('splitterPreds' in lvl) and userSplitters else [ ]
+    partialInvs = [ lvl['partialInv'] ] if ('partialInv' in lvl) and useSplitters else []
+    splitterPreds = lvl['splitterPreds'] if ('splitterPreds' in lvl) and useSplitters else [ ]
     if (generalizeUserInvs):
       replMaps = generalizeConstTraceVars(lvl);
     else:

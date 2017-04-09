@@ -26,32 +26,39 @@ def getOrAddSource(name, session):
   return s
 
 
-def addEvent(sourceName, type, time, ename,  addr, data, session):
+def addEvent(sourceName, type, time, ename,  addr, data, session, mturkId):
   src = getOrAddSource(sourceName, session);
 
+  payl = { "workerId": mturkId[0], "hitId": mturkId[1], "assignmentId": mturkId[2] }
+
   if (type == "TutorialStart" or type == "ReplayTutorialAll"):
-    payl = { }
+    pass
   elif (type == "TutorialDone"):
-    payl = { }
+    pass
   elif (type == "StartLevel" or type == "FinishLevel" or type == "SkipToNextLevel"):
-    payl = { "lvlset" : data[0], "lvlid" : data[1] }
+    payl["lvlset"] = data[0]
+    payl["lvlid"] = data[1]
     if type == "FinishLevel":
       payl["verified"] = data[2]
       invs = zip(data[3], [ str(esprimaToBoogie(x, {})) for x in data[4] ])
       payl["all_found"] = invs;
   elif (type == "FoundInvariant" or type == "TriedInvariant"):
-    payl = { "lvlset" : data[0], "lvlid" : data[1],
-              "raw": data[2], "canonical": str(esprimaToBoogie(data[3], { }))}
+    payl["lvlset"] = data[0]
+    payl["lvlid"] = data[1]
+    payl["raw"] = data[2]
+    payl["canonical"] = str(esprimaToBoogie(data[3], { }))
   elif (type == "PowerupsActivated"):
-    payl = { "lvlset" : data[0], "lvlid" : data[1],
-              "raw": str(esprimaToBoogie(data[2], { })), "powerups": data[3] }
+    payl["lvlset"] = data[0]
+    payl["lvlid"] = data[1]
+    payl["raw"] = str(esprimaToBoogie(data[2], { }))
+    payl["powerups"] = data[3]
   elif (type == "GameDone"):
-    payl = { "numLvlsPassed" : data[0] }
+    payl["numLvlsPassed"] = data[0]
   elif (type == "VerifyAttempt"):
-    payl = data;
+    for k in data:
+      payl[k] = data[k];
   else:
     print "Unknown event: ", e
-    payl = { }
 
   e = Event(type=type, source=src, addr=addr, experiment=ename, time=datetime.fromtimestamp(time), payload=dumps(payl))
  

@@ -95,7 +95,7 @@ for origName in originalToSplitM:
   
   (overfitted, dummy1), (nonind, dummy2), sound, violations =\
       tryAndVerifyLvl(lvl, invs, set(), args.timeout, \
-        userSplitters=False, addSPs=False, generalizeUserInvs=False)
+        useSplitters=False, addSPs=False, generalizeUserInvs=False)
 
   assert (len(dummy2) == 0 and len(dummy1) == 0);
 

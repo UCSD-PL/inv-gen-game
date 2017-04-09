@@ -41,6 +41,10 @@
  font-weight: bold;
 }
 
+#hint-row {
+  color: rgb(0, 153,255);
+}
+
 .good {
   color: green;
 }

@@ -27,6 +27,7 @@
   <script src="build/ts/level.js"></script>
   <script src="build/ts/eval.js"></script>
   <script src="build/ts/pp.js"></script>
+  <script src="build/ts/rpc.js"></script>
   <script src="build/ts/util.js"></script>
   <script src="build/ts/powerups.js"></script>
 
@@ -54,12 +55,36 @@
           let lvl = res[1];
           curLvlId = lvl.id;
           console.log("Just loaded " + curLvlSet + "." + curLvlId);
-          if (lvl.hint === null)
-            $("#hint-row").html("");
-          else
-            $("#hint-row").html("<p class='lead'><b>" + lvl.hint + "</b></p>");
-          console.log("Sorin " + lvl.hint);
           gameLogic.loadLvl(lvl);
+          if (lvl.hint === null) {
+            $("#hint-row").html("");
+          } else {
+            if (lvl.hint.type == "plain") {
+              $("#hint-row").html("<p class='lead'><b>" + lvl.hint + "</b></p>");
+            } else if (lvl.hint.type == "post-assert") {
+              var pos_res = invEval(lvl.hint.assert, lvl.variables, lvl.data[0])
+              if (evalResultBool(pos_res)) {
+                var holdsOnLast = pos_res[pos_res.length-1];
+                var holdsOnAll = pos_res.reduce((acc,val)=> acc && val, true)
+
+                if (holdsOnAll) {
+                  $("#hint-row").html("<p class='lead'><b>Hint: Check out: " +
+                    lvl.hint.assert + 
+                    "</b></p>");
+                  traceW.setExp(lvl.hint.assert);
+                } else if (holdsOnLast) {
+                  $("#hint-row").html("<p class='lead'><b>Hint: " +
+                    lvl.hint.assert + 
+                    " holds for the last row. Can you change it to work for all rows?</b></p>");
+                  traceW.setExp(lvl.hint.assert);
+                } else {
+                  // TODO
+                }
+              } else {
+                // TODO
+              }
+            }
+          }
         }
       })
     }
@@ -235,10 +260,12 @@
                  ['#not_op', 'not_ex'],
                  ['#and_op', 'and_ex'],
                  ['#or_op', 'or_ex'],
-                 ['#impl_op', 'impl_ex'],
-                 ['#tutorials', 'tutorials_info'],
                  //['#equiv_op', 'equiv_ex'],
       ]
+      if (Args.get_mode() !== "nond") {
+        ops.push(['#impl_op', 'impl_ex'])
+      }
+      ops.push(['#tutorials', 'tutorials_info'])
       for (var i in ops) {
         $(ops[i][0]).click(function (lbl) {
           return function() {_openEx(lbl);}
@@ -254,12 +281,22 @@
       });
       $('#replay-tutorial-all').click(function() {
         logEvent("ReplayTutorialAll", []);
-        window.open('tutorial_patterns.html?tutorialAction=redo-all', '_blank').focus();
+        window.open('tutorial_patterns.html?tutorialAction=redo-all-nond', '_blank').focus();
       })
       $('#replay-tutorial-cond-1, #replay-tutorial-cond-2').click(function() {
         logEvent("ReplayTutorialConditional", []);
         window.open('tutorial_patterns.html?tutorialAction=redo-cond', '_blank').focus();
       })
+
+      if (Args.get_mode() == "nond") {
+        $("#impl_op").hide();
+        $("#see-conditional-tutorial-1").hide();
+        $("#see-conditional-tutorial-2").hide();
+        $("#tutorial-video-done").hide();
+        $("#replay-tutorial-cond-1").hide();
+        $("#replay-tutorial-cond-2").hide();
+        $("#impl_ex").hide();
+      }
 
       $('#quit').click(function () { doneScreen(false) });
       $('#skip-to-next-lvl').click(function () {

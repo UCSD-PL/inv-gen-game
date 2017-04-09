@@ -53,7 +53,7 @@ function assert(c: boolean, msg?: any): void {
     throw msg || "Assertion failed.";
 }
 function logEvent(name: string, data: any): void {
-  rpc.call("App.logEvent", [Args.get_worker_id(), name, data], (res) => { }, log);
+  rpc_logEvent(Args.get_worker_id(), name, data);
 }
 
 function fst<T1, T2>(x: [T1, T2]): T1 { return x[0]; }
@@ -68,6 +68,7 @@ class Args {
   static tutorial_action: string = null;
   static admin_token: string = null;
   static game_id: string = null;
+  static mode: string = null;
 
   static parse_args() {
     let query = window.location.search.substring(1).split("&");
@@ -84,6 +85,7 @@ class Args {
     Args.tutorial_action = Args.args["tutorialAction"];
     Args.admin_token = Args.args["adminToken"];
     Args.game_id = Args.args["gameId"];
+    Args.mode = Args.args["mode"];
   }
   static get_hit_id(): string {
     if (Args.hit_id === null)
@@ -119,6 +121,11 @@ class Args {
     if (Args.game_id === null)
       Args.parse_args()
     return Args.game_id;
+  }
+  static get_mode(): string {
+    if (Args.mode === null)
+      Args.parse_args()
+    return Args.mode;
   }
 }
 

@@ -10,11 +10,18 @@
   <script src="build/ts/util.js"></script>
 
   <script>
+    var queryString = window.location.search;
+    if (queryString == "") {
+      queryString += "?"
+    } else {
+      queryString += "&"
+    }
+
     function goto_tut() {
-      window.location.replace('tutorial_patterns_nond.html' + window.location.search);
+      window.location.replace('tutorial_patterns.html' + queryString + "tutorialAction=nond");
     }
     function goto_game() {
-      window.location.replace('game_patterns_nond.html' + window.location.search);
+      window.location.replace('game_patterns.html' + queryString + "mode=nond");
     }
     if (Args.get_assignment_id() === "ASSIGNMENT_ID_NOT_AVAILABLE")
       goto_tut();

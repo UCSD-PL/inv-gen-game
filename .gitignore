@@ -35,8 +35,9 @@ studies/
 
 src/output
 src/tmp_outputs
-
 z3*.csv
+z3Cache.csv
+z4FailureCache.csv
 
 src/static/ion.sound-3.0.7
 src/static/notify.js
