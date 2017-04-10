@@ -361,6 +361,7 @@
     function quit() {
       var id = sessionStorage.getItem("playerId");
       saveState(id);
+      doneScreen(false);
       window.location.href = "menu.html";
     }
 
@@ -376,24 +377,24 @@
     }
 
     function doneScreen(alldone) {
-      let assignment_id = Args.get_assignment_id();
-      if (assignment_id == "ASSIGNMENT_ID_NOT_AVAILABLE") {
-          $("#done-screen").html("<h2 class='text-center'><b>You are previewing the HIT. To perform this HIT, please accept it.</b></h2>");
-          $("#done-screen").fadeIn(1000);
-          return;
-      }
-      if (assignment_id !== undefined) {
-          document.getElementById("assignment-id-in-form").value = assignment_id;
-      }
-      let turk_submit_to = Args.get_turk_submit_to();
-      if (turk_submit_to !== undefined) {
-          document.getElementById("turk-form").action = turk_submit_to + "/mturk/externalSubmit";
-      }
+      // let assignment_id = Args.get_assignment_id();
+      // if (assignment_id == "ASSIGNMENT_ID_NOT_AVAILABLE") {
+      //     $("#done-screen").html("<h2 class='text-center'><b>You are previewing the HIT. To perform this HIT, please accept it.</b></h2>");
+      //     $("#done-screen").fadeIn(1000);
+      //     return;
+      // }
+      // if (assignment_id !== undefined) {
+      //     document.getElementById("assignment-id-in-form").value = assignment_id;
+      // }
+      // let turk_submit_to = Args.get_turk_submit_to();
+      // if (turk_submit_to !== undefined) {
+      //     document.getElementById("turk-form").action = turk_submit_to + "/mturk/externalSubmit";
+      // }
       msg = "Good job! You finished " + numLvlPassed + " level(s)! Your score is: " + gameLogic.score  + "!";
       if (alldone) {
          msg = "There are no more levels to play at this moment.<br>" + msg
       }
-      $("#done-screen").prepend("<h2 class='good text-center'>" + msg + "</h2>");
+      $("#done-screen").html("<h2 class='good text-center'>" + msg + "</h2>");
       logEvent("GameDone", [numLvlPassed]);
   
       $("#done-screen").fadeIn(1000);
@@ -479,13 +480,14 @@
       stickyW = new StickyWindow($('#sticky'))
       gameLogic = new PatternGameLogic(traceW, progW, scoreW, stickyW);
 
-      $('#next-lvl').hide();
+      // $('#next-lvl').hide();
+      $('#next-lvl').show();
 
       gameLogic.onLvlPassed(function() {
         numLvlPassed = numLvlPassed + 1;
         function plural(n,s) { return n == 1? s : s + "s" }
         if (numLvlPassed >= 2) {
-          s = "You can continue or quit.<br>Each additional level you pass will give you a new $0.50 bonus!";
+          s = "You can continue or quit.";
           $("#next-or-quit-additional-text").html("<h2>"+s+"</h2>");
           $("#quit-overlay").show();
         } else {
@@ -504,7 +506,8 @@
       });
 
       $('#next-lvl').click(function() {
-        $('#next-lvl').hide();
+        // $('#next-lvl').hide();
+        $('#next-lvl').show();
         $('#skip-to-next-lvl').hide();
         if (curL)
           removeLabel(curL);
@@ -781,7 +784,6 @@
           <button id='skip-to-next-lvl' class='btn-next' style='display: none;'>Next Lvl</button>
         </div>
         <div class='row-md-6'>
-
           <div class='col-md-8' id='hint-col'>
             <span id='next_lvl_span'>
               <button id='next-lvl' class='btn-next'>Next Level</button>
@@ -832,63 +834,6 @@
     <button id='quit-overlay' class='btn-next'>Quit</button>
   </div> 
   <div class='overlay' style='display: none;' id='done-screen'>
-    <div class="container">
-      <h2 class='text-center'>Please answer a few questions and click on Finish HIT below</h2>
-      <form action="" id="turk-form">
-        <label class="statement">This sesssion was fun to play.</label>
-        <ul class='likert'>
-          <li>
-            <input type="radio" name="fun" value="5">
-            <label>Strongly agree</label>
-          </li>
-          <li>
-            <input type="radio" name="fun" value="4">
-            <label>Agree</label>
-          </li>
-          <li>
-            <input type="radio" name="fun" value="3">
-            <label>Neutral</label>
-          </li>
-          <li>
-            <input type="radio" name="fun" value="2">
-            <label>Disagree</label>
-          </li>
-          <li>
-            <input type="radio" name="fun" value="1">
-            <label>Strongly disagree</label>
-          </li>
-        </ul>
-        <label class="statement">This session was challenging.</label>
-        <ul class='likert'>
-          <li>
-            <input type="radio" name="challenging" value="5">
-            <label>Strongly agree</label>
-          </li>
-          <li>
-            <input type="radio" name="challenging" value="4">
-            <label>Agree</label>
-          </li>
-          <li>
-            <input type="radio" name="challenging" value="3">
-            <label>Neutral</label>
-          </li>
-          <li>
-            <input type="radio" name="challenging" value="2">
-            <label>Disagree</label>
-          </li>
-          <li>
-            <input type="radio" name="challenging" value="1">
-            <label>Strongly disagree</label>
-          </li>
-        </ul>
-        <fieldset class="form-group">
-          <label for="likes_input">Any comments? Likes, Dislikes?</label>
-          <textarea name="likes" class="form-control" rows="2" id="likes_input"></textarea>
-        </fieldset>
-        <input type="hidden" name="assignmentId" id="assignment-id-in-form" value="">
-        <button type="submit" class="btn-next">Finish HIT</button>
-      </form>
-    </div>
   </div> 
 </body>
 </html>
