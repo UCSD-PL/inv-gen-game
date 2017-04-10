@@ -358,12 +358,6 @@
       return false;
     }
 
-    function logout() {
-      var id = sessionStorage.getItem("playerId");
-      saveState(id);
-      window.location.href = "login.html";
-    }
-
     function quit() {
       var id = sessionStorage.getItem("playerId");
       saveState(id);
@@ -442,8 +436,6 @@
       $("#lblGameId").text(gameId);
       $("#lblGameURL").text(gameURL);
       $("#lblPlayerId").text(playerId);
-
-      $("#logout").click(logout);
 
       $(window).bind("beforeunload", function() { 
         saveState(playerId);
@@ -787,7 +779,6 @@
         <div class='row ' id='quit-div'>
           <button id='quit' class='btn-quit'>Quit</button>
           <button id='skip-to-next-lvl' class='btn-next' style='display: none;'>Next Lvl</button>
-          <button id='logout' class='btn-quit'>Logout</button>
         </div>
         <div class='row-md-6'>
 
