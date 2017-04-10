@@ -331,14 +331,6 @@
    ]
   ],
   [
-   "i-fig1",
-   [
-    "../ice-benchmarks/fig1.desugared.bpl",
-    "../ice-benchmarks/fig1.c",
-    "../ice-benchmarks/fig1.bpl"
-   ]
-  ],
-  [
    "i-fig3",
    [
     "../ice-benchmarks/single/fig3.desugared.dimo.bpl",

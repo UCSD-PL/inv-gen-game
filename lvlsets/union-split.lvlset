@@ -593,31 +593,6 @@
    ]
   ],
   [
-   "i-fig1.0",
-   [
-    "../ice-benchmarks/fig1.desugared.bpl",
-    "../ice-benchmarks/fig1.c",
-    "../ice-benchmarks/fig1.bpl"
-   ],
-   [
-    "y<=0"
-   ],
-   "true"
-  ],
-  [
-   "i-fig1.1",
-   [
-    "../ice-benchmarks/fig1.desugared.bpl",
-    "../ice-benchmarks/fig1.c",
-    "../ice-benchmarks/fig1.bpl"
-   ],
-   [
-    "!(y<=0)"
-   ],
-   "y <= 0 ==> x < 0",
-   "trivial"
-  ],
-  [
    "i-fig3.0",
    [
     "../ice-benchmarks/single/fig3.desugared.dimo.bpl",
