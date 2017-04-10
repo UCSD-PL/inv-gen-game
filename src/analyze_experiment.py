@@ -170,17 +170,20 @@ if __name__ == "__main__":
     if (args.lvlStats):
       print ", ".join(["Level", "Solved", "#Started", "Finished", "Total Time", "Ave Time/User", "#Invs Tried", "Ave #Invs Tried/Usr""#Invs Found", "#Invs Found", "Ave #Invs Found/Usr", "#Sound", "Sound", "#Overfitted", "Overfitted", "#Nonind", "Nonind"])
       for (lvlName, lvlS) in lvlStats.items():
+        time_users_finished = "N/A" if lvlS["nusersFinished"] == 0 else str(lvlS["totalTime"] / lvlS["nusersFinished"])
+        tried_users_finished = "N/A" if lvlS["nusersFinished"] == 0 else str(lvlS["nInvariantsTried"] / lvlS["nusersFinished"])
+        found_users_finished = "N/A" if lvlS["nusersFinished"] == 0 else str(lvlS["nInvariantsFound"] / lvlS["nusersFinished"])
         print ", ".join([\
           lvlName,\
           str(lvlS["solved"]),\
           str(lvlS["nusersStarted"]),\
           str(lvlS["nusersFinished"]),\
           str(lvlS["totalTime"]),\
-          str(lvlS["totalTime"] / lvlS["nusersFinished"]),\
+          time_users_finished,\
           str(lvlS["nInvariantsTried"]),\
-          str(lvlS["nInvariantsTried"]/(lvlS["nusersFinished"]*1.0)),\
+          tried_users_finished,\
           str(lvlS["nInvariantsFound"]),\
-          str(lvlS["nInvariantsFound"]/(lvlS["nusersFinished"]*1.0)),\
+          found_users_finished,\
           str(len(lvlS["sound"])),\
           ";".join(lvlS["sound"]),\
           str(len(lvlS["overfitted"])),\
