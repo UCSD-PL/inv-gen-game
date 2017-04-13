@@ -24,6 +24,17 @@ class Scores(Base):
     score = Column('score', Integer)
 
 
+class Feedback(Base):
+    __tablename__ = "feedback"
+    rowId = Column('id', Integer, primary_key=True, autoincrement=True)
+    playerId = Column('player_id', String)
+    fun = Column('fun', Integer)
+    challenging = Column('challenging', Integer)
+    prog_experience = Column('prog_experience', Integer)
+    math_experience = Column('math_experience', Integer)
+    comments = Column('comments', String)
+
+
 def open_db(path):
     engine = create_engine("sqlite:///" + path, echo=False,
       connect_args={'check_same_thread':False})
@@ -79,3 +90,14 @@ def getPlayerTotalScore(id, session):
 def getAllPlayerScores(session):
     scores = session.query(Scores.playerId, func.sum(Scores.score).label('total')).group_by(Scores.playerId).order_by(desc('total')).all()
     return scores
+
+
+def addFeedback(id, fun, challenge, prog, math, comments, session):
+    feedback = Feedback(playerId=id, fun=fun, challenging=challenge, prog_experience=prog, math_experience=math, comments=comments)
+    session.add(feedback)
+    session.commit()
+
+
+def getFeedback(session):
+    feedback = session.query(Feedback)
+    return feedback

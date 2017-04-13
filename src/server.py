@@ -562,6 +562,20 @@ def getAllScores():
     return getAllPlayerScores(session)
 
 
+@api.method("App.addNewFeedback")
+@pp_exc
+def addNewFeedback(playerId, fun, challenge, prog, math, comments):
+    session = sessionN()
+    addFeedback(playerId, fun, challenge, prog, math, comments, session)
+
+
+@api.method("App.getAllFeedback")
+@pp_exc
+def getAllFeedback():
+    session = sessionN()
+    return getFeedback(session)
+
+
 # Admin Calls:
 @api.method("App.getLogs")
 @pp_exc
