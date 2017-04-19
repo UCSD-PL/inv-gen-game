@@ -612,4 +612,5 @@ if __name__ == "__main__":
     ignore = IgnoreManager()
     print "Admin Token: ", adminToken
     print "Admin URL: ", "admin.html?adminToken=" + adminToken
-    app.run(host='0.0.0.0',port=args.port,ssl_context=(MYDIR + '/cert.pem', MYDIR + '/privkey.pem'), threaded=True)
+    app.run(host='0.0.0.0', port=args.port, threaded=True)
+    # app.run(host='0.0.0.0',port=args.port,ssl_context=(MYDIR + '/cert.pem', MYDIR + '/privkey.pem'), threaded=True)
