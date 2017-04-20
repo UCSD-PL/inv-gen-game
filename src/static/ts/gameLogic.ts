@@ -442,7 +442,11 @@ class PatternGameLogic extends BaseGameLogic {
                 gl.foundJSInv.push(ui)
                 gl.invMap[ui.id] = ui;
                 gl.progressW.addInvariant(ui.id, ui.rawInv);
-                gl.tracesW.setExp("");
+                if (this.curLvl.hint.type == "post-assert") {
+                  gl.tracesW.setExp(this.curLvl.hint.assert);
+                } else {
+                  gl.tracesW.setExp("");
+                }
                 logEvent("FoundInvariant", [curLvlSet, gl.curLvl.id, ui.rawUserInp, ui.canonForm]);
                 if (!gl.lvlPassedF) {
                   if (gl.foundJSInv.length >= 6) {
