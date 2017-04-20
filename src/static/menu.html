@@ -188,12 +188,20 @@
           });
         }
 
-        var table = "<table class='tg'><tr><th class='tg-9hbo'>Game</th><th class='tg-9hbo'># Players</th><th class='tg-9hbo'># Expressions</th></tr>"
-        for (var i = 0, len = allGames.length; i < len; i++) {
-          table += "<tr><td class='tg-yw4l'><a href='" + (window.location.origin + "/game_np.html?gameId=" + allGames[i].id) + "'>" + allGames[i].id + "</a></td><td class='tg-yw4l'>" + allGames[i].players + "</td><td class='tg-yw4l'>" + allGames[i].expr + "</td></tr>"
+        if (allGames.length > 0) {
+          var table = "<table class='tg'><tr><th class='tg-9hbo'>Game</th><th class='tg-9hbo'># Players</th><th class='tg-9hbo'># Expressions</th></tr>"
+          for (var i = 0, len = allGames.length; i < len; i++) {
+            table += "<tr><td class='tg-yw4l'><a href='" + (window.location.origin + "/game_np.html?gameId=" + allGames[i].id) + "'>" + allGames[i].id + "</a></td><td class='tg-yw4l'>" + allGames[i].players + "</td><td class='tg-yw4l'>" + allGames[i].expr + "</td></tr>"
+          }
+          table += "</table>";
+          $("#gameList").show();
+          $("#gameList").html(table);
         }
-        table += "</table>";
-        $("#gameList").html(table);
+        else {
+          // $("#select-msg").text("There are no open games currently.")
+          $("#select-msg").hide();
+          $("#gameList").hide();
+        }
         setHeader();
       });
     }
@@ -289,9 +297,10 @@
         <br />
         <label id="notFound" class="error"></label>
         <br /><br />
-        OR
-        <br /><br />
-        Select a game from below:
+        <div id="select-msg">
+          OR
+          <br /><br />
+          Select a current game from below:</div>
         <div id="gameList"></div>
       </div>
 
