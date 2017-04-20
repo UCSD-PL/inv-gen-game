@@ -42,6 +42,7 @@
     var time = 1000;
     var numReqExpr = 4;
     var numExpFound = 0;
+    var doneScript = false;
 
 
     var curLvl;
@@ -323,9 +324,11 @@
       }      
       if (expressions[curLvlId] && Object.keys(expressions[curLvlId]).length >= numReqExpr) {
         $("#skip-to-next-lvl").show();
+        $('#skip-to-next-lvl').prop("disable", false);
       }
       else {
         $("#skip-to-next-lvl").hide();
+        $('#skip-to-next-lvl').prop("disable", true);
       }
 
       var numFound = (expressions && expressions[curLvlId] && Object.keys(expressions[curLvlId])) ? Object.keys(expressions[curLvlId]).length : 0;
@@ -361,7 +364,8 @@
     function quit() {
       var id = sessionStorage.getItem("playerId");
       saveState(id);
-      doneScreen(false);
+      // doneScreen(false);
+      logEvent("GameDone", [numLvlPassed]);
       window.location.href = "menu.html";
     }
 
@@ -480,20 +484,20 @@
       stickyW = new StickyWindow($('#sticky'))
       gameLogic = new PatternGameLogic(traceW, progW, scoreW, stickyW);
 
-      // $('#next-lvl').hide();
-      $('#next-lvl').show();
+      $('#next-lvl').hide();
+      // $('#next-lvl').show();
 
       gameLogic.onLvlPassed(function() {
         numLvlPassed = numLvlPassed + 1;
         function plural(n,s) { return n == 1? s : s + "s" }
         if (numLvlPassed >= 2) {
           s = "You can continue or quit.";
-          $("#next-or-quit-additional-text").html("<h2>"+s+"</h2>");
+          // $("#next-or-quit-additional-text").html("<h2>"+s+"</h2>");
           $("#quit-overlay").show();
         } else {
           left = 2 - numLvlPassed;
           s = "Please try to finish at least " + left + plural(left," more level") + "!"
-          $("#next-or-quit-additional-text").html("<h2>"+s+"</h2>")
+          // $("#next-or-quit-additional-text").html("<h2>"+s+"</h2>")
           $("#quit-overlay").hide();
         }
         $("#next-or-quit-screen").fadeIn(1000);
@@ -505,15 +509,15 @@
         nextLvl();
       });
 
-      $('#next-lvl').click(function() {
-        // $('#next-lvl').hide();
-        $('#next-lvl').show();
-        $('#skip-to-next-lvl').hide();
-        if (curL)
-          removeLabel(curL);
+      // $('#next-lvl').click(function() {
+      //   // $('#next-lvl').hide();
+      //   $('#next-lvl').show();
+      //   $('#skip-to-next-lvl').hide();
+      //   if (curL)
+      //     removeLabel(curL);
 
-        nextLvl();
-      })
+      //   nextLvl();
+      // })
 
       $('#help').click(function() {
         $('#help-content').slideToggle(200);
@@ -581,14 +585,17 @@
       // $('#quit').click(function () { doneScreen(false) });
       $('#quit').click(quit);
       $('#skip-to-next-lvl').click(function () {
-        nextLvl();
-        // gameLogic.skipToNextLvl();
+        // nextLvl();
+        $('#skip-to-next-lvl').hide();
+        $('#skip-to-next-lvl').prop("disable", true);
+        gameLogic.skipToNextLvl();
       });
       $('#quit-overlay').click(function() { doneScreen(false) });
 
       $('#arrows').click(function() {
-        if (curScript == null) {
+        if (curScript == null && !doneScript) {
           curScript = new Script(tutorialScript);
+          doneScript = true;
         }
       })
 
@@ -598,8 +605,10 @@
         loadLvlSet("desugared-boogie-benchmarks");
 
       gameLogic.onLvlLoaded(function () {
-        curScript = new Script(tutorialScript)
-        //gameLogic.onLvlLoaded(function (){})
+        if (!doneScript) {
+          curScript = new Script(tutorialScript)
+          doneScript = true;
+        }
       })
 
       gameLogic.onUserInput(function () {
@@ -609,9 +618,11 @@
         }
         if (gameLogic.foundJSInv.length >= numReqExpr) {
           $("#skip-to-next-lvl").show();
+          $('#skip-to-next-lvl').prop("disable", false);
         }
         else {
           $("#skip-to-next-lvl").hide();
+          $('#skip-to-next-lvl').prop("disable", true);
         }
       })
     })
@@ -781,28 +792,15 @@
         </div>
         <div class='row ' id='quit-div'>
           <button id='quit' class='btn-quit'>Quit</button>
-          <button id='skip-to-next-lvl' class='btn-next' style='display: none;'>Next Lvl</button>
+          <button id='skip-to-next-lvl' class='btn-next' style='display: none;'>Next Level</button>
         </div>
-        <div class='row-md-6'>
+        <!--<div class='row-md-6'>
           <div class='col-md-8' id='hint-col'>
             <span id='next_lvl_span'>
               <button id='next-lvl' class='btn-next'>Next Level</button>
             </span>
           </div>
-
-          <!-- <div class='row'> -->
-          <!--   <div class='col-md-6 gap'> -->
-          <!--     <img id='help' src="help-icon.png" class='help-icon' data-toggle="tooltip" title="Click to toggle help options"/> -->
-          <!--     <div id='help-content' class='helpContentWindow box'> -->
-          <!--       <span id='replay' class='helpContent' data-toggle="tooltip" title="Click to play the tutorial again">Replay tutorial</span> -->
-          <!--       <br> -->
-          <!--       <span id='arrows' class='helpContent' data-toggle="tooltip" title="Click to view the layout introduction">Understand screen layout</span> -->
-          <!--       <br> -->
-          <!--     </div> -->
-          <!--   </div> -->
-          <!-- </div> -->
-
-        </div>
+        </div>-->
       </div>
 
       <div class='col-md-3' >
@@ -829,7 +827,7 @@
   </div> 
   <div class='overlay text-center' style='display: none;' id='next-or-quit-screen'>
     <h1 class='good'> Good job, you finished another level!</h1>
-    <div id='next-or-quit-additional-text'></div>
+    <!--<div id='next-or-quit-additional-text'></div>-->
     <button id='next-level-overlay' class='btn-next'>Next Level</button>
     <button id='quit-overlay' class='btn-next'>Quit</button>
   </div> 
