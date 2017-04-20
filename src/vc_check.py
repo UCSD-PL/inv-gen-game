@@ -143,7 +143,7 @@ def tryAndVerifyWithSplitterPreds(bbs, loop, old_sound_invs, boogie_invs,
 
     return ((p1_overfitted, p2_overfitted), (p1_nonind, p2_nonind), sound, violations)
 
-def loopInvOverfittedCtrex(loop, inv, bbs):
+def loopInvOverfittedCtrex(loop, invs, bbs, timeout = None):
   """ Given a candidate loop invariant inv find 'overfittedness'
       counterexamples.  I.e. find counterexamples to "precondition ==> inv".
       Returns a potentially empty set of environments (dicts) that the invariant
@@ -154,7 +154,22 @@ def loopInvOverfittedCtrex(loop, inv, bbs):
   violations = checkInvNetwork(bbs, AstTrue(), AstTrue(), cps, timeout);
   entryBB = entry(bbs);
 
-  return set([ x.endEnv() for x in violations
+  return ([ x.endEnv() for x in violations
     if x.isInductive() and # Implication fail
        x.startBB() == entryBB and # From entry
        x.endBB() == loopHdr ]) # To loop inv
+
+def loopInvSafetyCtrex(loop, invs, bbs, timeout=None):
+  """ Given a candidate loop invariant inv find 'safety'
+      counterexamples.  I.e. find counterexamples to "inv ==> post" or "inv ==> assert".
+      Returns a potentially empty set of environments (dicts) that the invariant
+      should satisfy.
+  """
+  loopHdr = loop.loop_paths[0][0]
+  cps = { loopHdr : set(invs) }
+  violations = checkInvNetwork(bbs, AstTrue(), AstTrue(), cps, timeout);
+  entryBB = entry(bbs);
+
+  return ([ x.endEnv() for x in violations
+    if x.isSafety() and # Safety fail
+       x.startBB() == loopHdr ]) # From Inv
