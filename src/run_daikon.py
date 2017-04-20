@@ -8,6 +8,8 @@ import argparse
 from os.path import exists
 from os import listdir
 from vc_check import tryAndVerifyLvl
+import lib.boogie.ast as bast
+from lib.boogie.eval import evalPred
 import sys
 
 if (__name__ == "__main__"):
@@ -36,6 +38,10 @@ if (__name__ == "__main__"):
         t = eval(open(fuzz_path + "/" + f).read());
         t_loop_headers = [x for x in t if 'LoopHead' in x[0]]
         assert (len(set([x[0] for x in t_loop_headers])) == 1)
+        if ("splitterPreds" in lvl):
+          splitterPred = bast.ast_and(lvl["splitterPreds"])
+          t_loop_headers = filter(lambda row:  evalPred(splitterPred, row[1][0]), t_loop_headers)
+
         t_header_vals = [ [ row[1][0][v] for v in vs ] for row in t_loop_headers ]
         header_vals = header_vals + t_header_vals
     invs = runDaikon(vs, header_vals, args.no_suppression)

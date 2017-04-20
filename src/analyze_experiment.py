@@ -151,8 +151,9 @@ if __name__ == "__main__":
     for lvlName in lvls:
       lvlS = lvlStats[lvlName]
       lvl = lvls[lvlName]
-      invM = { str(parseExprAst(b)) : raw for (raw, b) in lvlS["invariantsFound"] }
-      userInvs = set([parseExprAst(x[1]) for x in lvlS["invariantsFound"]])
+      invs = lvlS["invariantsTried"].union(lvlS["invariantsFound"])
+      invM = { str(parseExprAst(b)) : raw for (raw, b) in invs}
+      userInvs = set([parseExprAst(x[1]) for x in invs])
 
       if (lvlName in otherInvs):
         oInvs = set(otherInvs[lvlName])

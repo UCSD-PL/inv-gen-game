@@ -29,6 +29,7 @@ pip install sqlalchemy
 pip install tabulate
 pip install Pyro4
 pip install pydot
+pip install frozendict
 
 if [ ! -d $DIR/third_party ] ; then
   mkdir $DIR/third_party
