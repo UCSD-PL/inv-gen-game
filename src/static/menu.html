@@ -136,7 +136,13 @@
       var res = rpc.call("App.getTotalScore", [pid], function(res) {
         $("#pid").html("Player: " + pid);
         $("#points").html("Points: " + res);
-        $("#rank").html("Rank: " + rank);
+        if (rank == null) {
+          $("#rank").hide();
+        }
+        else {
+          $("#rank").show();
+          $("#rank").html("Rank: " + rank);
+        }
       });
     }
 
