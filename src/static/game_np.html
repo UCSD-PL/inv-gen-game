@@ -364,9 +364,9 @@
     function quit() {
       var id = sessionStorage.getItem("playerId");
       saveState(id);
-      // doneScreen(false);
-      logEvent("GameDone", [numLvlPassed]);
-      window.location.href = "menu.html";
+      doneScreen(false);
+      // logEvent("GameDone", [numLvlPassed]);
+      // window.location.href = "menu.html";
     }
 
     function saveState(id) {
@@ -402,9 +402,9 @@
       logEvent("GameDone", [numLvlPassed]);
   
       $("#done-screen").fadeIn(1000);
-      //$("#done-screen").click(function() {
-      //  window.location.replace('survey.html' + window.location.search);
-      //});
+      $("#done-screen").click(function() {
+        window.location.replace('menu.html');
+      });
     }
 
     function labelRemover(lbl) {
