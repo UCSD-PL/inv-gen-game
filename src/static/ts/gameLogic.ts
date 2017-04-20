@@ -251,12 +251,12 @@ class StaticGameLogic extends BaseGameLogic implements IGameLogic {
                 gl.progressW.markInvariant(esprimaToStr(x[0]), "implies")
                 gl.tracesW.immediateError("This is weaker than a found expression!")
               } else {
-                var addScore = gl.computeScore(parsedInv, 1)
+                var addScore: number = gl.computeScore(parsedInv, 1)
 
                 gl.pwupSuggestion.invariantTried(parsedInv);
                 setTimeout(() => gl.setPowerups(gl.pwupSuggestion.getPwups()), 1000); // TODO: Remove hack
 
-                gl.score += addScore;
+                gl.score = (gl.score + addScore);
                 gl.scoreW.add(addScore);
                 gl.foundJSInv.push(ui)
                 gl.progressW.addInvariant(ui.id, ui.rawInv);
@@ -436,13 +436,13 @@ class PatternGameLogic extends BaseGameLogic {
                 gl.progressW.markInvariant(esprimaToStr(x[0]), "implies")
                 gl.tracesW.immediateError("This is weaker than a found expression!")
               } else {
-                var addScore = gl.computeScore(ui.rawInv, 1)
-                gl.score += addScore;
+                var addScore: number = gl.computeScore(ui.rawInv, 1)
+                gl.score = (gl.score + addScore);
                 gl.scoreW.add(addScore);
                 gl.foundJSInv.push(ui)
                 gl.invMap[ui.id] = ui;
                 gl.progressW.addInvariant(ui.id, ui.rawInv);
-                if (this.curLvl.hint.type == "post-assert") {
+                if (this.curLvl && this.curLvl.hint.type == "post-assert") {
                   gl.tracesW.setExp(this.curLvl.hint.assert);
                 } else {
                   gl.tracesW.setExp("");
@@ -871,12 +871,12 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
                   return;
                 }
 
-                let addScore = gl.computeScore(jsInvEs, 1);
+                let addScore: number = gl.computeScore(jsInvEs, 1);
 
                 gl.pwupSuggestion.invariantTried(jsInvEs);
                 setTimeout(() => gl.setPowerups(gl.pwupSuggestion.getPwups()), 1000); // TODO: Remove hack
 
-                gl.score += addScore;
+                gl.score = (gl.score + addScore);
                 gl.scoreW.add(addScore);
                 gl.foundInv.push(inv);
                 gl.foundJSInv.push(jsInv);
