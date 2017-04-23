@@ -515,8 +515,9 @@ class PatternGameLogic extends BaseGameLogic {
       this.allData[lvl.id] = [ [], [], [] ];
     }
 
-    for (let i in [0,1,2])
-      this.allData[lvl.id][i]  = this.allData[lvl.id][i].concat(lvl.data[i])
+    this.allData[lvl.id][0]  = this.allData[lvl.id][0].concat(lvl.data[0])
+    this.allData[lvl.id][1]  = this.allData[lvl.id][1].concat(lvl.data[1])
+    this.allData[lvl.id][2]  = this.allData[lvl.id][2].concat(lvl.data[2])
 
     this.lvlLoadedCb = loadedCb;
     if (this.lvlLoadedCb)
