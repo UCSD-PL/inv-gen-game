@@ -106,6 +106,9 @@ if __name__ == "__main__":
           print "Doesn't satisfy all rows!"
           continue;
 
+        redRowsL = [ redRowsL[i] for i in xrange(0, len(redRowsL)) if i not in redRowsEvals ]
+        redRows = set(redRowsL);
+
         print "Verifying..."
         curInvs.add(binv);
         # Try and Verify
