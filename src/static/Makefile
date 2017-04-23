@@ -4,8 +4,8 @@ THIRD_PARTY_DEPS=bootstrap.min.css \
 								 jquery-1.12.0.min.js \
 								 jquery.jsonrpcclient.js\
 								 jquery.color-2.1.2.min.js\
-								 jquery-ui-1.11.4\
-								 help-icon.png
+								 jquery-ui-1.11.4
+#								 help-icon.png
 #								 doge.jpg\
 								 crafty-min.js
 
