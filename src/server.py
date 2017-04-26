@@ -15,7 +15,7 @@ from cProfile import Profile
 from pstats import Stats
 from StringIO import StringIO
 from random import choice
-from vc_check import _from_dict, tryAndVerifyLvl
+from vc_check import _from_dict, tryAndVerifyLvl, loopInvSafetyCtrex
 
 from levels import _tryUnroll, findNegatingTrace, loadBoogieLvlSet
 
@@ -438,7 +438,14 @@ def tryAndVerify(levelSet, levelId, invs, mturkId):
     # See if the level is solved
     solved = len(violations) == 0;
     fix = lambda x: _from_dict(lvl['variables'], x)
-    
+
+    if (not solved):
+        bbs = lvl["program"]
+        loop = lvl["loop"]
+        direct_ctrexs = loopInvSafetyCtrex(loop, otherInvs.union(userInvs), bbs, args.timeout);
+    else:
+        direct_ctrexs = []
+
     # Convert all invariants from Boogie to esprima expressions, and counterexamples to arrays
     # from dictionaries
     overfitted = [ (boogieToEsprima(inv), fix(v.endEnv()))
@@ -447,15 +454,18 @@ def tryAndVerify(levelSet, levelId, invs, mturkId):
       for (inv, v) in nonind ]
     sound = [ boogieToEsprima(inv) for inv in sound ]
     safety_ctrexs = [ fix(v.startEnv()) for v in violations ]
+    direct_ctrexs = [ fix(v) for v in direct_ctrexs ]
 
-    res = (overfitted, nonind, sound, safety_ctrexs)
+
+    res = (overfitted, nonind, sound, safety_ctrexs, direct_ctrexs)
     addEvent("verifier", "VerifyAttempt", time(), args.ename, "localhost", {
       "lvlset": levelSet,
       "lvlid": levelId,
       "overfitted":nodups([str(esprimaToBoogie(inv, {})) for (inv,c) in overfitted]),
       "nonind":nodups([str(esprimaToBoogie(inv, {})) for (inv,c) in nonind]),
       "sound":nodups([str(esprimaToBoogie(inv, {})) for inv in sound]),
-      "post_ctrex":safety_ctrexs
+      "post_ctrex":safety_ctrexs,
+      "direct_ctrex": direct_ctrexs
     }, s, mturkId)
 
     return res
