@@ -1,5 +1,5 @@
-type dataT = [any[][], any[][], [ any[], any[] ][] ]
-type resDataT = { data: [ any[], any[], [any, any][] ]}
+type dataT = [any[][], [ any[], any[] ][], any[][] ]
+type resDataT = { data: [ any[], [any, any][], any[] ]}
 type resClearT = { clear: any }
 type resT = resDataT | resClearT
 

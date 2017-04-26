@@ -46,7 +46,8 @@ function tryAndVerify(lvlSet: string, lvlId: string, invs: invariantT[],
                          cb: (res: [ [ESTree.Node, any[]][], // Overfitted invs & counterexample
                                      [ESTree.Node, [any[], any[]]][], // Nonind. invs & counterexample
                                      ESTree.Node[], // Sound Invariants
-                                     any[]]) => void) {  // Post cond. counterexample to sound invariants
+                                     any[],// Post cond. counterexample to sound invariants
+                                     any[]]) => void) { // Post cond. counterex to all invariants
   rpc_tryAndVerify(lvlSet, lvlId, invs, cb);
 }
 

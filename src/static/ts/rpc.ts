@@ -5,7 +5,7 @@ interface loadLvlBasicRes {
   variables: string[];
   data: dataT;
   goal: any;
-  hint: string;
+  hint: any;
 }
 
 interface loadLvlDynamicRes extends loadLvlBasicRes {
@@ -59,7 +59,8 @@ function rpc_tryAndVerify(lvlSet: string, lvlId: string, invs: invariantT[],
                               cb: (res: [ [ESTree.Node, any[]][], // Overfitted invs & counterexample
                                      [ESTree.Node, [any[], any[]]][], // Nonind. invs & counterexample
                                      ESTree.Node[], // Sound Invariants
-                                     any[]]) => void) {  // Post cond. counterexample to sound invariants
+                                     any[],// Post cond. counterexample to sound invariants
+                                     any[]]) => void) {  // Post-cond counterexample to all invariants
   rpc.call("App.tryAndVerify", [ lvlSet, lvlId, invs, mturkId() ], cb, log)
 }
 
