@@ -8,7 +8,14 @@ class ScoreWindow {
   }
 
   add(num: number): void {
-    this.score = (this.score + num);
+    let score = this.score.toString();
+    this.score = parseInt(score);
+    
+    let numTemp = num.toString();
+    num = parseInt(numTemp);
+
+    this.score = parseInt((this.score + num).toString());
+    
     $(this.parent).html("<span>" + this.score + "</span>");
     let addSpan = $("<span class='scoreText scoreFloat'>+" + num + "</span>")
     $(this.parent).append(addSpan)
