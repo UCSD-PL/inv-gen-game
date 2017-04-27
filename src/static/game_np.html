@@ -44,6 +44,8 @@
     var numExpFound = 0;
     var doneScript = false;
     var esprimaMapping = {};
+    var bonus = 5;
+    var points = 0;
 
 
     var curLvl;
@@ -80,7 +82,7 @@
           if (lvl.hint === null)
             $("#hint-row").html("");
           else
-            $("#hint-row").html("<p class='lead'><b>" + lvl.hint + "</b></p>");
+            // $("#hint-row").html("<p class='lead'><b>" + lvl.hint + "</b></p>");
           console.log("Sorin " + lvl.hint);
           gameLogic.loadLvl(lvl);
         }
@@ -88,6 +90,7 @@
     }
 
     function nextLvl() {
+      numExpFound = 0;
       if (dynamicLvlOrder)
         loadNextTrace()
       else
@@ -95,6 +98,7 @@
     }
 
     function loadLvl(lvl) {
+      numExpFound = 0
       if (lvl == lvls.length) {
         curLvl = lvl;
         doneScreen(true);
@@ -110,6 +114,7 @@
     }
 
     function loadLvlSet(lvlset) {
+      numExpFound = 0;
       curLvlSet = lvlset;
       res = rpc.call('App.listData', [lvlset], function(res) {
         lvls = res;
@@ -268,6 +273,7 @@
       mergeValues(serverVal, localVal);
       updateMapping();
       findWeakInvariants();
+      addBonus();
     }
 
     function updateMapping() {
@@ -317,14 +323,28 @@
       }
     }
 
+    function addBonus() {
+      if (points > 0) {
+        var score = bonus * points;
+        scoreW.add(score);
+        gameLogic.score = (parseInt(gameLogic.score.toString()) + parseInt(score.toString()));
+        var sessionScore = sessionStorage.getItem("score");
+        sessionStorage.setItem("score", (parseInt(sessionScore.toString()) + parseInt(score.toString())));
+        points = 0;
+      }
+    }
+
     function crush(expression) {
       var expressions = values.expressions[playerLvl.id];
       var exp = expressions && esprimaMapping && esprimaMapping[expression] ? expressions[esprimaMapping[expression]] : null;
       var expId = exp && exp.id ? exp.id : null;
       if (expId) {
         var elem = $("#" + expId);
-        // elem.addClass("implied");
-        elem.slideUp();
+        if (!elem.hasClass("implied")) {
+          elem.slideUp();
+          elem.addClass("implied");
+          points = (points + 1);
+        }
       }
     }
 
@@ -393,6 +413,7 @@
       }
 
       var numFound = (expressions && expressions[curLvlId] && Object.keys(expressions[curLvlId])) ? Object.keys(expressions[curLvlId]).length : 0;
+      // var existing = $("#good-invariants").children().length;
       if (numFound > numExpFound) {
         notifyNewExpression();
         numExpFound = numFound;
@@ -433,8 +454,8 @@
     function saveState(id) {
       var gameId = sessionStorage.getItem("gameId");
 
-      var gameScore = gameLogic.score;
-      var sessionScore = sessionStorage.getItem("score");
+      var gameScore = parseInt(gameLogic.score.toString());
+      var sessionScore = parseInt(sessionStorage.getItem("score").toString());
       gameScore = gameScore > sessionScore ? gameScore : sessionScore;
       
       sessionStorage.setItem("score", gameScore);
@@ -533,10 +554,10 @@
         preload: true
       })
       
-      if (Args.get_assignment_id() == "ASSIGNMENT_ID_NOT_AVAILABLE") {
-        s = "This is just a preview of the HIT. The work you do here will have to be redone when you accept the HIT."
-        $("#hit-preview-warning").html("<p class='lead'><b>" + s + "</b></p>");
-      }
+      // if (Args.get_assignment_id() == "ASSIGNMENT_ID_NOT_AVAILABLE") {
+        // s = "This is just a preview of the HIT. The work you do here will have to be redone when you accept the HIT."
+        // $("#hit-preview-warning").html("<p class='lead'><b>" + s + "</b></p>");
+      // }
 
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
       progW = new ProgressWindow($('#discovered-invariants-div'));
@@ -566,6 +587,7 @@
       });
 
       $('#next-level-overlay').click(function() {
+        numExpFound = 0;
         $("#next-or-quit-screen").fadeOut(1000);
         nextLvl();
       });
@@ -649,6 +671,7 @@
         // nextLvl();
         $('#skip-to-next-lvl').hide();
         $('#skip-to-next-lvl').prop("disable", true);
+        numExpFound = 0;
         gameLogic.skipToNextLvl();
       });
       $('#quit-overlay').click(function() { doneScreen(false) });
