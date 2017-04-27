@@ -43,6 +43,7 @@
     var numReqExpr = 4;
     var numExpFound = 0;
     var doneScript = false;
+    var esprimaMapping = {};
 
 
     var curLvl;
@@ -265,6 +266,66 @@
 
       currentGen = serverGen > localGen ? serverGen : localGen;
       mergeValues(serverVal, localVal);
+      updateMapping();
+      findWeakInvariants();
+    }
+
+    function updateMapping() {
+      if (playerLvl) {
+        var currentLvlExpressions = values.expressions[playerLvl.id];
+        allExp = []
+        
+        for (var exp in currentLvlExpressions) {
+          allExp.push(exp);
+        }
+
+        var mappedExp = allExp.map(esprima.parse);
+        var mappedExp1 = mappedExp.map(esprimaToStr);
+
+        for (var i = 0; i < mappedExp1.length; i++) {
+          esprimaMapping[mappedExp1[i]] = allExp[i];
+        }
+      }
+    }
+
+    function findWeakInvariants() {
+      if (playerLvl) {
+        var currentLvlExpressions = values.expressions[playerLvl.id];
+        for (var exp in currentLvlExpressions) {
+          var curExp = esprima.parse(exp);
+          var otherExps = [];
+          
+          for (var exps in currentLvlExpressions) {
+            if (exp !== exps) {
+              otherExps.push(exps);
+            }
+          }
+
+          var otherExp = otherExps.map(esprima.parse);
+
+          impliedPairs([curExp], otherExp, function(x) {
+            if (x !== null && x.length > 0) {
+              for (var i = 0; i < x.length; i++) {
+                var exp1 = esprimaToStr(x[i][0]);
+                var exp2 = esprimaToStr(x[i][1]);
+                // console.log(exp1 + " ==> " + exp2);
+                crush(exp2);
+              }
+            }
+          });
+        }
+      }
+    }
+
+    function crush(expression) {
+      var expressions = values.expressions[playerLvl.id];
+      var exp = expressions && esprimaMapping && esprimaMapping[expression] ? expressions[esprimaMapping[expression]] : null;
+      var expId = exp && exp.id ? exp.id : null;
+      if (expId) {
+        var elem = $("#" + expId);
+        // elem.addClass("implied");
+        elem.slideUp();
+      }
     }
 
     function mergeValues(serverValue, localValue) {
@@ -394,7 +455,7 @@
       // if (turk_submit_to !== undefined) {
       //     document.getElementById("turk-form").action = turk_submit_to + "/mturk/externalSubmit";
       // }
-      msg = "Good job! You finished " + numLvlPassed + " level(s)! Your score is: " + gameLogic.score  + "!";
+      msg = "Good job! You finished " + numLvlPassed + " level(s)! Your score is: " + gameLogic.score  + "!<br>Click anywhere to continue.";
       if (alldone) {
          msg = "There are no more levels to play at this moment.<br>" + msg
       }
