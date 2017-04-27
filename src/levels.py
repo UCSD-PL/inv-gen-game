@@ -6,6 +6,7 @@ from lib.boogie.analysis import livevars
 from lib.boogie.eval import instantiateAndEval, evalPred, _to_dict, execute
 from os import listdir
 from os.path import dirname, join, abspath, realpath
+from infinite import product
 from json import load, dumps
 from random import randint
 from vc_check import loopInvOverfittedCtrex
@@ -21,26 +22,44 @@ def _tryUnroll(loop, bbs, min_un, max_un, bad_envs, good_env):
     term_vals = get_loop_header_values(loop, bbs, min_un, max_un, bad_envs, good_env, False)
     return (term_vals, False)
 
-def getEnsamble(loop, bbs, exec_limit, tryFind = 100, distr = lambda:  randint(0,5)):
+def varproduct(vargens):
+  # Take var: gen and generate all var assignments (smallest first), i.e.
+  # "A": count(), "B": count() yields
+  #   (A, B) = (0, 0), (0, 1), (1, 0), (0, 2), (1, 1), (2, 0), ...
+  vars_, gens = zip(*vargens.items())
+  for vals in product(*gens):
+    yield dict(zip(vars_, vals))
+
+def getEnsamble(loop, bbs, exec_limit, tryFind=100, distr=lambda: randint(0,5),
+        include_bbhit=False, vargens=None):
     loopHdr = loop.loop_paths[0][0]
     traceVs = list(livevars(bbs)[loopHdr])
-    ensamble = []
+    if vargens is None:
+      def candidatef():
+        while True:
+          yield {v: distr() for v in traceVs}
+      candidategen = candidatef()
+    else:
+      candidategen = varproduct(vargens)
     tried = set();
     #TODO: Not a smart way for generating random start values. Fix.
     s = 0
     print "Trying to find ", tryFind, " traces of length up to ", exec_limit
     while s < tryFind:
-        candidate = tuple([ distr() for x in traceVs ])
-        if (candidate in tried):
-            continue
+        candidate = next(candidategen)
+        hashable = tuple(candidate[v] for v in traceVs)
+        if hashable in tried:
+          continue
+        tried.add(hashable)
 
-        tried.add(candidate)
-
-        candidate = { x : candidate[i] for (i,x) in enumerate(traceVs) }
         found = False
-        for (_,_,_,_,vals) in execute(candidate, entry(bbs), bbs, exec_limit):
+        for _, _, _, ssap, vals in execute(candidate, entry(bbs), bbs, exec_limit):
           vals = [ envs[0] for (bb, envs) in vals if bb == loopHdr ]
-          ensamble.append(vals)
+          if include_bbhit:
+            bbhit = set(bbname for bbname, _ in ssap)
+            yield (vals, bbhit)
+          else:
+            yield vals
           found = True;
           s += 1
           if (s >= tryFind):
@@ -48,10 +67,8 @@ def getEnsamble(loop, bbs, exec_limit, tryFind = 100, distr = lambda:  randint(0
 
         if (not found): s += 1;
 
-    return ensamble
-
 def getInitialData(loop, bbs, nunrolls, invs, invVars = None, invConsts = ["_sc_a", "_sc_b", "_sc_c"]):
-    trace_enasmble = getEnsamble(loop, bbs, nunrolls, 1);
+    trace_enasmble = list(getEnsamble(loop, bbs, nunrolls, 1))
     vals, terminates = _tryUnroll(loop, bbs, 0, nunrolls, None, None)
     if (vals):
         trace_enasmble.append(vals)

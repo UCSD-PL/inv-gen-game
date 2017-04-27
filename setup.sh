@@ -30,6 +30,7 @@ pip install tabulate
 pip install Pyro4
 pip install pydot
 pip install frozendict
+pip install infinite
 
 if [ ! -d $DIR/third_party ] ; then
   mkdir $DIR/third_party
