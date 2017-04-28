@@ -2,8 +2,10 @@
 
 import argparse
 import boogie.ast
+import json
 import levels
 import math
+import os
 import random
 import tabulate
 
@@ -12,21 +14,37 @@ p.add_argument("--lvlset", type=str, default="unsolved",
   help="lvlset to use for benchmarks")
 p.add_argument("--lvl", type=str, default="s-diamond_true-unreach-call1",
   help="lvl to use for generating traces")
+p.add_argument("--write", action="store_true")
 
 args = p.parse_args()
 
 # Process arguments
-LVLSET_PATH = "lvlsets/%s.lvlset" % args.lvlset
-
-curLevelSetName, lvls = levels.loadBoogieLvlSet(LVLSET_PATH)
+lvlset_path = "lvlsets/%s.lvlset" % args.lvlset
+curLevelSetName, lvls = levels.loadBoogieLvlSet(lvlset_path)
 
 lvl = lvls[args.lvl]
+trace_dir = None
+if args.write:
+  trace_dir = lvl["path"][0][:-4] + ".new_fuzz_traces"
+  print "Making trace directory:", trace_dir
+  try:
+    os.mkdir(trace_dir)
+  except OSError:
+    pass
+
 print
 print "=== LEVEL ==="
 print lvl
 
 vars_ = lvl["variables"]
 vars_.sort()
+
+def write_trace(rows, prefix=""):
+  trace_str = json.dumps(rows)
+  trace_file = "%s/%s%d.trace" % (trace_dir, prefix, hash(trace_str))
+  print "Writing trace to file:", trace_file
+  with open(trace_file, "w") as fh:
+    fh.write(trace_str)
 
 # http://www.cs.huji.ac.il/course/2005/algo2/scribes/lecture2.pdf
 def weighted_set_cover(u, xs, cost, coverage):
@@ -86,7 +104,10 @@ while bbneed or len(alltraces) < 2 * mintraces:
   bbneed -= bbhit
 
   alltraces.append((valss, bbhit))
-  # TODO Dump intermediate traces to file
+
+  # Dump intermediate traces to file
+  if trace_dir:
+    write_trace(valss)
 
   nbbcov = len(bbset.intersection(bbhit))
   print "Found %d traces with coverage %d/%d (%f%%)" % (len(valss),
@@ -106,6 +127,10 @@ for valss, _ in ctraces:
   rows += valss
 
 # TODO Refine traces based on changing conditional expressions
+
+# Dump combined trace to file
+if trace_dir:
+  write_trace(rows, prefix="combined-")
 
 print "Selected %d/%d rows (%d/%d traces)" % (len(rows),
   sum(len(valss) for valss, _ in alltraces), len(ctraces), len(alltraces))
