@@ -270,6 +270,7 @@
       currentGen = serverGen > localGen ? serverGen : localGen;
       mergeValues(serverVal, localVal);
       updateMapping();
+      points = 0;
       findWeakInvariants();
       addBonus();
     }
@@ -315,6 +316,9 @@
                 // console.log(exp1 + " ==> " + exp2);
                 crush(exp2);
               }
+            }
+            else {
+              points = 0;
             }
           });
         }
@@ -457,7 +461,7 @@
       var gameId = sessionStorage.getItem("gameId");
 
       var gameScore = parseInt(gameLogic.score.toString());
-      var sessionScore = parseInt(sessionStorage.getItem("score").toString());
+      var sessionScore = sessionStorage.getItem("score") ? parseInt(sessionStorage.getItem("score").toString()) : 0;
       gameScore = gameScore > sessionScore ? gameScore : sessionScore;
       
       sessionStorage.setItem("score", gameScore);
