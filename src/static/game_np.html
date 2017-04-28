@@ -42,6 +42,7 @@
     var time = 1000;
     var numReqExpr = 4;
     var numExpFound = 0;
+    var numFound = 0;
     var doneScript = false;
     var esprimaMapping = {};
     var bonus = 5;
@@ -90,7 +91,6 @@
     }
 
     function nextLvl() {
-      numExpFound = 0;
       if (dynamicLvlOrder)
         loadNextTrace()
       else
@@ -98,7 +98,6 @@
     }
 
     function loadLvl(lvl) {
-      numExpFound = 0
       if (lvl == lvls.length) {
         curLvl = lvl;
         doneScreen(true);
@@ -114,7 +113,6 @@
     }
 
     function loadLvlSet(lvlset) {
-      numExpFound = 0;
       curLvlSet = lvlset;
       res = rpc.call('App.listData', [lvlset], function(res) {
         lvls = res;
@@ -412,8 +410,12 @@
         $('#skip-to-next-lvl').prop("disable", true);
       }
 
-      var numFound = (expressions && expressions[curLvlId] && Object.keys(expressions[curLvlId])) ? Object.keys(expressions[curLvlId]).length : 0;
-      // var existing = $("#good-invariants").children().length;
+      numFound = (expressions && expressions[curLvlId] && Object.keys(expressions[curLvlId])) ? Object.keys(expressions[curLvlId]).length : 0;
+      
+      if (numFound === 0) {
+        numExpFound = 0;
+      }
+
       if (numFound > numExpFound) {
         notifyNewExpression();
         numExpFound = numFound;
@@ -587,7 +589,6 @@
       });
 
       $('#next-level-overlay').click(function() {
-        numExpFound = 0;
         $("#next-or-quit-screen").fadeOut(1000);
         nextLvl();
       });
@@ -671,7 +672,6 @@
         // nextLvl();
         $('#skip-to-next-lvl').hide();
         $('#skip-to-next-lvl').prop("disable", true);
-        numExpFound = 0;
         gameLogic.skipToNextLvl();
       });
       $('#quit-overlay').click(function() { doneScreen(false) });
