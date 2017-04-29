@@ -57,8 +57,16 @@ class CounterexGameLogic extends BaseGameLogic {
   }
 
   goalSatisfied(cb:(sat: boolean, feedback: any)=>void):void {
+    let contains = (v, arr) => {
+      for (let i in arr)
+        if (arr[i] == v) {
+          return true;
+        }
+      return false;
+    };
     if (this.foundJSInv.length > 0) {
-      tryAndVerify(curLvlSet, this.curLvl.id, this.foundJSInv.map((x)=>x.canonForm),
+      var invToTry = this.foundJSInv.filter((ui)=>!contains(ui.id, this.overfittedInvs));
+      tryAndVerify(curLvlSet, this.curLvl.id, invToTry.map((x)=>x.canonForm),
         ([overfitted, nonind, sound, post_ctrex, direct_ctrex]) => {
           if (sound.length > 0) {
             cb(post_ctrex.length == 0, [overfitted, nonind, sound, post_ctrex, direct_ctrex]);
@@ -166,6 +174,13 @@ class CounterexGameLogic extends BaseGameLogic {
                 } else {
                   gl.tracesW.setExp("");
                 }
+
+                /*
+                 * Clear the current negative rows
+                 */
+                gl.curLvl.data[2] = [];
+                (<CounterexTracesWindow>gl.tracesW).clearNegRows();
+
                 logEvent("FoundInvariant", [curLvlSet, gl.curLvl.id, ui.rawUserInp, ui.canonForm]);
                 if (!gl.lvlPassedF) {
                   if (gl.foundJSInv.length >= 6) {
@@ -190,9 +205,12 @@ class CounterexGameLogic extends BaseGameLogic {
                      */
                     var preCallCurLvl = gl.curLvl.id;
                     gl.goalSatisfied((sat, feedback) => {
+                      var overfittedInvs = feedback[0].map((p)=>esprimaToStr(p[0]));
+                      gl.overfittedInvs = gl.overfittedInvs.concat(overfittedInvs);
+
                       if (!sat) {
                         // Add any counterexamples
-                        var overfitted = feedback[0];
+                        var overfitted = feedback[0].map((p)=>p[1]);
                         var postctrex = feedback[4];
                         console.log(overfitted, postctrex);
                         gl.tracesW.addData([overfitted, [], postctrex]);

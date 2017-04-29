@@ -46,6 +46,15 @@ class CounterexTracesWindow extends BaseTracesWindow {
     das.reflowAll();
   }
 
+  clearNegRows(): void {
+    this.firstNegRow = null;
+    for (let i in this.dataMap[2]) {
+      $(this.dataMap[2][i]).remove();
+    }
+    this.dataMap[2] = [];
+    this.data[2] = [];
+  }
+
   evalResult(res: resT): void {
     if (res.hasOwnProperty("data")) {
       let resD = <resDataT>res;
