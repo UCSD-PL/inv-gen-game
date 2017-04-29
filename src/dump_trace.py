@@ -37,5 +37,5 @@ data = trace[0]
 
 print
 print "=== TRACE ==="
-print tabulate.tabulate([[d[v].as_long() for v in vars_] for d in data],
+print tabulate.tabulate([[d[v] for v in vars_] for d in data],
   headers=vars_)
