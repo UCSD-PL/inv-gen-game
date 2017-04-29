@@ -437,7 +437,7 @@ def tryAndVerify(levelSet, levelId, invs, mturkId):
 
     # See if the level is solved
     solved = len(violations) == 0;
-    fix = lambda x: _from_dict(lvl['variables'], x)
+    fix = lambda x: _from_dict(lvl['variables'], x, 0)
 
     if (not solved):
         bbs = lvl["program"]
@@ -470,13 +470,27 @@ def tryAndVerify(levelSet, levelId, invs, mturkId):
 
     return res
 
+def divisionToMul(inv):
+    if isinstance(inv, AstBinExpr) and inv.op in ['==', '<', '>', '<=', '>=', '!==']:
+        if (isinstance(inv.lhs, AstBinExpr) and inv.lhs.op == 'div' and\
+                isinstance(inv.lhs.rhs, AstNumber)):
+                    return AstBinExpr(inv.lhs.lhs, inv.op, AstBinExpr(inv.rhs, '*', inv.lhs.rhs));
+
+        if (isinstance(inv.rhs, AstBinExpr) and inv.rhs.op == 'div' and\
+                isinstance(inv.rhs.rhs, AstNumber)):
+                    return AstBinExpr(AstBinExpr(inv.lhs, "*", inv.rhs.rhs), inv.op, inv.rhs.lhs);
+    return inv
+
 @api.method("App.simplifyInv")
 @pp_exc
 @log_d(pp_EsprimaInv, pp_mturkId, pp_EsprimaInv)
 def simplifyInv(inv, mturkId):
-    z3_inv = esprimaToZ3(inv, {});
+    boogieInv = esprimaToBoogie(inv, {});
+    noDivBoogie = divisionToMul(boogieInv);
+    z3_inv = expr_to_z3(noDivBoogie, AllIntTypeEnv())
     simpl_z3_inv = simplify(z3_inv, arith_lhs=True);
-    return boogieToEsprima(z3_expr_to_boogie(simpl_z3_inv));
+    simpl_boogie_inv = z3_expr_to_boogie(simpl_z3_inv);
+    return boogieToEsprima(simpl_boogie_inv);
 
 @api.method("App.getRandomCode")
 @pp_exc
