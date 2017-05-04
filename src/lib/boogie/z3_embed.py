@@ -1,4 +1,4 @@
-import ast
+import lib.boogie.ast as ast
 import z3;
 from threading import Condition, local
 from time import sleep, time
@@ -12,6 +12,23 @@ from z3 import IntNumRef as Z3IntNumRef, BoolRef as Z3BoolRef
 
 ctxHolder = local();
 
+def val_to_boogie(v):
+    if (isinstance(v, Z3IntNumRef)):
+        return ast.AstNumber(v.as_long())
+    elif (isinstance(v, Z3BoolRef)):
+        return ast.AstTrue() if ast.is_true(v) else ast.AstFalse()
+    elif (v == "true"):
+        return ast.AstTrue()
+    elif (v == "false"):
+        return ast.AstFalse()
+    else:
+        return ast.AstNumber(int(v))
+
+def env_to_expr(env, suff = ""):
+    return ast.ast_and(
+            [ ast.AstBinExpr(ast.AstId(k + suff), "==", val_to_boogie(v))
+                for (k,v) in env.iteritems() ])
+
 def getCtx():
   global ctxHolder
   ctx = getattr(ctxHolder, "ctx", None)
@@ -22,6 +39,7 @@ def getCtx():
 
 class WrappedZ3Exception(BaseException):
   def __init__(s, value):
+    BaseException.__init__(s);
     s._value = value;
 
 def wrapZ3Exc(f):
@@ -255,6 +273,30 @@ def counterex(pred, timeout=None, comm = ""):
         break;
 
       return m;
+    finally:
+      if (s): releaseSolver(s);
+
+def counterexamples(pred, num, timeout=None, comm = ""):
+    s = None
+    assert num > 0
+    try:
+      s = getSolver()
+      s.add(Not(pred))
+      counterexes = [ ]
+      while len(counterexes) < num:
+        try:
+          res = s.check(timeout, comm)
+          if res == z3.unsat:
+              break;
+
+          env = s.model()
+          counterexes.append(env)
+          s.add(Not(env_to_expr(env)))
+        except Crashed:
+          continue;
+        break;
+
+      return counterexes;
     finally:
       if (s): releaseSolver(s);
 

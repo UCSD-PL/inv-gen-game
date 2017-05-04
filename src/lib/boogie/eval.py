@@ -6,24 +6,8 @@ from ssa import SSAEnv
 from itertools import permutations
 from copy import deepcopy
 
-def val_to_boogie(v):
-    if (isinstance(v, Z3IntNumRef)):
-        return AstNumber(v.as_long())
-    elif (isinstance(v, Z3BoolRef)):
-        return AstTrue() if is_true(v) else AstFalse()
-    elif (v == "true"):
-        return AstTrue()
-    elif (v == "false"):
-        return AstFalse()
-    else:
-        return AstNumber(int(v))
-
 def _to_dict(vs, vals):
     return { vs[i]: vals[i] for i in xrange(0, len(vs)) }
-
-def env_to_expr(env, suff = ""):
-    return ast_and([ AstBinExpr(AstId(k + suff), "==", val_to_boogie(v))
-        for (k,v) in env.iteritems() ])
 
 def evalPred(boogie_expr, env):
     typeEnv = { x : Int for x in env }
