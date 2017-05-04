@@ -169,7 +169,7 @@ class CounterexGameLogic extends BaseGameLogic {
                 gl.foundJSInv.push(ui)
                 gl.invMap[ui.id] = ui;
                 gl.progressW.addInvariant(ui.id, ui.rawInv);
-                if (gl.curLvl.hint.type == "post-assert") {
+                if (gl.curLvl.hint && gl.curLvl.hint.type == "post-assert") {
                   gl.tracesW.setExp(gl.curLvl.hint.assert);
                 } else {
                   gl.tracesW.setExp("");
