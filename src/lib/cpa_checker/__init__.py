@@ -7,7 +7,8 @@ from z3 import parse_smt2_string
 import re
 
 MYDIR = dirname(abspath(relpath(__file__)))
-CPA_PATH = MYDIR + "/../../../env/third_party/cpa_checker_1.4/CPAchecker-1.4-svcomp16c-unix/"
+CPA_PATH = MYDIR + \
+    "/../../../env/third_party/cpa_checker_1.4/CPAchecker-1.4-svcomp16c-unix/"
 
 def findLoopHeaderLabel(dotFile):
   g = unique(graph_from_dot_file(dotFile))
@@ -20,10 +21,12 @@ def findLoopHeaderLabel(dotFile):
   return unique(doubleCircles)[1].split("\\n")[0][2:]
 
 def parseAbstractionFile(fname):
-  lines = filter(lambda x:  x != '', map(lambda x:  x.strip(), open(fname).read().split("\n")))
+  lines = filter(lambda x:  x != '',
+                 map(lambda x:  x.strip(), open(fname).read().split("\n")))
   decls = [ ]
   invs = { }
-  label_re = re.compile("^(?P<n1>[0-9]*) \((?P<n2>[0-9,]*)\) \@(?P<n3>[0-9]*):$");
+  label_re = re.compile(
+        "^(?P<n1>[0-9]*) \((?P<n2>[0-9,]*)\) \@(?P<n3>[0-9]*):$");
   var_re = re.compile("\|[a-zA-Z0-9]*::([a-zA-Z0-9_]*)\|")
   cur_lbl = None
   for l in lines:
@@ -38,7 +41,8 @@ def parseAbstractionFile(fname):
   return invs
 
 def parseInvariantsFile(fname):
-  lines = filter(lambda x:  x != '', map(lambda x:  x.strip(), open(fname).read().split("\n")))
+  lines = filter(lambda x:  x != '',
+                 map(lambda x:  x.strip(), open(fname).read().split("\n")))
   label_re = re.compile("^[^ ]* [^ :]*:$")
   label_lines = [l for l in lines if label_re.match(l)]
   assert (len(label_lines) == 1) # Single loop header so single invariant
@@ -68,24 +72,30 @@ def convertCppFileForCPAChecker(cppFile, outFile):
 
   call(cpp_args);
 
-def runCPAChecker(inpFile, timelimit=100, config="predicateAnalysis-ImpactRefiner-ABEl.properties"):
-  contain_assume_def = [ ]
+def runCPAChecker(inpFile, timelimit=100,
+                  config="predicateAnalysis-ImpactRefiner-ABEl.properties"):
+  nondetFunctions = [ "unknown1", "unknown2", "unknown3", "unknown4", \
+                      "unknown5", "random", "__VERIFIER_nondet_int", \
+                      "__VERIFIER_nondet_uint"
+  ]
   args = [ CPA_PATH + "scripts/cpa.sh",
             "-config", CPA_PATH + "config/" + config,
             "-timelimit", str(timelimit),
-            "-setprop", "cpa.predicate.nondetFunctions=unknown1,unknown2,unknown3,unknown4,unknown5,random,__VERIFIER_nondet_int,__VERIFIER_nondet_uint",
+            "-setprop",
+            "cpa.predicate.nondetFunctions=" + ",".join(nondetFunctions),
             inpFile ]
   raw = check_output(args, stderr=STDOUT);
   lines = raw.split("\n");
-  lines = [x for x in lines if not (x.startswith("Running CPAchecker with") or
-                                    x.startswith("Using the following resource") or
-                                    x.startswith("CPAchecker 1.4-svcomp16c (OpenJDK") or
-                                    x.startswith("Using predicate analysis with") or
-                                    x.startswith("Using refinement for predicate analysis with") or
-                                    x.startswith("Starting analysis ...") or
-                                    x.startswith("Stopping analysis ...") or
-                                    x.startswith("More details about the verification run") or
-                                    len(x.strip()) == 0) ]
+  lines = [x for x in lines
+             if not (x.startswith("Running CPAchecker with") or
+                     x.startswith("Using the following resource") or
+                     x.startswith("CPAchecker 1.4-svcomp16c (OpenJDK") or
+                     x.startswith("Using predicate analysis with") or
+                     x.startswith("Using refinement for predicate analysis") or
+                     x.startswith("Starting analysis ...") or
+                     x.startswith("Stopping analysis ...") or
+                     x.startswith("More details about the verification run") or
+                     len(x.strip()) == 0) ]
   verified = len([x for x in lines if "Verification result: TRUE." in x]) > 0
 
   headerLabel = findLoopHeaderLabel("output/cfa.dot")
