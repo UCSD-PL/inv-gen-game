@@ -46,6 +46,17 @@ class PrepopulatedDynamicLevel extends DynamicLevel {
     })
   }
 
+  genNext(lvlSet:string, invs: invariantT[], cb:(lvl: [string, Level])=>void) {
+    rpc_genNextLvlDynamic(Args.get_worker_id(), lvlSet, this.id, invs, (data: loadNextLvlDynamicRes) => {
+      if (data == null) {
+        cb(null);
+      } else {
+        let lvl = new PrepopulatedDynamicLevel(data.id, data.variables, data.data, data.goal, data.hint, data.exploration_state, [[], [], []]);
+        cb([lvlSet, lvl]);
+      }
+    });
+  }
+
   static loadNext(cb: (res: [string, Level])=>void) {
     rpc_loadNextLvlDynamic(Args.get_worker_id(), function(data) {
       if (data === null)

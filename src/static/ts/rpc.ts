@@ -37,6 +37,10 @@ function rpc_loadNextLvlDynamic(workerkId: string, cb:(res: loadNextLvlDynamicRe
   rpc.call("App.loadNextLvl", [workerkId, mturkId()], (data:any) => cb(<loadNextLvlDynamicRes>data), log);
 }
 
+function rpc_genNextLvlDynamic(workerkId: string, lvlSet:string, lvlId: string, invs: invariantT[], cb:(res: loadNextLvlDynamicRes) => void) {
+  rpc.call("App.genNextLvl", [workerkId, mturkId(), lvlSet, lvlId, invs], (data:any) => cb(<loadNextLvlDynamicRes>data), log);
+}
+
 function rpc_equivalentPairs(invL1: invariantT[], invL2: invariantT[],
                              cb: (arg:[ESTree.Node, ESTree.Node][])=>void): void {
   rpc.call("App.equivalentPairs", [ invL1, invL2, mturkId() ], cb, log)

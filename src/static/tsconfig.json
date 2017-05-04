@@ -42,6 +42,7 @@
     "ts/eval.ts",
     "ts/gameLogic.ts",
     "ts/ctrexGameLogic.ts",
+    "ts/roundsGameLogic.ts",
     "ts/level.ts",
     "ts/logic.ts",
     "ts/powerups.ts",
