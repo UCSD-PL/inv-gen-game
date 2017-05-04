@@ -1,5 +1,5 @@
 from lib.boogie.ast import parseExprAst, ast_or, ast_and
-from lib.boogie.bb import get_bbs, ensureSingleExit, entry
+from lib.boogie.bb import get_bbs, ensureSingleExit, bbEntry
 from boogie_loops import loops, get_loop_header_values
 from lib.common.util import unique, powerset, average, error
 from lib.boogie.analysis import livevars
@@ -53,7 +53,7 @@ def getEnsamble(loop, bbs, exec_limit, tryFind=100, distr=lambda: randint(0,5),
         tried.add(hashable)
 
         found = False
-        for _, _, _, ssap, vals in execute(candidate, entry(bbs), bbs, exec_limit):
+        for _, _, _, ssap, vals in execute(candidate, bbEntry(bbs), bbs, exec_limit):
           vals = [ envs[0] for (bb, envs) in vals if bb == loopHdr ]
           if include_bbhit:
             bbhit = set(bbname for bbname, _ in ssap)

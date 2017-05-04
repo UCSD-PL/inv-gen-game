@@ -1,7 +1,7 @@
 from lib.boogie.paths import is_nd_bb_path_possible
 from lib.boogie.ast import *;
 from lib.boogie.z3_embed import *
-from lib.boogie.bb import BB, get_bbs, entry
+from lib.boogie.bb import BB, get_bbs, bbEntry
 from lib.boogie.paths import get_path_vars, nd_bb_path_to_ssa, ssa_path_to_z3, wp_nd_ssa_path
 from lib.boogie.ssa import *
 from lib.boogie.eval import env_to_expr
@@ -27,7 +27,7 @@ Loop = namedtuple("Loop", ["header", "loop_paths", "exit_paths", "entry_cond"])
 # 3) is particularly risky.
 def _loops(bbs, curpath, loop_m):
     if (curpath == []):
-        curpath.append(entry(bbs))
+        curpath.append(bbEntry(bbs))
 
     #TODO: Is the code resilient to random dead loops?
     #if (not is_nd_bb_path_possible(curpath, bbs)):

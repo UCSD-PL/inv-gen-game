@@ -6,7 +6,7 @@ from lib.boogie.ssa import SSAEnv
 from lib.boogie.predicate_transformers import wp_stmts, sp_stmt
 from lib.boogie.analysis import propagate_sp
 from copy import copy
-from lib.boogie.bb import entry, exit
+from lib.boogie.bb import bbEntry
 from lib.boogie.inv_networks import *
 
 def conservative_tautology(q):
@@ -152,7 +152,7 @@ def loopInvOverfittedCtrex(loop, invs, bbs, timeout = None):
   loopHdr = loop.loop_paths[0][0]
   cps = { loopHdr : set(invs) }
   violations = checkInvNetwork(bbs, AstTrue(), AstTrue(), cps, timeout);
-  entryBB = entry(bbs);
+  entryBB = bbEntry(bbs);
 
   return ([ x.endEnv() for x in violations
     if x.isInductive() and # Implication fail
@@ -168,7 +168,7 @@ def loopInvSafetyCtrex(loop, invs, bbs, timeout=None):
   loopHdr = loop.loop_paths[0][0]
   cps = { loopHdr : set(invs) }
   violations = checkInvNetwork(bbs, AstTrue(), AstTrue(), cps, timeout);
-  entryBB = entry(bbs);
+  entryBB = bbEntry(bbs);
 
   return ([ x.endEnv() for x in violations
     if x.isSafety() and # Safety fail

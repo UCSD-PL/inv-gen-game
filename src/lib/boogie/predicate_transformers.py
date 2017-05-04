@@ -1,5 +1,6 @@
-from ast import *;
-from z3_embed import *
+from lib.boogie.ast import AstLabel, AstAssignment, AstAssert, AstAssume, \
+        expr_read
+from lib.boogie.z3_embed import expr_to_z3, And, Implies, ids
 from collections import namedtuple
 import z3
 
@@ -23,7 +24,7 @@ def wp_stmt(stmt, pred, typeEnv):
 
 def wp_stmts(stmts, pred, typeEnv):
     for s in reversed(stmts):
-        old_pred = pred 
+        #old_pred = pred
         pred = wp_stmt(s, pred, typeEnv)
         #print "WP of ", old_pred, " w.r.t. ", s, " is ", pred
     return pred
