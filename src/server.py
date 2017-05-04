@@ -2,13 +2,15 @@
 from flask import Flask
 from flask import request
 from flask_jsonrpc import JSONRPC as rpc
-from os.path import *
+from os.path import dirname, abspath, realpath, join
 from json import dumps
 from js import esprimaToZ3, esprimaToBoogie, boogieToEsprima
-from lib.boogie.ast import AstBinExpr, AstTrue, ast_and, AstId, AstNumber
+from lib.boogie.ast import AstBinExpr, AstTrue, ast_and, AstId, AstNumber, \
+        parseExprAst
 from lib.common.util import pp_exc, powerset, split, nonempty, nodups
 from lib.boogie.eval import instantiateAndEval, _to_dict
-from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, z3_expr_to_boogie, Unknown
+from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, z3_expr_to_boogie,\
+        Unknown, simplify, implies, equivalent, tautology
 from lib.boogie.analysis import propagate_sp
 from sys import exc_info
 from cProfile import Profile
@@ -22,7 +24,8 @@ from levels import _tryUnroll, findNegatingTrace, loadBoogieLvlSet
 import argparse
 import traceback
 import sys
-from pp import *
+from pp import pp_BoogieLvl, pp_EsprimaInv, pp_EsprimaInvs, pp_CheckInvsRes, \
+        pp_tryAndVerifyRes, pp_mturkId, pp_EsprimaInvPairs
 from copy import copy
 from colorama import Fore,Back,Style
 from colorama import init as colorama_init
@@ -205,6 +208,8 @@ def loadLvl(levelSet, lvlId, mturkId):
     if ('program' in lvl):
       # This is a boogie level - don't return the program/loop and other book keeping
       lvl = {
+             'lvlSet': levelSet,
+             'id': lvlId,
              'variables': lvl['variables'],
              'data': lvl['data'],
              'exploration_state': lvl['exploration_state'],
@@ -243,6 +248,63 @@ class IgnoreManager:
     def contains(self,workerId, levelSet, lvlId):
         return (levelSet, lvlId) in self.ignoreset(workerId)
 
+@api.method("App.genNextLvl")
+@pp_exc
+@log_d(str, pp_mturkId, str, str, pp_EsprimaInvs, pp_BoogieLvl)
+def genNextLvl(workerId, mturkId, levelSet, levelId, invs):
+    s = sessionF();
+    if (levelSet not in traces):
+        raise Exception("Unkonwn level set " + str(levelSet))
+
+    if (levelId not in traces[levelSet]):
+        raise Exception("Unkonwn trace " + str(levelId) + " in levels " + str(levelSet))
+
+    if (len(invs) == 0):
+        raise Exception("No invariants given")
+
+    lvl = traces[levelSet][levelId]
+
+    if ('program' not in lvl):
+      # Not a boogie level - error
+      raise Exception("Level " + str(levelId) + " " + str(levelSet) + " not a dynamic boogie level.")
+
+    userInvs = set([ esprimaToBoogie(x, {}) for x in invs ])
+    otherInvs = set([])
+    lastVer = getLastVerResult(levelSet, levelId, s)
+
+    if (lastVer):
+      otherInvs = otherInvs.union([parseExprAst(x) for x in lastVer["sound"]])
+      otherInvs = otherInvs.union([parseExprAst(x) for x in lastVer["nonind"]])
+
+    ((overfitted, overfitted_ignore), (nonind, nonind_ignore), sound, violations) =\
+      tryAndVerifyLvl(lvl, userInvs, otherInvs, args.timeout)
+
+    # See if the level is solved
+    solved = len(violations) == 0;
+    if (solved):
+        return loadNextLvl(workerId, mturkId);
+
+    fix = lambda env:   _from_dict(lvl['variables'], env, 0)
+    greenRows = [ fix(v.endEnv()) for v in overfitted if type(v) != tuple]
+    print "Invs: ", otherInvs.union(userInvs)
+    print "GreenRows: ", greenRows
+    bbs = lvl["program"]
+    loop = lvl["loop"]
+    safetyCtrex = loopInvSafetyCtrex(loop, otherInvs.union(userInvs), bbs, args.timeout)
+    redRows = [ fix(x) for x in safetyCtrex if len(x) != 0 ]
+    print "RedRows: ", redRows
+    if (len(redRows) > 0 or len(greenRows) > 0):
+        # Lets give them another level
+        newLvl = copy(lvl);
+        newLvlId = levelId + ".g"
+        newLvl["data"][0].extend(greenRows)
+        newLvl["data"][2].extend(redRows)
+        traces[levelSet][newLvlId] = newLvl;
+        return loadLvl(levelSet, newLvlId, mturkId);
+    else:
+        # Else give them the actual next level
+        return loadNextLvl(workerId, mturkId);
+
 @api.method("App.loadNextLvl")
 @pp_exc
 @log_d(str, pp_mturkId, pp_BoogieLvl)
@@ -258,8 +320,6 @@ def loadNextLvl(workerId, mturkId):
            workerId != "" and levelFinishedBy(session, curLevelSetName, lvlId, workerId):
             continue
         result = loadLvl(curLevelSetName, lvlId, mturkId)
-        result["id"] = lvlId
-        result["lvlSet"] = curLevelSetName
         return result
 
 @api.method("App.instantiate")
