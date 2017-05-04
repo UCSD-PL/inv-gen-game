@@ -1,3 +1,4 @@
+#pylint: disable=no-self-argument
 class AstNode:
     def __init__(s, *args):
         s._children = args;
@@ -13,11 +14,12 @@ class AstNode:
 
     def __getattr__(s, n):
         return s._dict[n];
-            
+
     def __repr__(s):
         try:
             return s.__str__();
-        except:
+        except: #pylint: disable=bare-except
+                #TODO(dimo) fix this
             return s.__class__.__name__ + "[" + str(s._children) + "]"
 
     # Structural equality
@@ -42,4 +44,6 @@ def replace(ast, m):
         return ast.__class__(*[replace(x,m) for x in ast._children])
 
 def reduce_nodes(node, cb):
-    return cb(node, [ reduce_nodes(x, cb) for x in node._children if isinstance(x, AstNode) ])
+    return cb(node,
+              [ reduce_nodes(x, cb)
+                  for x in node._children if isinstance(x, AstNode) ])
