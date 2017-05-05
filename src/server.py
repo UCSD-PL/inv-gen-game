@@ -3,7 +3,6 @@ from flask import Flask
 from flask import request
 from flask_jsonrpc import JSONRPC as rpc
 from os.path import dirname, abspath, realpath, join, isfile
-from json import dumps
 from js import esprimaToZ3, esprimaToBoogie, boogieToEsprima, \
         boogieToEsprimaExpr
 from lib.boogie.ast import AstBinExpr, AstTrue, ast_and, AstId, AstNumber, \
@@ -14,147 +13,22 @@ from lib.boogie.eval import instantiateAndEval, _to_dict
 from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, z3_expr_to_boogie,\
         Unknown, simplify, implies, equivalent, tautology
 from lib.boogie.analysis import propagate_sp
-from sys import exc_info
-from cProfile import Profile
-from pstats import Stats
-from StringIO import StringIO
 from vc_check import _from_dict, tryAndVerifyLvl, loopInvSafetyCtrex
 
 from levels import _tryUnroll, findNegatingTrace, loadBoogieLvlSet
 
 import argparse
-import traceback
 import sys
 from pp import pp_BoogieLvl, pp_EsprimaInv, pp_EsprimaInvs, pp_CheckInvsRes, \
         pp_tryAndVerifyRes, pp_mturkId, pp_EsprimaInvPairs
 from copy import copy
-from colorama import Fore,Back,Style
-from colorama import init as colorama_init
 from time import time
 from datetime import datetime
 from models import open_sqlite_db, Event
 from db_util import playersWhoStartedLevel, enteredInvsForLevel,\
         getOrAddSource, addEvent, levelSolved, levelFinishedBy
 from atexit import register
-
-colorama_init();
-
-p = argparse.ArgumentParser(description="invariant gen game server")
-p.add_argument('--log', type=str,
-        help='an optional log file to store all user actions. ' +
-             'Entries are stored in JSON format.')
-p.add_argument('--port', type=int, help='a optional port number', required=True)
-p.add_argument('--ename', type=str, default = 'default',
-        help='Name for experiment; if none provided, use "default"')
-p.add_argument('--lvlset', type=str, default = 'desugared-boogie-benchmarks',
-        help='Lvlset to use for serving benchmarks"')
-p.add_argument('--db', type=str, help='Path to database')
-p.add_argument('--adminToken', type=str,
-        help='Secret token for logging in to admin interface. ' +
-        'If omitted will be randomly generated')
-p.add_argument('--timeout', type=int, default=60,
-        help='Timeout in seconds for z3 queries.')
-
-args = p.parse_args();
-logF = None;
-
-sessionF = open_sqlite_db(args.db)
-
-if (args.adminToken):
-  adminToken = args.adminToken
-else:
-  adminToken = randomToken(5);
-
-if args.log:
-    logF = open(args.log,'w')
-
-def arg_tostr(arg):
-    return str(arg);
-
-def log(action, *pps):
-    action['time'] = time()
-    action['ip'] = request.remote_addr;
-    if (logF):
-        logF.write(dumps(action) + '\n')
-        logF.flush()
-    else:
-        if (len(pps) == 0):
-          print dumps(action) + "\n";
-        else:
-          assert(len(action['kwargs']) == 0);
-          assert(len(pps) >= len(action['args']));
-          ppArgs = [pps[ind](arg) for (ind, arg) in enumerate(action["args"])]
-          # See if one of the ppArgs is a mturkId
-          hitId, assignmentId, workerId = (None, None, None)
-          mturkArgInd = None
-          for (i, _) in enumerate(ppArgs):
-            if (pps[i] == pp_mturkId):
-              workerId, hitId, assignmentId = action["args"][i]
-              mturkArgInd = i
-
-          if (mturkArgInd != None):
-            ppArgs.pop(mturkArgInd)
-
-          reset = Style.RESET_ALL
-          red = Fore.RED
-          green = Fore.GREEN
-
-          prompt = "[" + green + str(action['ip']) + reset + \
-              red + ":" + green + str(hitId) + reset + \
-              red + ":" + green + str(assignmentId) + reset + \
-              red + ":" + green + str(workerId) + reset + \
-              '] ' + \
-              Style.DIM + str(action['time']) + reset + ':'
-
-          call = red + action['method'] + "(" + reset \
-              + (red + "," + reset).join(ppArgs) + \
-               red + ")" + reset
-
-          if (len(action['args']) + 1 == len(pps) and 'res' in action):
-            call += "=" + pps[len(action['args'])](action['res']);
-
-          print prompt + call;
-        sys.stdout.flush();
-
-def log_d(*pps):
-    def decorator(f):
-        def decorated(*pargs, **kwargs):
-            try:
-                res = f(*pargs, **kwargs)
-                log({ "method": f.__name__, "args": pargs, "kwargs": kwargs,
-                      "res": res }, *pps)
-                return res;
-            except Exception:
-                strTrace = ''.join(traceback.format_exception(*exc_info()))
-                log({ "method": f.__name__, "args": pargs, "kwargs": kwargs,
-                      "exception": strTrace})
-                raise
-        return decorated
-    return decorator
-
-def prof_d(f):
-    def decorated(*pargs, **kwargs):
-        try:
-            pr = Profile()
-            pr.enable()
-            res = f(*pargs, **kwargs)
-            pr.disable()
-            return res;
-        except Exception:
-            raise
-        finally:
-            # Print results
-            s = StringIO()
-            ps = Stats(pr, stream=s).sort_stats('cumulative')
-            ps.print_stats()
-            print s.getvalue()
-    return decorated
-
-MYDIR = dirname(abspath(realpath(__file__)))
-ROOT_DIR = dirname(MYDIR)
-
-curLevelSetName, lvls = loadBoogieLvlSet(args.lvlset)
-traces = { curLevelSetName: lvls }
+from server_common import openLog, log, log_d
 
 class Server(Flask):
     def get_send_file_max_age(self, name):
@@ -167,6 +41,35 @@ class Server(Flask):
 
 app = Server(__name__, static_folder='static/', static_url_path='')
 api = rpc(app, '/api')
+
+## Utility functions #################################################
+def getLastVerResult(lvlset, lvlid, session):
+    events = session.query(Event)
+    verifyAttempts = events.filter(Event.type == "VerifyAttempt").all();
+    verifyAttempts = filter(
+        lambda x:  x.payl()["lvlset"] == lvlset and x.payl()["lvlid"] == lvlid,
+        verifyAttempts);
+    if (len(verifyAttempts) > 0):
+      return verifyAttempts[-1].payl();
+    else:
+      return None;
+
+def divisionToMul(inv):
+    if isinstance(inv, AstBinExpr) and \
+       inv.op in ['==', '<', '>', '<=', '>=', '!==']:
+        if (isinstance(inv.lhs, AstBinExpr) and inv.lhs.op == 'div' and\
+                isinstance(inv.lhs.rhs, AstNumber)):
+                    return AstBinExpr(inv.lhs.lhs, inv.op, \
+                                      AstBinExpr(inv.rhs, '*', inv.lhs.rhs));
+
+        if (isinstance(inv.rhs, AstBinExpr) and inv.rhs.op == 'div' and\
+                isinstance(inv.rhs.rhs, AstNumber)):
+                    return AstBinExpr(AstBinExpr(inv.lhs, "*", inv.rhs.rhs), \
+                                      inv.op, inv.rhs.lhs);
+    return inv
+
+
+## API Entry Points ##################################################
 
 @api.method("App.logEvent")
 @pp_exc
@@ -231,31 +134,6 @@ def loadLvl(levelSet, lvlId, mturkId): #pylint: disable=unused-argument
       }
 
     return lvl
-
-class IgnoreManager:
-    def __init__(self):
-        self.ignores = {}
-    def fname(self, workerId):
-        return join(ROOT_DIR, 'logs', args.ename, "ignore-" + workerId)
-    def ignoreset(self, workerId):
-        if not workerId in self.ignores:
-            self.load_from_file(workerId)
-        return self.ignores[workerId]
-    def load_from_file(self, workerId):
-        res = set()
-        try:
-            with open(self.fname(workerId)) as f:
-                for l in f.readlines():
-                    res.add(tuple(l.split()))
-        except IOError:
-            pass # file does not exist, this is just empty ignore set
-        self.ignores[workerId] = res
-    def add(self, workerId, levelSet, lvlId):
-        self.ignoreset(workerId).add((levelSet, lvlId))
-        with open(self.fname(workerId), "a") as f:
-            f.write(levelSet + " " + lvlId + "\n")
-    def contains(self,workerId, levelSet, lvlId):
-        return (levelSet, lvlId) in self.ignoreset(workerId)
 
 @api.method("App.genNextLvl")
 @pp_exc
@@ -464,7 +342,7 @@ def impliedPairs(invL1, invL2, mturkId): #pylint: disable=unused-argument
 
         if (impl):
           res.append((x,y))
-    
+
     res = [(boogieToEsprima(z3_expr_to_boogie(x)),
             boogieToEsprima(z3_expr_to_boogie(y))) for (x,y) in res]
     return res
@@ -478,18 +356,6 @@ def isTautology(inv, mturkId): #pylint: disable=unused-argument
       return res
     except Unknown:
       return False; # Conservative assumption
-
-
-def getLastVerResult(lvlset, lvlid, session):
-    events = session.query(Event)
-    verifyAttempts = events.filter(Event.type == "VerifyAttempt").all();
-    verifyAttempts = filter(
-        lambda x:  x.payl()["lvlset"] == lvlset and x.payl()["lvlid"] == lvlid,
-        verifyAttempts);
-    if (len(verifyAttempts) > 0):
-      return verifyAttempts[-1].payl();
-    else:
-      return None;
 
 @api.method("App.tryAndVerify")
 @pp_exc
@@ -562,20 +428,6 @@ def tryAndVerify(levelSet, levelId, invs, mturkId):
              "localhost", payl, s, mturkId)
 
     return res
-
-def divisionToMul(inv):
-    if isinstance(inv, AstBinExpr) and \
-       inv.op in ['==', '<', '>', '<=', '>=', '!==']:
-        if (isinstance(inv.lhs, AstBinExpr) and inv.lhs.op == 'div' and\
-                isinstance(inv.lhs.rhs, AstNumber)):
-                    return AstBinExpr(inv.lhs.lhs, inv.op, \
-                                      AstBinExpr(inv.rhs, '*', inv.lhs.rhs));
-
-        if (isinstance(inv.rhs, AstBinExpr) and inv.rhs.op == 'div' and\
-                isinstance(inv.rhs.rhs, AstNumber)):
-                    return AstBinExpr(AstBinExpr(inv.lhs, "*", inv.rhs.rhs), \
-                                      inv.op, inv.rhs.lhs);
-    return inv
 
 @api.method("App.simplifyInv")
 @pp_exc
@@ -665,7 +517,42 @@ def getSolutions(): # Lvlset is assumed to be current by default
   return res
 
 if __name__ == "__main__":
-    ignore = IgnoreManager()
+    p = argparse.ArgumentParser(description="invariant gen game server")
+    p.add_argument('--log', type=str,
+            help='an optional log file to store all user actions. ' +
+                 'Entries are stored in JSON format.')
+    p.add_argument('--port', type=int, help='a optional port number', \
+                   required=True)
+    p.add_argument('--ename', type=str, default='default',
+            help='Name for experiment; if none provided, use "default"')
+    p.add_argument('--lvlset', type=str, \
+            default='desugared-boogie-benchmarks',
+            help='Lvlset to use for serving benchmarks"')
+    p.add_argument('--db', type=str, help='Path to database')
+    p.add_argument('--adminToken', type=str,
+            help='Secret token for logging in to admin interface. ' +
+            'If omitted will be randomly generated')
+    p.add_argument('--timeout', type=int, default=60,
+            help='Timeout in seconds for z3 queries.')
+
+    args = p.parse_args();
+
+    sessionF = open_sqlite_db(args.db)
+
+    if (args.adminToken):
+      adminToken = args.adminToken
+    else:
+      adminToken = randomToken(5);
+
+    if args.log:
+        openLog(args.log);
+
+    MYDIR = dirname(abspath(realpath(__file__)))
+    ROOT_DIR = dirname(MYDIR)
+
+    curLevelSetName, lvls = loadBoogieLvlSet(args.lvlset)
+    traces = { curLevelSetName: lvls }
+
     print "Admin Token: ", adminToken
     print "Admin URL: ", "admin.html?adminToken=" + adminToken
     app.run(host='0.0.0.0',
