@@ -134,14 +134,14 @@
     function setHeader() {
       var pid = sessionStorage.getItem("playerId");
       var res = rpc.call("App.getTotalScore", [pid], function(res) {
-        $("#pid").html("Player: " + pid);
-        $("#points").html("Points: " + res);
+        $("#pid").html("<b>Player:</b> " + pid);
+        $("#points").html("<b>Points:</b> " + res);
         if (rank == null) {
           $("#rank").hide();
         }
         else {
           $("#rank").show();
-          $("#rank").html("Rank: " + rank);
+          $("#rank").html("<b>Rank:</b> " + rank);
         }
       });
     }
@@ -149,7 +149,7 @@
     function getLeaderboard() {
       var res = rpc.call("App.getAllScores", [], function(result) {
         if (result) {
-          var table = "<h4>Leaderboard</h4><table class='tg'><tr><th class='tg-9hbo'>Rank</th><th class='tg-9hbo'>Player</th><th class='tg-9hbo'>Points</th></tr>"
+          var table = "<h3>Leaderboard</h3><table class='tg'><tr><th class='tg-9hbo'>Rank</th><th class='tg-9hbo'>Player</th><th class='tg-9hbo'>Points</th></tr>"
           var rows = (result.length < 10) ? result.length : 10;
           for (var i = 0; i < rows; i++) {
             table += "<tr><td class='tg-yw4l'>" + (i+1) + "</td><td class='tg-yw4l'>" + result[i][0] + "</td><td class='tg-yw4l'>" + result[i][1] + "</td></tr>"
@@ -189,18 +189,22 @@
         }
 
         if (allGames.length > 0) {
-          var table = "<table class='tg'><tr><th class='tg-9hbo'>Game</th><th class='tg-9hbo'># Players</th><th class='tg-9hbo'># Expressions</th></tr>"
+          var table = "<table class='tg' style='margin: 0 auto;'><tr><th class='tg-9hbo'>Game</th><th class='tg-9hbo'># Players</th><th class='tg-9hbo'># Expressions</th></tr>"
           for (var i = 0, len = allGames.length; i < len; i++) {
             table += "<tr><td class='tg-yw4l'><a href='" + (window.location.origin + "/game_np.html?gameId=" + allGames[i].id) + "'>" + allGames[i].id + "</a></td><td class='tg-yw4l'>" + allGames[i].players + "</td><td class='tg-yw4l'>" + allGames[i].expr + "</td></tr>"
           }
           table += "</table>";
+          $("#joinDetails").show();
           $("#gameList").show();
+          $("#noGamesMsg").hide();
           $("#gameList").html(table);
         }
         else {
-          // $("#select-msg").text("There are no open games currently.")
           $("#select-msg").hide();
           $("#gameList").hide();
+          $("#joinDetails").hide();
+          $("#noGamesMsg").show();
+
         }
         setHeader();
       });
@@ -226,6 +230,7 @@
       $("#optJoin").click(showJoin);
       $("#optLogout").click(logout);
       $("#optBackJoin").click(hideJoin);
+      $("#optBackToJoin").click(hideJoin);
       $("#gameId").keyup(validateGameId);
       $("#join").click(checkGameId);
       $(".ui-tabs-tab").click(function() {$("#joinGame").hide()});
@@ -269,42 +274,56 @@
       </ul>
       
       <div id="profile" class="row menu">
-        <h4 id="pid"></h4>
-        <h4 id="points"></h4>
-        <h4 id="rank"></h4>
         <br />
-        <button id="optLogout" class="btn-quit">Logout</button>
+        <div class="col-md-4"></div>
+        <div class="col-md-4">
+          <h4 id="pid"></h4>
+          <h4 id="points"></h4>
+          <h4 id="rank"></h4>
+          <br />
+          <button id="optLogout" class="btn-quit">Logout</button>
+        </div>
+        <div class="col-md-4"></div>
       </div>
 
-      <div id="tutorials" class="row menu">
-        Click here to launch the tutorial: <button id="tutorial" class="btn-quit">Tutorial</button>
+      <div id="tutorials" class="row menu centered">
+        <br />
+        <button id="tutorial" class="btn-quit">Launch Tutorial</button>
         <br /><br />
       </div>
 
-      <div id="options" class="row menu">
-        <button id="optStart" class="btn-quit">New Game</button>
+      <div id="options" class="row menu centered">
+        <button id="optStart" class="btn-quit">Start New Game</button>
         <br /><br />
-        <button id="optJoin" class="btn-quit">Join Game</button>
+        <button id="optJoin" class="btn-quit">Join Existing Game</button>
         <br /><br />
       </div>
 
       <div class="row menu" id="joinGame" hidden="true">
-        <label id="lblJoin">Enter Game ID:</label>
-        <input id="gameId" type="text" placeholder="Enter Game ID"></input>
-        <br />
-        <button id="join" type="submit" class="btn-quit" disabled="true">Join</button>
-        <button id="optBackJoin" type="button" class="btn-quit">Back</button>
-        <br />
-        <label id="notFound" class="error"></label>
-        <br /><br />
-        <div id="select-msg">
-          OR
+        <div id="joinDetails">
+          <label id="lblJoin">Enter Game ID:</label>
+          <input id="gameId" type="text" placeholder="Enter Game ID"></input>
+          <br />
+          <button id="join" type="submit" class="btn-quit" disabled="true">Join</button>
+          <button id="optBackJoin" type="button" class="btn-quit">Back</button>
+          <br />
+          <label id="notFound" class="error"></label>
           <br /><br />
-          Select a current game from below:</div>
-        <div id="gameList"></div>
+          <div id="select-msg">
+            OR
+            <br /><br />
+            Select a current game from below:</div>
+          <div id="gameList"></div>
+        </div>
+        <div id="noGamesMsg" class="centered">
+          <br />
+          <h4>There are no ongoing games to join.</h4>
+          <br />
+          <button id="optBackToJoin" type="button" class="btn-quit">Back</button>
+        </div>
       </div>
 
-      <div id="leaderboard" class="row menu"></div>
+      <div id="leaderboard" class="row menu centered"></div>
 
       <div id="feedback" class="row menu">
         <div class="container">
