@@ -295,6 +295,9 @@
     function findWeakInvariants() {
       if (playerLvl) {
         var currentLvlExpressions = values.expressions[playerLvl.id];
+        if (currentLvlExpressions.length < 2) {
+          break;
+        }
         for (var exp in currentLvlExpressions) {
           var curExp = esprima.parse(exp);
           var otherExps = [];
@@ -310,16 +313,13 @@
           impliedPairs([curExp], otherExp, function(x) {
             if (x !== null && x.length > 0) {
               for (var i = 0; i < x.length; i++) {
-                var exp1 = esprimaToStr(x[i][0]);
+                // var exp1 = esprimaToStr(x[i][0]);
                 var exp2 = esprimaToStr(x[i][1]);
                 // console.log(exp1 + " ==> " + exp2);
                 crush(exp2);
               }
               addBonus();
             }
-            // else {
-            //   points = 0;
-            // }
           });
         }
       }

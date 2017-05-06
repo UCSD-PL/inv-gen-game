@@ -33,6 +33,7 @@ from db_util import playersWhoStartedLevel, enteredInvsForLevel, getOrAddSource,
   levelSolved, levelFinishedBy
 from atexit import register
 from flask_compress import Compress
+from flask.ext.cache import Cache
 
 from nplayer_db import *
 
@@ -162,6 +163,7 @@ class Server(Flask):
 
 app = Server(__name__, static_folder='static/', static_url_path='')
 Compress(app)
+cache = Cache(app,config={'CACHE_TYPE': 'simple'})
 api = rpc(app, '/api')
 
 @api.method("App.logEvent")
@@ -371,6 +373,7 @@ def equivalentPairs(invL1, invL2, mturkId):
 @api.method("App.impliedPairs")
 @pp_exc
 @log_d(pp_EsprimaInvs, pp_EsprimaInvs, pp_mturkId, pp_EsprimaInvPairs)
+@cache.memoize(timeout=1000)
 def impliedPairs(invL1, invL2, mturkId):
     z3InvL1 = [esprimaToZ3(x, {}) for x in invL1]
     z3InvL2 = [esprimaToZ3(x, {}) for x in invL2]
@@ -484,6 +487,7 @@ kvStore = { }
 @api.method("App.get")
 @pp_exc
 @log_d(str)
+@cache.memoize(timeout=50)
 def get(key):
     if (type(key) != unicode):
       raise Exception("Key must be string");
