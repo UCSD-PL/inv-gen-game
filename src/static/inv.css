@@ -609,3 +609,11 @@ form .likert li label {width:100%;}
 .highlight {
   color:  red;
 }
+
+.good-invariant {
+  padding: 0.5em;
+}
+
+.score-label {
+  padding-top: 8px;
+}
