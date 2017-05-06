@@ -91,6 +91,7 @@
     }
 
     function nextLvl() {
+      numExpFound = 0;
       if (dynamicLvlOrder)
         loadNextTrace()
       else
@@ -682,6 +683,7 @@
       $('#quit').click(quit);
       $('#skip-to-next-lvl').click(function () {
         // nextLvl();
+        numExpFound = 0;
         saveState(playerId);
         $('#skip-to-next-lvl').hide();
         $('#skip-to-next-lvl').prop("disable", true);
@@ -702,6 +704,7 @@
         loadLvlSet("desugared-boogie-benchmarks");
 
       gameLogic.onLvlLoaded(function () {
+        numExpFound = 0;
         if (!doneScript) {
           curScript = new Script(tutorialScript)
           doneScript = true;
