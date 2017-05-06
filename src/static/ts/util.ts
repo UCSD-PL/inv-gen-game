@@ -521,3 +521,7 @@ function min(...args: number[]): number {
     }
   return min
 }
+
+function toInt(num: any): number {
+  return parseInt(num.toString());
+}

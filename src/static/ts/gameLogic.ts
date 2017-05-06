@@ -256,8 +256,8 @@ class StaticGameLogic extends BaseGameLogic implements IGameLogic {
                 gl.pwupSuggestion.invariantTried(parsedInv);
                 setTimeout(() => gl.setPowerups(gl.pwupSuggestion.getPwups()), 1000); // TODO: Remove hack
 
-                gl.score = (parseInt(gl.score.toString()) + parseInt(addScore.toString()));
-                gl.scoreW.add(parseInt(addScore.toString()));
+                gl.score = (toInt(gl.score) + toInt(addScore));
+                gl.scoreW.add(toInt(addScore));
                 gl.foundJSInv.push(ui)
                 gl.progressW.addInvariant(ui.id, ui.rawInv);
                 gl.tracesW.setExp("");
@@ -437,8 +437,8 @@ class PatternGameLogic extends BaseGameLogic {
                 gl.tracesW.immediateError("This is weaker than a found expression!")
               } else {
                 var addScore: number = gl.computeScore(ui.rawInv, 1)
-                gl.score = (parseInt(gl.score.toString()) + parseInt(addScore.toString()));
-                gl.scoreW.add(parseInt(addScore.toString()));
+                gl.score = (toInt(gl.score) + toInt(addScore));
+                gl.scoreW.add(toInt(addScore));
                 gl.foundJSInv.push(ui)
                 gl.invMap[ui.id] = ui;
                 gl.progressW.addInvariant(ui.id, ui.rawInv);
@@ -877,8 +877,8 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
                 gl.pwupSuggestion.invariantTried(jsInvEs);
                 setTimeout(() => gl.setPowerups(gl.pwupSuggestion.getPwups()), 1000); // TODO: Remove hack
 
-                gl.score = (parseInt(gl.score.toString()) + parseInt(addScore.toString()));
-                gl.scoreW.add(parseInt(addScore.toString()));
+                gl.score = (toInt(gl.score) + toInt(addScore));
+                gl.scoreW.add(toInt(addScore));
                 gl.foundInv.push(inv);
                 gl.foundJSInv.push(jsInv);
                 gl.progressW.addInvariant(inv, jsInvEs);

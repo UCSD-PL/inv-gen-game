@@ -8,13 +8,9 @@ class ScoreWindow {
   }
 
   add(num: number): void {
-    let score = this.score.toString();
-    this.score = parseInt(score);
-    
-    let numTemp = num.toString();
-    num = parseInt(numTemp);
-
-    this.score = parseInt((this.score + num).toString());
+    this.score = toInt(this.score);
+    num = toInt(num);
+    this.score = toInt((this.score + num));
     
     $(this.parent).html("<span>" + this.score + "</span>");
     let addSpan = $("<span class='scoreText scoreFloat'>+" + num + "</span>")
@@ -40,6 +36,20 @@ class NPlayerScoreWindow extends ScoreWindow {
     $("#scoreboard-div-row").append("<div id=\"scoreboard\"></div>");
   }
 
+  addBonus(num: number) {
+    this.score = toInt(this.score);
+    num = toInt(num);
+    this.score = toInt((this.score + num));
+    
+    $(this.parent).html("<span>" + this.score + "</span>");
+    let addSpan = $("<span class='scoreTextBonus scoreFloat'>+" + num + "</span>")
+    $(this.parent).append(addSpan)
+    addSpan.position({ "my": "left center", "at": "right+10 center", "of": this.parent })
+    addSpan.hide({ effect: "puff", easing:"swing", duration:2000, complete: function() { 
+      $(addSpan).remove();
+    }
+    });
+  }
   comparePlayers(a: any, b: any) {
     if (a.score < b.score) {
       return -1;
