@@ -110,7 +110,7 @@ while bbneed or len(alltraces) < 2 * mintraces:
     write_trace(valss)
 
   nbbcov = len(bbset.intersection(bbhit))
-  print "Found %d traces with coverage %d/%d (%f%%)" % (len(valss),
+  print "Found a trace of length %d with coverage %d/%d (%f%%)" % (len(valss),
     nbbcov, nbbset, nbbcov * 100. / nbbset)
   print "Still need:", bbneed
 

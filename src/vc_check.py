@@ -15,11 +15,11 @@ def conservative_tautology(q):
   except Unknown:
     return False;
 
-def _from_dict(vs, vals):
+def _from_dict(vs, vals, missing= None):
     if type(vals) == tuple:
         return ( _from_dict(vs, vals[0]), _from_dict(vs, vals[1]) )
     else:
-        return [ vals[vs[i]] if vs[i] in vals else None for i in xrange(0, len(vs)) ]
+        return [ vals[vs[i]] if vs[i] in vals else missing for i in xrange(0, len(vs)) ]
 
 def traceConstantVars(lvl):
   vs = lvl['variables']

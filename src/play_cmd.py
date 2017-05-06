@@ -91,6 +91,7 @@ if __name__ == "__main__":
           env = { vs[i]: (gR[i] if gR[i] != None else 0) for i in xrange(len(gR)) }
           greenRowsEvals[i] = evalPred(binv, env);
 
+        redRowsEvals = { }
         for i in xrange(len(redRows)):
           rR = redRowsL[i]
           env = { vs[i]: rR[i] for i in xrange(len(rR)) if rR[i] != '*' }
@@ -124,7 +125,7 @@ if __name__ == "__main__":
         direct_violations = loopInvSafetyCtrex(loop, curInvs, bbs, args.timeout);
         for endEnv in direct_violations:
           redRows.add(tuple([endEnv.get(v, '*') for v in vs]))
-          redRowsL = list(redRows)
+        redRowsL = list(redRows)
         roundN += 1
         print "======================================================="
       print "Congrats! You solved :", lvlName, " after ", roundN, " rounds!"

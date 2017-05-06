@@ -3,7 +3,7 @@ class Level {
     public variables: string[],
     public data: dataT,
     public goal: any,
-    public hint: string) {
+    public hint: any) {
   }
   static load(lvlSet: string, id: string, cb: (lvl: Level) => void) {
     rpc_loadLvlBasic(lvlSet, id, function(data) {
@@ -17,7 +17,7 @@ class DynamicLevel extends Level{
     public variables: string[],
     public data:  dataT,
     public goal:  any,
-    public hint:  string,
+    public hint:  any,
     public exploration_state: any) {
     super(id, variables, data, goal, hint);
   }
@@ -34,7 +34,7 @@ class PrepopulatedDynamicLevel extends DynamicLevel {
     variables: string[],
     data:  dataT,
     goal:  any,
-    hint:  string,
+    hint:  any,
     exploration_state: any,
     public startingInvs: [[invariantT, any[]][], [invariantT, [any[], any[]]][], invariantT[]]) {
     super(id, variables, data, goal, hint, exploration_state);

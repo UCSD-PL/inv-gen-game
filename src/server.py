@@ -15,7 +15,7 @@ from cProfile import Profile
 from pstats import Stats
 from StringIO import StringIO
 from random import choice
-from vc_check import _from_dict, tryAndVerifyLvl
+from vc_check import _from_dict, tryAndVerifyLvl, loopInvSafetyCtrex
 
 from levels import _tryUnroll, findNegatingTrace, loadBoogieLvlSet
 
@@ -445,8 +445,15 @@ def tryAndVerify(levelSet, levelId, invs, mturkId):
 
     # See if the level is solved
     solved = len(violations) == 0;
-    fix = lambda x: _from_dict(lvl['variables'], x)
-    
+    fix = lambda x: _from_dict(lvl['variables'], x, 0)
+
+    if (not solved):
+        bbs = lvl["program"]
+        loop = lvl["loop"]
+        direct_ctrexs = loopInvSafetyCtrex(loop, otherInvs.union(userInvs), bbs, args.timeout);
+    else:
+        direct_ctrexs = []
+
     # Convert all invariants from Boogie to esprima expressions, and counterexamples to arrays
     # from dictionaries
     overfitted = [ (boogieToEsprima(inv), fix(v.endEnv()))
@@ -455,26 +462,43 @@ def tryAndVerify(levelSet, levelId, invs, mturkId):
       for (inv, v) in nonind ]
     sound = [ boogieToEsprima(inv) for inv in sound ]
     safety_ctrexs = [ fix(v.startEnv()) for v in violations ]
+    direct_ctrexs = [ fix(v) for v in direct_ctrexs ]
 
-    res = (overfitted, nonind, sound, safety_ctrexs)
+
+    res = (overfitted, nonind, sound, safety_ctrexs, direct_ctrexs)
     addEvent("verifier", "VerifyAttempt", time(), args.ename, "localhost", {
       "lvlset": levelSet,
       "lvlid": levelId,
       "overfitted":nodups([str(esprimaToBoogie(inv, {})) for (inv,c) in overfitted]),
       "nonind":nodups([str(esprimaToBoogie(inv, {})) for (inv,c) in nonind]),
       "sound":nodups([str(esprimaToBoogie(inv, {})) for inv in sound]),
-      "post_ctrex":safety_ctrexs
+      "post_ctrex":safety_ctrexs,
+      "direct_ctrex": direct_ctrexs
     }, s, mturkId)
 
     return res
+
+def divisionToMul(inv):
+    if isinstance(inv, AstBinExpr) and inv.op in ['==', '<', '>', '<=', '>=', '!==']:
+        if (isinstance(inv.lhs, AstBinExpr) and inv.lhs.op == 'div' and\
+                isinstance(inv.lhs.rhs, AstNumber)):
+                    return AstBinExpr(inv.lhs.lhs, inv.op, AstBinExpr(inv.rhs, '*', inv.lhs.rhs));
+
+        if (isinstance(inv.rhs, AstBinExpr) and inv.rhs.op == 'div' and\
+                isinstance(inv.rhs.rhs, AstNumber)):
+                    return AstBinExpr(AstBinExpr(inv.lhs, "*", inv.rhs.rhs), inv.op, inv.rhs.lhs);
+    return inv
 
 @api.method("App.simplifyInv")
 @pp_exc
 @log_d(pp_EsprimaInv, pp_mturkId, pp_EsprimaInv)
 def simplifyInv(inv, mturkId):
-    z3_inv = esprimaToZ3(inv, {});
+    boogieInv = esprimaToBoogie(inv, {});
+    noDivBoogie = divisionToMul(boogieInv);
+    z3_inv = expr_to_z3(noDivBoogie, AllIntTypeEnv())
     simpl_z3_inv = simplify(z3_inv, arith_lhs=True);
-    return boogieToEsprima(z3_expr_to_boogie(simpl_z3_inv));
+    simpl_boogie_inv = z3_expr_to_boogie(simpl_z3_inv);
+    return boogieToEsprima(simpl_boogie_inv);
 
 @api.method("App.getRandomCode")
 @pp_exc

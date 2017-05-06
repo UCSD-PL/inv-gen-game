@@ -211,7 +211,7 @@ class StaticGameLogic extends BaseGameLogic implements IGameLogic {
 
     try {
       let pos_res = invEval(parsedInv, this.curLvl.variables, this.curLvl.data[0]);
-      let res: [any[], any[], [any, any][]] = [pos_res, [], []];
+      let res: [any[], [any, any][], any[]] = [pos_res, [], []];
       this.tracesW.evalResult({ data: res });
 
       if (!evalResultBool(res))
@@ -394,7 +394,7 @@ class PatternGameLogic extends BaseGameLogic {
       }
 
       let pos_res = invEval(parsedInv, this.curLvl.variables, this.curLvl.data[0])
-      let res: [any[], any[], [any, any][]] = [pos_res, [], [] ]
+      let res: [any[], [any, any][], any[]] = [pos_res, [], [] ]
       this.tracesW.evalResult({ data: res })
 
       if (!evalResultBool(res))
@@ -746,7 +746,7 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
     try {
       let doProceed = true;
       let pos_res = invEval(parsedInv, this.curLvl.variables, this.curLvl.data[0]);
-      let res: [any[], any[], [any, any][]] = [pos_res, [], []];
+      let res: [any[], [any, any][], any[]] = [pos_res, [], []];
       this.tracesW.evalResult({ data: res });
 
       if (!evalResultBool(res))
