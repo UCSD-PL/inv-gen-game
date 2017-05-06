@@ -163,7 +163,7 @@ class Server(Flask):
 
 app = Server(__name__, static_folder='static/', static_url_path='')
 Compress(app)
-cache = Cache(app,config={'CACHE_TYPE': 'simple'})
+cache = Cache(app,config={'CACHE_TYPE': 'filesystem', 'CACHE_DIR': '/'})
 api = rpc(app, '/api')
 
 @api.method("App.logEvent")
