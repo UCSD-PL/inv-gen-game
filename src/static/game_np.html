@@ -296,7 +296,7 @@
       if (playerLvl) {
         var currentLvlExpressions = values.expressions[playerLvl.id];
         if (currentLvlExpressions.length < 2) {
-          break;
+          return;
         }
         for (var exp in currentLvlExpressions) {
           var curExp = esprima.parse(exp);

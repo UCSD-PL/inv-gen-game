@@ -170,7 +170,7 @@
         for (var id in res) {
           var currentGameId = id;
           var result = res[id][1];
-          var currentGamePlayers = result ? result.players.length : 0;
+          var currentGamePlayers = result && result.players ? result.players.length : 0;
           var currentGameExpressions = result ? result.expressions : {};
 
           var expr = [];
