@@ -458,14 +458,14 @@
     }
 
     function saveState(id) {
-      var gameId = sessionStorage.getItem("gameId");
-
-      var gameScore = parseInt(gameLogic.score.toString());
-      var sessionScore = sessionStorage.getItem("score") ? parseInt(sessionStorage.getItem("score").toString()) : 0;
-      gameScore = gameScore > sessionScore ? gameScore : sessionScore;
-      
-      sessionStorage.setItem("score", gameScore);
-      res = rpc.call("App.updateScore", [id, gameId, gameScore], function() {return;})
+      if (id) {
+        var gameId = sessionStorage.getItem("gameId");
+        var gameScore = gameLogic && gameLogic.score ? parseInt(gameLogic.score.toString()) : 0;
+        var sessionScore = sessionStorage.getItem("score") ? parseInt(sessionStorage.getItem("score").toString()) : 0;
+        gameScore = (gameScore > sessionScore) ? gameScore : sessionScore;
+        sessionStorage.setItem("score", gameScore);
+        res = rpc ? rpc.call("App.updateScore", [id, gameId, gameScore], function() {return;}) : null;
+      }
     }
 
     function doneScreen(alldone) {
@@ -674,6 +674,7 @@
       $('#quit').click(quit);
       $('#skip-to-next-lvl').click(function () {
         // nextLvl();
+        saveState(playerId);
         $('#skip-to-next-lvl').hide();
         $('#skip-to-next-lvl').prop("disable", true);
         gameLogic.skipToNextLvl();
@@ -719,6 +720,8 @@
         while (!gameId) {}
         synchronize();
       }, time);
+    
+    setInterval(saveState(playerId), 10000);
 
   </script>
 </head>
@@ -880,7 +883,7 @@
         </div>
         <div class='row ' id='quit-div'>
           <button id='quit' class='btn-quit'>Quit</button>
-          <button id='skip-to-next-lvl' class='btn-next' style='display: none;'>Next Level</button>
+          <button id='skip-to-next-lvl' class='btn-next' style='display: none;'>Skip To Next Level</button>
         </div>
         <!--<div class='row-md-6'>
           <div class='col-md-8' id='hint-col'>
