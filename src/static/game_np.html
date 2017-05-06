@@ -134,7 +134,8 @@
       if (sState.length !== 2 || lState.length !== 2) {
         return false;
       }
-      return (sState[0] === lState[0]) && equalValues(sState[1], lState[1]);
+      // return (sState[0] === lState[0]) && equalValues(sState[1], lState[1]);
+      return equalValues(sState[1], lState[1]);
     }
 
     function equalValues(sVal, lVal) {
@@ -151,10 +152,17 @@
       if (p1.length !== p2.length) {
         return false;
       }
-      for (var i = p1.length; i--;) {
-        if ((p1[i].id !== p2[i].id)
-        || (p1[i].score !== p2[i].score)
-        || (p1[i].level !== p2[i].level)) {
+      for (var i = p1.length - 1; i >= 0; i--) {
+        var id1 = p1[i].id;
+        var id2 = p2[i].id;
+        var score1 = p1[i].score;
+        var score2 = p2[i].score;
+        var level1 = p1[i].level.id;
+        var level2 = p2[i].level.id;
+        
+        if ((id1 !== id2)
+        || (score1 !== score2)
+        || (level1 !== level2)) {
           return false;
         }
       }
