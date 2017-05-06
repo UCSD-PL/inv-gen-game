@@ -32,6 +32,7 @@ from models import open_sqlite_db, Event
 from db_util import playersWhoStartedLevel, enteredInvsForLevel, getOrAddSource, addEvent,\
   levelSolved, levelFinishedBy
 from atexit import register
+from flask_compress import Compress
 
 from nplayer_db import *
 
@@ -160,6 +161,7 @@ class Server(Flask):
         return 0
 
 app = Server(__name__, static_folder='static/', static_url_path='')
+Compress(app)
 api = rpc(app, '/api')
 
 @api.method("App.logEvent")
