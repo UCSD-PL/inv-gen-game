@@ -340,6 +340,8 @@ def expr_to_z3(expr, typeEnv):
             return And(Implies(e1, e2), Implies(e2,e1))
         elif expr.op == "==>":
             return Implies(e1, e2)
+        elif expr.op == "=>":
+            return Implies(e1, e2)
         elif expr.op == "||":
             return Or(e1, e2)
         elif expr.op == "&&":
