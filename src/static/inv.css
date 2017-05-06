@@ -139,6 +139,13 @@
   text-align: center;
 }
 
+.scoreTextBonus {
+  font-size: 40px;
+  font-weight: bold;
+  color:  gold;
+  text-align: center;
+}
+
 .scoreText1 {
   font-size: 40px;
   font-weight: bold;

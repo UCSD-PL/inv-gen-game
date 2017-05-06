@@ -92,6 +92,9 @@
 
     function nextLvl() {
       numExpFound = 0;
+      if (playerId) {
+        saveState(playerId);
+      }
       if (dynamicLvlOrder)
         loadNextTrace()
       else
@@ -307,29 +310,34 @@
         if (currentLvlExpressions.length < 2) {
           return;
         }
-        for (var exp in currentLvlExpressions) {
-          var curExp = esprima.parse(exp);
-          var otherExps = [];
-          
-          for (var exps in currentLvlExpressions) {
-            if (exp !== exps) {
-              otherExps.push(exps);
-            }
-          }
-
-          var otherExp = otherExps.map(esprima.parse);
-
-          impliedPairs([curExp], otherExp, function(x) {
-            if (x !== null && x.length > 0) {
-              for (var i = 0; i < x.length; i++) {
-                // var exp1 = esprimaToStr(x[i][0]);
-                var exp2 = esprimaToStr(x[i][1]);
-                // console.log(exp1 + " ==> " + exp2);
-                crush(exp2);
+        else if (($(".good-invariant").length - $(".implied").length) < 2) {
+          return;
+        }
+        else {
+          for (var exp in currentLvlExpressions) {
+            var curExp = esprima.parse(exp);
+            var otherExps = [];
+            
+            for (var exps in currentLvlExpressions) {
+              if (exp !== exps) {
+                otherExps.push(exps);
               }
-              addBonus();
             }
-          });
+
+            var otherExp = otherExps.map(esprima.parse);
+
+            impliedPairs([curExp], otherExp, function(x) {
+              if (x !== null && x.length > 0) {
+                for (var i = 0; i < x.length; i++) {
+                  // var exp1 = esprimaToStr(x[i][0]);
+                  var exp2 = esprimaToStr(x[i][1]);
+                  // console.log(exp1 + " ==> " + exp2);
+                  crush(exp2);
+                }
+                addBonus();
+              }
+            });
+          }
         }
       }
     }
@@ -337,24 +345,40 @@
     function addBonus() {
       if (points > 0) {
         var score = bonus * points;
-        scoreW.add(score);
-        gameLogic.score = (parseInt(gameLogic.score.toString()) + parseInt(score.toString()));
+        scoreW.addBonus(score);
+        gameLogic.score = (toInt(gameLogic.score) + toInt(score));
         var sessionScore = sessionStorage.getItem("score");
-        sessionStorage.setItem("score", (parseInt(sessionScore.toString()) + parseInt(score.toString())));
+        sessionStorage.setItem("score", (toInt(sessionScore) + toInt(score)));
         points = 0;
       }
     }
 
     function crush(expression) {
       var expressions = values.expressions[playerLvl.id];
-      var exp = expressions && esprimaMapping && esprimaMapping[expression] ? expressions[esprimaMapping[expression]] : null;
-      var expId = exp && exp.id ? exp.id : null;
-      if (expId) {
-        var elem = $("#" + expId);
-        if (!elem.hasClass("implied")) {
-          points = (parseInt(points.toString()) + 1);
-          elem.slideUp();
-          elem.addClass("implied");
+      var mapped = (esprimaMapping && esprimaMapping[expression]) ? esprimaMapping[expression] : null;
+      var exp = null;
+      if (expressions && mapped) {
+        var index = Object.keys(expressions).indexOf(mapped);
+        var index2 = Object.keys(expressions).indexOf("(" + mapped + ")");
+        if (index >= 0) {
+          exp = Object.keys(expressions)[index];
+        }
+        else if (index2 >= 0) {
+          exp = Object.keys(expressions)[index2];
+        }
+      }
+
+      exp = exp.replace(/^\(/g, "").replace(/\)$/g, "");
+
+      if (exp) {
+        var elems = $(".good-invariant:contains('" + exp + "')");
+        for (var i = 0; i < elems.length; i++) {
+          var elem = $("#" + elems[i].id);
+          if (!elem.hasClass("implied")) {
+            points = (toInt(points) + 1);
+            elem.addClass("implied");
+            elem.slideUp();
+          }
         }
       }
     }
@@ -469,8 +493,8 @@
     function saveState(id) {
       if (id) {
         var gameId = sessionStorage.getItem("gameId");
-        var gameScore = gameLogic && gameLogic.score ? parseInt(gameLogic.score.toString()) : 0;
-        var sessionScore = sessionStorage.getItem("score") ? parseInt(sessionStorage.getItem("score").toString()) : 0;
+        var gameScore = gameLogic && gameLogic.score ? toInt(gameLogic.score) : 0;
+        var sessionScore = sessionStorage.getItem("score") ? toInt(sessionStorage.getItem("score")) : 0;
         gameScore = (gameScore > sessionScore) ? gameScore : sessionScore;
         sessionStorage.setItem("score", gameScore);
         res = rpc ? rpc.call("App.updateScore", [id, gameId, gameScore], function() {return;}) : null;
