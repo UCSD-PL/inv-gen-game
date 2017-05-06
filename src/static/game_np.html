@@ -39,13 +39,13 @@
     var currentGen = 0;
     var values = { expressions: {}, players: [] };
     var playerLvl = null;
-    var time = 1000;
+    var time = 2000;
     var numReqExpr = 4;
     var numExpFound = 0;
     var numFound = 0;
     var doneScript = false;
     var esprimaMapping = {};
-    var bonus = 5;
+    var bonus = 10;
     var points = 0;
 
 
@@ -272,7 +272,6 @@
       updateMapping();
       points = 0;
       findWeakInvariants();
-      addBonus();
     }
 
     function updateMapping() {
@@ -316,10 +315,11 @@
                 // console.log(exp1 + " ==> " + exp2);
                 crush(exp2);
               }
+              addBonus();
             }
-            else {
-              points = 0;
-            }
+            // else {
+            //   points = 0;
+            // }
           });
         }
       }
@@ -343,9 +343,9 @@
       if (expId) {
         var elem = $("#" + expId);
         if (!elem.hasClass("implied")) {
+          points = (parseInt(points.toString()) + 1);
           elem.slideUp();
           elem.addClass("implied");
-          points = (points + 1);
         }
       }
     }
@@ -524,10 +524,10 @@
         window.location.href = "login.html";
       }
 
-      var gameURL = window.location.href;
+      // var gameURL = window.location.href;
 
       $("#lblGameId").text(gameId);
-      $("#lblGameURL").text(gameURL);
+      // $("#lblGameURL").text(gameURL);
       $("#lblPlayerId").text(playerId);
 
       $(window).bind("beforeunload", function() { 
@@ -724,16 +724,16 @@
 </head>
 <body>
   <div class='container'>
-    <div class="row menu">
-      <h2>Multiplayer inv-gen-game</h2>
-    </div>
-    <div class="row centered" id="shareGameId">
-      <h4>
-        Hi <span id="lblPlayerId"></span>, invite others to join your game by sharing this code: <label id="lblGameId" class="success"></label>
-      </h4>
-      <h4>
-        You can also invite them to join through this URL: <label id="lblGameURL" class="success"></label>
-      </h4>
+    <div class="row">
+      <div class="col-md-3 centered">
+        <h3>Player: <label id="lblPlayerId" class="success"></label></h3>
+      </div>
+      <div class="col-md-6 centered">
+        <h2>Multiplayer inv-gen-game</h2>
+      </div>
+      <div class="col-md-3 centered">
+        <h3>Game: <label id="lblGameId" class="success"></label></h3>
+      </div>
     </div>
   </div>
   <div class='container'>
