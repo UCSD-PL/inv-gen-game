@@ -1,4 +1,6 @@
-from ast import *;
+from lib.boogie.ast import parseAst, AstImplementation, AstLabel, \
+        AstAssert, AstAssume, AstHavoc, AstAssignment, AstGoto, \
+        AstReturn;
 from collections import namedtuple
 
 def unique(iterable, msg=""):
@@ -45,20 +47,22 @@ def get_bbs(filename):
 def is_internal_bb(bb):
     return bb.startswith("_union_") or bb == "_tmp_header_pred_"
 
-def entry(bbs):
-    e = [x for x in bbs if not is_internal_bb(x) and len(bbs[x].predecessors) == 0]
+def bbEntry(bbs):
+    e = [x for x in bbs
+           if (not is_internal_bb(x) and len(bbs[x].predecessors) == 0)]
     assert (len(e) == 1)
     return e[0]
 
-def exits(bbs):
-    return [x for x in bbs if not is_internal_bb(x) and len(bbs[x].successors) == 0]
+def bbExits(bbs):
+    return [x for x in bbs
+              if not is_internal_bb(x) and len(bbs[x].successors) == 0]
 
-def exit(bbs):
-    return unique(exits(bbs))
+def bbExit(bbs):
+    return unique(bbExits(bbs))
 
 def bbpath_to_stmts(bb_path, bbs):
     r = []
-    for b in bb_path:   
+    for b in bb_path:
         if (isinstance(b, BB)):
             r.extend(bbs[b].stmts)
         else:
@@ -66,7 +70,7 @@ def bbpath_to_stmts(bb_path, bbs):
     return r
 
 def ensureSingleExit(bbs):
-    e = exits(bbs);
+    e = bbExits(bbs);
     if (len(e) == 1):
       return;
 

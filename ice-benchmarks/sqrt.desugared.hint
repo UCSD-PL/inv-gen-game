@@ -1,4 +1,0 @@
-{
-  "type": "post-assert",
-  "assert": "(a+1)*(a+1) == su"
-}

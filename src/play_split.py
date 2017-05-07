@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#pylint: disable=line-too-long
 
 import boogie.ast
 import boogie.eval
@@ -6,6 +7,7 @@ import json
 import os
 import tabulate
 import lib.common.util
+import util
 
 DATA_SET = [
   {

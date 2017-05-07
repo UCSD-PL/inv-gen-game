@@ -1,20 +1,22 @@
 import traceback
 from itertools import chain, combinations
-from sys import exc_info, stderr, exit
+from sys import exc_info, stderr
+from random import choice
 
 def error(*args):
   if (len(args) > 0 and str(args[0]) and '%' in args[0]):
     fmt = args[0]
     rest = args[1:]
-    if '\n' not in fmt: fmt += '\n'
-    stderr.write(fmt % typle(rest))
+    if '\n' not in fmt:
+        fmt += '\n'
+    stderr.write(fmt % tuple(rest))
   else:
     stderr.write(" ".join(map(str, args)) + "\n")
 
 def fatal(*args):
   error(*args)
   exit(-1)
-      
+
 def unique(iterable, msg=""):
   """ assert that iterable has one element and return it """
   l = list(iterable)
@@ -27,14 +29,15 @@ def pp_exc(f):
     def decorated(*args, **kwargs):
         try:
             return f(*args, **kwargs)
-        except Exception,e:
+        except Exception:
             traceback.print_exception(*exc_info())
             raise
     return decorated
 
 def powerset(s):
   """ Return the powerset of a set s """
-  for subS in chain.from_iterable(combinations(s, l) for l in range(len(s) + 1)):
+  it = chain.from_iterable(combinations(s, l) for l in range(len(s) + 1))
+  for subS in it:
     yield set(subS)
 
 def average(vals):
@@ -61,3 +64,8 @@ def nodups(s):
 
 def flattenSet(s):
   return reduce(lambda x,y: set(x).union(y), s, set([]))
+
+def randomToken(l):
+  alphanum = "".join([chr(ord('a') + i) for i in range(26) ] +\
+          [ str(i) for i in range(0,10)])
+  return "".join([ choice(alphanum) for _ in xrange(l) ]);

@@ -1,10 +1,8 @@
 #!/usr/bin/env python
-
 import argparse
 import boogie.ast
 import levels
 import tabulate
-from boogie.eval import *
 from levels import getEnsamble
 from random import randint
 from json import dumps
@@ -20,13 +18,15 @@ curLevelSetName, lvls = levels.loadBoogieLvlSet(args.lvlset)
 for lvl_name in lvls:
   print "Trying random values for ", lvl_name
   lvl = lvls[lvl_name]
-  traces = getEnsamble(lvl["loop"], lvl["program"], 1000, 5, lambda:  randint(-100, 100))
+  traces = getEnsamble(lvl["loop"], lvl["program"], 1000, 5,\
+                       lambda:  randint(-100, 100))
   if (len(traces) == 0):
     print "Found ", len(traces), " traces."
     continue
 
-  print "Found ", len(traces), " traces with ", sum(map(len, traces)), " total rows ",\
-    " and ", sum(map(len, traces))*1.0/len(traces), " average length."
+  print "Found ", len(traces), " traces with ", sum(map(len, traces)), \
+    " total rows ", " and ", sum(map(len, traces))*1.0/len(traces), \
+    " average length."
 
   dirN = lvl["path"][0][:-4] + ".fuzz_traces"
   try:
@@ -42,4 +42,3 @@ for lvl_name in lvls:
     f = open(fname, "w")
     f.write(str_t)
     f.close()
-    

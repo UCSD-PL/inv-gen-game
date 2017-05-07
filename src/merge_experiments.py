@@ -4,9 +4,9 @@ from js import esprimaToBoogie
 from datetime import datetime
 from models import open_sqlite_db, Source, Event, workers, done_tutorial,\
     finished_levels, found_invs, experiments
-from argparse import *
-from experiments import *
-from os.path import join
+from experiments import Experiment, load_experiment_or_die, ServerRun
+from argparse import ArgumentParser
+from os.path import join, basename
 
 p = ArgumentParser(description="Compute stats over an experiment");
 p.add_argument('exp1', type=str, help='Name for first experiment to merge');
@@ -26,7 +26,6 @@ if __name__ == "__main__":
       exit(-1)
     except IOError:
       e3 = Experiment(args.out, True)
-      pass
 
     s1 = open_sqlite_db("../logs/" + args.exp1 + "/events.db")()
     s2 = open_sqlite_db("../logs/" + args.exp2 + "/events.db")()
@@ -34,7 +33,8 @@ if __name__ == "__main__":
 
 
     # Merging consists of 3 steps:
-    # 1) Copy over all ignore-*, tut-done-* and done-* files over in target directory
+    # 1) Copy over all ignore-*, tut-done-* and done-* files over in target
+    #    directory
     from shutil import copyfile
     from glob import glob
 
@@ -68,7 +68,7 @@ if __name__ == "__main__":
           str(e2run.srid + start) + basename(f)[len(strSrid):]))
 
     e3.store_server_runs();
-      
+
     # 3) Merge the events.db files
     sources =  s1.query(Source).all() + s2.query(Source).all()
     events = s1.query(Event).all() + s2.query(Event).all()
@@ -84,6 +84,11 @@ if __name__ == "__main__":
     s3.commit()
 
     for evt in events:
-      s3.add(Event(type = evt.type, experiment = evt.experiment, src = evt.src, addr = evt.addr, time = evt.time, payload = evt.payload));
+      s3.add(Event(type = evt.type,\
+                   experiment = evt.experiment,\
+                   src = evt.src,\
+                   addr = evt.addr,\
+                   time = evt.time,\
+                   payload = evt.payload));
 
     s3.commit();

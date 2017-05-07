@@ -1,10 +1,5 @@
 #! /usr/bin/env python
-from argparse import *
-from traceback import *
-import sys
-from boto.mturk.question import *
-from boto.mturk.connection import *
-from datetime import *
+from traceback import print_exc
 from mturk_util import error, connect, mkParser
 
 
@@ -15,10 +10,12 @@ args = p.parse_args()
 mc = connect(args.credentials_file, args.sandbox)
 try:
     r = mc.get_assignments(args.HITId)
-    print "Id                             Accepted             Status               Submited       WorkerId"
+    print "Id                             Accepted             " +\
+          "Status               Submited       WorkerId"
     for assn in r:
-        print assn.AssignmentId, assn.AcceptTime, assn.AssignmentStatus, assn.SubmitTime, \
-            assn.WorkerId
+        print assn.AssignmentId, assn.AcceptTime, \
+              assn.AssignmentStatus, assn.SubmitTime, \
+              assn.WorkerId
 except Exception,e:
     print_exc()
     error("Failed...")

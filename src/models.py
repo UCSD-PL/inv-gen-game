@@ -1,5 +1,7 @@
+#pylint: disable=no-self-argument
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, ForeignKey, create_engine, DateTime, Sequence
+from sqlalchemy import Column, Integer, String, ForeignKey, \
+        create_engine, DateTime, Sequence
 from sqlalchemy.orm import relationship, sessionmaker
 import json
 import re

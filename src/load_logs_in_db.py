@@ -1,12 +1,13 @@
 #! /usr/bin/env python
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, ForeignKey, create_engine, DateTime, Sequence
+from sqlalchemy import Column, Integer, String, ForeignKey, \
+        create_engine, DateTime, Sequence
 from sqlalchemy.orm import relationship, sessionmaker
 from json import loads, dumps
 from js import esprimaToBoogie
 from datetime import datetime
 from models import open_sqlite_db, Source, Event
-from db_util import *
+from db_util import addEvent
 
 import json
 import sys;
@@ -28,4 +29,5 @@ for l in f:
   time = e["time"]
   ip = e['ip']
   (worker_id, evt_type, rest) = e["args"]
-  addEvent(worker_id, evt_type, time, ename, ip, rest, s)
+  mturkId = ("","","")
+  addEvent(worker_id, evt_type, time, ename, ip, rest, s, mturkId)

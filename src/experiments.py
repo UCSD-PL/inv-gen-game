@@ -2,7 +2,7 @@ import socket
 import subprocess
 import os
 import json
-from os.path import *
+from os.path import join, dirname, abspath, realpath, exists
 
 
 BONUS_PER_LEVEL=0.75
@@ -38,14 +38,14 @@ class ServerRun:
 class Experiment:
     def __init__(self, experiment_name, create_if_not_there = False):
         self.experiment_name = experiment_name
-        dirname = join(ROOT_DIR, 'logs', experiment_name)
-        if not exists(dirname):
+        eDirname = join(ROOT_DIR, 'logs', experiment_name)
+        if not exists(eDirname):
             if create_if_not_there:
-                os.makedirs(dirname)
+                os.makedirs(eDirname)
             else:
                 raise IOError
         self.fname = join(ROOT_DIR, 'logs', experiment_name, 'server_runs')
-        self.dirname = dirname;
+        self.dirname = eDirname;
         self.server_runs = self.read_server_runs()
     def read_server_runs(self):
         self.server_runs = []
@@ -96,7 +96,7 @@ def load_experiment_or_die(ename):
 def get_unused_port():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind(('localhost', 0))
-    addr, port = s.getsockname()
+    _, port = s.getsockname()
     s.close()
     return port
 
@@ -105,7 +105,14 @@ def start_server(port, experiment_name, srid, lvlset, adminToken):
     event_log = get_event_log_fname(experiment_name, srid)
     db = get_db_fname(experiment_name)
     with open(server_log, 'w') as output:
-        cmd = [get_server_run_cmd(), "--port", str(port), "--log", event_log, "--ename", experiment_name, "--lvlset", lvlset, "--db", db, "--adminToken", adminToken]
+        cmd = [ get_server_run_cmd(),
+                "--port", str(port),\
+                "--log", event_log,\
+                "--ename", experiment_name,\
+                "--lvlset", lvlset,\
+                "--db", db,\
+                "--adminToken", adminToken
+              ]
         p = subprocess.Popen(cmd, stdout=output, stderr=subprocess.STDOUT)
     return p
 

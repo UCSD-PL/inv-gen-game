@@ -1,4 +1,4 @@
-from js import *
+from js import esprimaToZ3
 
 def pp_BoogieLvl(lvl):
   if (lvl != None):

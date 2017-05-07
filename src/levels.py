@@ -1,5 +1,5 @@
 from lib.boogie.ast import parseExprAst, ast_or, ast_and
-from lib.boogie.bb import get_bbs, ensureSingleExit, entry
+from lib.boogie.bb import get_bbs, ensureSingleExit, bbEntry
 from boogie_loops import loops, get_loop_header_values
 from lib.common.util import unique, powerset, average, error
 from lib.boogie.analysis import livevars
@@ -13,13 +13,15 @@ from vc_check import loopInvOverfittedCtrex
 
 def _tryUnroll(loop, bbs, min_un, max_un, bad_envs, good_env):
     # Lets first try to find a terminating loop between min and max iterations
-    term_vals = get_loop_header_values(loop, bbs, min_un, max_un, bad_envs, good_env, True)
+    term_vals = get_loop_header_values(loop, bbs, min_un, max_un,
+                                       bad_envs, good_env, True)
     if (term_vals != []):
       return (term_vals, True)
 
     # Couldn't find a terminating loop between 0 and 6 iteration. Lets find
     # a loop that has at LEAST min iterations
-    term_vals = get_loop_header_values(loop, bbs, min_un, max_un, bad_envs, good_env, False)
+    term_vals = get_loop_header_values(loop, bbs, min_un, max_un,
+                                       bad_envs, good_env, False)
     return (term_vals, False)
 
 def varproduct(vargens):
@@ -53,7 +55,8 @@ def getEnsamble(loop, bbs, exec_limit, tryFind=100, distr=lambda: randint(0,5),
         tried.add(hashable)
 
         found = False
-        for _, _, _, ssap, vals in execute(candidate, entry(bbs), bbs, exec_limit):
+        trace = execute(candidate, bbEntry(bbs), bbs, exec_limit)
+        for _, _, _, ssap, vals in trace:
           vals = [ envs[0] for (bb, envs) in vals if bb == loopHdr ]
           if include_bbhit:
             bbhit = set(bbname for bbname, _ in ssap)
@@ -65,11 +68,14 @@ def getEnsamble(loop, bbs, exec_limit, tryFind=100, distr=lambda: randint(0,5),
           if (s >= tryFind):
             break;
 
-        if (not found): s += 1;
+        if (not found):
+            s += 1;
 
-def getInitialData(loop, bbs, nunrolls, invs, invVars = None, invConsts = ["_sc_a", "_sc_b", "_sc_c"]):
+def getInitialData(loop, bbs, nunrolls, invs, invVars = None, invConsts = None):
+    if (invConsts == None):
+        invConsts = ["_sc_a", "_sc_b", "_sc_c"]
     trace_enasmble = list(getEnsamble(loop, bbs, nunrolls, 1))
-    vals, terminates = _tryUnroll(loop, bbs, 0, nunrolls, None, None)
+    vals, _ = _tryUnroll(loop, bbs, 0, nunrolls, None, None)
     if (vals):
         trace_enasmble.append(vals)
     
@@ -81,12 +87,14 @@ def getInitialData(loop, bbs, nunrolls, invs, invVars = None, invConsts = ["_sc_
     if (invVars == None):
         invVars = traceVs
 
-    hold_for_data = []
-    invs_lst = [ reduce(lambda x,y: x+y, 
-                        [ instantiateAndEval(inv, trace, invVars, invConsts) for inv in invs ], [])
+    invs_lst = [ reduce(lambda x,y: x+y,
+                        [ instantiateAndEval(inv, trace, invVars, invConsts)
+                            for inv in invs ],
+                        [])
                  for trace in trace_enasmble if len(trace) > 0 ]
 
-    tmp_lst = [ (len(invs), invs, tr) for (invs, tr) in zip(invs_lst, trace_enasmble) ]
+    tmp_lst = [ (len(invs), invs, tr)
+                for (invs, tr) in zip(invs_lst, trace_enasmble) ]
 
     tmp_lst.sort(key=lambda t:  t[0]);
     return (tmp_lst[0][2], False)
@@ -102,12 +110,14 @@ def findNegatingTrace(loop, bbs, nunrolls, invs, invVrs = None):
         invVrs = traceVs
 
     def diversity(vals):
-        lsts = [ [ vals[i][k] for i in xrange(len(vals)) ] for k in vals[0].keys() ]
+        lsts = [ [ vals[i][k] for i in xrange(len(vals)) ]
+                 for k in vals[0].keys() ]
         return average([len(set(lst)) for lst in lsts])
         #return average([len(set(lst)) / 1.0 * len(lst) for lst in lsts])
 
     for inv in invs:
-        hold_for_data.extend(instantiateAndEval(inv, vals, invVrs, ["_sc_a", "_sc_b", "_sc_c"]))
+        hold_for_data.extend(instantiateAndEval(inv, vals, invVrs,
+                                                ["_sc_a", "_sc_b", "_sc_c"]))
 
     print "The following invariants hold for initial trace: ", hold_for_data
     hold_for_data = list(set(hold_for_data))
@@ -119,13 +129,15 @@ def findNegatingTrace(loop, bbs, nunrolls, invs, invVrs = None):
             continue
         #print "Looking for ctrex for: ", s, " with no_ctrex: ", no_ctrex
         inv = ast_or(s)
-        ctrexs = loopOverfittedCtrex(loop, inv, bbs)
+        ctrexs = loopInvOverfittedCtrex(loop, inv, bbs)
         if (len(ctrexs) > 0):
             for ctrex in ctrexs:
-              trace, terminates = _tryUnroll(loop, bbs, 0, nunrolls, None, ctrex)
+              trace, terminates = \
+                      _tryUnroll(loop, bbs, 0, nunrolls, None, ctrex)
               if (len(trace) > 0):
                   print "Ctrexample for ", inv, " is ", trace
-                  res.append((diversity(trace), len(s), list(s), ctrex, (trace, terminates)))
+                  res.append((diversity(trace), len(s), list(s),
+                              ctrex, (trace, terminates)))
         else:
             no_ctrex = no_ctrex.union(s)
 
@@ -137,11 +149,13 @@ def findNegatingTrace(loop, bbs, nunrolls, invs, invVrs = None):
 
 def readTrace(fname):
     trace = open(fname, "r").read();
-    lines = filter(lambda (x): len(x) != 0, map(lambda x:   x.strip(), trace.split('\n')))
+    lines = filter(lambda (x): len(x) != 0,
+                   map(lambda x:   x.strip(), trace.split('\n')))
     vs = filter(lambda x:   len(x) != 0, lines[0].split(' '))
     header_vals = [ ]
     for l in lines[1:]:
-        if (l[0] == '#'):    continue;
+        if (l[0] == '#'):
+            continue;
 
         env = { }
         for (var,val) in zip(vs, filter(lambda x:   len(x) != 0, l.split(' '))):
@@ -164,7 +178,8 @@ def writeTrace(fname, header_vals):
 def loadBoogieFile(fname, multiround):
     bbs = get_bbs(fname)
     ensureSingleExit(bbs);
-    loop = unique(loops(bbs), "Cannot handle program with multiple loops:" + fname)
+    loop = unique(loops(bbs),
+                  "Cannot handle program with multiple loops:" + fname)
 
     # The variables to trace are all live variables at the loop header
     vs = list(livevars(bbs)[loop.loop_paths[0][0]])
@@ -179,17 +194,19 @@ def loadBoogieFile(fname, multiround):
     try:
         (vs, header_vals) = readTrace(fname[:-4] + '.trace')
         hint = load(open(fname[:-4] + '.hint'))
-    except: 
+    except Exception: #TODO (Dimo) IOError here instead?
         pass
 
     if (not header_vals):
         header_vals, terminates = _tryUnroll(loop, bbs, 0, 4, None, None)
         # Assume we have no tests with dead loops
         assert(header_vals != [])
+        invTemplates = ["_sv_x<_sv_y", "_sv_x<=_sv_y", "_sv_x==_sc_c", \
+                        "_sv_x==_sv_y", "_sv_x==0", "_sv_x<0"]
+        invTemplates = [ parseExprAst(inv)[0] for inv in invTemplates]
 
-        new_header_vals, new_terminates = getInitialData(loop, bbs, 4,
-          [ parseExprAst(inv)[0] for inv in ["_sv_x<_sv_y", "_sv_x<=_sv_y", "_sv_x==_sc_c", "_sv_x==_sv_y", "_sv_x==0", "_sv_x<0"] ],
-          [ "_sv_x", "_sv_y" ])
+        new_header_vals, new_terminates = \
+                getInitialData(loop, bbs, 4, invTemplates, [ "_sv_x", "_sv_y" ])
 
         if (new_header_vals != None):
             header_vals = new_header_vals
@@ -197,8 +214,12 @@ def loadBoogieFile(fname, multiround):
             writeTrace(fname[:-4] + ".trace", new_header_vals);
 
     return { 'variables': vs,
-             'data': [[[ str(row[v]) for v in vs  ]  for row in header_vals], [], []],
-             'exploration_state' : [ ([ str(header_vals[0][v]) for v in vs  ], len(header_vals), terminates) ],
+             'data': [ [[ str(row[v]) for v in vs  ] for row in header_vals],
+                       [],
+                       [] ],
+             'exploration_state' : [ ( [str(header_vals[0][v]) for v in vs],
+                                       len(header_vals),
+                                       terminates ) ],
              'hint': hint,
              'goal' : { "verify" : True },
              'support_pos_ex' : True,
@@ -210,15 +231,16 @@ def loadBoogieFile(fname, multiround):
     }
 
 def loadBoogies(dirN, multiround = False):
-    return { name[:-4] : loadBoogieFile(dirN + '/' + name, multiround) for name in listdir(dirN)
-                if name.endswith('.bpl') }
+    return { name[:-4] : loadBoogieFile(dirN + '/' + name, multiround)
+             for name in listdir(dirN) if name.endswith('.bpl') }
 
 def readTraceOnlyLvl(fname):
     rows = []
     first = True
     for l in open(fname):
         l = l.strip();
-        if (l == ''):   continue
+        if (l == ''):
+            continue
         row = {}
         for (n,v) in [x.split('=') for x in l.split(' ')]:
             row[n] = v
@@ -233,10 +255,13 @@ def readTraceOnlyLvl(fname):
     try:
         goal = load(open(fname[:-4] + '.goal'))
         hint = open(fname[:-4] + '.hint').read()
-    except: pass
+    except Exception:
+        pass
 
     return { 'variables': vs,
-             'data': [[[ row.get(n, None) for n in vs  ]  for row in rows ], [], []],
+             'data': [[[ row.get(n, None) for n in vs  ]  for row in rows ],
+                      [],
+                      []],
              'hint': hint,
              'goal' : goal,
              'support_pos_ex' : False,
@@ -246,8 +271,8 @@ def readTraceOnlyLvl(fname):
     }
 
 def loadTraces(dirN):
-    return { name[:-4] : readTraceOnlyLvl(dirN + '/' + name) for name in listdir(dirN)
-                if name.endswith('.out') }
+    return { name[:-4] : readTraceOnlyLvl(dirN + '/' + name)
+             for name in listdir(dirN) if name.endswith('.out') }
 
 def loadBoogieLvlSet(lvlSetFile):
     # Small helper funct to make sure we didn't

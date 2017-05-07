@@ -285,6 +285,7 @@ class PatternGameLogic extends BaseGameLogic {
   foundJSInv: UserInvariant[] = [];
   invMap: { [ id: string ] : UserInvariant } = {};
   lvlPassedF: boolean = false;
+  lvlSolvedF: boolean = false;
   nonindInvs: UserInvariant[] = [];
   overfittedInvs: UserInvariant[] = [];
   soundInvs: UserInvariant[] = [];
@@ -442,8 +443,9 @@ class PatternGameLogic extends BaseGameLogic {
                 gl.foundJSInv.push(ui)
                 gl.invMap[ui.id] = ui;
                 gl.progressW.addInvariant(ui.id, ui.rawInv);
-                if (this.curLvl && this.curLvl.hint.type == "post-assert") {
-                  gl.tracesW.setExp(this.curLvl.hint.assert);
+
+                if (gl.curLvl.hint && gl.curLvl.hint.type == "post-assert") {
+                  gl.tracesW.setExp(gl.curLvl.hint.assert);
                 } else {
                   gl.tracesW.setExp("");
                 }
@@ -454,6 +456,7 @@ class PatternGameLogic extends BaseGameLogic {
 
                     if (coin) {
                       gl.lvlPassedF = true;
+                      gl.lvlSolvedF = false;
                       gl.lvlPassedCb();
                       logEvent("FinishLevel",
                                [curLvlSet,
@@ -471,6 +474,7 @@ class PatternGameLogic extends BaseGameLogic {
                      */
                     var preCallCurLvl = gl.curLvl.id;
                     gl.goalSatisfied((sat, feedback) => {
+                      gl.lvlSolvedF = sat;
                       if (!sat)
                         return;
 

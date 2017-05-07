@@ -1,16 +1,19 @@
 from slimit.parser import Parser
 from slimit.visitors.nodevisitor import ASTVisitor
 from slimit.visitors import nodevisitor
-from slimit import ast
-from lib.boogie.ast import *
-from lib.boogie.z3_embed import *
+from slimit import ast as jsast
+from lib.boogie.ast import AstUnExpr, AstBinExpr, AstId, AstTrue, \
+        AstFalse, AstNumber, normalize
+from lib.boogie.z3_embed import Int, And, Or, Not, Implies, BoolVal, IntVal
 
-def addAllIntEnv(inv, env = {}):
+def addAllIntEnv(inv, env = None):
+  if (env == None):
+    env = {}
   p = Parser()
   t = p.parse(inv)
 
   for node in nodevisitor.visit(t):
-    if isinstance(node, ast.Identifier):
+    if isinstance(node, jsast.Identifier):
       env[node.value] = Int
 
   return env
@@ -19,20 +22,20 @@ def invJSToZ3(inv, typeEnv):
   p = Parser()
   t = p.parse(inv)
 
-  assert(isinstance(t, ast.Program))
+  assert(isinstance(t, jsast.Program))
   assert(len(t.children()) == 1)
-  assert(isinstance(t.children()[0], ast.ExprStatement))
+  assert(isinstance(t.children()[0], jsast.ExprStatement))
   return jsToZ3Expr(t.children()[0].expr, typeEnv)
 
 def jsNumToZ3(strN):
   try:
     intV = int(strN)
     return IntVal(intV)
-  except Exception,e:
+  except Exception:
     raise Exception("Dont' currently support floats");
 
 def jsToZ3Expr(astn, typeEnv):
-  if (isinstance(astn, ast.BinOp)):
+  if (isinstance(astn, jsast.BinOp)):
     ln,rn = [jsToZ3Expr(x, typeEnv) for x in astn.children()]
 
     try:
@@ -53,10 +56,10 @@ def jsToZ3Expr(astn, typeEnv):
       }[astn.op](ln, rn)
     except:
       raise Exception("Don't know how to parse " + astn.to_ecma())
-  elif (isinstance(astn, ast.Identifier)):
+  elif (isinstance(astn, jsast.Identifier)):
     name = astn.value
     return typeEnv[name](name);
-  if (isinstance(astn, ast.Number)):
+  if (isinstance(astn, jsast.Number)):
     return jsNumToZ3(astn.value)
   else:
     raise Exception("Don't know how to parse " + astn.to_ecma())
@@ -69,12 +72,13 @@ def esprimaToZ3Expr(astn, typeEnv):
         return arg;
       return {
         '-': lambda x:  -x,
-        '!': lambda x:  Not(x)
+        '!': Not
       }[astn["operator"]](arg)
     except:
       raise Exception("Unknown unary expression " + str(astn))
   elif (astn["type"] == "BinaryExpression"):
-    ln,rn = esprimaToZ3Expr(astn["left"], typeEnv), esprimaToZ3Expr(astn["right"], typeEnv)
+    ln = esprimaToZ3Expr(astn["left"], typeEnv)
+    rn = esprimaToZ3Expr(astn["right"], typeEnv)
 
     try:
       return {
@@ -93,7 +97,8 @@ def esprimaToZ3Expr(astn, typeEnv):
     except:
       raise Exception("Unkown binary expression " + str(astn))
   elif (astn["type"] == "LogicalExpression"):
-    ln,rn = esprimaToZ3Expr(astn["left"], typeEnv), esprimaToZ3Expr(astn["right"], typeEnv)
+    ln = esprimaToZ3Expr(astn["left"], typeEnv)
+    rn = esprimaToZ3Expr(astn["right"], typeEnv)
     try:
       return {
         '&&': And,
@@ -126,7 +131,8 @@ def _esprimaToBoogieExprAst(astn, typeEnv):
     except:
       raise Exception("Unknown unary expression " + str(astn))
   elif (astn["type"] == "BinaryExpression"):
-    ln,rn = _esprimaToBoogieExprAst(astn["left"], typeEnv), _esprimaToBoogieExprAst(astn["right"], typeEnv)
+    ln = _esprimaToBoogieExprAst(astn["left"], typeEnv),
+    rn = _esprimaToBoogieExprAst(astn["right"], typeEnv)
 
     try:
       op = {
@@ -202,17 +208,22 @@ def boogieToEsprimaExpr(expr):
             '-':    '-',
             '!':    '!',
         }[expr.op]
-        return { "type": "UnaryExpression", "operator": espr_op, "argument": boogieToEsprimaExpr(expr.expr) }
+        return { "type": "UnaryExpression",
+                 "operator": espr_op,
+                 "argument": boogieToEsprimaExpr(expr.expr) }
     elif isinstance(expr, AstBinExpr):
         lhs = boogieToEsprimaExpr(expr.lhs)
         rhs = boogieToEsprimaExpr(expr.rhs)
 
         # Hack to desugar implication to disjunction for esprima.
         if (expr.op == "==>"):
-          return {"type": "LogicalExpression", "operator": "||",\
-            "left": { "type": "UnaryExpression", "operator": "!", "argument": lhs },
-            "right": rhs }
-        
+          return {"type": "LogicalExpression",
+                  "operator": "||",\
+                  "left": { "type": "UnaryExpression",
+                            "operator": "!",
+                            "argument": lhs },
+                  "right": rhs }
+
         espr_op, typ = {
             '+':    ('+', 'BinaryExpression'),
             '-':    ('-', 'BinaryExpression'),
@@ -233,12 +244,13 @@ def boogieToEsprimaExpr(expr):
         raise Exception("Unknown expression " + str(expr))
 
 def boogieToEsprima(inv):
-  return { "type":"Program", "sourceType": "script", "body": [ 
-    { "type": "ExpressionStatement", "expression": boogieToEsprimaExpr(inv) } ] }
+  return { "type":"Program",
+           "sourceType": "script",
+           "body": [ { "type": "ExpressionStatement",
+                       "expression": boogieToEsprimaExpr(inv) } ] }
 
 if __name__ == "__main__":
-  p = Parser()
-  t = p.parse("  i == 4 && b == 44")
+  tmpP = Parser()
+  tmpT = tmpP.parse("  i == 4 && b == 44")
   print invJSToZ3("i == 4", { "i" : Int })
   print invJSToZ3("  i == 4 && b == 44", { "i" : Int, "b" : Int })
-  print invJSToZ3("  i == 4.0 && b == 44", { "i" : lambda x:  FP(x, FPSort(8, 24)), "b" : Int })

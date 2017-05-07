@@ -1,13 +1,11 @@
-from lib.boogie.ast import ast_and, replace, AstBinExpr, AstAssert, AstAssume, AstTrue, AstNumber, AstId
-from lib.common.util import split, nonempty, powerset, flattenSet
-from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, Unknown, counterex, Implies, And, tautology, satisfiable, unsatisfiable
-from lib.boogie.paths import nd_bb_path_to_ssa, ssa_path_to_z3, _ssa_stmts
-from lib.boogie.ssa import SSAEnv
-from lib.boogie.predicate_transformers import wp_stmts, sp_stmt
+from lib.boogie.ast import ast_and, replace, AstBinExpr, AstTrue, \
+        AstNumber, AstId
+from lib.common.util import nonempty, powerset, flattenSet
+from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, Unknown, \
+        And, tautology
 from lib.boogie.analysis import propagate_sp
-from copy import copy
-from lib.boogie.bb import entry, exit
-from lib.boogie.inv_networks import *
+from lib.boogie.bb import bbEntry
+from lib.boogie.inv_networks import checkInvNetwork, filterCandidateInvariants
 
 def conservative_tautology(q):
   try:
@@ -19,7 +17,8 @@ def _from_dict(vs, vals, missing= None):
     if type(vals) == tuple:
         return ( _from_dict(vs, vals[0]), _from_dict(vs, vals[1]) )
     else:
-        return [ vals[vs[i]] if vs[i] in vals else missing for i in xrange(0, len(vs)) ]
+        return [ (vals[vs[i]] if vs[i] in vals else missing) \
+                 for i in xrange(0, len(vs)) ]
 
 def traceConstantVars(lvl):
   vs = lvl['variables']
@@ -37,33 +36,47 @@ def substitutions(expr, replMs):
   return family
 
 def generalizeConstTraceVars(lvl):
-  """ Given an expression and a set of pairs (Var, Num) where Var is always equal to Num
-      in the traces presented to the user, add all variations of expr with Num
-      substituded for Var and vice-versa. Note we don't do combinations of multiple
-      substitutions where that is possible.
+  """ Given an expression and a set of pairs (Var, Num) where Var is always
+      equal to Num in the traces presented to the user, add all variations
+      of expr with Num substituded for Var and vice-versa. Note we don't do
+      combinations of multiple substitutions where that is possible.
   """
   varNums = traceConstantVars(lvl)
   replMs = [ { AstId(v[0]) : AstNumber(int(v[1])) for v in varNums } ] + \
            [ { AstNumber(int(v[1])) : AstId(v[0]) for v in varNums } ]
   return replMs
 
-def tryAndVerify(bbs, loop, splitterPreds, partialInvs, userInvs, otherInvs, replMaps, timeout=None):
+def tryAndVerify(bbs,\
+       loop,\
+       splitterPreds,\
+       partialInvs,\
+       userInvs,\
+       otherInvs,\
+       replMaps,\
+       timeout=None):
     userInvs = flattenSet([substitutions(x, replMaps) for x in userInvs])
     invs = userInvs.union(otherInvs)
     invs = invs.union(partialInvs);
 
     if (len(splitterPreds) == 0):
       assert(len(partialInvs) == 0);
-      (ovrefitted, nonind, sound, violations) = tryAndVerify_impl(bbs, loop, set(), invs, timeout)
+      (ovrefitted, nonind, sound, violations) = \
+              tryAndVerify_impl(bbs, loop, set(), invs, timeout)
       return ((ovrefitted, []), (nonind, []), sound, violations)
     else:
-      return tryAndVerifyWithSplitterPreds(bbs, loop, set(), invs, splitterPreds, partialInvs, timeout)
+      return tryAndVerifyWithSplitterPreds(bbs, loop, set(), invs, \
+                                           splitterPreds, \
+                                           partialInvs, \
+                                           timeout)
 
-def tryAndVerifyLvl(lvl, userInvs, otherInvs, timeout = None, useSplitters = True, addSPs = True, generalizeUserInvs = True):
+def tryAndVerifyLvl(lvl, userInvs, otherInvs, timeout = None, \
+        useSplitters = True, addSPs = True, generalizeUserInvs = True):
     bbs = lvl['program']
     loop = lvl['loop']
-    partialInvs = [ lvl['partialInv'] ] if ('partialInv' in lvl) and useSplitters else []
-    splitterPreds = lvl['splitterPreds'] if ('splitterPreds' in lvl) and useSplitters else [ ]
+    partialInvs = [ lvl['partialInv'] ] \
+            if ('partialInv' in lvl) and useSplitters else []
+    splitterPreds = lvl['splitterPreds'] \
+            if ('splitterPreds' in lvl) and useSplitters else [ ]
     if (generalizeUserInvs):
       replMaps = generalizeConstTraceVars(lvl);
     else:
@@ -75,7 +88,8 @@ def tryAndVerifyLvl(lvl, userInvs, otherInvs, timeout = None, useSplitters = Tru
       sps = propagate_sp(bbs)[loop_header]
       otherInvs = otherInvs.union(sps)
 
-    return tryAndVerify(bbs, loop, splitterPreds, partialInvs, userInvs, otherInvs, replMaps, timeout);
+    return tryAndVerify(bbs, loop, splitterPreds, partialInvs, \
+                        userInvs, otherInvs, replMaps, timeout);
 
 def tryAndVerify_impl(bbs, loop, old_sound_invs, invs, timeout=None):
     """ Wrapper around checkInvNetwork for the case of a function
@@ -107,13 +121,14 @@ def tryAndVerifyWithSplitterPreds(bbs, loop, old_sound_invs, boogie_invs,
           ((p1_overfit, p2_overfit), (p1_nonindg, p2_nonind), sound, violations)
 
         Where
-        
-          p1_overfit, p2_ovefit are lists of pairs of overfittted invariants and their
-              respective counterexamples from passes 1 and 2
-          p1_nonind, p2_ovefit are lists of pairs of noninductive invariants and their
-              respective counterexamples from passes 1 and 2
+
+          p1_overfit, p2_ovefit are lists of pairs of overfittted invariants
+                    and their respective counterexamples from passes 1 and 2
+          p1_nonind, p2_ovefit are lists of pairs of noninductive invariants
+                    and their respective counterexamples from passes 1 and 2
           sound is a set of sound invariants
-          violations is a list of any safety violations permitted by the sound invariants
+          violations is a list of any safety violations permitted by the sound
+          invariants
     """
     assert isinstance(old_sound_invs, set)
     assert isinstance(boogie_invs, set)
@@ -125,23 +140,32 @@ def tryAndVerifyWithSplitterPreds(bbs, loop, old_sound_invs, boogie_invs,
     # First lets find the invariants that are sound without implication
     p1_overfitted, p1_nonind, p1_sound, violations =\
       tryAndVerify_impl(bbs, loop, initial_sound, boogie_invs, timeout)
-    p1_sound = set([x for x in p1_sound if not conservative_tautology(expr_to_z3(x, AllIntTypeEnv()))])
+    p1_sound = \
+        set([x for x in p1_sound \
+               if not conservative_tautology(expr_to_z3(x, AllIntTypeEnv()))])
 
     # Next lets add implication  to all unsound invariants from first pass
     # Also add manually specified partialInvs
     unsound = [ inv_ctr_pair[0] for inv_ctr_pair in p1_overfitted + p1_nonind ]
-    candidate_precedents = [ ast_and(pSet) for pSet in nonempty(powerset(splitterPreds)) ]
+    candidate_precedents = \
+            [ ast_and(pSet) for pSet in nonempty(powerset(splitterPreds)) ]
     p2_invs = [ AstBinExpr(precc, "==>", inv)
       for precc in candidate_precedents for inv in unsound] + partialInvs
 
-    p2_invs = set([ x for x in p2_invs if not conservative_tautology(expr_to_z3(x, AllIntTypeEnv())) ])
+    p2_invs = \
+        set([ x for x in p2_invs \
+                if not conservative_tautology(expr_to_z3(x, AllIntTypeEnv())) ])
 
     # And look for any new sound invariants
-    p2_overfitted, p2_nonind, p2_sound, violations = tryAndVerify_impl(bbs, loop, \
-      p1_sound.union(set(partialInvs)), p2_invs, timeout)
+    p2_overfitted, p2_nonind, p2_sound, violations = \
+            tryAndVerify_impl(bbs, loop, p1_sound.union(set(partialInvs)), \
+                              p2_invs, timeout)
     sound = p1_sound.union(p2_sound)
 
-    return ((p1_overfitted, p2_overfitted), (p1_nonind, p2_nonind), sound, violations)
+    return ((p1_overfitted, p2_overfitted), \
+            (p1_nonind, p2_nonind), \
+            sound, \
+            violations)
 
 def loopInvOverfittedCtrex(loop, invs, bbs, timeout = None):
   """ Given a candidate loop invariant inv find 'overfittedness'
@@ -152,7 +176,7 @@ def loopInvOverfittedCtrex(loop, invs, bbs, timeout = None):
   loopHdr = loop.loop_paths[0][0]
   cps = { loopHdr : set(invs) }
   violations = checkInvNetwork(bbs, AstTrue(), AstTrue(), cps, timeout);
-  entryBB = entry(bbs);
+  entryBB = bbEntry(bbs);
 
   return ([ x.endEnv() for x in violations
     if x.isInductive() and # Implication fail
@@ -161,14 +185,13 @@ def loopInvOverfittedCtrex(loop, invs, bbs, timeout = None):
 
 def loopInvSafetyCtrex(loop, invs, bbs, timeout=None):
   """ Given a candidate loop invariant inv find 'safety'
-      counterexamples.  I.e. find counterexamples to "inv ==> post" or "inv ==> assert".
-      Returns a potentially empty set of environments (dicts) that the invariant
-      should satisfy.
+      counterexamples.  I.e. find counterexamples to "inv ==> post" or "inv ==>
+      assert".  Returns a potentially empty set of environments (dicts) that
+      the invariant should satisfy.
   """
   loopHdr = loop.loop_paths[0][0]
   cps = { loopHdr : set(invs) }
   violations = checkInvNetwork(bbs, AstTrue(), AstTrue(), cps, timeout);
-  entryBB = entry(bbs);
 
   return ([ x.endEnv() for x in violations
     if x.isSafety() and # Safety fail

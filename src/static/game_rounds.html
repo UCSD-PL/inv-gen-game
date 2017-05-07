@@ -25,7 +25,7 @@
   <script src="build/ts/traceWindow.js"></script>
   <script src="build/ts/ctrexTracesWindow.js"></script>
   <script src="build/ts/gameLogic.js"></script>
-  <script src="build/ts/ctrexGameLogic.js"></script>
+  <script src="build/ts/roundsGameLogic.js"></script>
   <script src="build/ts/level.js"></script>
   <script src="build/ts/eval.js"></script>
   <script src="build/ts/pp.js"></script>
@@ -48,47 +48,54 @@
 
     disableBackspaceNav();
 
-    function loadNextTrace() {
-      PrepopulatedDynamicLevel.loadNext(function(res) {
-        if (res === null)
-          doneScreen(true)
-        else {
-          curLvlSet = res[0];
-          let lvl = res[1];
-          curLvlId = lvl.id;
-          console.log("Just loaded " + curLvlSet + "." + curLvlId);
-          gameLogic.loadLvl(lvl);
-          if (lvl.hint === null) {
-            $("#hint-row").html("");
-          } else {
-            if (lvl.hint.type == "plain") {
-              $("#hint-row").html("<p class='lead'><b>" + lvl.hint + "</b></p>");
-            } else if (lvl.hint.type == "post-assert") {
-              var pos_res = invEval(lvl.hint.assert, lvl.variables, lvl.data[0])
-              if (evalResultBool(pos_res)) {
-                var holdsOnLast = pos_res[pos_res.length-1];
-                var holdsOnAll = pos_res.reduce((acc,val)=> acc && val, true)
+    function loadTrace(res) {
+      if (res === null)
+        doneScreen(true)
+      else {
+        curLvlSet = res[0];
+        let lvl = res[1];
+        curLvlId = lvl.id;
+        console.log("Just loaded " + curLvlSet + "." + curLvlId);
+        gameLogic.loadLvl(lvl);
+        if (lvl.hint === null) {
+          $("#hint-row").html("");
+        } else {
+          if (lvl.hint.type == "plain") {
+            $("#hint-row").html("<p class='lead'><b>" + lvl.hint + "</b></p>");
+          } else if (lvl.hint.type == "post-assert") {
+            var pos_res = invEval(lvl.hint.assert, lvl.variables, lvl.data[0])
+            if (evalResultBool(pos_res)) {
+              var holdsOnLast = pos_res[pos_res.length-1];
+              var holdsOnAll = pos_res.reduce((acc,val)=> acc && val, true)
 
-                if (holdsOnAll) {
-                  $("#hint-row").html("<p class='lead'><b>Hint: Check out: " +
-                    lvl.hint.assert + 
-                    "</b></p>");
-                  traceW.setExp(lvl.hint.assert);
-                } else if (holdsOnLast) {
-                  $("#hint-row").html("<p class='lead'><b>Hint: " +
-                    lvl.hint.assert + 
-                    " holds for the last row. Can you change it to work for all rows?</b></p>");
-                  traceW.setExp(lvl.hint.assert);
-                } else {
-                  // TODO
-                }
+              if (holdsOnAll) {
+                $("#hint-row").html("<p class='lead'><b>Hint: Check out: " +
+                  lvl.hint.assert +
+                  "</b></p>");
+                traceW.setExp(lvl.hint.assert);
+              } else if (holdsOnLast) {
+                $("#hint-row").html("<p class='lead'><b>Hint: " +
+                  lvl.hint.assert + 
+                  " holds for the last row. Can you change it to work for all rows?</b></p>");
+                traceW.setExp(lvl.hint.assert);
               } else {
                 // TODO
               }
+            } else {
+              // TODO
             }
           }
         }
-      })
+      }
+    }
+
+    function loadNextTrace() {
+      if (gameLogic.curLvl && !gameLogic.lvlSolvedF) {
+        gameLogic.curLvl.genNext(curLvlSet, gameLogic.foundJSInv.map(function(x){ return x.canonForm}),
+            loadTrace)
+      } else {
+        PrepopulatedDynamicLevel.loadNext(loadTrace);
+      }
     }
 
     function nextLvl() {
@@ -199,8 +206,9 @@
       progW = new ProgressWindow($('#discovered-invariants-div'));
       scoreW = new ScoreWindow($('#score-div'));
       traceW = new CounterexTracesWindow($('#data-display'));
+      //stickyW = new WideStickyWindow($('#sticky'))
       stickyW = new StickyWindow($('#sticky'))
-      gameLogic = new CounterexGameLogic(traceW, progW, scoreW, stickyW);
+      gameLogic = new RoundsGameLogic(traceW, progW, scoreW, stickyW);
 
       gameLogic.onLvlPassed(function() {
         numLvlPassed = numLvlPassed + 1;
@@ -635,6 +643,6 @@
         <button id="final-submit" class="btn-next">Finish HIT</button>
       </form>
     </div>
-  </div> 
+  </div>
 </body>
 </html>

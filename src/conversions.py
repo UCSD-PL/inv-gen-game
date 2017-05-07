@@ -18,7 +18,7 @@ def daikonToBoogieExpr(astn):
     # We can translate power operators to a constant power
     if (astn.op == "**" and isinstance(astn.rhs, dast.AstNumber)):
       res = ln;
-      for i in xrange(astn.rhs.num-1):
+      for _ in xrange(astn.rhs.num-1):
         res = bast.AstBinExpr(res, '*', ln)
       return res
     else:
@@ -85,7 +85,8 @@ def daikonToBoogieExpr(astn):
         bast.AstBinExpr(expr, "mod", modulo), "==", remainder)
   elif (isinstance(astn, dast.AstHasValues)):
     if (len(astn.values) > 300):
-      raise Exception("Can't convert HasValues: Too many options: " + str(len(astn.values)));
+      raise Exception("Can't convert HasValues: Too many options: " +\
+                      str(len(astn.values)));
     cn = daikonToBoogieExpr(astn.expr)
     values = map(daikonToBoogieExpr, astn.values)
     return bast.ast_or([bast.AstBinExpr(cn, "==", v) for v in values])

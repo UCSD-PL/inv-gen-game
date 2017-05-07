@@ -1,4 +1,5 @@
-from grammar import *
+#pylint: disable=no-self-argument,multiple-statements
+from lib.boogie.grammar import BoogieParser
 from pyparsing import ParseResults
 from ..common.ast import AstNode, replace, reduce_nodes
 
@@ -13,8 +14,10 @@ class AstProgram(AstNode):
     def __str__(s): return "\n".join(map(str, s.decls))
 
 class AstImplementation(AstNode):
-    def __init__(s, name, signature, body): AstNode.__init__(s, name, signature, body)
-    def __str__(s): return "implementation " + s.name + " " + str(s.signature) + str(s.body)
+    def __init__(s, name, signature, body):
+        AstNode.__init__(s, name, signature, body)
+    def __str__(s):
+        return "implementation " + s.name + " " + str(s.signature) + str(s.body)
 
 class AstBinding(AstNode):
     def __init__(s, names, typ):  AstNode.__init__(s, names, typ)
@@ -35,12 +38,14 @@ class AstIntType(AstNode):
 class AstBody(AstNode):
     def __init__(s, bindings, stmts):   AstNode.__init__(s, bindings, stmts)
     def __str__(s):
-        return "{\n" + "\n".join(["var " + str(x) + ";" for x in s.bindings]) + "\n" +\
-                "\n".join([str(x) for x in s.stmts]) + "\n}"
+        return "{\n" + "\n".join(["var " + str(x) + ";" for x in s.bindings]) +\
+                "\n" +\
+                "\n".join([str(x) for x in s.stmts]) + \
+                "\n}"
 
 class AstStmt(AstNode): pass
 class AstOneExprStmt(AstStmt):
-    def __init__(s, expr):  AstNode.__init__(s, expr)
+    def __init__(s, expr):  AstStmt.__init__(s, expr)
 
 class AstAssert(AstOneExprStmt):
     def __str__(s): return "assert (" + str(s.expr) + ");";
@@ -49,16 +54,16 @@ class AstAssume(AstOneExprStmt):
     def __str__(s): return "assume (" + str(s.expr) + ");";
 
 class AstHavoc(AstStmt):
-    def __init__(s, ids):  AstNode.__init__(s, ids)
+    def __init__(s, ids):  AstStmt.__init__(s, ids)
     def __str__(s): return "havoc " + ",".join(map(str, s.ids)) + ";"
 
 # Returns is for now without argument
 class AstReturn(AstStmt):
-    def __init__(s):  AstNode.__init__(s)
+    def __init__(s):  AstStmt.__init__(s)
     def __str__(s): return "return ;"
 
 class AstGoto(AstStmt):
-    def __init__(s, labels):  AstNode.__init__(s, labels)
+    def __init__(s, labels):  AstStmt.__init__(s, labels)
     def __str__(s): return "goto " + ",".join(map(str, s.labels)) + ";"
 
 class AstUnExpr(AstNode):
@@ -83,7 +88,8 @@ class AstId(AstNode):
 
 class AstBinExpr(AstNode):
     def __init__(s, lhs, op, rhs):  AstNode.__init__(s, lhs, op, rhs)
-    def __str__(s): return "(" + str(s.lhs) + " " + str(s.op) + " " + str(s.rhs) + ")"
+    def __str__(s):
+        return "(" + str(s.lhs) + " " + str(s.op) + " " + str(s.rhs) + ")"
 
 class AstBuilder(BoogieParser):
   def onAtom(s, prod, st, loc, toks):
@@ -107,7 +113,9 @@ class AstBuilder(BoogieParser):
       assert(len(toks) > 3);
       base = AstBinExpr(*toks[:3])
       rest = [ [toks[3+2*k], toks[3+2*k+1]] for k in xrange((len(toks)-3)/2) ]
-      return [ reduce(lambda acc,el:  AstBinExpr(acc, el[0], el[1]), rest, base) ]
+      return [ reduce(lambda acc,el:  AstBinExpr(acc, el[0], el[1]), \
+                      rest, base)
+             ]
 
   def onRABinOp(s, prod, st, loc, toks):
     if (len(toks) == 3):
@@ -116,8 +124,9 @@ class AstBuilder(BoogieParser):
       assert(len(toks) > 3);
       toks = reversed(toks)
       base = AstBinExpr(*toks[:3])
-      rest = [ [toks[3+2*k], toks[3+2*k+1]] for k in xrange((len(toks)-3)/2) ]
-      return [ reduce(lambda acc,el:  AstBinExpr(acc, el[0], el[1]), toks[3:], base) ]
+      return [ reduce(lambda acc,el:  AstBinExpr(acc, el[0], el[1]), \
+                      toks[3:], base)
+             ]
 
   def onNABinOp(s, prod, st, loc, toks):
     assert (len(toks) == 3);

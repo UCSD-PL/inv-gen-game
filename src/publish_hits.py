@@ -1,22 +1,32 @@
 #! /usr/bin/env python
-from argparse import *
-from traceback import *
-import sys
-from boto.mturk.question import *
-from boto.mturk.qualification import *
-from boto.mturk.connection import *
-from datetime import *
-from mturk_util import *
-from experiments import *
+#pylint: disable=line-too-long
+
+from traceback import print_exc
+from boto.mturk.question import Question, QuestionContent, SimpleField, \
+        AnswerSpecification, FileUploadAnswer, SelectionAnswer, \
+        FreeTextAnswer, Overview, FormattedContent, QuestionForm, \
+        ExternalQuestion
+from boto.mturk.qualification import Qualifications, \
+        NumberHitsApprovedRequirement, \
+        PercentAssignmentsApprovedRequirement, Requirement
+from datetime import timedelta
+from mturk_util import connect, mkParser, error
+from experiments import Experiment, get_unused_port, start_server, \
+        HIT_REWARD, ServerRun
 
 p = mkParser("Run experiment", True)
-p.add_argument('--num_hits', type=int, default=1, help='number of HITs to create')
-p.add_argument('--ext', action='store_const', const=True, default=False, help='if specified run ExternalQuestion')
-p.add_argument('--lvlset', type=str, default = 'desugared-boogie-benchmarks', help='Lvlset to use for serving benchmarks"')
-p.add_argument('--adminToken', type=str, help='Token to use to login to admin interfaces', required=True)
-p.add_argument('--no-ifs', action='store_const', const=True, default=False, help='Play version of the game without ifs')
+p.add_argument('--num_hits', type=int, default=1, \
+        help='number of HITs to create')
+p.add_argument('--ext', action='store_const', const=True, default=False, \
+        help='if specified run ExternalQuestion')
+p.add_argument('--lvlset', type=str, default = 'desugared-boogie-benchmarks', \
+        help='Lvlset to use for serving benchmarks"')
+p.add_argument('--adminToken', type=str, \
+        help='Token to use to login to admin interfaces', required=True)
+p.add_argument('--no-ifs', action='store_const', const=True, default=False, \
+        help='Play version of the game without ifs')
 
-args = parse_args(p)
+args = p.parse_args()
 
 title = "Play a Math Puzzle Game For Science!"
 
@@ -31,7 +41,7 @@ htmlOverview = """
 <p>We are developing a new game to aid program verification.
    The game consists of a short tutorial, followed by 5 levels.
    Your goal in each level is to come up with expressions that are
-   accepted by the game. If you have already played this game in a previous HIT,
+   accepted by the game. If you have already played this game in a previ
    please don't accept the current HIT. At this point we are looking for 
    new players.</p>
 
@@ -116,8 +126,8 @@ q7 = Question("experience",
               AnswerSpecification(FreeTextAnswer()),
               True)
 
-def question_form(port):
-    o = Overview([FormattedContent(htmlOverview.format(port))])
+def question_form(aPort):
+    o = Overview([FormattedContent(htmlOverview.format(aPort))])
     return QuestionForm([o, q1, q2, q3, q4, q5, q6, q7])
     #return QuestionForm([q2])
 
@@ -125,8 +135,8 @@ mastersQualType = "2ARFPLSP75KLA8M8DH1HTEQVJT3SY6" if args.sandbox else \
                   "2F1QJWKUDD8XADTFD2Q0G6UTO95ALH"
 
 quals = [] if args.sandbox else [
-                    NumberHitsApprovedRequirement("GreaterThanOrEqualTo", 1000), 
-                    PercentAssignmentsApprovedRequirement("GreaterThanOrEqualTo", 97), 
+                    NumberHitsApprovedRequirement("GreaterThanOrEqualTo", 1000),
+                    PercentAssignmentsApprovedRequirement("GreaterThanOrEqualTo", 97),
                     Requirement(mastersQualType, "Exists")
                 ]
 
@@ -162,6 +172,6 @@ try:
         assert len(r) == 1
         print "Created", kind, "HIT", r[0].HITId
         exp.add_session(ServerRun(srid, r[0].HITId, p.pid, port))
-except:
+except Exception:
     print_exc()
     error("Failed...")

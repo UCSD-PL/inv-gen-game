@@ -3,13 +3,15 @@ import argparse
 import levels
 import lib.boogie.ast as bast
 from lib.boogie.analysis import propagate_sp
+from lib.common.util import error
 from vc_check import tryAndVerifyLvl
-from boogie_loops import *
-from re import compile
+from re import compile as reComp
 from models import open_sqlite_db, Event
 from datetime import datetime, timedelta
 
-p = argparse.ArgumentParser(description="given an experiment ran over a split levelset see if the combined found invariants for each split solve the original level")
+p = argparse.ArgumentParser(description=\
+        "given an experiment ran over a split levelset see if " +\
+        "the combined found invariants for each split solve the original level")
 p.add_argument("--lvlset", type=str, help="lvlset to check", required=True)
 p.add_argument("--ename", type=str, help="experiment name", required=True)
 p.add_argument("--timeout", type=int, help="timeout on z3 queries")
@@ -18,8 +20,8 @@ args = p.parse_args()
 lvlsetName, lvls = levels.loadBoogieLvlSet(args.lvlset)
 s = open_sqlite_db("../logs/" + args.ename + "/events.db")()
 
-endsWithNumP = compile(".*\.[0-9]*$")
-justEnd = compile("\.[0-9]*$")
+endsWithNumP = reComp(".*\.[0-9]*$")
+justEnd = reComp("\.[0-9]*$")
 
 originalToSplitM = { }
 splitToOriginal = { }
@@ -46,7 +48,8 @@ for e in s.query(Event).all():
     error("Logs refer to levelset " + p['lvlset'] + " which is not loaded.")
 
   if ('lvlid' in p and p['lvlid'] not in lvls):
-    error("Logs refer to level " + p['lvlid'] + " which is not found in current lvlset.")
+    error("Logs refer to level " + p['lvlid'] + \
+          " which is not found in current lvlset.")
 
   if ('lvlid' in p):
     lvl = lvls[p['lvlid']]
@@ -71,16 +74,20 @@ for lvl_name, lvl in lvls.items():
 
   if (endsWithNumP.match(lvl_name)):
     origName = justEnd.split(lvl_name)[0]
-    originalToSplitM[origName] = originalToSplitM.get(origName, []) + [ lvl_name ]
+    originalToSplitM[origName] = \
+            originalToSplitM.get(origName, []) + [ lvl_name ]
     splitToOriginal[lvl_name] = origName
 
 
-print "Level, #Splits, Solved, #FoundInvariants, #Added Implications, #Added SPs, #Sound, #Overfit, #Nonind"
+print "Level, #Splits, Solved, #FoundInvariants, #Added Implications, " +\
+      "#Added SPs, #Sound, #Overfit, #Nonind"
 for origName in originalToSplitM:
   found = reduce(lambda x,y:  x.union(y),
     [lvlStats[z]["invariantsFound"] for z in originalToSplitM[origName]], set())
-  implied = [ set([ bast.AstBinExpr(precc, "==>", bast.parseExprAst(inv[1])) for inv in lvlStats[z]["invariantsFound"] \
-              for precc in lvls[z]["splitterPreds"] ]) for z in originalToSplitM[origName] ]
+  implied = [ set([ bast.AstBinExpr(precc, "==>", bast.parseExprAst(inv[1]))
+                    for inv in lvlStats[z]["invariantsFound"] \
+                        for precc in lvls[z]["splitterPreds"] ])
+              for z in originalToSplitM[origName] ]
   implied = reduce(lambda x,y:  x.union(y), implied, set())
   found = set([bast.parseExprAst(x[1]) for x in found])
   nraw = len(found)
@@ -92,7 +99,7 @@ for origName in originalToSplitM:
   sps = propagate_sp(bbs)[loop_header]
   nsps = len(sps)
   invs = found.union(sps).union(implied)
-  
+
   (overfitted, dummy1), (nonind, dummy2), sound, violations =\
       tryAndVerifyLvl(lvl, invs, set(), args.timeout, \
         useSplitters=False, addSPs=False, generalizeUserInvs=False)

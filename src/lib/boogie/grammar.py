@@ -1,4 +1,6 @@
-from pyparsing import delimitedList,nums, ParserElement, operatorPrecedence, opAssoc, StringEnd
+#pylint: disable=no-self-argument,unused-argument, multiple-statements
+from pyparsing import delimitedList,nums, ParserElement, operatorPrecedence, \
+        opAssoc, StringEnd
 from ..common.parser import InfixExprParser
 from pyparsing import ZeroOrMore as ZoM,\
     OneOrMore as OoM,\
@@ -56,9 +58,11 @@ class BoogieParser(InfixExprParser):
     s.RETURNS = K("returns")
     s.FUNCTION = K("function")
     s.FALSE = K("false")
-    s.FALSE.setParseAction(lambda st, loc, toks:  s.onAtom(s.FALSE, st, loc, toks))
+    s.FALSE.setParseAction(\
+            lambda st, loc, toks:  s.onAtom(s.FALSE, st, loc, toks))
     s.TRUE = K("true")
-    s.TRUE.setParseAction(lambda st, loc, toks:  s.onAtom(s.TRUE, st, loc, toks))
+    s.TRUE.setParseAction(\
+            lambda st, loc, toks:  s.onAtom(s.TRUE, st, loc, toks))
     s.OLD = K("old")
     s.AXIOM = K("axiom")
     s.FORALL = K("forall")
@@ -101,7 +105,8 @@ class BoogieParser(InfixExprParser):
     s.OrOp = L("||")
     s.AndOp = L("&&")
     s.AndOrOp = s.AndOp | s.OrOp
-    s.RelOp = (L("!=") | L ("<=") | L(">=") | L("<:")| L("==") |  L("<") | L(">") )
+    s.RelOp = (L("!=") | L ("<=") | L(">=") | L("<:") \
+               | L("==") |  L("<") | L(">") )
     s.ConcatOp = L("++")
     s.AddOp = (L("+") | L("-"))
     s.MulOp = (L("*") | L("/") | L("div") | L("mod"))
@@ -114,25 +119,34 @@ class BoogieParser(InfixExprParser):
     s.Expr = F();
 
     s.Number = W(nums)
-    s.Number.setParseAction(lambda st, loc, toks:  s.onAtom(s.Number, st, loc, toks))
+    s.Number.setParseAction(
+            lambda st, loc, toks:  s.onAtom(s.Number, st, loc, toks))
     s.BitVector = R("[0-9][0-9]*bv[0-9][0-9]*")
-    s.BitVector.setParseAction(lambda st, loc, toks:  s.onAtom(s.BitVector, st, loc, toks))
+    s.BitVector.setParseAction(
+            lambda st, loc, toks:  s.onAtom(s.BitVector, st, loc, toks))
     # TODO
     # TrigAttr = Trigger | Attribute
     s.Fun_App = s.Id + s.LPARN + csl(s.Expr) + s.RPARN
-    s.Fun_App.setParseAction(lambda st, loc, toks:  s.onAtom(s.Fun_App, st, loc, toks))
+    s.Fun_App.setParseAction(
+            lambda st, loc, toks:  s.onAtom(s.Fun_App, st, loc, toks))
     s.Old = s.OLD + s.LPARN + s.Expr + s.RPARN
-    s.Old.setParseAction(lambda st, loc, toks:  s.onAtom(s.Old, st, loc, toks))
-    s.Primitive = s.FALSE | s.TRUE | s.Number | s.BitVector 
+    s.Old.setParseAction(
+            lambda st, loc, toks:  s.onAtom(s.Old, st, loc, toks))
+    s.Primitive = s.FALSE | s.TRUE | s.Number | s.BitVector
     # TODO: Handle TriggerAttrs in Quantified expressions
-    #E9_Quantified = LPARN + QOp + O(TypeArgs) + csl(IdsType) + QSep + ZoM(TrigAttr) + Expr  +  RPARN 
-    #s.Quantified = s.LPARN + s.QOp + O(s.TypeArgs) + csl(s.IdsType) + s.QSep + s.Expr  +  s.RPARN 
+    #E9_Quantified = LPARN + QOp + O(TypeArgs) + csl(IdsType) \
+    #        + QSep + ZoM(TrigAttr) + Expr  +  RPARN
+    #s.Quantified = s.LPARN + s.QOp + O(s.TypeArgs) + \
+    #        csl(s.IdsType) + s.QSep + s.Expr  +  s.RPARN
 
     s.Atom = s.Primitive | s.Fun_App | s.Old | s.Id #| s.Quantified
     s.ArithExpr = operatorPrecedence(s.Atom, [
-      (s.ArithUnOp, 1, opAssoc.RIGHT, lambda st, loc, toks:  s.onUnaryOp(s.ArithUnOp, st, loc, toks[0])),
-      (s.MulOp, 2, opAssoc.LEFT, lambda st, loc, toks: s.onLABinOp(s.MulOp, st, loc, toks[0])),
-      (s.AddOp, 2, opAssoc.LEFT, lambda st, loc, toks: s.onLABinOp(s.AddOp, st, loc, toks[0])),
+      (s.ArithUnOp, 1, opAssoc.RIGHT, \
+           lambda st, loc, toks:  s.onUnaryOp(s.ArithUnOp, st, loc, toks[0])),
+      (s.MulOp, 2, opAssoc.LEFT, \
+           lambda st, loc, toks: s.onLABinOp(s.MulOp, st, loc, toks[0])),
+      (s.AddOp, 2, opAssoc.LEFT, \
+           lambda st, loc, toks: s.onLABinOp(s.AddOp, st, loc, toks[0])),
     ]);
     # TODO: Add support for Map operations
     #MapUpdate = ASSGN + Expr
@@ -142,16 +156,21 @@ class BoogieParser(InfixExprParser):
     # TODO: Add support for ConcatOp
     #E4 << E5 + ZoM(ConcatOp + E4)
     s.RelExpr = s.ArithExpr + s.RelOp + s.ArithExpr
-    s.RelExpr.setParseAction(lambda st, loc, toks: s.onNABinOp(s.RelExpr, st, loc, toks))
+    s.RelExpr.setParseAction(
+            lambda st, loc, toks: s.onNABinOp(s.RelExpr, st, loc, toks))
 
     s.BoolExpr = operatorPrecedence((s.RelExpr | s.Atom), [
-      (s.BoolUnOp, 1, opAssoc.RIGHT, lambda st, loc, toks:  s.onUnaryOp(s.BoolUnOp, st, loc, toks[0])),
-      (s.AndOrOp, 2, opAssoc.LEFT, lambda st, loc, toks:  s.onLABinOp(s.AndOrOp, st, loc, toks[0])),
-      (s.ImplOp, 2, opAssoc.LEFT, lambda st, loc, toks:  s.onLABinOp(s.ImplOp, st, loc, toks[0])),
-      (s.EquivOp, 2, opAssoc.LEFT, lambda st, loc, toks:  s.onLABinOp(s.EquivOp, st, loc, toks[0])),
+      (s.BoolUnOp, 1, opAssoc.RIGHT, \
+              lambda st, loc, toks:  s.onUnaryOp(s.BoolUnOp, st, loc, toks[0])),
+      (s.AndOrOp, 2, opAssoc.LEFT, \
+              lambda st, loc, toks:  s.onLABinOp(s.AndOrOp, st, loc, toks[0])),
+      (s.ImplOp, 2, opAssoc.LEFT, \
+              lambda st, loc, toks:  s.onLABinOp(s.ImplOp, st, loc, toks[0])),
+      (s.EquivOp, 2, opAssoc.LEFT, \
+              lambda st, loc, toks:  s.onLABinOp(s.EquivOp, st, loc, toks[0])),
     ]);
 
-    s.Expr << (s.BoolExpr ^ s.RelExpr ^ s.ArithExpr )
+    s.Expr << (s.BoolExpr ^ s.RelExpr ^ s.ArithExpr ) #pylint: disable=pointless-statement
 
     ####### Attributes
     s.AttrArg = s.Expr | s.StringLiteral
@@ -163,32 +182,35 @@ class BoogieParser(InfixExprParser):
     s.BVType = R("bv[0-9][0-9]*")
     s.TypeAtom = s.INT | s.BOOL | s.BVType | s.LPARN + s.Type + s.RPARN
     s.TypeArgs = S(s.LT) + csl(s.Type) + S(s.GT)
-    s.MapType = O(s.TypeArgs) + s.LSQBR + csl(s.Type) + s.RSQBR + s.Type 
+    s.MapType = O(s.TypeArgs) + s.LSQBR + csl(s.Type) + s.RSQBR + s.Type
 
     s.TypeCtorArgs = F()
     s.TypeCtorArgs = s.TypeAtom + O(s.TypeCtorArgs) |\
                    s.Id + O(s.TypeCtorArgs) |\
                    s.MapType
 
-    s.Type << (s.TypeAtom | s.MapType | s.Id + O(s.TypeCtorArgs))
+    s.Type << (s.TypeAtom | s.MapType | s.Id + O(s.TypeCtorArgs)) #pylint: disable=expression-not-assigned
     s.Type.setParseAction(lambda st, loc, toks: s.onType(s.Type, st, loc, toks))
     s.IdsType = csl(s.Id) + s.COLN + s.Type
 
 
     ####### Type Declarations
     s.TypeConstructor = s.TYPE + s.AttrList + O(s.FINITE) + OoM(s.Id) + s.SEMI
-    s.TypeSynonym = s.TYPE + s.AttrList + OoM(s.Id) + s.EQ + s.Type + s.SEMI 
+    s.TypeSynonym = s.TYPE + s.AttrList + OoM(s.Id) + s.EQ + s.Type + s.SEMI
     s.TypeDecl = s.TypeConstructor | s.TypeSynonym;
 
     ####### Constant Declarations
-    s.ConstantDecl = s.CONST + O(s.Attribute) + O(s.UNIQUE) + s.IdsType + s.OrderSpec;
+    s.ConstantDecl = s.CONST + O(s.Attribute) + O(s.UNIQUE) + \
+            s.IdsType + s.OrderSpec;
 
     ####### Function Declarations
     s.FArgName = s.Id + s.COLN
     s.FArg = s.FArgName + s.Type
-    s.FSig = O(s.TypeArgs) + s.LPARN + csl(s.FArg) + s.RPARN + s.RETURNS + s.LPARN + s.FArg + s.RPARN
+    s.FSig = O(s.TypeArgs) + s.LPARN + csl(s.FArg) + \
+            s.RPARN + s.RETURNS + s.LPARN + s.FArg + s.RPARN
     s.FunctionDecl = s.FUNCTION + ZoM(s.Attribute) + s.Id + s.FSig + s.SEMI |\
-                     s.FUNCTION + ZoM(s.Attribute) + s.Id + s.FSig + s.SEMI + s.LBRAC + s.Expr + s.RBRAC
+                     s.FUNCTION + ZoM(s.Attribute) + s.Id + s.FSig + s.SEMI +\
+                        s.LBRAC + s.Expr + s.RBRAC
 
     ####### Axiom Declarations
     s.AxiomDecl = s.AXIOM + ZoM(s.Attribute) + s.Expr;
@@ -204,11 +226,15 @@ class BoogieParser(InfixExprParser):
           | O(s.FREE) + s.ENSURES + s.Expr + s.SEMI
 
     s.OutParameters = s.RETURNS + s.LPARN + csl(s.IdsTypeWhere) + s.RPARN
-    s.PSig = O(s.TypeArgs) + s.LPARN + csl(s.IdsTypeWhere) + s.RPARN + O(s.OutParameters)
+    s.PSig = O(s.TypeArgs) + s.LPARN + csl(s.IdsTypeWhere) + \
+            s.RPARN + O(s.OutParameters)
 
 
-    s.LocalVarDecl = S(s.VAR) + ZoM(s.Attribute) + csl(s.IdsTypeWhere) + S(s.SEMI);
-    s.LocalVarDecl.setParseAction(lambda st, loc, toks: s.onLocalVarDecl(s.LocalVarDecl, st, loc, toks))
+    s.LocalVarDecl = S(s.VAR) + ZoM(s.Attribute) + csl(s.IdsTypeWhere) + \
+            S(s.SEMI);
+    s.LocalVarDecl.setParseAction(
+            lambda st, loc, toks: s.onLocalVarDecl(s.LocalVarDecl,
+                                                   st, loc, toks))
 
     s.StmtList = F()
     s.WildcardExpr = s.Expr | s.STAR
@@ -219,7 +245,8 @@ class BoogieParser(InfixExprParser):
 
     s.IfStmt = F()
     s.Else = s.ELSE + s.BlockStmt | s.ELSE + s.IfStmt
-    s.IfStmt = s.IF + s.LBRAC + s.WildcardExpr + s.RBRAC + s.BlockStmt + O(s.Else)
+    s.IfStmt = s.IF + s.LBRAC + s.WildcardExpr + s.RBRAC + s.BlockStmt + \
+            O(s.Else)
 
     s.CallLhs = csl(s.Id) + s.ASSGN
     s.MapSelect = s.LSQBR + csl(s.Expr) + s.RSQBR
@@ -227,24 +254,34 @@ class BoogieParser(InfixExprParser):
     s.Label = s.Id | s.Number
 
     s.AssertStmt = S(s.ASSERT) + s.Expr + S(s.SEMI)
-    s.AssertStmt.setParseAction(lambda st, loc, toks: s.onAssert(s.AssertStmt, st, loc, toks))
+    s.AssertStmt.setParseAction(
+            lambda st, loc, toks: s.onAssert(s.AssertStmt, st, loc, toks))
     s.AssumeStmt = S(s.ASSUME) + O(S("{:partition}")) + s.Expr + S(s.SEMI)
-    s.AssumeStmt.setParseAction(lambda st, loc, toks: s.onAssume(s.AssumeStmt, st, loc, toks))
+    s.AssumeStmt.setParseAction(
+            lambda st, loc, toks: s.onAssume(s.AssumeStmt, st, loc, toks))
     s.ReturnStmt = S(s.RETURN) + S(s.SEMI)
-    s.ReturnStmt.setParseAction(lambda st, loc, toks: s.onReturn(s.ReturnStmt, st, loc, toks))
+    s.ReturnStmt.setParseAction(
+            lambda st, loc, toks: s.onReturn(s.ReturnStmt, st, loc, toks))
     s.GotoStmt = S(s.GOTO) + csl(s.Label) + S(s.SEMI)
-    s.GotoStmt.setParseAction(lambda st, loc, toks: s.onGoto(s.GotoStmt, st, loc, toks))
+    s.GotoStmt.setParseAction(
+            lambda st, loc, toks: s.onGoto(s.GotoStmt, st, loc, toks))
     s.AssignmentStmt = G(csl(s.Lhs)) + S(s.ASSGN) + G(csl(s.Expr)) + S(s.SEMI)
-    s.AssignmentStmt.setParseAction(lambda st, loc, toks: s.onAssignment(s.AssignmentStmt, st, loc, toks))
+    s.AssignmentStmt.setParseAction(
+            lambda st, loc, toks: s.onAssignment(s.AssignmentStmt, st,
+                                                 loc, toks))
     s.HavocStmt = S(s.HAVOC) + csl(s.Id) + S(s.SEMI)
-    s.HavocStmt.setParseAction(lambda st, loc, toks: s.onHavoc(s.HavocStmt, st, loc, toks))
+    s.HavocStmt.setParseAction(
+            lambda st, loc, toks: s.onHavoc(s.HavocStmt, st, loc, toks))
 
-    s.CallAssignStmt = s.CALL + O(s.CallLhs) + s.Id + s.LPARN + csl(s.Expr) + s.RPARN + S(s.SEMI)
-    s.CallForallStmt = s.CALL + s.FORALL + s.Id + s.LPARN + csl(s.WildcardExpr) + s.RPARN + S(s.SEMI)
+    s.CallAssignStmt = s.CALL + O(s.CallLhs) + s.Id + s.LPARN + csl(s.Expr) +\
+            s.RPARN + S(s.SEMI)
+    s.CallForallStmt = s.CALL + s.FORALL + s.Id + s.LPARN + \
+            csl(s.WildcardExpr) + s.RPARN + S(s.SEMI)
 
-    s.WhileStmt = s.WHILE + s.LPARN + s.WildcardExpr + s.RPARN + ZoM(s.LoopInv) + s.BlockStmt 
+    s.WhileStmt = s.WHILE + s.LPARN + s.WildcardExpr + s.RPARN + \
+            ZoM(s.LoopInv) + s.BlockStmt
     s.BreakStmt = s.BREAK + O(s.Id) + S(s.SEMI)
- 
+
     s.Stmt = s.AssertStmt \
           | s.AssumeStmt \
           | s.HavocStmt \
@@ -259,33 +296,44 @@ class BoogieParser(InfixExprParser):
 
     s.LStmt = F();
     s.LabeledStatement = s.Label + S(s.COLN) + s.LStmt
-    s.LStmt << (s.Stmt | s.LabeledStatement)
+    s.LStmt << (s.Stmt | s.LabeledStatement) #pylint: disable=pointless-statement
     s.LEmpty = F();
-    s.LEmpty <<(s.Id + s.COLN + O(s.LEmpty))
+    s.LEmpty <<(s.Id + s.COLN + O(s.LEmpty)) #pylint: disable=expression-not-assigned
     s.LabeledStatement.setParseAction(
-      lambda st, loc, toks: s.onLabeledStatement(s.LabeledStatement, st, loc, toks))
+      lambda st, loc, toks: s.onLabeledStatement(s.LabeledStatement,
+                                                 st, loc, toks))
 
-    s.StmtList << (ZoM(s.LStmt) + O(s.LEmpty))
+    s.StmtList << (ZoM(s.LStmt) + O(s.LEmpty)) #pylint: disable=expression-not-assigned
 
 
     s.Body = S(s.LBRAC) + G(ZoM(s.LocalVarDecl)) + G(s.StmtList) + S(s.RBRAC)
     s.Body.setParseAction(lambda st, loc, toks: s.onBody(s.Body, st, loc, toks))
 
-    s.ProcedureDecl = s.PROCEDURE + ZoM(s.Attribute) + s.Id + s.PSig + s.SEMI + ZoM(s.Spec) |\
-                    s.PROCEDURE + ZoM(s.Attribute) + s.Id + s.PSig + ZoM(s.Spec) + s.Body
+    s.ProcedureDecl = \
+        s.PROCEDURE + ZoM(s.Attribute) + s.Id + s.PSig + s.SEMI + ZoM(s.Spec) |\
+        s.PROCEDURE + ZoM(s.Attribute) + s.Id + s.PSig + ZoM(s.Spec) + s.Body
 
     s.IOutParameters = s.RETURNS + s.LPARN + csl(s.IdsType) + s.RPARN
-    s.ISig = G(O(s.TypeArgs)) + s.LPARN + G(O(csl(s.IdsType))) + s.RPARN + G(O(s.IOutParameters))
-    s.ImplementationDecl = S(s.IMPLEMENTATION) + G(ZoM(s.Attribute)) + s.Id + G(s.ISig) + G(ZoM(s.Body))
+    s.ISig = G(O(s.TypeArgs)) + s.LPARN + G(O(csl(s.IdsType))) + s.RPARN +\
+            G(O(s.IOutParameters))
+    s.ImplementationDecl = S(s.IMPLEMENTATION) + G(ZoM(s.Attribute)) + s.Id +\
+            G(s.ISig) + G(ZoM(s.Body))
     s.ImplementationDecl.setParseAction(
-      lambda st, loc, toks: s.onImplementationDecl(s.ImplementationDecl, st, loc, toks))
+      lambda st, loc, toks: s.onImplementationDecl(s.ImplementationDecl,
+                                                   st, loc, toks))
 
 
-    s.Decl = s.TypeDecl | s.ConstantDecl | s.FunctionDecl | s.AxiomDecl | s.VarDecl | \
-        s.ProcedureDecl | s.ImplementationDecl
+    s.Decl = s.TypeDecl |\
+             s.ConstantDecl |\
+             s.FunctionDecl |\
+             s.AxiomDecl |\
+             s.VarDecl |\
+             s.ProcedureDecl |\
+             s.ImplementationDecl
 
     s.Program = ZoM(s.Decl);
-    s.Program.setParseAction(lambda st, loc, toks: s.onProgram(s.Program, st, loc, toks))
+    s.Program.setParseAction(
+            lambda st, loc, toks: s.onProgram(s.Program, st, loc, toks))
 
   def parseExpr(s, st):
     return (s.Expr + StringEnd()).parseString(st)[0]

@@ -1,4 +1,4 @@
-class CounterexGameLogic extends BaseGameLogic {
+class RoundsGameLogic extends BaseGameLogic {
   foundJSInv: UserInvariant[] = [];
   invMap: { [ id: string ] : UserInvariant } = {};
   lvlPassedF: boolean = false;
@@ -178,8 +178,8 @@ class CounterexGameLogic extends BaseGameLogic {
                 /*
                  * Clear the current negative rows
                  */
-                gl.curLvl.data[2] = [];
-                (<CounterexTracesWindow>gl.tracesW).clearNegRows();
+                //gl.curLvl.data[2] = [];
+                //(<CounterexTracesWindow>gl.tracesW).clearNegRows();
 
                 logEvent("FoundInvariant", [curLvlSet, gl.curLvl.id, ui.rawUserInp, ui.canonForm]);
                 if (!gl.lvlPassedF) {
@@ -210,12 +210,14 @@ class CounterexGameLogic extends BaseGameLogic {
 
                       if (!sat) {
                         // Add any counterexamples
+                        /*
                         var overfitted = feedback[0].map((p)=>p[1]);
                         var postctrex = feedback[4];
                         console.log(overfitted, postctrex);
                         gl.tracesW.addData([overfitted, [], postctrex]);
                         gl.curLvl.data[0] = gl.curLvl.data[0].concat(overfitted);
                         gl.curLvl.data[2] = gl.curLvl.data[2].concat(postctrex);
+                        */
                         return;
                       }
 

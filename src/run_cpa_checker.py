@@ -3,21 +3,25 @@ import argparse
 from levels import loadBoogieLvlSet
 from vc_check import tryAndVerifyLvl
 from lib.cpa_checker import runCPAChecker, convertCppFileForCPAChecker
-from lib.boogie.z3_embed import to_smt2, z3_expr_to_boogie
+from lib.boogie.z3_embed import to_smt2, z3_expr_to_boogie, Unknown
 from lib.common.util import error
 from shutil import move
 from signal import signal, SIGALRM,  alarm
 from os.path import exists
 
-def handler(signum, frame):
+def handler(signum):
+  assert (signum == SIGALRM)
   raise Exception("timeout")
 signal(SIGALRM, handler);
 
 if (__name__ == "__main__"):
-  p = argparse.ArgumentParser(description="run daikon on a levelset")
-  p.add_argument('--lvlset', type=str, help='Path to lvlset file', required=True)
-  p.add_argument('--csv-table', action="store_true", default=False, help='Print results as a csv table')
-  p.add_argument('--time-limit', type=int, default=300, help='Time limit for CPAChecker')
+  p = argparse.ArgumentParser(description="run CPAChecker on a levelset")
+  p.add_argument('--lvlset', type=str, \
+          help='Path to lvlset file', required=True)
+  p.add_argument('--csv-table', action="store_true", \
+          default=False, help='Print results as a csv table')
+  p.add_argument('--time-limit', type=int, default=300, \
+          help='Time limit for CPAChecker')
   args = p.parse_args();
 
   lvlSetName, lvls = loadBoogieLvlSet(args.lvlset)
@@ -46,7 +50,8 @@ if (__name__ == "__main__"):
       try:
         alarm(args.time_limit)
         # On lvl d-14 for example the invariants explode exponentially due to
-        # inlining of lets. So add timeout. Seems to be the only level with this problem
+        # inlining of lets. So add timeout. Seems to be the only level with
+        # this problem
         invs = map(z3_expr_to_boogie, loopInvs)
       except Exception,e:
         if (e.message == "timeout"):
@@ -61,7 +66,7 @@ if (__name__ == "__main__"):
       if (invs != None):
         try:
           (overfitted, nonind, sound, violations) =\
-            tryAndVerifyLvl(lvl, set(invs), set(), args.time_limit, addSps=True)
+            tryAndVerifyLvl(lvl, set(invs), set(), args.time_limit, addSPs=True)
 
           error ("Out of ", invs, "sound: ", sound)
 

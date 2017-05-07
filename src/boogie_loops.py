@@ -1,12 +1,12 @@
 from lib.boogie.paths import is_nd_bb_path_possible
-from lib.boogie.ast import *;
-from lib.boogie.z3_embed import *
-from lib.boogie.bb import BB, get_bbs, entry
-from lib.boogie.paths import get_path_vars, nd_bb_path_to_ssa, ssa_path_to_z3, wp_nd_ssa_path
-from lib.boogie.ssa import *
+from lib.boogie.ast import AstAssume, ast_or, AstTrue, parseExprAst, AstAssume
+#from lib.boogie.z3_embed import *
+from lib.boogie.bb import BB, get_bbs, bbEntry
+from lib.boogie.paths import get_path_vars
+#from lib.boogie.ssa import *
 from lib.boogie.eval import env_to_expr
 from collections import namedtuple
-from lib.common.util import *
+from lib.common.util import unique
 
 Loop = namedtuple("Loop", ["header", "loop_paths", "exit_paths", "entry_cond"])
 
@@ -15,6 +15,10 @@ Loop = namedtuple("Loop", ["header", "loop_paths", "exit_paths", "entry_cond"])
 # assumptions about code shape. Should be removed when we
 # moved to on-demand level generation as loops are
 # discovered during dynamic exploration of the program.
+
+# NOTE(dimo): The work to use lib/boogie/inv_networks.py to check
+# if invariants are sufficient was half the work to obsolete this
+# file.
 
 # There are several implicit assumption in the loop code
 # (these seem to hold for the desugared boogie code)
@@ -27,7 +31,7 @@ Loop = namedtuple("Loop", ["header", "loop_paths", "exit_paths", "entry_cond"])
 # 3) is particularly risky.
 def _loops(bbs, curpath, loop_m):
     if (curpath == []):
-        curpath.append(entry(bbs))
+        curpath.append(bbEntry(bbs))
 
     #TODO: Is the code resilient to random dead loops?
     #if (not is_nd_bb_path_possible(curpath, bbs)):
@@ -75,14 +79,17 @@ def unroll_loop(loop, nunrolls, extra_pred_bb = None, exact = False):
       nunrolls * [ loop.loop_paths ] + ([ loop.exit_paths ] if exact else [])
 
 def bad_envs_to_expr(bad_envs):
-    s = "&&".join(["!(" + 
-                        "&&".join([("(%s==%s)" %(k, str(v))) for (k,v) in bad_env.iteritems()]) + ")"
-                        for bad_env in bad_envs])
+    s = "&&".join(["!(" + \
+                    "&&".join([("(%s==%s)" %(k, str(v))) \
+                                for (k,v) in bad_env.iteritems()]) + \
+                    ")"
+                    for bad_env in bad_envs])
     if (s == ""):
         return AstTrue()
     return parseExprAst(s)
 
-# get_loop_header_values tries to unroll the given loop between min_unrolls and max_unrolls.
+# get_loop_header_values tries to unroll the given loop between min_unrolls and
+# max_unrolls.
 #
 #   loop - loop to unroll (specified in the Loop named tuple format)
 #   bbs - the basic block representation of the function
@@ -94,7 +101,7 @@ def bad_envs_to_expr(bad_envs):
 #   starting_env - an optional precise initial assignment for the live loop
 #     variables to start with. Useful when you want to continue unrolling a
 #     partially unrolled loop
-#   exact - if true, look for loop unrolling that exit the loop afterwards 
+#   exact - if true, look for loop unrolling that exit the loop afterwards
 #
 def get_loop_header_values(loop, bbs, min_unrolls = 0, max_unrolls = 5, \
   forbidden_envs = None, start_env = None, exact = False):
@@ -112,11 +119,14 @@ def get_loop_header_values(loop, bbs, min_unrolls = 0, max_unrolls = 5, \
             expr = env_to_expr(start_env)
         bbs[extra_bb] = BB([], [ AstAssume(expr) ], [])
 
-    while is_nd_bb_path_possible(unroll_loop(loop, nunrolls+1, extra_bb, exact), bbs) and \
-      nunrolls < max_unrolls:
+    while (is_nd_bb_path_possible(unroll_loop(loop, nunrolls+1, extra_bb,\
+                                              exact),
+                                  bbs) \
+           and nunrolls < max_unrolls):
         nunrolls += 1;
 
-    if (not is_nd_bb_path_possible(unroll_loop(loop, nunrolls, extra_bb, exact), bbs)):
+    if (not is_nd_bb_path_possible(unroll_loop(loop, nunrolls, extra_bb, exact),
+                                   bbs)):
         return []
 
     unrolled_path = unroll_loop(loop, nunrolls, extra_bb, exact)

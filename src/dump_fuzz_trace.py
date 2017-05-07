@@ -39,8 +39,8 @@ print lvl
 vars_ = lvl["variables"]
 vars_.sort()
 
-def write_trace(rows, prefix=""):
-  trace_str = json.dumps(rows)
+def write_trace(rowsL, prefix=""):
+  trace_str = json.dumps(rowsL)
   trace_file = "%s/%s%d.trace" % (trace_dir, prefix, hash(trace_str))
   print "Writing trace to file:", trace_file
   with open(trace_file, "w") as fh:
