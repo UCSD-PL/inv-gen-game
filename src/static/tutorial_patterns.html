@@ -177,7 +177,7 @@
                }
       },
       { setup: function (cs) {
-                 curL = label($('#formula-entry'), "Now try i.", "left")
+                 curL = label($('#formula-entry'), "Now type i", "left")
                  nextStepOnInvariant(cs, "i", labelRemover(curL));
                }
       },
@@ -218,7 +218,7 @@
                }
       },
       { setup: function (cs) {
-                 curL = label($("#formula-entry"), "Now try i > 0", "left")
+                 curL = label($("#formula-entry"), "Now type i > 0", "left")
                  nextStepOnInvariant(cs, "i>0", labelRemover(curL));
                }
       },
@@ -335,7 +335,7 @@
       { setup: function (cs) {
                  tracesW.msg("")
                  curL = label({ of: $("#sticky"), at: "center bottom" },
-                              "Double added points <br> since you used only <br> variables", "up")
+                              "Double points <br> since you used only <br> variables", "up")
                  pwups[0].highlight(() => 
                    cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
                  );
@@ -344,7 +344,7 @@
       { setup: function (cs) {
                  tracesW.msg("")
                  curL = label({ of: $("#sticky"), at: "center bottom" },
-                              "Double added points <br> since you used <br> inequality", "up")
+                              "Double points <br> since you used <br> inequality", "up")
                  pwups[1].highlight(() => 
                    cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
                  );
@@ -450,6 +450,7 @@
                  pwups[1].highlight(() => 0)
                  scoreW.add(4)
                  addSuccessfulInvariant(inv);
+                 $("#formula-entry").val("");
                  curL = label({ of: $("#score-div-row"), at: "right center" },
                               "Hurray! <br> You learned to use %!", "left");
                  cs.nextStepOnKeyClickOrTimeout(-1, labelRemover(curL), 13)
@@ -623,6 +624,124 @@
                }
       },
     ]
+    
+    var multiplayerScript = [
+      {
+        setup: function(cs) {
+          $('.overlay').html("<h2>Let's see how the multiplayer game works.");
+          $('.overlay').fadeIn(fadeDelay, function () {
+            var lvl = {
+
+                      id: "tutorial_lvl_5",
+                      variables: [ "a", "b" ],
+                      data: [ [ [ 1, 4 ], [ 2, 4 ], [ 3, 4 ] ], [], [] ],
+                      goal: { },
+                      hint: "",
+                      supports_pos_ex: false,
+                      supports_neg_ex: false,
+                      supports_ind_ex: false,
+                    }
+
+            curLvl = lvl;
+            tracesW = new PositiveTracesWindow($('#data-display'));
+            tracesW.setVariables(lvl)
+            tracesW.onChanged(function() {
+              if (errorTimer) {
+                window.clearTimeout(errorTimer);
+                errorTimer = null;
+              }
+              updateUI();
+            })
+            tracesW.addData(lvl.data);
+            $('#hint').html(lvl.hint)
+            updateUI()
+            var you = {id: 'you', score: scoreW.score ? scoreW.score : 0};
+            var opponent = {id: 'rob', score: 0};
+            scoreW.updatePlayers([you, opponent]);
+            $("#scoreboard-div-row").show();
+            progW.clear();
+            cs.nextStepOnKeyClickOrTimeout(stepTimeout, () => {}, 32)
+          })
+        }
+      },
+      { setup: function (cs) {
+          $(".overlay").fadeOut(fadeDelay, function () {});
+          curL = label($("#scoreboard-div-row"), "This scoreboard<br/>shows your standing<br/>in the current<br/>multiplayer game", "left");
+          cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
+        }
+      },
+      { setup: function (cs) {
+          curL = label($("#progWin"), "Expressions from all<br/>players show up here", "left");
+          cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
+        }
+      },
+      { setup: function (cs) {
+          var inv = invPP("b>=0");
+          addSuccessfulInvariant(inv);
+          var you = {id: 'you', score: scoreW.score ? scoreW.score : 0};
+          var opponent = {id: 'rob', score: 2};
+          scoreW.updatePlayers([you, opponent]);
+          curL = label($("#progWin"), "Your opponent rob<br/>just found b>=0<br/>for 2 points", "left");
+          cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32);
+        }
+      },
+      { setup: function (cs) {
+          curL = label($("#formula-entry"), "Try b=4", "left");
+          nextStepOnInvariant(cs, "b=4", labelRemover(curL));
+        }
+      },
+      { setup: function (cs) {
+          tracesW.msg("Press Enter...")
+          curL = label($("#formula-entry"), "Press enter...", "left")
+          cs.nextStepOnKeyClickOrTimeout(-1, labelRemover(curL), 13)
+        }
+      },
+      { setup: function (cs) {
+                 tracesW.msg("");
+                 var inv = invPP(tracesW.curExp().trim());
+                 addSuccessfulInvariant(inv);
+                 scoreW.add(2);
+                 var you = {id: 'you', score: scoreW.score};
+                 var opponent = {id: 'rob', score: 2};
+                 scoreW.updatePlayers([you, opponent]);
+                 $("#formula-entry").val("");
+                 curL = label($("#score-div-row"), "You got 2 points for<br>finding b==4", "left");
+                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                 curL = label($("#good_1"), "b==4 is stronger<br/>than b>=0", "up");
+                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32);
+               }
+      },
+      { setup: function (cs) {
+                 scoreW.addBonus(10);
+                 var you = {id: 'you', score: scoreW.score};
+                 var opponent = {id: 'rob', score: 2};
+                 scoreW.updatePlayers([you, opponent]);
+                 curL = label($("#score-div"), "So you get<br/>10 bonus points!", "left");
+                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
+               }
+      },
+      { setup: function (cs) {
+                var elem = $("#good_0");
+                elem.addClass("implied");
+                curL = label($("#progWin"), "And b>=0 is cancelled", "up");
+                cs.nextStepOnKeyClickOrTimeout(stepTimeout, function() {
+                  elem.slideUp();
+                  labelRemover(curL);
+                  }, 32);
+               }
+      },
+      { setup: function(cs) {
+          setTimeout(function() {
+            $("#scoreboard-div-row").hide();
+            cs.nextStep();
+          }, 1000);
+        }
+      }
+    ]
+
     var conclusionScript = [
       // Conclusion ----------------------------------------------------------
       { setup: function (cs) {
@@ -660,7 +779,7 @@
                      .join('\n') +
                     '</tbody></table></h3>' +
                     '</div>');
-                    if (Args.get_tutorial_action() != "redo-cond" && Args.get_tutorial_action() != "redo-all" && Args.get_tutorial_action() != "redo-all-nond")
+                    if (Args.get_tutorial_action() != "redo-cond" && Args.get_tutorial_action() != "redo-all" && Args.get_tutorial_action() != "redo-all-nond" && Args.get_tutorial_action() != "multi")
                       cs.nextStep()
                }
       },
@@ -695,6 +814,9 @@
        tutorialScript = conditionalsScript
     else if (Args.get_tutorial_action() == "nond" || Args.get_tutorial_action() == "redo-all-nond")
        tutorialScript = mainScript.concat(conclusionScript)
+    else if (Args.get_tutorial_action() == "multi") {
+      tutorialScript = mainScript.concat(conditionalsScript).concat(multiplayerScript).concat(conclusionScript)
+    }
     else
        tutorialScript = mainScript.concat(conditionalsScript).concat(conclusionScript)
 
@@ -707,7 +829,7 @@
       progW = new ProgressWindow($('#discovered-invariants-div'));
       $('#discovered-invariants-div').hide();
       $('.ignoreWindow').hide();
-      scoreW = new ScoreWindow($('#score-div'));
+      scoreW = new NPlayerScoreWindow($('#score-div'));
       $('#score-div-row').hide();
       $('#next-lvl').hide();
       $('#overlay').hide();
@@ -720,6 +842,8 @@
           removeLabel(curL);
         curScript.nextStep();
       })
+
+      $("#scoreboard-div-row").hide();
     })
 
   </script>
@@ -745,9 +869,11 @@
       </div>
       <div class='col-md-3' >
         <div id='score-div-row' class='row positioned box progressWindow'>
-          <div class='col-md-2'> Score: </div>
+          <div class='col-md-2 score-label'> Score: </div>
           <div id='score-div' class='col-md-7 col-md-offset-3'>
           </div>
+        </div>
+        <div id='scoreboard-div-row' class='row positioned box progressWindow'>
         </div>
         <div class='row good centered positioned' id='discovered-invariants-div'>
         </div>
