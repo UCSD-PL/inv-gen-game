@@ -14,9 +14,12 @@ import csv
 from re import sub
 
 p = ArgumentParser(description="Compute stats over an experiment");
-p.add_argument('--lvlset', type=str, help='Path to levelset used in experiment', required=True);
-p.add_argument('--timeout', type=int, default=10, help='Timeout in seconds for z3 queries.')
-p.add_argument('--additionalInvs', type=str, help='Path to a .csv file with additional invariants.')
+p.add_argument('--lvlset', type=str, help='Path to levelset used in experiment',
+        required=True);
+p.add_argument('--timeout', type=int, default=10,
+        help='Timeout in seconds for z3 queries.')
+p.add_argument('--additionalInvs', type=str,
+        help='Path to a .csv file with additional invariants.')
 
 set_history_length(1000);
 
@@ -81,14 +84,15 @@ if __name__ == "__main__":
           try:
             binv = parseExprAst(pp_inv)
             break
-          except:
+          except Exception:
             print "Error: Can't parse ", inv
 
         invVars = set(expr_read(binv))
 
         for i in xrange(len(greenRows)):
           gR = greenRows[i]
-          env = { vs[i]: (gR[i] if gR[i] != None else 0) for i in xrange(len(gR)) }
+          env = { vs[i]: (gR[i] if gR[i] != None else 0)
+                    for i in xrange(len(gR)) }
           greenRowsEvals[i] = evalPred(binv, env);
 
         redRowsEvals = { }
@@ -107,22 +111,24 @@ if __name__ == "__main__":
           print "Doesn't satisfy all rows!"
           continue;
 
-        redRowsL = [ redRowsL[i] for i in xrange(0, len(redRowsL)) if i not in redRowsEvals ]
+        redRowsL = [ redRowsL[i] for i in xrange(0, len(redRowsL))
+                        if i not in redRowsEvals ]
         redRows = set(redRowsL);
 
         print "Verifying..."
         curInvs.add(binv);
         # Try and Verify
-        ((overfitted, overfitted_ignore), (nonind, nonind_ignore), sound, violations) =\
+        ((overfitted, _), (nonind, _), sound, violations) =\
           tryAndVerifyLvl(lvl, curInvs, oInvs, args.timeout)
 
         if (len(violations) == 0):
           break;
 
-        # tryAndVerifyLvl filters out invariants we can't show to be sound before checking for
-        # safety ctrexamples. Call loopInvSafetyCtrex directly to obtain any red-rows for the
-        # current invariant set
-        direct_violations = loopInvSafetyCtrex(loop, curInvs, bbs, args.timeout);
+        # tryAndVerifyLvl filters out invariants we can't show to be sound
+        # before checking for safety ctrexamples. Call loopInvSafetyCtrex
+        # directly to obtain any red-rows for the current invariant set
+        direct_violations = loopInvSafetyCtrex(loop, curInvs, bbs,
+                                               args.timeout);
         for endEnv in direct_violations:
           redRows.add(tuple([endEnv.get(v, '*') for v in vs]))
         redRowsL = list(redRows)

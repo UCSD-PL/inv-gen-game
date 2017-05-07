@@ -6,7 +6,7 @@ import sys
 from boogie.bb import get_bbs
 from boogie_loops import loops
 from mturk_util import error
-from argparse import *
+from argparse import ArgumentParser
 
 p = ArgumentParser(description="desugar file");
 p.add_argument("inp_file", type=str, help="input file");
@@ -15,10 +15,11 @@ p.add_argument("out_file", type=str, help="output file");
 BOOGIE_PATH= "/home/dimo/install/boogie/Binaries/Boogie.exe"
 
 def desugar(fname):
-    output = subprocess.check_output([BOOGIE_PATH, "/nologo", "/noinfer", "/traceverify", fname]);
+    output = subprocess.check_output(
+            [BOOGIE_PATH, "/nologo", "/noinfer", "/traceverify", fname]);
     lines = list(output.split("\n"))
     start = 0;
-    res = {}
+    desugaredF = {}
     r = re.compile("implementation (?P<name>[^(]*)\(", re.MULTILINE)
     while True:
         try:
@@ -26,12 +27,12 @@ def desugar(fname):
                     lines.index("after desugaring sugared commands like procedure calls",start)+1:
                     lines.index("after conversion into a DAG", start)])
             name = r.findall(code)[0]
-            res[name] = code;
+            desugaredF[name] = code;
             start = lines.index("after conversion into a DAG", start) + 1
         except ValueError:
             break;
 
-    return res
+    return desugaredF
 
 if (__name__ == "__main__"):
   args = p.parse_args();

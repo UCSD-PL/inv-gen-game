@@ -16,12 +16,15 @@ p.add_argument('--lvlStats', action="store_const", const=True, default=False,
                help='If set print lvl stats');
 p.add_argument('--usrStats', action="store_const", const=True, default=False,
                help='If set print user stats');
-p.add_argument('--lvlset', type=str, help='Path to levelset used in experiment', required=True);
-p.add_argument('--timeout', type=int, default=10, help='Timeout in seconds for z3 queries.')
-p.add_argument('--additionalInvs', type=str, help='Path to a .csv file with additional invariants.')
+p.add_argument('--lvlset', type=str,
+               help='Path to levelset used in experiment', required=True);
+p.add_argument('--timeout', type=int, default=10,
+               help='Timeout in seconds for z3 queries.')
+p.add_argument('--additionalInvs', type=str,
+               help='Path to a .csv file with additional invariants.')
 
-def isSrcUser(src):
-    return src != 'verifier'
+def isSrcUser(srcId):
+    return srcId != 'verifier'
 
 if __name__ == "__main__":
     args = p.parse_args();
@@ -39,7 +42,8 @@ if __name__ == "__main__":
           for inv in [x for x in invs.split(";") if len(x.strip()) != 0]:
             try:
               bInv = parseExprAst(inv)
-              if (tautology(expr_to_z3(bInv, AllIntTypeEnv()))): continue
+              if (tautology(expr_to_z3(bInv, AllIntTypeEnv()))):
+                  continue
               bInvs.append(bInv)
             except RuntimeError:
               # Some invariants are just too large for parsing :(
@@ -73,7 +77,8 @@ if __name__ == "__main__":
         fatal("Logs refer to levelset " + p['lvlset'] + " which is not loaded.")
 
       if ('lvlid' in p and p['lvlid'] not in lvls):
-        fatal("Logs refer to level " + p['lvlid'] + " which is not found in current lvlset.")
+        fatal("Logs refer to level " + p['lvlid'] +\
+              " which is not found in current lvlset.")
 
       if ('lvlid' in p):
         lvl = lvls[p['lvlid']]
@@ -123,7 +128,8 @@ if __name__ == "__main__":
       elif (typ == "PowerupsActivated"):
         usrS['totalNPowerups'] += len(p['powerups'])
         usrS['timesPowerupsActivated'] += 1
-        usrS['sumPowerupMultipliers'] += reduce(lambda x,y: x*y, [z[1] for z in p['powerups']], 1)
+        usrS['sumPowerupMultipliers'] += \
+                reduce(lambda x,y: x*y, [z[1] for z in p['powerups']], 1)
       elif (typ == "FoundInvariant"):
         usrS["nInvariantsFound"] += 1
         lvlS["nInvariantsFound"] += 1
@@ -160,7 +166,7 @@ if __name__ == "__main__":
       else:
         oInvs = set([])
 
-      ((overfitted, overfitted_ignore), (nonind, nonind_ignore), sound, violations) =\
+      ((overfitted, _), (nonind, _), sound, violations) =\
         tryAndVerifyLvl(lvl, userInvs, oInvs, args.timeout)
 
       lvlS["solved"] = (len(violations) == 0)
@@ -169,7 +175,12 @@ if __name__ == "__main__":
       lvlS["nonind"] = [invM.get(str(x[0]),str(x[0])) for x in nonind]
 
     if (args.lvlStats):
-      print ", ".join(["Level", "Solved", "#Started", "Finished", "Total Time", "Ave Time/User", "#Invs Tried", "Ave #Invs Tried/Usr""#Invs Found", "#Invs Found", "Ave #Invs Found/Usr", "#Sound", "Sound", "#Overfitted", "Overfitted", "#Nonind", "Nonind"])
+      lvlStatColumns = ["Level", "Solved", "#Started", "Finished", \
+                        "Total Time", "Ave Time/User", "#Invs Tried", \
+                        "Ave #Invs Tried/Usr", "#Invs Found", "#Invs Found",\
+                        "Ave #Invs Found/Usr", "#Sound", "Sound", \
+                        "#Overfitted", "Overfitted", "#Nonind", "Nonind"]
+      print ", ".join(lvlStatColumns)
       for (lvlName, lvlS) in lvlStats.items():
         print ", ".join([\
           lvlName,\
@@ -188,3 +199,6 @@ if __name__ == "__main__":
           ";".join(lvlS["overfitted"]),\
           str(len(lvlS["nonind"])),\
           ";".join(lvlS["nonind"])]);
+
+    if (args.userStats):
+        raise Exception("NYI!");

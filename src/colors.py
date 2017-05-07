@@ -10,7 +10,9 @@ def make_colors(start):
 foreground_normal = make_colors(30)
 foreground_bright = make_colors(90)
 
-def color(s, c, scheme = foreground_bright):
+def color(s, c, scheme = None):
+    if (scheme == None):
+        scheme = foreground_bright
     return scheme[c] + s + '\033[0m'
 
 def bold(s):

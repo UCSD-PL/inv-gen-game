@@ -4,7 +4,10 @@ from datetime import datetime
 from js import esprimaToBoogie
 
 def playersWhoStartedLevel(lvlset, lvl, session):
-  return set([ e.source.name for e in session.query(Event).all() if e.type == "StartLevel" and e.payl()["lvlset"] == lvlset and e.payl()["lvlid"] == lvl ])
+  return set([ e.source.name for e in session.query(Event).all()
+                             if (e.type == "StartLevel" and
+                                 e.payl()["lvlset"] == lvlset and
+                                 e.payl()["lvlid"] == lvl) ])
 
 def enteredInvsForLevel(lvlset, lvl, session):
   invM = { p["canonical"]: p["raw"] for p in
@@ -26,55 +29,72 @@ def getOrAddSource(name, session):
   return s
 
 
-def addEvent(sourceName, type, time, ename,  addr, data, session, mturkId):
+def addEvent(sourceName, typ, time, ename,  addr, data, session, mturkId):
   src = getOrAddSource(sourceName, session);
 
-  payl = { "workerId": mturkId[0], "hitId": mturkId[1], "assignmentId": mturkId[2] }
+  payl = { "workerId": mturkId[0],
+           "hitId": mturkId[1],
+           "assignmentId": mturkId[2] }
 
-  if (type == "TutorialStart" or type == "ReplayTutorialAll"):
+  if (typ == "TutorialStart" or typ == "ReplayTutorialAll"):
     pass
-  elif (type == "TutorialDone"):
+  elif (typ == "TutorialDone"):
     pass
-  elif (type == "StartLevel" or type == "FinishLevel" or type == "SkipToNextLevel"):
+  elif (typ == "StartLevel" or
+        typ == "FinishLevel" or
+        typ == "SkipToNextLevel"):
     payl["lvlset"] = data[0]
     payl["lvlid"] = data[1]
-    if type == "FinishLevel":
+    if typ == "FinishLevel":
       payl["verified"] = data[2]
       invs = zip(data[3], [ str(esprimaToBoogie(x, {})) for x in data[4] ])
       payl["all_found"] = invs;
-  elif (type == "FoundInvariant" or type == "TriedInvariant"):
+  elif (typ == "FoundInvariant" or typ == "TriedInvariant"):
     payl["lvlset"] = data[0]
     payl["lvlid"] = data[1]
     payl["raw"] = data[2]
     payl["canonical"] = str(esprimaToBoogie(data[3], { }))
-  elif (type == "PowerupsActivated"):
+  elif (typ == "PowerupsActivated"):
     payl["lvlset"] = data[0]
     payl["lvlid"] = data[1]
     payl["raw"] = str(esprimaToBoogie(data[2], { }))
     payl["powerups"] = data[3]
-  elif (type == "GameDone"):
+  elif (typ == "GameDone"):
     payl["numLvlsPassed"] = data[0]
-  elif (type == "VerifyAttempt"):
+  elif (typ == "VerifyAttempt"):
     for k in data:
       payl[k] = data[k];
   else:
-    print "Unknown event: ", e
+    print "Unknown event type: ", typ
 
-  e = Event(type=type, source=src, addr=addr, experiment=ename, time=datetime.fromtimestamp(time), payload=dumps(payl))
- 
+  e = Event(type=typ,\
+            source=src,\
+            addr=addr,\
+            experiment=ename,\
+            time=datetime.fromtimestamp(time),\
+            payload=dumps(payl))
+
   session.add(e)
   session.commit();
 
 def levelSolved(session, lvlset, lvlid):
-  verifys = [ x.payl() for x in session.query(Event).filter(Event.type == "VerifyAttempt").all() ]
-  solved_events = [ x for x in verifys if \
-      x["lvlset"] == lvlset and x["lvlid"] == lvlid and len(x["post_ctrex"]) == 0 ]
-  # We can't just look for a successfull "FinishEvent", since sometimes the solver takes a while,
-  # and finishes successfully only after the user has gotten impatient and clicked next. So look for
-  # At least 1 successful VerifyAttempt
+  verifys = session.query(Event).filter(Event.type == "VerifyAttempt").all()
+  verifyPayls = [ x.payl() for x in verifys ]
+  solved_events = [ x for x in verifyPayls
+                      if (x["lvlset"] == lvlset and
+                          x["lvlid"] == lvlid and
+                          len(x["post_ctrex"]) == 0) ]
+  # We can't just look for a successfull "FinishEvent", since sometimes the
+  # solver takes a while, and finishes successfully only after the user has
+  # gotten impatient and clicked next. So look for At least 1 successful
+  # VerifyAttempt
   return len(solved_events) > 0
 
 def levelFinishedBy(session, lvlset, lvlid, userId):
-  fls = [ x.payl() for x in session.query(Event).filter(Event.type == "FinishLevel").filter(Event.src == userId).all() ]
-  fls = [ x for x in fls if x["lvlset"] == lvlset and x["lvlid"] == lvlid]
-  return len(fls) > 0
+  finishLevels = session.query(Event)\
+                    .filter(Event.type == "FinishLevel")\
+                    .filter(Event.src == userId).all()
+  finishLevelPayls = [ x.payl() for x in finishLevels ]
+  finishLevelPayls = [ x for x in finishLevelPayls\
+                         if x["lvlset"] == lvlset and x["lvlid"] == lvlid]
+  return len(finishLevelPayls) > 0

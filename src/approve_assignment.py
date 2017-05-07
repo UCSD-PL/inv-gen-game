@@ -1,16 +1,13 @@
 #! /usr/bin/env python
-from argparse import *
-from traceback import *
-import sys
-from boto.mturk.question import *
-from boto.mturk.connection import *
-from datetime import *
+from traceback import print_exc
 from mturk_util import error, connect, mkParser
 
 
 p = mkParser("Approve an Assignment")
-p.add_argument('AssignmentId', type=str, help='ID Of the Assignment to approve.')
-p.add_argument('--feedback', type=str, help='Additional feedback', default=None)
+p.add_argument('AssignmentId', type=str,
+        help='ID Of the Assignment to approve.')
+p.add_argument('--feedback', type=str,
+        help='Additional feedback', default=None)
 args = p.parse_args()
 
 try:

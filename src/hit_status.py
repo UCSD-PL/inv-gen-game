@@ -1,18 +1,11 @@
 #! /usr/bin/env python
-from argparse import *
-from traceback import *
-import sys
-from boto.mturk.question import *
-from boto.mturk.qualification import *
-from boto.mturk.connection import *
-from datetime import *
-from mturk_util import *
-from experiments import *
+from mturk_util import mkParser, connect, hit_status
+from experiments import load_experiment_or_die
 import os
 import signal
 
 p = mkParser("Print HIT status", True)
-args = parse_args(p)
+args = p.parse_args()
 
 e = load_experiment_or_die(args.ename)
 mc = connect(args.credentials_file, args.sandbox)

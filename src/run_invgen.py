@@ -15,10 +15,13 @@ def parseInvGenInvariant(inv):
   return parseExprAst(inv)
 
 if (__name__ == "__main__"):
-  p = argparse.ArgumentParser(description="run daikon on a levelset")
-  p.add_argument('--lvlset', type=str, help='Path to lvlset file', required=True)
-  p.add_argument('--time-limit', type=int, help='Timeout for any operation involving InvGen or z3')
-  p.add_argument('--csv-table', action="store_true", default=False, help='Print results as a csv table')
+  p = argparse.ArgumentParser(description="run invgen on a levelset")
+  p.add_argument('--lvlset', type=str, \
+          help='Path to lvlset file', required=True)
+  p.add_argument('--time-limit', type=int, \
+          help='Timeout for any operation involving InvGen or z3')
+  p.add_argument('--csv-table', action="store_true", default=False, \
+          help='Print results as a csv table')
   args = p.parse_args();
 
   lvlSetName, lvls = loadBoogieLvlSet(args.lvlset)
@@ -55,7 +58,8 @@ if (__name__ == "__main__"):
       loop = lvl["loop"]
       try:
         ((overfitted, overfitted2), (nonind, nonind2), sound, violations) =\
-          tryAndVerifyLvl(bbs, loop, set(boogieInvs), set(), args.time_limit, addSPs=True, useSplitters=False, generalizeUserInvs = False)
+          tryAndVerifyLvl(lvl, set(boogieInvs), set(), args.time_limit, \
+          addSPs=True, useSplitters=False, generalizeUserInvs = False)
         assert (len(overfitted2) == 0 and len(nonind2) == 0);
         if (len(violations) > 0):
           error("Supposedly sound inv: ", loopInvs)
@@ -74,6 +78,11 @@ if (__name__ == "__main__"):
       boogieInvs = []
 
     if (args.csv_table):
-      print lvlName, ",", ";".join(map(str, loopInvs)), ",", ";".join(map(str, boogieInvs)), ",", res[lvlName][0], ",", conf_status
+      print lvlName, ",",\
+            ";".join(map(str, loopInvs)), ",",\
+            ";".join(map(str, boogieInvs)), ",",\
+            res[lvlName][0], ",",\
+            conf_status
     else:
-      print "Level", lvlName, "discovered:", loopInvs, "solved: ", solved, "confirmed?: ", conf_status
+      print "Level", lvlName, "discovered:", loopInvs, "solved: ", solved,\
+            "confirmed?: ", conf_status

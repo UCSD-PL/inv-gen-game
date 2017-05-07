@@ -1,5 +1,5 @@
 #pylint: disable=no-self-argument, unused-argument
-from lib.inv_grammar import DaikonInvParser
+from lib.daikon.inv_grammar import DaikonInvParser
 from ..common.ast import AstNode as AstNode
 
 class AstUnExpr(AstNode):
