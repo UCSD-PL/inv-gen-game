@@ -518,17 +518,18 @@ def getSolutions(): # Lvlset is assumed to be current by default
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description="invariant gen game server")
+    p.add_argument('--local', action='store_true',
+            help='Run without SSL for local testing')
     p.add_argument('--log', type=str,
             help='an optional log file to store all user actions. ' +
                  'Entries are stored in JSON format.')
-    p.add_argument('--port', type=int, help='a optional port number', \
-                   required=True)
+    p.add_argument('--port', type=int, help='an optional port number')
     p.add_argument('--ename', type=str, default='default',
             help='Name for experiment; if none provided, use "default"')
     p.add_argument('--lvlset', type=str, \
-            default='desugared-boogie-benchmarks',
+            default='lvlsets/unsolved.lvlset',
             help='Lvlset to use for serving benchmarks"')
-    p.add_argument('--db', type=str, help='Path to database')
+    p.add_argument('--db', type=str, help='Path to database', required=True)
     p.add_argument('--adminToken', type=str,
             help='Secret token for logging in to admin interface. ' +
             'If omitted will be randomly generated')
@@ -550,12 +551,16 @@ if __name__ == "__main__":
     MYDIR = dirname(abspath(realpath(__file__)))
     ROOT_DIR = dirname(MYDIR)
 
+    if args.local:
+      host = '127.0.0.1'
+      sslContext = None
+    else:
+      host = '0.0.0.0'
+      sslContext = MYDIR + '/cert.pem', MYDIR + '/privkey.pem'
+
     curLevelSetName, lvls = loadBoogieLvlSet(args.lvlset)
     traces = { curLevelSetName: lvls }
 
     print "Admin Token: ", adminToken
     print "Admin URL: ", "admin.html?adminToken=" + adminToken
-    app.run(host='0.0.0.0',
-            port=args.port,
-            ssl_context=(MYDIR + '/cert.pem', MYDIR + '/privkey.pem'),
-            threaded=True)
+    app.run(host=host, port=args.port, ssl_context=sslContext, threaded=True)
