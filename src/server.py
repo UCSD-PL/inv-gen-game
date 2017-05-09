@@ -602,9 +602,9 @@ if __name__ == "__main__":
     p.add_argument('--ename', type=str, default='default',
             help='Name for experiment; if none provided, use "default"')
     p.add_argument('--lvlset', type=str, \
-            default='desugared-boogie-benchmarks',
+            default='lvlsets/unsolved.lvlset',
             help='Lvlset to use for serving benchmarks"')
-    p.add_argument('--db', type=str, help='Path to database')
+    p.add_argument('--db', type=str, help='Path to database', required=True)
     p.add_argument('--adminToken', type=str,
             help='Secret token for logging in to admin interface. ' +
             'If omitted will be randomly generated')
