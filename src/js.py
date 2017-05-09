@@ -131,7 +131,7 @@ def _esprimaToBoogieExprAst(astn, typeEnv):
     except:
       raise Exception("Unknown unary expression " + str(astn))
   elif (astn["type"] == "BinaryExpression"):
-    ln = _esprimaToBoogieExprAst(astn["left"], typeEnv),
+    ln = _esprimaToBoogieExprAst(astn["left"], typeEnv)
     rn = _esprimaToBoogieExprAst(astn["right"], typeEnv)
 
     try:
