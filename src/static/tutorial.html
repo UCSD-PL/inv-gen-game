@@ -672,14 +672,8 @@
                    $('#next-lvl').off("click")
                    $('#next-lvl').click(function() {
                      var queryStr = window.location.search
-                     if (Args.get_mode() == "nond") {
-                       if (queryStr == '') {
-                         queryStr = "?"
-                       } else {
-                         queryStr += "&"
-                       }
-
-                       queryStr += "mode=nond"
+                     if (Args.get_noifs()) {
+                       queryStr = queryAppend(queryStr, "noifs")
                      }
                      window.location.replace('game.html' + queryStr);
                    })
@@ -694,7 +688,7 @@
 
     if (Args.get_tutorial_action() == "redo-cond")
        tutorialScript = conditionalsScript
-    else if (Args.get_mode() == "nond")
+    else if (Args.get_noifs())
        tutorialScript = mainScript.concat(conclusionScript)
     else
        tutorialScript = mainScript.concat(conditionalsScript).concat(conclusionScript)

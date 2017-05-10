@@ -24,7 +24,9 @@ p.add_argument('--lvlset', type=str, default = 'desugared-boogie-benchmarks', \
 p.add_argument('--adminToken', type=str, \
         help='Token to use to login to admin interfaces', required=True)
 p.add_argument('--no-ifs', action='store_const', const=True, default=False, \
-        help='Play version of the game without ifs')
+        help='Dont teach implication in tutorial or show it ingame')
+p.add_argument('--mode', type=str, default="patterns", \
+        help='Game mode to play in. ', choices=["patterns", "ctrex", "rounds"])
 
 args = p.parse_args()
 
@@ -64,7 +66,7 @@ Begin recording your screen.
 </li>
 
 <li>
-Use Google Chrome to navigate to <a target='_blank' href='https://zoidberg.ucsd.edu:{0}/tutorial_patterns.html""" + ("?tutorialAction=nond" if args.no_ifs else "") + """'> the following link</a>
+Use Google Chrome to navigate to <a target='_blank' href='https://zoidberg.ucsd.edu:{0}/tutorial.html?mode=""" + args.mode + ("&noifs" if args.no_ifs else "") + """'> the following link</a>
 </li>
 
 <li>
@@ -151,10 +153,11 @@ try:
         port = get_unused_port()
         srid = exp.create_unique_server_run_id()
         p = start_server(port, args.ename, srid, args.lvlset, args.adminToken)
-        print "Started server run", srid, "on port", port, "with pid", p.pid 
+        print "Started server run", srid, "on port", port, "with pid", p.pid
         if args.ext:
-            start_url = "https://zoidberg.ucsd.edu:{0}/start_patterns_nond.html" if args.no_ifs else \
-                        "https://zoidberg.ucsd.edu:{0}/start_patterns.html"
+            start_url = "https://zoidberg.ucsd.edu:{0}/mturk_landing.html?mode=" + args.mode
+            if (args.noifs):
+                start_url += "&noifs"
             q = ExternalQuestion(start_url.format(port), 1024)
             kind = "ExternalQuestion"
         else:

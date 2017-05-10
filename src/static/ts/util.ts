@@ -68,6 +68,8 @@ class Args {
   static tutorial_action: string = null;
   static admin_token: string = null;
   static mode: string = null;
+  static noifs: boolean = false;
+
   static parse_args() {
     let query = window.location.search.substring(1).split("&");
     for (let i = 0; i < query.length; i++) {
@@ -83,6 +85,7 @@ class Args {
     Args.tutorial_action = Args.args["tutorialAction"];
     Args.admin_token = Args.args["adminToken"];
     Args.mode = Args.args["mode"];
+    Args.noifs = Args.args.hasOwnProperty("noifs");
   }
   static get_hit_id(): string {
     if (Args.hit_id === null)
@@ -118,6 +121,12 @@ class Args {
     if (Args.mode === null)
       Args.parse_args()
     return Args.mode;
+  }
+
+  static get_noifs(): boolean {
+    if (Args.noifs === null)
+      Args.parse_args()
+    return Args.noifs;
   }
 }
 
@@ -512,4 +521,13 @@ function min(...args: number[]): number {
       min = args[i];
     }
   return min
+}
+
+function queryAppend(qStr: string, append: string): string {
+  if (qStr == "") {
+    qStr += "?";
+  } else {
+    qStr += "&";
+  }
+  return qStr + append;
 }

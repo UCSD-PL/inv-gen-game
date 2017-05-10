@@ -272,7 +272,7 @@
                  ['#or_op', 'or_ex'],
                  //['#equiv_op', 'equiv_ex'],
       ]
-      if (mode !== "nond") {
+      if (!Args.get_noifs()) {
         ops.push(['#impl_op', 'impl_ex'])
       }
       ops.push(['#tutorials', 'tutorials_info'])
@@ -282,23 +282,25 @@
         }(ops[i][1]))
       }
 
-      $('#see-conditional-tutorial-1, #see-conditional-tutorial-2').click(function() { 
+      $('#see-conditional-tutorial-1, #see-conditional-tutorial-2').click(function() {
         logEvent("SeeConditionalTutorial", []);
         $('#tutorial-video').fadeIn(1000)
       });
-      $('#tutorial-video-done').click(function() { 
-        $('#tutorial-video').fadeOut(1000) 
+      $('#tutorial-video-done').click(function() {
+        $('#tutorial-video').fadeOut(1000)
       });
       $('#replay-tutorial-all').click(function() {
         logEvent("ReplayTutorialAll", []);
-        window.open('tutorial.html?tutorialAction=redo-all&mode='  + mode, '_blank').focus();
+        window.open('tutorial.html' + queryAppend(window.location.search, "tutorialAction=redo-all"),
+                    '_blank').focus();
       })
       $('#replay-tutorial-cond-1, #replay-tutorial-cond-2').click(function() {
         logEvent("ReplayTutorialConditional", []);
-        window.open('tutorial.html?tutorialAction=redo-cond&mode=' + mode, '_blank').focus();
+        window.open('tutorial.html' + queryAppend(window.location.search, "tutorialAction=redo-cond"),
+                    '_blank').focus();
       })
 
-      if (mode == "nond") {
+      if (Args.get_noifs()) {
         $("#impl_op").hide();
         $("#see-conditional-tutorial-1").hide();
         $("#see-conditional-tutorial-2").hide();
