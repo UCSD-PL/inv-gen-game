@@ -73,5 +73,10 @@ class CounterexTracesWindow extends BaseTracesWindow {
     }
     das.reflowAll();
   }
+
+  setVariables(lvl: Level): void {
+    this.clearNegRows();
+    super.setVariables(lvl);
+  }
 }
 

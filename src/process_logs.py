@@ -71,9 +71,9 @@ class Payment:
 
 class HITPayment(Payment):
     def __init__(self, aWorkerId, aHitId, aAssnId):
-        self.aWorkerId = aWorkerId
-        self.aHitId = aHitId
-        self.aAssnId = aAssnId
+        self.worker_id = aWorkerId
+        self.hit_id = aHitId
+        self.assn_id = aAssnId
     def make_payment(self):
         mc.approve_assignment(self.assn_id)
     def amount(self):

@@ -156,7 +156,7 @@ try:
         print "Started server run", srid, "on port", port, "with pid", p.pid
         if args.ext:
             start_url = "https://zoidberg.ucsd.edu:{0}/mturk_landing.html?mode=" + args.mode
-            if (args.noifs):
+            if (args.no_ifs):
                 start_url += "&noifs"
             q = ExternalQuestion(start_url.format(port), 1024)
             kind = "ExternalQuestion"

@@ -84,7 +84,7 @@ class Args {
     Args.turk_submit_to = Args.args["turkSubmitTo"];
     Args.tutorial_action = Args.args["tutorialAction"];
     Args.admin_token = Args.args["adminToken"];
-    Args.mode = Args.args["mode"];
+    Args.mode = Args.args["mode"] || "patterns";
     Args.noifs = Args.args.hasOwnProperty("noifs");
   }
   static get_hit_id(): string {
