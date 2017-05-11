@@ -211,7 +211,8 @@ class StaticGameLogic extends BaseGameLogic implements IGameLogic {
 
     try {
       let pos_res = invEval(parsedInv, this.curLvl.variables, this.curLvl.data[0]);
-      let res: [any[], [any, any][], any[]] = [pos_res, [], []];
+      let neg_res = invEval(parsedInv, this.curLvl.variables, this.curLvl.data[2]);
+      let res: [any[], [any, any][], any[]] = [pos_res, [], neg_res];
       this.tracesW.evalResult({ data: res });
 
       if (!evalResultBool(res))
@@ -227,8 +228,9 @@ class StaticGameLogic extends BaseGameLogic implements IGameLogic {
           return
         }
 
-        let all = pos_res.length
-        let hold = pos_res.filter(function (x) { return x; }).length
+        let all = pos_res.length + neg_res.length
+        let hold = pos_res.filter(function (x) { return x; }).length +
+                   neg_res.filter(function (x) { return !x; }).length 
 
         if (hold < all)
           this.tracesW.error("Holds for " + hold + "/" + all + " cases.")

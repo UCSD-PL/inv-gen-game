@@ -31,7 +31,7 @@ class CounterexTracesWindow extends BaseTracesWindow {
       let col_id = 0;
       console.log(directCtrex[i])
       let curRow = $(
-          "<tr class='traces-row' id='" + data_id + "'>" +
+          "<tr class='traces-row' id='neg_" + data_id + "'>" +
             directCtrex[i].map(el =>
               "<td class='" + classes[1]  + "' id='" + data_id + "_" + col_id++ + "'>" + el + "</td>").join("") +
             "<td class='temp_expr_eval'>&nbsp</td>" +
