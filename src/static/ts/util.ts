@@ -61,6 +61,7 @@ function fst<T1, T2>(x: [T1, T2]): T1 { return x[0]; }
 function snd<T1, T2>(x: [T1, T2]): T2 { return x[1]; }
 
 class Args {
+  static parsed: boolean = false;
   static args: { [key:string] : string; } = {};
   static hit_id: string = null;
   static worker_id: string = null;
@@ -72,6 +73,8 @@ class Args {
   static noifs: boolean = false;
 
   static parse_args() {
+    if (Args.parsed)
+      return;
     let query = window.location.search.substring(1).split("&");
     for (let i = 0; i < query.length; i++) {
       if (query[i] === "") // check for trailing & with no param
@@ -87,46 +90,38 @@ class Args {
     Args.admin_token = Args.args["adminToken"];
     Args.mode = Args.args["mode"] || "patterns";
     Args.noifs = Args.args.hasOwnProperty("noifs");
+    Args.parsed = true;
   }
   static get_hit_id(): string {
-    if (Args.hit_id === null)
-      Args.parse_args()
+    Args.parse_args();
     return Args.hit_id;
   }
   static get_worker_id(): string {
-    if (Args.worker_id === null)
-      Args.parse_args()
+    Args.parse_args();
     return Args.worker_id;
   }
   static get_assignment_id(): string {
-    if (Args.assignment_id === null)
-      Args.parse_args()
+    Args.parse_args();
     return Args.assignment_id;
   }
   static get_turk_submit_to(): string {
-    if (Args.turk_submit_to === null)
-      Args.parse_args()
+    Args.parse_args();
     return Args.turk_submit_to;
   }
   static get_tutorial_action(): string {
-    if (Args.tutorial_action === null)
-      Args.parse_args()
+    Args.parse_args();
     return Args.tutorial_action;
   }
   static get_admin_token(): string {
-    if (Args.admin_token === null)
-      Args.parse_args()
+    Args.parse_args();
     return Args.admin_token;
   }
   static get_mode(): string {
-    if (Args.mode === null)
-      Args.parse_args()
+    Args.parse_args();
     return Args.mode;
   }
-
   static get_noifs(): boolean {
-    if (Args.noifs === null)
-      Args.parse_args()
+    Args.parse_args();
     return Args.noifs;
   }
 }
