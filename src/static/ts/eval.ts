@@ -129,12 +129,12 @@ function identifiers(inv: (string|ESTree.Node)): strset {
     }
 
     if (nd.type === "Identifier") {
-      let r: strset = {};
-      r[(<ESTree.Identifier>nd).name] = true;
+      let r: strset = emptyStrset();
+      r.add((<ESTree.Identifier>nd).name);
       return r;
     }
 
-    return {};
+    return emptyStrset();
   });
 }
 
@@ -155,12 +155,12 @@ function literals(inv: (string|ESTree.Node)): strset {
     }
 
     if (nd.type === "Literal") {
-      let r: strset = {};
-      r[(<string>(<ESTree.Literal>nd).value)] = true;
+      let r: strset = emptyStrset();
+      r.add(<string>(<ESTree.Literal>nd).value);
       return r;
     }
 
-    return {};
+    return emptyStrset();
   });
 }
 
@@ -174,19 +174,19 @@ function operators(inv: (string|ESTree.Node)): strset {
 
     if (nd.type === "BinaryExpression" || nd.type === "LogicalExpression") {
       let be = <ESTree.BinaryExpression>nd;
-      let p: strset = {};
-      p[be.operator] = true;
+      let p: strset = emptyStrset();
+      p.add(be.operator);
       return union(union(p, args[0]), args[1]);
     }
 
     if (nd.type === "UnaryExpression") {
       let ue = <ESTree.UnaryExpression>nd;
-      let p: strset = {};
-      p[ue.operator] = true;
+      let p: strset = emptyStrset();
+      p.add(ue.operator);
       return union(p, args[0]);
     }
 
-    return {};
+    return emptyStrset();
   });
 }
 

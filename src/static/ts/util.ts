@@ -1,44 +1,45 @@
 type directionT = "up" | "down" | "left" | "right"
-type strset = { [ ind: string ]: boolean }
+
+type strset = Set<string>
+
+function emptyStrset(): strset {
+  return new Set();
+}
 
 function toStrset(strs: string[]): strset {
-  let res : strset = {};
-  for (let i in strs) {
-    res[strs[i]] = true;
+  let res = emptyStrset();
+  for (let x in strs) {
+    res.add(x);
   }
   return res;
 }
 
+function isMember(s: strset, x: string): boolean {
+  return s.has(x);
+}
+
 function isSubset(s1: strset, s2: strset): boolean {
   for (let k in s1) {
-    if (!s1.hasOwnProperty(k))  continue;
-    if (!s2.hasOwnProperty(k))  return false;
+    if (!isMember(s2, k)) return false;
   }
   return true;
 }
 
 function difference(s1: strset, s2: strset): strset {
-  let res:strset = {};
-
+  let res  = emptyStrset();
   for (let k in s1) {
-    if (!s1.hasOwnProperty(k))  continue;
-    if (s2.hasOwnProperty(k))  continue;
-    res[k] = true;
+    if (isMember(s2, k)) continue;
+    res.add(k);
   }
   return res;
 }
 
 function isEmpty(s: strset): boolean {
-  for (let k in s) {
-    if (!s.hasOwnProperty(k))  continue;
-    return false;
-  }
-  return true;
+  return s.size === 0;
 }
 
 function any_mem(s: strset): string {
   for (let k in s) {
-    if (!s.hasOwnProperty(k))  continue;
     return k;
   }
 }
@@ -330,20 +331,15 @@ class Script {
 }
 
 /* In-place union - modifies s1 */
-function union(s1: any, s2: any): any {
+function union(s1: strset, s2: strset): strset {
   for (let e in s2) {
-    s1[e] = true;
+    s1.add(e);
   }
-
   return s1;
 }
 
-function setlen(s: any): number {
-  let l = 0;
-  for (let i in s) {
-    if (s.hasOwnProperty(i)) l++;
-  }
-  return l;
+function setlen(s: strset): number {
+  return s.size;
 }
 
 function forAll(boolL: boolean[]): boolean {

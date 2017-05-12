@@ -9,7 +9,7 @@
     "removeComments": true,
     "rootDir": ".",
     "suppressImplicitAnyIndexErrors": true,
-    "target": "es5"
+    "target": "es6"
   },
   "exclude": [
     "typings/main.d.ts",
