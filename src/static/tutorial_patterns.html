@@ -757,7 +757,7 @@
       // Conclusion ----------------------------------------------------------
       { setup: function (cs) {
                   var elmts = $('#data-display table').add('#score-div-row').add('#discovered-invariants-div')
-                  .add('#sticky').add('.kill-switch');
+                  .add('#sticky').add('.kill-switch').add("#header");
                   var numElmts = elmts.length;
                   elmts.fadeOut(fadeDelay, function () {
                     if( --numElmts > 0 ) return;
@@ -860,6 +860,15 @@
   </script>
 </head>
 <body tabindex="-1">
+  <div class='container'>
+    <div class="row" id="header">
+      <div class="col-md-3"></div>
+      <div class="col-md-6 centered">
+        <h2>Tutorial</h2>
+      </div>
+      <div class="col-md-3"></div>
+    </div>
+  </div>
   <div class='container'>
     <div class='row' id='hit-preview-warning'>
     </div>
