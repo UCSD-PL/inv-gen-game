@@ -26,16 +26,16 @@ bootstrap-theme.min.css:
 	wget https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css
 
 jquery-1.12.0.min.js:
-	wget http://code.jquery.com/jquery-1.12.0.min.js
+	wget https://code.jquery.com/jquery-1.12.0.min.js
 
 jquery.jsonrpcclient.js:
 	wget https://raw.githubusercontent.com/Textalk/jquery.jsonrpcclient.js/master/jquery.jsonrpcclient.js
 
 jquery.color-2.1.2.min.js:
-	wget http://code.jquery.com/color/jquery.color-2.1.2.min.js
+	wget https://code.jquery.com/color/jquery.color-2.1.2.min.js
 
 jquery-ui-1.11.4:
-	wget http://jqueryui.com/resources/download/jquery-ui-1.11.4.zip
+	wget https://jqueryui.com/resources/download/jquery-ui-1.11.4.zip
 	unzip jquery-ui-1.11.4.zip
 	rm jquery-ui-1.11.4.zip
 
