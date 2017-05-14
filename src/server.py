@@ -70,28 +70,23 @@ def divisionToMul(inv):
 
 
 ## API Entry Points ##################################################
-
 @api.method("App.logEvent")
 @pp_exc
 @log_d(str,str,str,pp_mturkId, str)
 def logEvent(workerId, name, data, mturkId):
+    """ Log an event from either the frontend or backend. Event appears
+        as JSON in both the textual log, as well as in the database """
     session = sessionF()
     addEvent(workerId, name, time(), args.ename, request.remote_addr, \
              data, session, mturkId);
     return None
 
-@api.method("App.listData")
-@pp_exc
-@log_d(str,str)
-def listData(levelSet):
-    res = traces[levelSet].keys()
-    res.sort()
-    return res
-
 @api.method("App.getTutorialDone")
 @pp_exc
 @log_d(str, str)
 def getTutorialDone(workerId):
+    """ Return whether a given user has done the tutorial. Called from
+        mturk_landing.html """
     if workerId == "":
         return False
     return isfile(join(ROOT_DIR, 'logs', args.ename, "tut-done-" + workerId))
@@ -100,6 +95,9 @@ def getTutorialDone(workerId):
 @pp_exc
 @log_d(str)
 def setTutorialDone(workerId):
+    """ Specify that a given user has done the tutorial. Called form
+        tutorial.html. TODO(Dimo): This should user the database instead
+        of tut-done-ID marker files """
     if workerId != "":
         marker = join(ROOT_DIR, 'logs', args.ename, "tut-done-" + workerId)
         open(marker, "w").close()
@@ -109,6 +107,7 @@ def setTutorialDone(workerId):
 @pp_exc
 @log_d(str, str, pp_mturkId, pp_BoogieLvl)
 def loadLvl(levelSet, lvlId, mturkId): #pylint: disable=unused-argument
+    """ Load a given level. """
     if (levelSet not in traces):
         raise Exception("Unkonwn level set " + levelSet)
 
@@ -139,6 +138,11 @@ def loadLvl(levelSet, lvlId, mturkId): #pylint: disable=unused-argument
 @pp_exc
 @log_d(str, pp_mturkId, str, str, pp_EsprimaInvs, pp_BoogieLvl)
 def genNextLvl(workerId, mturkId, levelSet, levelId, invs):
+    """ Given a level (levelSet, levelId) and a set of invariants invs
+        attempted by a user, generate and return a new level by appending the
+        counterexamples to invs to the current level. The new level has the
+        same id as levelId with ".g" appended at the end. This is a hack.
+    """
     s = sessionF();
     if (levelSet not in traces):
         raise Exception("Unkonwn level set " + str(levelSet))
@@ -199,6 +203,7 @@ def genNextLvl(workerId, mturkId, levelSet, levelId, invs):
 @pp_exc
 @log_d(str, pp_mturkId, pp_BoogieLvl)
 def loadNextLvl(workerId, mturkId):
+    """ Return the unsolved level seen by the fewest users. """
     session = sessionF();
     level_names = traces[curLevelSetName].keys();
     num_invs = [len(enteredInvsForLevel(curLevelSetName, x, session))
@@ -217,6 +222,15 @@ def loadNextLvl(workerId, mturkId):
 @pp_exc
 @log_d(pp_EsprimaInvs, str, str, pp_mturkId, pp_EsprimaInvs)
 def instantiate(invs, traceVars, trace, mturkId): #pylint: disable=unused-argument
+    """ 
+        Given a set of invariant templates inv, a set of variables traceVars
+        and concrete values for these variables trace, return a set of concrete
+        instances of the invariant templates, that hold for the given traces. A
+        concrete instatnce of a template is an invariant with the same shape, with 
+        variables and constants substituted in the appropriate places.
+
+        Not currently in use.
+    """ 
     res = []
     z3Invs = []
     templates = [ (esprimaToBoogie(x[0], {}), x[1], x[2]) for x in invs]
@@ -245,6 +259,13 @@ def instantiate(invs, traceVars, trace, mturkId): #pylint: disable=unused-argume
 @pp_exc
 @log_d()
 def getPositiveExamples(levelSet, levelId, cur_expl_state, overfittedInvs, num):
+    """ 
+        Given a level (levelSet, levelId), and some overfitted invriants
+        overfittedInvs, return a set of green rows that rebuke the overfitted
+        invariants.
+
+        Not currently in use.
+    """ 
     if (levelSet not in traces):
         raise Exception("Unkonwn level set " + str(levelSet))
 
@@ -307,6 +328,12 @@ def getPositiveExamples(levelSet, levelId, cur_expl_state, overfittedInvs, num):
 @pp_exc
 @log_d(pp_EsprimaInvs, pp_EsprimaInvs, pp_mturkId, pp_EsprimaInvPairs)
 def equivalentPairs(invL1, invL2, mturkId): #pylint: disable=unused-argument
+    """ 
+        Given lists of invariants invL1, invL2, return all pairs (I1, I2)
+        where I1 <==> I2, I1 \in invL1, I2 \in invL2 
+
+        Not currently in use.
+    """ 
     z3InvL1 = [esprimaToZ3(x, {}) for x in invL1]
     z3InvL2 = [esprimaToZ3(x, {}) for x in invL2]
 
@@ -329,6 +356,12 @@ def equivalentPairs(invL1, invL2, mturkId): #pylint: disable=unused-argument
 @pp_exc
 @log_d(pp_EsprimaInvs, pp_EsprimaInvs, pp_mturkId, pp_EsprimaInvPairs)
 def impliedPairs(invL1, invL2, mturkId): #pylint: disable=unused-argument
+    """ 
+        Given lists of invariants invL1, invL2, return all pairs (I1, I2)
+        where I1 ==> I2, I1 \in invL1, I2 \in invL2 
+
+        Used by game.html
+    """ 
     z3InvL1 = [esprimaToZ3(x, {}) for x in invL1]
     z3InvL2 = [esprimaToZ3(x, {}) for x in invL2]
 
@@ -351,6 +384,10 @@ def impliedPairs(invL1, invL2, mturkId): #pylint: disable=unused-argument
 @pp_exc
 @log_d(pp_EsprimaInv, pp_mturkId, str)
 def isTautology(inv, mturkId): #pylint: disable=unused-argument
+    """ 
+        Check whether the invariant inv is a tautology.
+        Used by game.html
+    """ 
     try:
       res = (tautology(esprimaToZ3(inv, {})))
       return res
@@ -361,6 +398,25 @@ def isTautology(inv, mturkId): #pylint: disable=unused-argument
 @pp_exc
 @log_d(str, str, pp_EsprimaInvs, pp_mturkId, pp_tryAndVerifyRes)
 def tryAndVerify(levelSet, levelId, invs, mturkId):
+    """ 
+        Given a level (levelSet, levelId) and a set of invaraints invs do:
+        1) Find all invariants OldI that were not DEFINITELY false from the
+           last time we tried to verify this level (getLastVerResult)
+
+        2) Try and verify the level using S = OldI + invs. This is done by
+           calling tryAndVerifyLvl. For more on that see comment in
+           tryAndVerifyLvl
+
+        3) Return object containing:
+           overfitted - all invariants in invs not implied by precondition
+           nonind - all invariants in invs that are not inductive
+           sound - all invariants in invs that are sound
+           post_ctrex - any safety counterexamples to the "sound" invariants.
+              If this set is empty, then the level is verified.
+           direct_ctrex - any safety counterexamples to ALL of the passed in
+              invs (not just the sound ones). This is used by the 'rounds' game
+              mode to generate red rows for the next level.
+    """ 
     s = sessionF();
     if (levelSet not in traces):
         raise Exception("Unkonwn level set " + str(levelSet))
@@ -433,6 +489,9 @@ def tryAndVerify(levelSet, levelId, invs, mturkId):
 @pp_exc
 @log_d(pp_EsprimaInv, pp_mturkId, pp_EsprimaInv)
 def simplifyInv(inv, mturkId): #pylint: disable=unused-argument
+    """ Given an invariant inv return its 'simplified' version. We
+        treat that as the canonical version of an invariant. Simplification
+        is performed by z3 """
     boogieInv = esprimaToBoogie(inv, {});
     noDivBoogie = divisionToMul(boogieInv);
     z3_inv = expr_to_z3(noDivBoogie, AllIntTypeEnv())
@@ -452,6 +511,9 @@ kvStore = { }
 @pp_exc
 @log_d(str)
 def get(key):
+    """ Generic Key/Value store get() used by two-player gameplay for
+        synchronizing shared state. 
+    """
     if (type(key) != unicode):
       raise Exception("Key must be string");
 
@@ -460,7 +522,10 @@ def get(key):
 @api.method("App.set")
 @pp_exc
 @log_d(str, str, str)
-def get(key, val, expectedGen):
+def set(key, val, expectedGen):
+    """ Generic Key/Value store set() used by two-player gameplay for
+        synchronizing shared state. 
+    """
     if (type(key) != unicode):
       raise Exception("Key must be string");
 
@@ -484,6 +549,9 @@ def get(key, val, expectedGen):
 @pp_exc
 @log_d(str, str, str)
 def getLogs(inputToken, afterTimestamp, afterId):
+  """ Get the current logs (optionally only logs after a given afterTimestamp
+      or afterId if specified). This is only used by admin interface.
+  """
   if inputToken != adminToken:
     raise Exception(str(inputToken) + " not a valid token.");
 
@@ -508,6 +576,8 @@ def getLogs(inputToken, afterTimestamp, afterId):
 @pp_exc
 @log_d()
 def getSolutions(): # Lvlset is assumed to be current by default
+  """ Return all solutions for a levelset. Only used by admin interface.
+  """
   res = { }
   for lvlId in lvls:
     solnFile = lvls[lvlId]["path"][0][:-len(".bpl")] + ".sol"

@@ -71,6 +71,28 @@ def tryAndVerify(bbs,\
 
 def tryAndVerifyLvl(lvl, userInvs, otherInvs, timeout = None, \
         useSplitters = True, addSPs = True, generalizeUserInvs = True):
+    """ Try and verify a given Lvl.
+
+          lvl - level to verify
+          userInvs - invariant candidate from the user
+          otherInvs - invariant candidates from other sources (e.g. previous
+                      users).
+                      Note: We will keep userInvs and otherInvs separate in the
+                      results.
+          timeout - if specified, the z3 timeout for each query
+          useSplitters - if the level supports splitter predicates, whether to
+                         use them or not.
+          addSPs - if true, try to propagte SP through the loop and add the
+                   results as invariants. For example if before the loop we 
+                   have "assert n>0;" and n is not modified in the loop, we
+                   can determine that"n>0" holds through the loop and add
+                   that to our cnadidate invariants.
+          generalizeUserInvs - if true, for any invariant I involving a
+                   constant C, where one of the variables V shown to the user
+                   was always equal to C in the traces, try substituting C with V.
+                   For example if in the level always n=4, and the user
+                   entered i<=4, the generalizaition would also try i<=n.
+    """
     bbs = lvl['program']
     loop = lvl['loop']
     partialInvs = [ lvl['partialInv'] ] \
