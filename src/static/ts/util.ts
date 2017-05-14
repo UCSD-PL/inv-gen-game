@@ -320,6 +320,7 @@ class Script {
       destructor();
       s.nextStep();
     });
+    $("body").focus();
   }
   cancel(): void {
     if (this.cancelCb)

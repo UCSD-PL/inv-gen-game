@@ -253,7 +253,16 @@ class RoundsGameLogic extends BaseGameLogic {
     }
   }
 
+  invSatisfiesPos(inv: UserInvariant, data: dataT): boolean {
+    let pos_res = invEval(inv.rawInv, this.curLvl.variables, data[0])
+    let hold = pos_res.filter(function (x) { return x; }).length
+    return hold == pos_res.length;
+  }
+
   loadLvl(lvl: DynamicLevel): void {
+    let gl = this;
+    let goodInvs = this.foundJSInv.filter((inv:UserInvariant) => gl.invSatisfiesPos(inv, lvl.data));
+
     let loadedCb = this.lvlLoadedCb;
     this.lvlLoadedCb = null;
     super.loadLvl(lvl);
@@ -265,6 +274,14 @@ class RoundsGameLogic extends BaseGameLogic {
     this.allData[lvl.id][0]  = this.allData[lvl.id][0].concat(lvl.data[0])
     this.allData[lvl.id][1]  = this.allData[lvl.id][1].concat(lvl.data[1])
     this.allData[lvl.id][2]  = this.allData[lvl.id][2].concat(lvl.data[2])
+
+    /*
+    for (var inv of goodInvs) {
+      this.foundJSInv.push(inv)
+      this.invMap[inv.id] = inv;
+      this.progressW.addInvariant(inv.id, inv.rawInv);
+    }
+    */
 
     this.lvlLoadedCb = loadedCb;
     if (this.lvlLoadedCb)

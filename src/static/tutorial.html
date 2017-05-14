@@ -53,9 +53,15 @@
       }
     }
 
-    function addSuccessfulInvariant(inv) {
+    function addSuccessfulInvariant(inv, safetyInv) {
+      try {
+        parsedInv = esprima.parse(invToJS(inv));
+      } catch (err) {
+        inv = safetyInv;
+        parsedInv = esprima.parse(invToJS(inv));
+      }
       jsfound.push(invToJS(inv))
-      progW.addInvariant(inv, esprima.parse(invToJS(inv)));
+      progW.addInvariant(inv, parsedInv);
     }
 
     function updateUI() {
@@ -97,6 +103,7 @@
            curScript.nextStep();
          }
        }
+       $('#formula-entry').focus();
     }
 
     function nextStepOnGLInvariant(curScript, invariant, destructor, gl) {
@@ -166,8 +173,7 @@
                }
       },
       { setup: function (cs) {
-                 curL = label($('#formula-entry'), "Type '3+4' here!", "left")
-                 $('#formula-entry').focus();
+                 curL = label($('#formula-entry'), "Type the text '3+4' here!", "left")
                  nextStepOnInvariant(cs, "3+4", labelRemover(curL));
                }
       },
@@ -178,7 +184,7 @@
                }
       },
       { setup: function (cs) {
-                 curL = label($('#formula-entry'), "Now try i.", "left")
+                 curL = label($('#formula-entry'), "Now type i.", "left")
                  nextStepOnInvariant(cs, "i", labelRemover(curL));
                }
       },
@@ -193,7 +199,7 @@
                }
       },
       { setup: function (cs) {
-                 curL = label($('#formula-entry'), "Try i+1", "left")
+                 curL = label($('#formula-entry'), "Type i+1", "left")
                  nextStepOnInvariant(cs, "i+1", labelRemover(curL));
                }
       },
@@ -276,7 +282,7 @@
       { setup: function (cs) {
                  $('#discovered-invariants-div').fadeIn(fadeDelay, function() {
                    var inv = invPP(tracesW.curExp().trim());
-                   addSuccessfulInvariant(inv);
+                   addSuccessfulInvariant(inv, "i>=0");
                    curL = label({ of: $("#good_0"), at: "left+10 bottom" },
                                 "Your accepted expressions <br> appear here", "up");
                    cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
@@ -285,7 +291,7 @@
       },
       { setup: function (cs) {
                  $("#formula-entry").val("")
-                 curL = label($("#formula-entry"), "Try i >= 0 again.", "left")
+                 curL = label($("#formula-entry"), "Type i >= 0 again.", "left")
                  nextStepOnInvariant(cs, "i>=0", labelRemover(curL));
                }
       },
@@ -302,6 +308,7 @@
                }
       },
       { setup: function (cs) {
+                 $('#errormsg').html("<div class='error'>This is weaker than a found expression!</div>");
                  curL = label({ of: $("#good_0"), at: "left+10 bottom" },
                               "Can't use a weaker<br> expression than <br> found one either.", "up");
                  cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
@@ -323,7 +330,7 @@
                }
       },
       { setup: function (cs) {
-                 curL = label($("#formula-entry"), "Try i<=n", "left")
+                 curL = label($("#formula-entry"), "Type i<=n", "left")
                  nextStepOnInvariant(cs, "i<=n", labelRemover(curL));
                }
       },
@@ -356,7 +363,7 @@
                               "So you get +4<br>instead of +1", "left")
                  scoreW.add(4)
                  var inv = invPP(tracesW.curExp().trim());
-                 addSuccessfulInvariant(inv);
+                 addSuccessfulInvariant(inv, "i<=n");
                  cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
@@ -419,22 +426,22 @@
                }
       },
       { setup: function (cs) {
-                 curL = label($("#formula-entry"), "Try j % 2", "left")
+                 curL = label($("#formula-entry"), "Type j % 2", "left")
                  nextStepOnInvariant(cs, "j%2", labelRemover(curL));
                }
       },
       { setup: function (cs) {
-                 curL = label($("#formula-entry"), "% means <br>'reminder of division'", "left")
+                 curL = label($("#formula-entry"), "% means <br>'remainder of division'", "left")
                  cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
-                 curL = label($("#formula-entry"), "j always has reminder <br> 0 divided by 2", "left")
+                 curL = label($("#formula-entry"), "j always has remainder <br> 0 divided by 2", "left")
                  cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
-                 curL = label($("#formula-entry"), "Try j % 2 = 0", "left")
+                 curL = label($("#formula-entry"), "Type j % 2 = 0", "left")
                  nextStepOnInvariant(cs, "j%2=0", labelRemover(curL));
                }
       },
@@ -450,7 +457,7 @@
                  pwups[0].highlight(() => 0)
                  pwups[1].highlight(() => 0)
                  scoreW.add(4)
-                 addSuccessfulInvariant(inv);
+                 addSuccessfulInvariant(inv, "j%2=0");
                  curL = label({ of: $("#score-div-row"), at: "right center" },
                               "Hurray! <br> You learned to use %!", "left");
                  cs.nextStepOnKeyClickOrTimeout(-1, labelRemover(curL), 13)
@@ -577,7 +584,7 @@
                }
       },
       { setup: function (cs) {
-                 curL = label($('#formula-entry'), "Try 'i&ltj' now", "left");
+                 curL = label($('#formula-entry'), "Type 'i&ltj' now", "left");
                  gameLogic.onUserInput(function (inv) {
                       if (tempCb != null)
                         tempCb(inv.replace(/\s/g, ""))
@@ -724,11 +731,7 @@
       },
       { setup: function (cs) {
                   $('#next-lvl').hide();
-                  $('#data-display').html('<div stype="display: none">' +
-                    '<h2><p>You can use all of the following operators:</p></h2><h3>' +
-                    '<table class="table table-stripped"><thead><tr><th>Operator</th><th>Description</th><th>Examples</th></tr></thead>' +
-                    '<tbody>' +
-                    [ ['+', 'Integer Addition', '3+4=7, i+1'],
+                  var ops = [ ['+', 'Integer Addition', '3+4=7, i+1'],
                       ['-', 'Integer Subtraction', '4-3=1, j-1'],
                       ['*', 'Integer Multiplication', '4*3=12, n*2'],
                       ['/', 'Integer Division', '5/2=2, n/3'],
@@ -740,8 +743,17 @@
                       ['&lt= <br> &gt=', 'Less than or equal<br>Greater than or equal', '2<=2, n>=0'],
                       ['&&', 'Logical And', '(n<5) && (n>0)'],
                       ['||', 'Logical Or', '(n>=5) || (n<=0)'],
-                      ['if', 'Conditional', 'x=y if x > y'],
-                    ].map(
+                    ]
+
+                  if (!Args.get_noifs()) {
+                    ops.push(['if', 'Conditional', 'x=y if x > y']);
+                  }
+
+                  $('#data-display').html('<div stype="display: none">' +
+                    '<h2><p>You can use all of the following operators:</p></h2><h3>' +
+                    '<table class="table table-stripped"><thead><tr><th>Operator</th><th>Description</th><th>Examples</th></tr></thead>' +
+                    '<tbody>' +
+                    ops.map(
                       ((x) => '<tr><td>' + x[0] + '</td><td>' + x[1] + '</td><td>' + x[2] + '</td></tr>'))
                      .join('\n') +
                     '</tbody></table></h3>' +
@@ -811,7 +823,7 @@
 
   </script>
 </head>
-<body>
+<body tabindex="-1">
   <div class='container'>
     <div class='row' id='hit-preview-warning'>
     </div>
