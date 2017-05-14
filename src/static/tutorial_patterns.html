@@ -52,9 +52,20 @@
       }
     }
 
-    function addSuccessfulInvariant(inv) {
-      jsfound.push(invToJS(inv))
-      progW.addInvariant(inv, esprima.parse(invToJS(inv)));
+    // function addSuccessfulInvariant(inv) {
+    //   jsfound.push(invToJS(inv))
+    //   progW.addInvariant(inv, esprima.parse(invToJS(inv)));
+    // }
+
+    function addSuccessfulInvariant(inv, safetyInv) {
+      try {
+        parsedInv = esprima.parse(invToJS(inv));
+      } catch (err) {
+        inv = safetyInv;
+        parsedInv = esprima.parse(invToJS(inv));
+      }
+      jsfound.push(invToJS(inv));
+      progW.addInvariant(inv, parsedInv);
     }
 
     function updateUI() {
@@ -96,6 +107,7 @@
            curScript.nextStep();
          }
        }
+       $('#formula-entry').focus();
     }
 
     function nextStepOnGLInvariant(curScript, invariant, destructor, gl) {
@@ -165,8 +177,7 @@
                }
       },
       { setup: function (cs) {
-                 curL = label($('#formula-entry'), "Type '3+4' here!", "left")
-                 $('#formula-entry').focus();
+                 curL = label($('#formula-entry'), "Type the text '3+4' here!", "left")
                  nextStepOnInvariant(cs, "3+4", labelRemover(curL));
                }
       },
@@ -275,7 +286,7 @@
       { setup: function (cs) {
                  $('#discovered-invariants-div').fadeIn(fadeDelay, function() {
                    var inv = invPP(tracesW.curExp().trim());
-                   addSuccessfulInvariant(inv);
+                   addSuccessfulInvariant(inv, "i>=0");
                    curL = label({ of: $("#good_0"), at: "left+10 bottom" },
                                 "Your accepted expressions <br> appear here", "up");
                    cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
@@ -284,7 +295,7 @@
       },
       { setup: function (cs) {
                  $("#formula-entry").val("")
-                 curL = label($("#formula-entry"), "Try i >= 0 again.", "left")
+                 curL = label($("#formula-entry"), "Type i >= 0 again.", "left")
                  nextStepOnInvariant(cs, "i>=0", labelRemover(curL));
                }
       },
@@ -322,7 +333,7 @@
                }
       },
       { setup: function (cs) {
-                 curL = label($("#formula-entry"), "Try i<=n", "left")
+                 curL = label($("#formula-entry"), "Type i<=n", "left")
                  nextStepOnInvariant(cs, "i<=n", labelRemover(curL));
                }
       },
@@ -355,7 +366,7 @@
                               "So you get +4<br>instead of +1", "left")
                  scoreW.add(4)
                  var inv = invPP(tracesW.curExp().trim());
-                 addSuccessfulInvariant(inv);
+                 addSuccessfulInvariant(inv, "i<=n");
                  cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
@@ -418,22 +429,22 @@
                }
       },
       { setup: function (cs) {
-                 curL = label($("#formula-entry"), "Try j % 2", "left")
+                 curL = label($("#formula-entry"), "Type j % 2", "left")
                  nextStepOnInvariant(cs, "j%2", labelRemover(curL));
                }
       },
       { setup: function (cs) {
-                 curL = label($("#formula-entry"), "% means <br>'reminder of division'", "left")
+                 curL = label($("#formula-entry"), "% means <br>'remainder of division'", "left")
                  cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
-                 curL = label($("#formula-entry"), "j always has reminder <br> 0 divided by 2", "left")
+                 curL = label($("#formula-entry"), "j always has remainder <br> 0 divided by 2", "left")
                  cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
                }
       },
       { setup: function (cs) {
-                 curL = label($("#formula-entry"), "Try j % 2 = 0", "left")
+                 curL = label($("#formula-entry"), "Type j % 2 = 0", "left")
                  nextStepOnInvariant(cs, "j%2=0", labelRemover(curL));
                }
       },
@@ -449,7 +460,7 @@
                  pwups[0].highlight(() => 0)
                  pwups[1].highlight(() => 0)
                  scoreW.add(4)
-                 addSuccessfulInvariant(inv);
+                 addSuccessfulInvariant(inv, "j%2=0");
                  $("#formula-entry").val("");
                  curL = label({ of: $("#score-div-row"), at: "right center" },
                               "Hurray! <br> You learned to use %!", "left");
@@ -848,7 +859,7 @@
 
   </script>
 </head>
-<body>
+<body tabindex="-1">
   <div class='container'>
     <div class='row' id='hit-preview-warning'>
     </div>
