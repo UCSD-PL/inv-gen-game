@@ -1,44 +1,45 @@
 type directionT = "up" | "down" | "left" | "right"
-type strset = { [ ind: string ]: boolean }
+
+type strset = Set<string>
+
+function emptyStrset(): strset {
+  return new Set();
+}
 
 function toStrset(strs: string[]): strset {
-  let res : strset = {};
-  for (let i in strs) {
-    res[strs[i]] = true;
+  let res = emptyStrset();
+  for (let x in strs) {
+    res.add(x);
   }
   return res;
 }
 
+function isMember(s: strset, x: string): boolean {
+  return s.has(x);
+}
+
 function isSubset(s1: strset, s2: strset): boolean {
   for (let k in s1) {
-    if (!s1.hasOwnProperty(k))  continue;
-    if (!s2.hasOwnProperty(k))  return false;
+    if (!isMember(s2, k)) return false;
   }
   return true;
 }
 
 function difference(s1: strset, s2: strset): strset {
-  let res:strset = {};
-
+  let res  = emptyStrset();
   for (let k in s1) {
-    if (!s1.hasOwnProperty(k))  continue;
-    if (s2.hasOwnProperty(k))  continue;
-    res[k] = true;
+    if (isMember(s2, k)) continue;
+    res.add(k);
   }
   return res;
 }
 
 function isEmpty(s: strset): boolean {
-  for (let k in s) {
-    if (!s.hasOwnProperty(k))  continue;
-    return false;
-  }
-  return true;
+  return s.size === 0;
 }
 
 function any_mem(s: strset): string {
   for (let k in s) {
-    if (!s.hasOwnProperty(k))  continue;
     return k;
   }
 }
@@ -60,6 +61,7 @@ function fst<T1, T2>(x: [T1, T2]): T1 { return x[0]; }
 function snd<T1, T2>(x: [T1, T2]): T2 { return x[1]; }
 
 class Args {
+  static parsed: boolean = false;
   static args: { [key:string] : string; } = {};
   static hit_id: string = null;
   static worker_id: string = null;
@@ -71,6 +73,8 @@ class Args {
   static noifs: boolean = false;
 
   static parse_args() {
+    if (Args.parsed)
+      return;
     let query = window.location.search.substring(1).split("&");
     for (let i = 0; i < query.length; i++) {
       if (query[i] === "") // check for trailing & with no param
@@ -86,46 +90,38 @@ class Args {
     Args.admin_token = Args.args["adminToken"];
     Args.mode = Args.args["mode"] || "patterns";
     Args.noifs = Args.args.hasOwnProperty("noifs");
+    Args.parsed = true;
   }
   static get_hit_id(): string {
-    if (Args.hit_id === null)
-      Args.parse_args()
+    Args.parse_args();
     return Args.hit_id;
   }
   static get_worker_id(): string {
-    if (Args.worker_id === null)
-      Args.parse_args()
+    Args.parse_args();
     return Args.worker_id;
   }
   static get_assignment_id(): string {
-    if (Args.assignment_id === null)
-      Args.parse_args()
+    Args.parse_args();
     return Args.assignment_id;
   }
   static get_turk_submit_to(): string {
-    if (Args.turk_submit_to === null)
-      Args.parse_args()
+    Args.parse_args();
     return Args.turk_submit_to;
   }
   static get_tutorial_action(): string {
-    if (Args.tutorial_action === null)
-      Args.parse_args()
+    Args.parse_args();
     return Args.tutorial_action;
   }
   static get_admin_token(): string {
-    if (Args.admin_token === null)
-      Args.parse_args()
+    Args.parse_args();
     return Args.admin_token;
   }
   static get_mode(): string {
-    if (Args.mode === null)
-      Args.parse_args()
+    Args.parse_args();
     return Args.mode;
   }
-
   static get_noifs(): boolean {
-    if (Args.noifs === null)
-      Args.parse_args()
+    Args.parse_args();
     return Args.noifs;
   }
 }
@@ -331,20 +327,15 @@ class Script {
 }
 
 /* In-place union - modifies s1 */
-function union(s1: any, s2: any): any {
+function union(s1: strset, s2: strset): strset {
   for (let e in s2) {
-    s1[e] = true;
+    s1.add(e);
   }
-
   return s1;
 }
 
-function setlen(s: any): number {
-  let l = 0;
-  for (let i in s) {
-    if (s.hasOwnProperty(i)) l++;
-  }
-  return l;
+function setlen(s: strset): number {
+  return s.size;
 }
 
 function forAll(boolL: boolean[]): boolean {
