@@ -8,7 +8,7 @@ function emptyStrset(): strset {
 
 function toStrset(strs: string[]): strset {
   let res = emptyStrset();
-  for (let x in strs) {
+  for (let x of strs) {
     res.add(x);
   }
   return res;
@@ -19,7 +19,7 @@ function isMember(s: strset, x: string): boolean {
 }
 
 function isSubset(s1: strset, s2: strset): boolean {
-  for (let k in s1) {
+  for (let k of s1) {
     if (!isMember(s2, k)) return false;
   }
   return true;
@@ -27,7 +27,7 @@ function isSubset(s1: strset, s2: strset): boolean {
 
 function difference(s1: strset, s2: strset): strset {
   let res  = emptyStrset();
-  for (let k in s1) {
+  for (let k of s1) {
     if (isMember(s2, k)) continue;
     res.add(k);
   }
@@ -39,7 +39,7 @@ function isEmpty(s: strset): boolean {
 }
 
 function any_mem(s: strset): string {
-  for (let k in s) {
+  for (let k of s) {
     return k;
   }
 }
@@ -328,7 +328,7 @@ class Script {
 
 /* In-place union - modifies s1 */
 function union(s1: strset, s2: strset): strset {
-  for (let e in s2) {
+  for (let e of s2) {
     s1.add(e);
   }
   return s1;
