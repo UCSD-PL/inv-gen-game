@@ -76,13 +76,20 @@ if __name__ == "__main__":
       if ('lvlset' in p and p['lvlset'] != lvlsetName):
         fatal("Logs refer to levelset " + p['lvlset'] + " which is not loaded.")
 
-      if ('lvlid' in p and p['lvlid'] not in lvls):
-        fatal("Logs refer to level " + p['lvlid'] +\
+      if ('lvlid' not in p):
+        lvlId = None
+      else:
+        lvlId = p['lvlid']
+        while lvlId[-2:] == '.g':
+          lvlId = lvlId[:-2]
+
+      if (lvlId and lvlId not in lvls):
+        fatal("Logs refer to level " + lvlId +\
               " which is not found in current lvlset.")
 
-      if ('lvlid' in p):
-        lvl = lvls[p['lvlid']]
-        lvlS = lvlStats[p['lvlid']]
+      if (lvlId):
+        lvl = lvls[lvlId]
+        lvlS = lvlStats[lvlId]
       else:
         lvl = None
         lvlS = None
@@ -158,8 +165,21 @@ if __name__ == "__main__":
       lvlS = lvlStats[lvlName]
       lvl = lvls[lvlName]
       invs = lvlS["invariantsTried"].union(lvlS["invariantsFound"])
-      invM = { str(parseExprAst(b)) : raw for (raw, b) in invs}
-      userInvs = set([parseExprAst(x[1]) for x in invs])
+      invM = { }
+      for (raw,b) in invs:
+        try:
+          parsed = str(parseExprAst(b))
+          invM[parsed]=raw
+        except Exception, e:
+          print "Failed parsing: ", raw,b
+
+      userInvs = set();
+
+      for x in invs:
+        try:
+          userInvs.add(parseExprAst(x[1]))
+        except:
+          print "Failed parsing: ", x[1]
 
       if (lvlName in otherInvs):
         oInvs = set(otherInvs[lvlName])
