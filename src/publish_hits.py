@@ -25,6 +25,8 @@ p.add_argument('--adminToken', type=str, \
         help='Token to use to login to admin interfaces', required=True)
 p.add_argument('--no-ifs', action='store_const', const=True, default=False, \
         help='Dont teach implication in tutorial or show it ingame')
+p.add_argument('--with-new-var-powerup', action='store_true',
+        help='Enable the new variable powerup')
 p.add_argument('--mode', type=str, default="patterns", \
         help='Game mode to play in. ', choices=["patterns", "ctrex", "rounds"])
 
@@ -158,6 +160,8 @@ try:
             start_url = "https://zoidberg.ucsd.edu:{0}/mturk_landing.html?mode=" + args.mode
             if (args.no_ifs):
                 start_url += "&noifs"
+            if args.with_new_var_powerup:
+                start_url += "&nvpower=1"
             q = ExternalQuestion(start_url.format(port), 1024)
             kind = "ExternalQuestion"
         else:

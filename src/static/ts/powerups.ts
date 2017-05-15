@@ -12,6 +12,22 @@ interface IPowerup {
   highlight(cb: () => any): void;
 }
 
+interface IOneShotPowerup extends IPowerup {
+  used: boolean;
+}
+
+function isOneShotPowerup(obj: IPowerup): obj is IOneShotPowerup {
+  return 'used' in obj;
+}
+
+interface ILevelPowerup extends IPowerup {
+  level_powerup_tag: boolean;
+}
+
+function isLevelPowerup(obj: IPowerup): obj is ILevelPowerup {
+  return 'level_powerup_tag' in obj;
+}
+
 class BasePowerup implements IPowerup {
   element: JQuery;
 
@@ -29,6 +45,7 @@ class BasePowerup implements IPowerup {
   }
 }
 
+// NOTE: This probably makes more sense as a mixin/interface pair.
 class MultiplierPowerup extends BasePowerup {
   constructor(public id: string,
               public html: string,
@@ -62,6 +79,21 @@ class MultiplierPowerup extends BasePowerup {
     this.element.find("div.pwup-mul").html(newm + "X");
     this.element.find("div.pwup-mul").effect({ effect: "highlight", color: "red" })
     this.element.attr("title", this.tip)
+  }
+}
+
+class NewVarPowerup extends MultiplierPowerup implements ILevelPowerup, IOneShotPowerup {
+  level_powerup_tag: boolean = true;
+  used: boolean = false;
+
+  constructor(varname: string, multiplier: number = 2) {
+    super("NewVar=" + varname,
+      varname + "<span style='position:absolute;left:4px;color:goldenrod'>" +
+        "*</span>",
+      (inv: invariantT) => isMember(identifiers(inv), varname),
+      multiplier,
+      (lvl) => true,
+      "use '" + varname + "' in an expression")
   }
 }
 
@@ -130,6 +162,12 @@ class PowerupSuggestionAll implements IPowerupSuggestion {
   }
 
   clear(lvl: Level): void {
+    this.all_pwups = this.all_pwups.filter(p => !isLevelPowerup(p));
+    if (Args.get_use_new_var_powerup()) {
+      for (let v of lvl.variables) {
+        this.all_pwups.push(new NewVarPowerup(v));
+      }
+    }
     this.age = {};
     for (let p of this.all_pwups) {
       this.age[p.id] = 0;
@@ -154,6 +192,9 @@ class PowerupSuggestionAll implements IPowerupSuggestion {
     for (let p of this.all_pwups) {
       if (p.holds(inv)) {
         this.age[p.id] = 0;
+        if (isOneShotPowerup(p)) {
+          p.used = true;
+        }
       } else {
         this.age[p.id] ++;
       }
@@ -175,7 +216,7 @@ class PowerupSuggestionAll implements IPowerupSuggestion {
   }
 
   getPwups(): IPowerup[] {
-    return this.all_pwups;
+    return this.all_pwups.filter(p => !(isOneShotPowerup(p) && p.used));
   }
 }
 
