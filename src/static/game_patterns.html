@@ -327,7 +327,7 @@
           curScript.cancel()
           curScript = null
         }
-        if (gameLogic.foundJSInv.length >= 4) {
+        if (gameLogic.foundJSInv.length >= 6) {
           $("#skip-to-next-lvl").show();
           $('#skip-to-next-lvl').prop("disable", false);
         }
@@ -509,7 +509,7 @@
         </div>
         <div class='row ' id='quit-div'>
           <button id='quit' class='btn-quit'>Quit</button>
-          <button id='skip-to-next-lvl' class='btn-next' style='display: none;'>Next Lvl</button>
+          <button id='skip-to-next-lvl' class='btn-next' style='display: none;'>Skip to Next Level</button>
         </div>
       </div>
     </div>
