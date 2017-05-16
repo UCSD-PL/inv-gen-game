@@ -446,6 +446,7 @@ def tryAndVerify(levelSet, levelId, invs, mturkId):
       raise Exception("Level " + str(levelId) + " " + \
                       str(levelSet) + " not a dynamic boogie level.")
 
+    print repr(set)
     userInvs = set([ esprimaToBoogie(x, {}) for x in invs ])
     otherInvs = set([])
     lastVer = getLastVerResult(levelSet, levelId, s)
@@ -522,9 +523,9 @@ kvStore = { }
 @pp_exc
 @log_d(str)
 @cache.memoize(timeout=50)
-def get(key):
-    """ Generic Key/Value store set() used by two-player gameplay for
-        synchronizing shared state. 
+def getVal(key):
+    """ Generic Key/Value store get() used by multiplayer gameplay for
+        synchronizing shared state.
     """
     if (type(key) != unicode):
       raise Exception("Key must be string");
@@ -534,9 +535,9 @@ def get(key):
 @api.method("App.set")
 @pp_exc
 @log_d(str, str, str)
-def get(key, val, expectedGen):
-    """ Generic Key/Value store get() used by two-player gameplay for
-        synchronizing shared state. 
+def setVal(key, val, expectedGen):
+    """ Generic Key/Value store set() used by multiplayer gameplay for
+        synchronizing shared state.
     """
     if (type(key) != unicode):
       raise Exception("Key must be string");
