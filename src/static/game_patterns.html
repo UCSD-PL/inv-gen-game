@@ -205,7 +205,7 @@
         numLvlPassed = numLvlPassed + 1;
         function plural(n,s) { return n == 1? s : s + "s" }
         if (numLvlPassed >= 2) {
-          s = "You can continue or quit.<br>Each additional level you pass will give you a new $0.50 bonus!";
+          s = "You can continue or quit.";
           $("#next-or-quit-additional-text").html("<h2>"+s+"</h2>");
           $("#quit-overlay").show();
         } else {
