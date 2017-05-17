@@ -521,7 +521,6 @@ kvStore = { }
 
 @api.method("App.get")
 @pp_exc
-@log_d(str)
 @cache.memoize(timeout=50)
 def getVal(key):
     """ Generic Key/Value store get() used by multiplayer gameplay for
@@ -534,7 +533,6 @@ def getVal(key):
 
 @api.method("App.set")
 @pp_exc
-@log_d(str, str, str)
 def setVal(key, val, expectedGen):
     """ Generic Key/Value store set() used by multiplayer gameplay for
         synchronizing shared state.
