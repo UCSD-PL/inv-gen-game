@@ -606,12 +606,12 @@
       gameLogic.onLvlPassed(function() {
         numLvlPassed = numLvlPassed + 1;
         function plural(n,s) { return n == 1? s : s + "s" }
-        if (numLvlPassed >= 2) {
+        if (numLvlPassed >= 4) {
           s = "You can continue or quit.";
           // $("#next-or-quit-additional-text").html("<h2>"+s+"</h2>");
           $("#quit-overlay").show();
         } else {
-          left = 2 - numLvlPassed;
+          left = 4 - numLvlPassed;
           s = "Please try to finish at least " + left + plural(left," more level") + "!"
           // $("#next-or-quit-additional-text").html("<h2>"+s+"</h2>")
           $("#quit-overlay").hide();
