@@ -30,7 +30,7 @@ from db_util import playersWhoStartedLevel, enteredInvsForLevel,\
 from atexit import register
 from server_common import openLog, log, log_d
 
-from flask_compress import Compress
+# from flask_compress import Compress
 from flask.ext.cache import Cache
 
 from nplayer_db import *
@@ -45,7 +45,7 @@ class Server(Flask):
         return 0
 
 app = Server(__name__, static_folder='static/', static_url_path='')
-Compress(app)
+# Compress(app)
 cache = Cache(app,config={'CACHE_TYPE': 'filesystem', 'CACHE_DIR': '/'})
 api = rpc(app, '/api')
 
