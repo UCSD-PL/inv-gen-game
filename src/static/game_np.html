@@ -483,8 +483,6 @@
     }
 
     function quit() {
-      var id = sessionStorage.getItem("playerId");
-      saveState(id);
       doneScreen(false);
       // logEvent("GameDone", [numLvlPassed]);
       // window.location.href = "menu.html";
@@ -515,6 +513,9 @@
       // if (turk_submit_to !== undefined) {
       //     document.getElementById("turk-form").action = turk_submit_to + "/mturk/externalSubmit";
       // }
+      var id = sessionStorage.getItem("playerId");
+      saveState(id);
+
       msg = "Good job! You finished " + numLvlPassed + " level(s)! Your score is: " + gameLogic.score  + "!<br>Click anywhere to continue.";
       if (alldone) {
          msg = "There are no more levels to play at this moment.<br>" + msg
@@ -699,6 +700,7 @@
 
       // $('#quit').click(function () { doneScreen(false) });
       $('#quit').click(quit);
+      
       $('#skip-to-next-lvl').click(function () {
         // nextLvl();
         numExpFound = 0;
@@ -707,6 +709,7 @@
         $('#skip-to-next-lvl').prop("disable", true);
         gameLogic.skipToNextLvl();
       });
+      
       $('#quit-overlay').click(function() { doneScreen(false) });
 
       $('#arrows').click(function() {
