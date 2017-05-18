@@ -8,7 +8,7 @@ p = mkParser("Wait for HITs", True)
 p.add_argument('--delay', type=int, default = 600, \
         help = "Number of seconds to wait between checks; " +\
                "if none provided, use 600 seconds")
-p.add_argument('--email', type=str, default = "lerner@eng.ucsd.edu", \
+p.add_argument('--email', type=str, required=True,
         help = "Email to notify")
 args = p.parse_args()
 
