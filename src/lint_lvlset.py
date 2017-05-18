@@ -144,7 +144,7 @@ for lvl_name, lvl in lvls.iteritems():
 
     bbs = lvl["program"]
     loop = lvl["loop"]
-    ((over, _), (nonind, _), sound, violations) = verify(lvl, [exactValExpr])
+    (over, nonind, sound, violations) = verify(lvl, exactValExpr)
     if (len(sound) == 0):
       print "Level", lvl_name, "has only", len(lvl["data"][0]), "rows"
 

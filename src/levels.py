@@ -203,7 +203,7 @@ def loadBoogieFile(fname, multiround):
         assert(header_vals != [])
         invTemplates = ["_sv_x<_sv_y", "_sv_x<=_sv_y", "_sv_x==_sc_c", \
                         "_sv_x==_sv_y", "_sv_x==0", "_sv_x<0"]
-        invTemplates = [ parseExprAst(inv)[0] for inv in invTemplates]
+        invTemplates = [ parseExprAst(inv) for inv in invTemplates]
 
         new_header_vals, new_terminates = \
                 getInitialData(loop, bbs, 4, invTemplates, [ "_sv_x", "_sv_y" ])
