@@ -424,8 +424,8 @@ class TwoPlayerUseOpsPwup extends TwoPlayerMultiplierPowerup {
       html,
       (inv: invariantT) => {
         let inv_ops = operators(inv);
-        for (let i in ops) {
-          if (ops[i] in inv_ops) return true;
+        for (let op of ops) {
+          if (isMember(inv_ops, op)) return true;
         }
         return false;
       },
