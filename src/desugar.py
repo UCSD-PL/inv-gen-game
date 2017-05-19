@@ -3,7 +3,7 @@ import subprocess;
 import os
 import re;
 import sys
-from boogie.bb import get_bbs
+from lib.boogie.bb import get_bbs
 from boogie_loops import loops
 from mturk_util import error
 from argparse import ArgumentParser

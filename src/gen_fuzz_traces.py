@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import argparse
-import boogie.ast
+import lib.boogie.ast
 import levels
 import tabulate
 from levels import getEnsamble
