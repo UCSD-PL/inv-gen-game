@@ -51,9 +51,9 @@ if [ ! -e $DIR/third_party/daikon ]; then
   pushd $DIR/third_party
   mkdir daikon
   cd daikon
-  wget https://plse.cs.washington.edu/daikon/download/daikon-5.5.2.tar.gz
-  tar zxf daikon-5.5.2.tar.gz
-  popd 
+  wget https://plse.cs.washington.edu/daikon/download/daikon-5.5.6.tar.gz
+  tar zxf daikon-5.5.6.tar.gz
+  popd
 fi
 
 if [ ! -e $DIR/third_party/invgen ]; then
@@ -64,7 +64,16 @@ if [ ! -e $DIR/third_party/invgen ]; then
   wget http://www.tcs.tifr.res.in/~agupta/invgen/frontend
   chmod a+x invgen
   chmod a+x frontend
-  popd 
+  popd
+fi
+
+if [ ! -e $DIR/third_party/cpa_checker_1.4 ]; then
+  pushd $DIR/third_party
+  mkdir cpa_checker_1.4
+  cd cpa_checker_1.4
+  wget http://cpachecker.sosy-lab.org/CPAchecker-1.4-unix.tar.bz2
+  tar jxvf CPAchecker-1.4-unix.tar.bz2
+  popd
 fi
 deactivate
 
@@ -76,10 +85,10 @@ fi
 
 npm install
 
-echo "export DAIKONDIR=$DIR/third_party/daikon/daikon-5.5.2" >> $DIR/bin/activate
+echo "export DAIKONDIR=$DIR/third_party/daikon/daikon-5.5.6" >> $DIR/bin/activate
 echo "export JAVA_HOME=\${JAVA_HOME:-\$(dirname \$(dirname \$(dirname \$(readlink -f \$(/usr/bin/which java)))))}" >> $DIR/bin/activate
 echo "source \$DAIKONDIR/scripts/daikon.bashrc" >> $DIR/bin/activate
 echo "export PATH=\$PATH:$MYDIR/node_modules/.bin/" >> $DIR/bin/activate
-echo "export PATH=\$PATH:$DIR/third_party/invgen/:$DIR/third_party/cpa_checker_1.4/CPAchecker-1.4-svcomp16c-unix/scripts/" >> $DIR/bin/activate
+echo "export PATH=\$PATH:$DIR/third_party/invgen/:$DIR/third_party/cpa_checker_1.4/CPAchecker-1.4-unix/scripts/" >> $DIR/bin/activate
 
 echo "To begin developing run source $DIR/bin/activate and then make"
