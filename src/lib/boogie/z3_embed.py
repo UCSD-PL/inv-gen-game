@@ -375,7 +375,7 @@ class AllIntTypeEnv:
 
 def expr_to_z3(expr, typeEnv):
     if isinstance(expr, ast.AstNumber):
-        return expr.num
+        return IntVal(expr.num)
     elif isinstance(expr, ast.AstId):
         return typeEnv[expr.name](expr.name)
     elif isinstance(expr, ast.AstTrue):

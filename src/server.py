@@ -163,18 +163,25 @@ def genNextLvl(workerId, mturkId, levelSet, levelId, invs):
 
     userInvs = set([ esprimaToBoogie(x, {}) for x in invs ])
     otherInvs = set([])
+    lastSoundInvs = set([])
+    lastNonindInvs = set([])
     lastVer = getLastVerResult(levelSet, levelId, s)
 
     if (lastVer):
-      otherInvs = otherInvs.union([parseExprAst(x) for x in lastVer["sound"]])
-      otherInvs = otherInvs.union([parseExprAst(x) for x in lastVer["nonind"]])
+      lastSoundInvs = set([parseExprAst(x) for x in lastVer["sound"]])
+      lastNonindInvs = set([parseExprAst(x) for x in lastVer["nonind"]])
 
-    ((overfitted, _), (_, _), _, violations) =\
+
+    otherInvs = lastSoundInvs.union(lastNonindInvs)
+    ((overfitted, _), (_, _), sound, violations) =\
       tryAndVerifyLvl(lvl, userInvs, otherInvs, args.timeout)
 
     # See if the level is solved
     solved = len(violations) == 0;
     if (solved):
+        payl = [levelSet, levelId, invs, [ boogieToEsprimaExpr(e) for e in sound ]]
+        addEvent("verifier", "GenNext.Solved", time(), args.ename, \
+                 "localhost", payl, s, mturkId)
         return loadNextLvl(workerId, mturkId);
 
     fix = lambda env:   _from_dict(lvl['variables'], env, 0)
@@ -183,12 +190,16 @@ def genNextLvl(workerId, mturkId, levelSet, levelId, invs):
     print "GreenRows: ", greenRows
     bbs = lvl["program"]
     loop = lvl["loop"]
+    ctrexInvs = lastSoundInvs.union(userInvs)
     safetyCtrex =\
-        loopInvSafetyCtrex(loop, otherInvs.union(userInvs), bbs, args.timeout)
+        loopInvSafetyCtrex(loop, ctrexInvs, bbs, args.timeout)
     redRows = [ fix(x) for x in safetyCtrex if len(x) != 0 ]
     print "RedRows: ", redRows
     if (len(redRows) > 0 or len(greenRows) > 0):
         # Lets give them another level
+        payl = [levelSet, levelId, invs, [ boogieToEsprimaExpr(e) for e in ctrexInvs ]]
+        addEvent("verifier", "GenNext.NoNewRows", time(), args.ename, \
+                 "localhost", payl, s, mturkId)
         newLvl = copy(lvl);
         newLvlId = levelId + ".g"
         newLvl["data"][0].extend(greenRows)
@@ -496,6 +507,7 @@ def simplifyInv(inv, mturkId): #pylint: disable=unused-argument
     boogieInv = esprimaToBoogie(inv, {});
     noDivBoogie = divisionToMul(boogieInv);
     z3_inv = expr_to_z3(noDivBoogie, AllIntTypeEnv())
+    print z3_inv, boogieInv
     simpl_z3_inv = simplify(z3_inv, arith_lhs=True);
     simpl_boogie_inv = z3_expr_to_boogie(simpl_z3_inv);
     return boogieToEsprima(simpl_boogie_inv);

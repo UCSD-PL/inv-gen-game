@@ -64,6 +64,8 @@ def addEvent(sourceName, typ, time, ename,  addr, data, session, mturkId):
   elif (typ == "VerifyAttempt"):
     for k in data:
       payl[k] = data[k];
+  elif (typ == "GenNext.Solved" or typ == "GenNext.NoNewRows"):
+    payl = data
   else:
     print "Unknown event type: ", typ
 
