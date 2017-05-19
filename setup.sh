@@ -75,6 +75,19 @@ if [ ! -e $DIR/third_party/cpa_checker_1.4 ]; then
   tar jxvf CPAchecker-1.4-svcomp16c-unix.tar.bz2
   popd
 fi
+
+if [ ! -e $DIR/third_party/boogie ]; then
+  pushd $DIR/third_party
+  git clone https://github.com/boogie-org/boogie.git
+  cd boogie
+  wget https://nuget.org/nuget.exe
+  mono ./nuget.exe restore Source/Boogie.sln
+  mozroots --import --sync
+  xbuild Source/Boogie.sln
+  ln -s $DIR/third_party/z3/build/z3 Binaries/z3.exe
+  popd
+fi
+
 deactivate
 
 which node;

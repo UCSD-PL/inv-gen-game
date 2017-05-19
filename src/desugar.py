@@ -12,7 +12,8 @@ p = ArgumentParser(description="desugar file");
 p.add_argument("inp_file", type=str, help="input file");
 p.add_argument("out_file", type=str, help="output file");
 
-BOOGIE_PATH= "/home/dimo/install/boogie/Binaries/Boogie.exe"
+MYDIR = dirname(abspath(realpath(__file__)))
+BOOGIE_PATH= MYDIR + "/../env/third_party/boogie/Binaries/Boogie.exe"
 
 def desugar(fname):
     output = subprocess.check_output(
