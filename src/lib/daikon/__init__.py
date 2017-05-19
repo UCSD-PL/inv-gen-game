@@ -1,7 +1,7 @@
 from tempfile import NamedTemporaryFile
 from subprocess import call, check_output
 from lib.daikon.inv_ast import parseExprAst
-from lib.common.util import flattenList
+from lib.common.util import flattenList, error
 from os.path import basename
 
 def toDaikonTrace(varz, trace):
@@ -201,8 +201,10 @@ def runDaikon(varz, trace, nosuppress=False):
     if (nosuppress):
       # Lets disable all filters and enable all invariants
       args = args + \
-        flattenList([[ "--config_option", x + "=false" ] for x in filter_opts]) + \
-        flattenList([[ "--config_option", x + "=true" ] for x in inv_enable_opts])
+        flattenList([[ "--config_option", x + "=false" ] \
+                        for x in filter_opts]) + \
+        flattenList([[ "--config_option", x + "=true" ] \
+                        for x in inv_enable_opts])
     args.append(dtraceF.name)
     raw = check_output(args)
     call(["rm", basename(dtraceF.name)[:-len(".dtrace")]+".inv.gz"])
@@ -218,6 +220,6 @@ def runDaikon(varz, trace, nosuppress=False):
     for i in invs:
       try:
         parsable.append(parseExprAst(i));
-      except:
-        print "Failed parsing: ", i
+      except Exception:
+        error("Failed parsing: ", i)
     return parsable
