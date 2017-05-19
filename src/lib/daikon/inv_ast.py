@@ -1,6 +1,7 @@
 #pylint: disable=no-self-argument, unused-argument
 from lib.daikon.inv_grammar import DaikonInvParser
 from ..common.ast import AstNode as AstNode
+from ..common.util import error
 
 class AstUnExpr(AstNode):
     def __init__(s, op, expr):
@@ -157,5 +158,5 @@ def parseExprAst(s):
   try:
     return astBuilder.parse(s);
   except:
-    print "Failed parsing";
+    error("Failed parsing");
     raise;

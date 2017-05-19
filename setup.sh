@@ -71,8 +71,8 @@ if [ ! -e $DIR/third_party/cpa_checker_1.4 ]; then
   pushd $DIR/third_party
   mkdir cpa_checker_1.4
   cd cpa_checker_1.4
-  wget http://cpachecker.sosy-lab.org/CPAchecker-1.4-unix.tar.bz2
-  tar jxvf CPAchecker-1.4-unix.tar.bz2
+  wget https://cpachecker.sosy-lab.org/CPAchecker-1.4-svcomp16c-unix.tar.bz2
+  tar jxvf CPAchecker-1.4-svcomp16c-unix.tar.bz2
   popd
 fi
 deactivate
@@ -89,6 +89,6 @@ echo "export DAIKONDIR=$DIR/third_party/daikon/daikon-5.5.6" >> $DIR/bin/activat
 echo "export JAVA_HOME=\${JAVA_HOME:-\$(dirname \$(dirname \$(dirname \$(readlink -f \$(/usr/bin/which java)))))}" >> $DIR/bin/activate
 echo "source \$DAIKONDIR/scripts/daikon.bashrc" >> $DIR/bin/activate
 echo "export PATH=\$PATH:$MYDIR/node_modules/.bin/" >> $DIR/bin/activate
-echo "export PATH=\$PATH:$DIR/third_party/invgen/:$DIR/third_party/cpa_checker_1.4/CPAchecker-1.4-unix/scripts/" >> $DIR/bin/activate
+echo "export PATH=\$PATH:$DIR/third_party/invgen/:$DIR/third_party/cpa_checker_1.4/CPAchecker-1.4-svcomp16c-unix/scripts/" >> $DIR/bin/activate
 
 echo "To begin developing run source $DIR/bin/activate and then make"
