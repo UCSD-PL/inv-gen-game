@@ -65,6 +65,9 @@ def nodups(s):
 def flattenSet(s):
   return reduce(lambda x,y: set(x).union(y), s, set([]))
 
+def flattenList(s):
+  return reduce(lambda x,y: x + y, s, [])
+
 def randomToken(l):
   alphanum = "".join([chr(ord('a') + i) for i in range(26) ] +\
           [ str(i) for i in range(0,10)])
