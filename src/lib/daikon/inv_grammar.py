@@ -26,6 +26,7 @@ class DaikonInvParser(InfixExprParser):
             L("<") | L(">") )
     s.AddOp = (L("+") | L("-"))
     s.MulOp = (L("*") | L("/") | L("%"))
+    s.BWAnd = L('&')
     s.PowOp = L("**")
     s.UnOp = (L("!") | L("-"))
 
