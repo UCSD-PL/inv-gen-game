@@ -129,6 +129,24 @@
  
           let duration = (finished - started) / 1000.0
           ud.time += duration
+          if (!lvls.hasOwnProperty(lvlid)) {
+            lvls[lvlid] = { completed: 0,
+                            started:0,
+                            skipped:0,
+                            invs: 0,
+                            time: 0,
+                            sound: 0,
+                            overfitted: 0,
+                            nonind: 0,
+                            soundSet: [ ],
+                            nonindSet: [ ],
+                            overfittedSet: [ ],
+                            completedUsers: {},
+                            skippedUsers: {},
+                            startedUsers: {},
+                            finishedUsers: {},
+            }
+          };
           lvls[lvlid].time += duration
 
           ud.invs += e.payload.all_found.length;
