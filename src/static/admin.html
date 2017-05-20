@@ -94,7 +94,7 @@
 
         if (e.type == "StartLevel") {
           let lvlid = e.payload.lvlset + "," + e.payload.lvlid;
-          ud.lvlD[lvlid] = { started: e.time };
+          ud.lvlD[lvlid] = { started: e.time, finished: null };
           if (!lvls.hasOwnProperty(lvlid)) {
             lvls[lvlid] = { completed: 0,
                             started:0,
@@ -118,6 +118,7 @@
         } else if (e.type == "FinishLevel") {
           let lvlid = e.payload.lvlset + "," + e.payload.lvlid;
           console.log(e.payload)
+          ud.lvlD[lvlid] = { started: e.time, finished: null };
           ud.lvlD[lvlid].finished = e.time;
           ud.completed ++;
           if (e.payload.verified)
@@ -138,6 +139,24 @@
         } else if (e.type == "SkipToNextLevel") {
           let lvlid = e.payload.lvlset + "," + e.payload.lvlid;
           ud.skipped ++;
+          if (!lvls.hasOwnProperty(lvlid)) {
+            lvls[lvlid] = { completed: 0,
+                            started:0,
+                            skipped:0,
+                            invs: 0,
+                            time: 0,
+                            sound: 0,
+                            overfitted: 0,
+                            nonind: 0,
+                            soundSet: [ ],
+                            nonindSet: [ ],
+                            overfittedSet: [ ],
+                            completedUsers: {},
+                            skippedUsers: {},
+                            startedUsers: {},
+                            finishedUsers: {},
+            }
+          };
           lvls[lvlid].skipped ++;
           lvls[lvlid].skippedUsers[e.src] = 1;
           lvls[lvlid].finishedUsers[e.src] = 1;
