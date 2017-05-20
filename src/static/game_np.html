@@ -66,6 +66,8 @@
     function loadTrace(traceId) {
       PrepopulatedDynamicLevel.load(curLvlSet, traceId, function(lvl) {
         curLvlId = traceId
+        playerLvl = lvl;
+        curLvlId = lvl.id;
         gameLogic.loadLvl(lvl)
       })
     }
@@ -307,6 +309,9 @@
     function findWeakInvariants() {
       if (playerLvl) {
         var currentLvlExpressions = values.expressions[playerLvl.id];
+        if (!currentLvlExpressions) {
+          return;
+        }
         if (currentLvlExpressions.length < 2) {
           return;
         }
