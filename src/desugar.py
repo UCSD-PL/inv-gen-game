@@ -3,6 +3,8 @@ import subprocess;
 import os
 import re;
 import sys
+import traceback;
+from os.path import dirname, abspath, realpath
 from lib.boogie.bb import get_bbs
 from boogie_loops import loops
 from mturk_util import error
@@ -13,19 +15,23 @@ p.add_argument("inp_file", type=str, help="input file");
 p.add_argument("out_file", type=str, help="output file");
 
 MYDIR = dirname(abspath(realpath(__file__)))
-BOOGIE_PATH= MYDIR + "/../env/third_party/boogie/Binaries/Boogie.exe"
+BOOGIE_PATH = MYDIR + "/../env/third_party/boogie/Binaries/Boogie.exe"
+#Z3_PATH = "E:\Gamification\inv-gen-game\env\third_party\z3\build\z3" 
 
 def desugar(fname):
     output = subprocess.check_output(
             [BOOGIE_PATH, "/nologo", "/noinfer", "/traceverify", fname]);
-    lines = list(output.split("\n"))
+    if (output.find("\r")>=0):
+        lines = list(output.split("\r\n"))
+    else:
+        lines = list(output.split("\n"))
     start = 0;
     desugaredF = {}
     r = re.compile("implementation (?P<name>[^(]*)\(", re.MULTILINE)
     while True:
         try:
             code = "\n".join(lines[
-                    lines.index("after desugaring sugared commands like procedure calls",start)+1:
+                    lines.index("after desugaring sugared commands like procedure calls", start)+1:
                     lines.index("after conversion into a DAG", start)])
             name = r.findall(code)[0]
             desugaredF[name] = code;
