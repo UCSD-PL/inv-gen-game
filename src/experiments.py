@@ -100,10 +100,13 @@ def get_unused_port():
     s.close()
     return port
 
-def start_server(port, experiment_name, srid, lvlset, adminToken):
+def start_server(port, experiment_name, srid, lvlset, adminToken, db):
     server_log = get_server_log_fname(experiment_name, srid)
     event_log = get_event_log_fname(experiment_name, srid)
-    db = get_db_fname(experiment_name)
+
+    if (db == None):
+      db = get_db_fname(experiment_name)
+
     with open(server_log, 'w') as output:
         cmd = [ get_server_run_cmd(),
                 "--port", str(port),\

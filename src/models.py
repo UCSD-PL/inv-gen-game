@@ -13,17 +13,17 @@ workerIDhashRE = re.compile("^[A-Z0-9]{5,}$")
 
 class Source(Base):
   __tablename__ = "sources"
-  name = Column(String, primary_key=True)
+  name = Column(String(256), primary_key=True)
   events = relationship("Event", backref="source", lazy="dynamic")
 
 
 class Event(Base):
   __tablename__ = "events"
   id = Column(Integer, Sequence('user_id_seq'), primary_key=True)
-  type = Column(String)
-  experiment = Column(String)
-  src = Column(String, ForeignKey("sources.name"))
-  addr = Column(String) # For mturk users this is the ip of the access
+  type = Column(String(128))
+  experiment = Column(String(256))
+  src = Column(String(256), ForeignKey("sources.name"))
+  addr = Column(String(256)) # For mturk users this is the ip of the access
   time = Column(DateTime)
   payload = Column(String(16536))
 
@@ -34,6 +34,12 @@ class Event(Base):
 def open_sqlite_db(path):
     engine = create_engine("sqlite:///" + path, echo=False,
       connect_args={'check_same_thread':False});
+    Session = sessionmaker(bind=engine)
+    Base.metadata.create_all(engine);
+    return Session;
+
+def open_mysql_db(url):
+    engine = create_engine(url, echo=False);
     Session = sessionmaker(bind=engine)
     Base.metadata.create_all(engine);
     return Session;

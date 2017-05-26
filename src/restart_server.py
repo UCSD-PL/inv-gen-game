@@ -15,6 +15,8 @@ p.add_argument('srid', type=int, \
         help='The server run ID that you want to restart')
 p.add_argument("--adminToken", type=str,\
         help='Admin token to use(if omitted we generate a random one)')
+p.add_argument('--db', type=str, default=None,
+        help='If specified, an explicit database for the servers to use')
 args = p.parse_args()
 exp = load_experiment_or_die(args.ename)
 
@@ -37,7 +39,7 @@ for sr in exp.server_runs:
             sr.pid = 0
         new_srid = exp.create_unique_server_run_id()
         port = sr.port
-        p = start_server(port, args.ename, new_srid, args.lvlset, adminToken)
+        p = start_server(port, args.ename, new_srid, args.lvlset, adminToken, args.db)
         print "Started server run", new_srid, "on port", port, "with pid", p.pid
         exp.add_session(ServerRun(new_srid, sr.hit_id, p.pid, port))
         exit(0)
