@@ -24,7 +24,7 @@ from pp import pp_BoogieLvl, pp_EsprimaInv, pp_EsprimaInvs, pp_CheckInvsRes, \
 from copy import copy
 from time import time
 from datetime import datetime
-from models import open_sqlite_db, Event
+from models import open_sqlite_db, open_mysql_db, Event
 from db_util import playersWhoStartedLevel, enteredInvsForLevel,\
         getOrAddSource, addEvent, levelSolved, levelFinishedBy
 from atexit import register
@@ -621,7 +621,10 @@ if __name__ == "__main__":
 
     args = p.parse_args();
 
-    sessionF = open_sqlite_db(args.db)
+    if ('mysql+mysqldb://' in args.db):
+      sessionF = open_mysql_db(args.db)
+    else:
+      sessionF = open_sqlite_db(args.db)
 
     if (args.adminToken):
       adminToken = args.adminToken

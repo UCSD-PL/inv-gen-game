@@ -29,6 +29,8 @@ p.add_argument('--with-new-var-powerup', action='store_true',
         help='Enable the new variable powerup')
 p.add_argument('--mode', type=str, default="patterns", \
         help='Game mode to play in. ', choices=["patterns", "ctrex", "rounds"])
+p.add_argument('--db', type=str, default=None,
+        help='If specified, an explicit database for the servers to use')
 
 args = p.parse_args()
 
@@ -154,7 +156,7 @@ try:
     for i in range(args.num_hits):
         port = get_unused_port()
         srid = exp.create_unique_server_run_id()
-        p = start_server(port, args.ename, srid, args.lvlset, args.adminToken)
+        p = start_server(port, args.ename, srid, args.lvlset, args.adminToken, args.db)
         print "Started server run", srid, "on port", port, "with pid", p.pid
         if args.ext:
             start_url = "https://zoidberg.ucsd.edu:{0}/mturk_landing.html?mode=" + args.mode
