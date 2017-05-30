@@ -43,11 +43,12 @@ app = Server(__name__, static_folder='static/', static_url_path='')
 api = rpc(app, '/api')
 
 ## Utility functions #################################################
-def getLastVerResult(lvlset, lvlid, session):
+def getLastVerResult(lvlset, lvlid, session, workerId=None):
     events = session.query(Event)
     verifyAttempts = events.filter(Event.type == "VerifyAttempt").all();
     verifyAttempts = filter(
-        lambda x:  x.payl()["lvlset"] == lvlset and x.payl()["lvlid"] == lvlid,
+        lambda x: x.payl()["lvlset"] == lvlset and x.payl()["lvlid"] == lvlid
+          and (workerId is None or x.payl()["workerId"] == workerId),
         verifyAttempts);
     if (len(verifyAttempts) > 0):
       return verifyAttempts[-1].payl();
@@ -136,8 +137,8 @@ def loadLvl(levelSet, lvlId, mturkId): #pylint: disable=unused-argument
 
 @api.method("App.genNextLvl")
 @pp_exc
-@log_d(str, pp_mturkId, str, str, pp_EsprimaInvs, pp_BoogieLvl)
-def genNextLvl(workerId, mturkId, levelSet, levelId, invs):
+@log_d(str, pp_mturkId, str, str, pp_EsprimaInvs, bool, pp_BoogieLvl)
+def genNextLvl(workerId, mturkId, levelSet, levelId, invs, individualMode):
     """ Given a level (levelSet, levelId) and a set of invariants invs
         attempted by a user, generate and return a new level by appending the
         counterexamples to invs to the current level. The new level has the
@@ -165,7 +166,8 @@ def genNextLvl(workerId, mturkId, levelSet, levelId, invs):
     otherInvs = set([])
     lastSoundInvs = set([])
     lastNonindInvs = set([])
-    lastVer = getLastVerResult(levelSet, levelId, s)
+    lastVer = getLastVerResult(levelSet, levelId, s,
+      workerId=(workerId if individualMode else None))
 
     if (lastVer):
       lastSoundInvs = set([parseExprAst(x) for x in lastVer["sound"]])
@@ -182,7 +184,7 @@ def genNextLvl(workerId, mturkId, levelSet, levelId, invs):
         payl = [levelSet, levelId, invs, [ boogieToEsprimaExpr(e) for e in sound ]]
         addEvent("verifier", "GenNext.Solved", time(), args.ename, \
                  "localhost", payl, s, mturkId)
-        return loadNextLvl(workerId, mturkId);
+        return loadNextLvl(workerId, mturkId, individualMode)
 
     fix = lambda env:   _from_dict(lvl['variables'], env, 0)
     greenRows = [ fix(v.endEnv()) for v in overfitted if type(v) != tuple]
@@ -208,12 +210,12 @@ def genNextLvl(workerId, mturkId, levelSet, levelId, invs):
         return loadLvl(levelSet, newLvlId, mturkId);
     else:
         # Else give them the actual next level
-        return loadNextLvl(workerId, mturkId);
+        return loadNextLvl(workerId, mturkId, individualMode)
 
 @api.method("App.loadNextLvl")
 @pp_exc
-@log_d(str, pp_mturkId, pp_BoogieLvl)
-def loadNextLvl(workerId, mturkId):
+@log_d(str, pp_mturkId, bool, pp_BoogieLvl)
+def loadNextLvl(workerId, mturkId, individualMode):
     """ Return the unsolved level seen by the fewest users. """
     session = sessionF();
     level_names = traces[curLevelSetName].keys();
@@ -221,8 +223,10 @@ def loadNextLvl(workerId, mturkId):
                     for x in level_names]
     ninvs_and_level = zip(num_invs, level_names)
     ninvs_and_level.sort()
+
     for _, lvlId in ninvs_and_level:
-        if levelSolved(session, curLevelSetName, lvlId) or \
+        if levelSolved(session, curLevelSetName, lvlId,
+            workerId=(workerId if individualMode else None)) or \
            (workerId != "" and \
             levelFinishedBy(session, curLevelSetName, lvlId, workerId)):
             continue
@@ -407,8 +411,8 @@ def isTautology(inv, mturkId): #pylint: disable=unused-argument
 
 @api.method("App.tryAndVerify")
 @pp_exc
-@log_d(str, str, pp_EsprimaInvs, pp_mturkId, pp_tryAndVerifyRes)
-def tryAndVerify(levelSet, levelId, invs, mturkId):
+@log_d(str, str, pp_EsprimaInvs, pp_mturkId, bool, pp_tryAndVerifyRes)
+def tryAndVerify(levelSet, levelId, invs, mturkId, individualMode):
     """ 
         Given a level (levelSet, levelId) and a set of invaraints invs do:
         1) Find all invariants OldI that were not DEFINITELY false from the
@@ -446,10 +450,12 @@ def tryAndVerify(levelSet, levelId, invs, mturkId):
       raise Exception("Level " + str(levelId) + " " + \
                       str(levelSet) + " not a dynamic boogie level.")
 
+    workerId, _, _ = mturkId
     print repr(set);
     userInvs = set([ esprimaToBoogie(x, {}) for x in invs ])
     otherInvs = set([])
-    lastVer = getLastVerResult(levelSet, levelId, s)
+    lastVer = getLastVerResult(levelSet, levelId, s,
+      workerId=(workerId if individualMode else None))
 
     if (lastVer):
       otherInvs = otherInvs.union([parseExprAst(x) for x in lastVer["sound"]])

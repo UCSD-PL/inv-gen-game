@@ -72,6 +72,7 @@ class Args {
   static mode: string = null;
   static noifs: boolean = false;
   static use_new_var_powerup: boolean = false;
+  static individual_mode: boolean = false;
 
   static parse_args() {
     if (Args.parsed)
@@ -92,6 +93,7 @@ class Args {
     Args.mode = Args.args["mode"] || "patterns";
     Args.noifs = Args.args.hasOwnProperty("noifs");
     Args.use_new_var_powerup = !!+Args.args["nvpower"] || false;
+    Args.individual_mode = !!+Args.args["individual"];
     Args.parsed = true;
   }
   static get_hit_id(): string {
@@ -129,6 +131,10 @@ class Args {
   static get_use_new_var_powerup(): boolean {
     Args.parse_args();
     return Args.use_new_var_powerup;
+  }
+  static get_individual_mode(): boolean {
+    Args.parse_args();
+    return Args.individual_mode;
   }
 }
 
