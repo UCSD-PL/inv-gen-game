@@ -92,7 +92,7 @@ class Args {
     Args.admin_token = Args.args["adminToken"];
     Args.mode = Args.args["mode"] || "patterns";
     Args.noifs = Args.args.hasOwnProperty("noifs");
-    Args.use_new_var_powerup = !!+Args.args["nvpower"] || false;
+    Args.use_new_var_powerup = !!+Args.args["nvpower"];
     Args.individual_mode = !!+Args.args["individual"];
     Args.parsed = true;
   }
