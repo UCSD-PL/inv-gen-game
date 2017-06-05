@@ -54,7 +54,7 @@ def log(action, *pps):
               Style.DIM + str(action['time']) + reset + ':'
 
           call = red + action['method'] + "(" + reset \
-              + (red + "," + reset).join(ppArgs) + \
+              + (red + "," + reset).join(map(str, ppArgs)) + \
                red + ")" + reset
 
           if (len(action['args']) + 1 == len(pps) and 'res' in action):

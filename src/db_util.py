@@ -79,13 +79,14 @@ def addEvent(sourceName, typ, time, ename,  addr, data, session, mturkId):
   session.add(e)
   session.commit();
 
-def levelSolved(session, lvlset, lvlid):
+def levelSolved(session, lvlset, lvlid, workerId=None):
   verifys = session.query(Event).filter(Event.type == "VerifyAttempt").all()
   verifyPayls = [ x.payl() for x in verifys ]
   solved_events = [ x for x in verifyPayls
                       if (x["lvlset"] == lvlset and
                           x["lvlid"] == lvlid and
-                          len(x["post_ctrex"]) == 0) ]
+                          len(x["post_ctrex"]) == 0 and
+                          (workerId is None or x["workerId"] == workerId)) ]
   # We can't just look for a successfull "FinishEvent", since sometimes the
   # solver takes a while, and finishes successfully only after the user has
   # gotten impatient and clicked next. So look for At least 1 successful

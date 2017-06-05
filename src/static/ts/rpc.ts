@@ -34,11 +34,11 @@ function rpc_loadLvlDynamic(lvlSet: string, id: string, cb:(res: loadLvlDynamicR
 }
 
 function rpc_loadNextLvlDynamic(workerkId: string, cb:(res: loadNextLvlDynamicRes) => void) {
-  rpc.call("App.loadNextLvl", [workerkId, mturkId()], (data:any) => cb(<loadNextLvlDynamicRes>data), log);
+  rpc.call("App.loadNextLvl", [workerkId, mturkId(), Args.get_individual_mode()], (data:any) => cb(<loadNextLvlDynamicRes>data), log);
 }
 
 function rpc_genNextLvlDynamic(workerkId: string, lvlSet:string, lvlId: string, invs: invariantT[], cb:(res: loadNextLvlDynamicRes) => void) {
-  rpc.call("App.genNextLvl", [workerkId, mturkId(), lvlSet, lvlId, invs], (data:any) => cb(<loadNextLvlDynamicRes>data), log);
+  rpc.call("App.genNextLvl", [workerkId, mturkId(), lvlSet, lvlId, invs, Args.get_individual_mode()], (data:any) => cb(<loadNextLvlDynamicRes>data), log);
 }
 
 function rpc_equivalentPairs(invL1: invariantT[], invL2: invariantT[],
@@ -65,7 +65,7 @@ function rpc_tryAndVerify(lvlSet: string, lvlId: string, invs: invariantT[],
                                      ESTree.Node[], // Sound Invariants
                                      any[],// Post cond. counterexample to sound invariants
                                      any[]]) => void) {  // Post-cond counterexample to all invariants
-  rpc.call("App.tryAndVerify", [ lvlSet, lvlId, invs, mturkId() ], cb, log)
+  rpc.call("App.tryAndVerify", [ lvlSet, lvlId, invs, mturkId(), Args.get_individual_mode() ], cb, log)
 }
 
 function rpc_instantiate(templates: templateT[],
