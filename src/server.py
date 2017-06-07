@@ -24,9 +24,10 @@ from pp import pp_BoogieLvl, pp_EsprimaInv, pp_EsprimaInvs, pp_CheckInvsRes, \
 from copy import copy
 from time import time
 from datetime import datetime
-from models import open_sqlite_db, open_mysql_db, Event
+from models import open_sqlite_db, open_mysql_db, Event, LvlData
 from db_util import playersWhoStartedLevel, enteredInvsForLevel,\
         getOrAddSource, addEvent, levelSolved, levelFinishedBy
+from sqlalchemy import case, func
 from atexit import register
 from server_common import openLog, log, log_d
 
@@ -604,6 +605,35 @@ def getSolutions(): # Lvlset is assumed to be current by default
     boogieSoln = parseExprAst(soln)
     res[curLevelSetName + "," + lvlId] = [boogieToEsprimaExpr(boogieSoln)]
   return res
+
+@api.method("App.getDashboard")
+@pp_exc
+@log_d()
+def getDashboard(inputToken):
+  """ Return data for the dashboard view; only used by the dashboard.
+  """
+  if inputToken != adminToken:
+    raise Exception(str(inputToken) + " not a valid token.")
+
+  s = sessionF()
+  rows = s.query(
+      LvlData.experiment,
+      LvlData.lvl,
+      # count includes all non-null values, so we need case to exclude values
+      # that do not match (the default case returns null)
+      func.count(case({1: 1}, value=LvlData.startflag)),
+      func.count(case({0: 1}, value=LvlData.startflag)),
+      func.count(case({1: 1}, value=LvlData.provedflag))
+    ) \
+    .group_by(LvlData.experiment, LvlData.lvl)
+
+  return [ dict(zip([
+      "experiment",
+      "lvl",
+      "nStarted",
+      "nFinished",
+      "nProved"
+    ], r)) for r in rows ]
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description="invariant gen game server")

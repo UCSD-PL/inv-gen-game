@@ -31,6 +31,19 @@ class Event(Base):
     return json.loads(s.payload)
 
 
+class LvlData(Base):
+  __tablename__ = "lvldata"
+  id = Column(Integer, primary_key=True, autoincrement=True)
+  worker = Column(String(256), ForeignKey("sources.name"))
+  hit = Column(String(64))
+  experiment = Column(String(256))
+  lvlset = Column(String(256))
+  lvl = Column(String(256))
+  time = Column(DateTime)
+  startflag = Column(Integer, nullable=False)
+  provedflag = Column(Integer, nullable=False)
+
+
 def open_sqlite_db(path):
     engine = create_engine("sqlite:///" + path, echo=False,
       connect_args={'check_same_thread':False});
