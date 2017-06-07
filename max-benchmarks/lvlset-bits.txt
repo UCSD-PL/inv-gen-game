@@ -1,0 +1,14 @@
+	[ "overflow32bit", 
+		[
+			"../max-benchmarks/overflow32bit.desugared.bpl",
+			"../max-benchmarks/overflow32bit.c",
+			"../max-benchmarks/overflow32bit.bpl"
+		]
+	],
+	[ "gcd", 
+		[
+			"../max-benchmarks/gcd.desugared.bpl",
+			"../max-benchmarks/gcd.c",
+			"../max-benchmarks/gcd.bpl"
+		]
+	],

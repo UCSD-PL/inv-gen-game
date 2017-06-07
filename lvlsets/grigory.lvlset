@@ -1,0 +1,26 @@
+{
+  "name" : "grigory",
+  "levels": [
+    [ "abdu_01", 
+		[
+			"../max-benchmarks/grigory_abdu_01.desugared.bpl",
+			"../max-benchmarks/grigory_abdu_01.c",
+			"../max-benchmarks/grigory_abdu_01.bpl"
+		]
+	],
+	[ "abdu_02", 
+		[
+			"../max-benchmarks/grigory_abdu_02.desugared.bpl",
+			"../max-benchmarks/grigory_abdu_02.c",
+			"../max-benchmarks/grigory_abdu_02.bpl"
+		]
+	],
+    [ "abdu_03", 
+		[
+			"../max-benchmarks/grigory_abdu_03.desugared.bpl",
+			"../max-benchmarks/grigory_abdu_03.c",
+			"../max-benchmarks/grigory_abdu_03.bpl"
+		]
+	]
+  ]
+}

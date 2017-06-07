@@ -1,0 +1,13 @@
+{
+  "name" : "max",
+  "levels": [
+    [ 
+		"1", 
+		[
+			"../max-benchmarks/01.desugared.bpl",
+			"../max-benchmarks/01.c",
+			"../max-benchmarks/01.bpl"
+		]
+	]
+  ]
+}
