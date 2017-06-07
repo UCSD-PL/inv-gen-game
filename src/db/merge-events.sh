@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 # Merge one sqlite event database into another
 sqlite3 "$1" <<EOF
-ATTACH '$2' AS src;
+ATTACH '$2' AS srcdb;
 BEGIN;
-INSERT INTO sources
+INSERT INTO main.sources
 SELECT *
-FROM src.sources
+FROM srcdb.sources
 WHERE
-  name NOT IN sources;
-INSERT INTO events
+  name NOT IN main.sources;
+INSERT INTO main.events
   (type, experiment, src, addr, time, payload)
 SELECT
   type, experiment, src, addr, time, payload
-FROM src.events;
+FROM srcdb.events;
 COMMIT;
-DETACH src;
+DETACH srcdb;
 EOF
