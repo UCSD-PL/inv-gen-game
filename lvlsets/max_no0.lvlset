@@ -1,0 +1,47 @@
+{
+  "name" : "max",
+  "levels": [
+	[ "sorin01", 
+		[
+			"../max-benchmarks/sorin01.desugared.bpl",
+			"../max-benchmarks/sorin01.c",
+			"../max-benchmarks/sorin01.bpl"
+		]
+	],
+	[ "sorin02", 
+		[
+			"../max-benchmarks/sorin02.desugared.bpl",
+			"../max-benchmarks/sorin02.c",
+			"../max-benchmarks/sorin02.bpl"
+		]
+	],
+	[ "sorin03", 
+		[
+			"../max-benchmarks/sorin03.desugared.bpl",
+			"../max-benchmarks/sorin03.c",
+			"../max-benchmarks/sorin03.bpl"
+		]
+	],
+	[ "sorin04", 
+		[
+			"../max-benchmarks/sorin04.desugared.bpl",
+			"../max-benchmarks/sorin04.c",
+			"../max-benchmarks/sorin04.bpl"
+		]
+	],
+	[ "overflow", 
+		[
+			"../max-benchmarks/overflow.desugared.bpl",
+			"../max-benchmarks/overflow.c",
+			"../max-benchmarks/overflow.bpl"
+		]
+	],
+	[ "sqrt", 
+		[
+			"../max-benchmarks/sqrt.desugared.bpl",
+			"../max-benchmarks/sqrt.c",
+			"../max-benchmarks/sqrt.bpl"
+		]
+	]	
+  ]
+}

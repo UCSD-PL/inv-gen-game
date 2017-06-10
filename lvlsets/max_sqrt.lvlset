@@ -1,0 +1,12 @@
+{
+  "name" : "max",
+  "levels": [
+	[ "sqrt", 
+		[
+			"../max-benchmarks/sqrt.desugared.bpl",
+			"../max-benchmarks/sqrt.c",
+			"../max-benchmarks/sqrt.bpl"
+		]
+	]	
+  ]
+}

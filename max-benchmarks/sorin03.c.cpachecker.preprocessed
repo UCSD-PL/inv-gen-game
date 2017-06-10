@@ -1,4 +1,4 @@
-# 1 "/mnt/e/Gamification/inv-gen-game/lvlsets/../max-benchmarks/sorin02.c"
+# 1 "/mnt/e/Gamification/inv-gen-game/lvlsets/../max-benchmarks/sorin03.c"
 # 1 "<built-in>"
 # 1 "<command-line>"
 # 1 "/usr/include/stdc-predef.h" 1 3 4
@@ -67,10 +67,11 @@ void __tmp_assert(int cond) {
              ;
 }
 # 1 "<command-line>" 2
-# 1 "/mnt/e/Gamification/inv-gen-game/lvlsets/../max-benchmarks/sorin02.c"
+# 1 "/mnt/e/Gamification/inv-gen-game/lvlsets/../max-benchmarks/sorin03.c"
+extern void __VERIFIER_error() __attribute__ ((__noreturn__));
 extern int __VERIFIER_nondet_int();
 # 1 "/usr/include/assert.h" 1 3 4
-# 4 "/mnt/e/Gamification/inv-gen-game/lvlsets/../max-benchmarks/sorin02.c" 2
+# 5 "/mnt/e/Gamification/inv-gen-game/lvlsets/../max-benchmarks/sorin03.c" 2
 
 
 
@@ -81,14 +82,15 @@ extern int __VERIFIER_nondet_int();
 void main()
 {
  int n = __VERIFIER_nondet_int();
- if(!(n>0)) exit(0);
- int a = 1;
- int su = 1;
- int t = 1;
- while(su <= n) {
-   t = t + 2;
-   su = su + t;
-   a = a + 1;
+ if(!(1<=n && n<=1000)) exit(0);
+ int s = 0;
+ int j = 0;
+ int i = 1;
+
+ while(i <= n) {
+    s = s + i;
+    j = i;
+    i = i + 1;
  }
- __tmp_assert((a*a == su));
+ __tmp_assert(2*s == n*(n+1));
 }

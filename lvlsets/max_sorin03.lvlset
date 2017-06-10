@@ -1,0 +1,12 @@
+{
+  "name" : "max",
+  "levels": [
+	[ "sorin03", 
+		[
+			"../max-benchmarks/sorin03.desugared.bpl",
+			"../max-benchmarks/sorin03.c",
+			"../max-benchmarks/sorin03.bpl"
+		]
+	]
+  ]
+}

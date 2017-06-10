@@ -1,13 +1,12 @@
-procedure main()
+procedure main()returns ()
 {
   var x,y,k: int;
   x := y mod k;
-  while (x<k)
-  //invariant (x == y mod k);
+  while (x<k && k > 1)
+  invariant (x == y mod k);
   {
-    // can enhance the benchmark by
-    // assigning x,y,k new values here
-    // using conditionals etc.
+    y := y + 2;
+    k := k - 1;
     x := y mod k;
   }
   assert(x == y mod k);

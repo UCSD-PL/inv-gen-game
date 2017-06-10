@@ -1,6 +1,6 @@
 extern void __VERIFIER_error() __attribute__ ((__noreturn__));
 extern void __VERIFIER_assume(int);
-extern unsigned int __VERIFIER_nondet_int(void);
+extern int __VERIFIER_nondet_int();
 #include <assert.h>
 
 /*
@@ -18,9 +18,9 @@ void main()
 	int i = 1;
 
  while(i <= n) {
-    s := s + i;
-    j := i;
-    i := i + 1;
+    s = s + i;
+    j = i;
+    i = i + 1;
  }
  static_assert(2*s == n*(n+1));
 }

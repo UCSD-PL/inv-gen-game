@@ -1,0 +1,12 @@
+{
+  "name" : "max",
+  "levels": [
+	[ "overflow", 
+		[
+			"../max-benchmarks/overflow.desugared.bpl",
+			"../max-benchmarks/overflow.c",
+			"../max-benchmarks/overflow.bpl"
+		]
+	]
+  ]
+}

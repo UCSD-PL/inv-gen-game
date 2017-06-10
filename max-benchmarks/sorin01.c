@@ -1,3 +1,4 @@
+extern int __VERIFIER_nondet_int();
 #include <assert.h>
 
 /*
@@ -8,6 +9,7 @@
 
 void main()
 {
+	int k = __VERIFIER_nondet_int();
  int j=0; int i=0;
  while(j<1000) {
    i = i + k;
