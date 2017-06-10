@@ -1,7 +1,7 @@
 from tempfile import NamedTemporaryFile
 from subprocess import call, check_output, STDOUT, check_call, \
         CalledProcessError
-from os.path import dirname, abspath, relpath
+from os.path import dirname, abspath, relpath, isfile
 from pydot import graph_from_dot_file
 from lib.common.util import unique, error
 from z3 import parse_smt2_string
@@ -54,7 +54,16 @@ def runInvGen(cppFile, mainRoutine):
   with NamedTemporaryFile(suffix=".front.out", delete=False) as frontOut,\
        NamedTemporaryFile(suffix=".invgen.out", delete=False) as invgenOut,\
        NamedTemporaryFile(suffix=".pl", delete=False) as transitionsF:
-    args = [ INVGEN_PATH + "/frontend",
+    if isfile(INVGEN_PATH + "/frontend"):
+      frontendName = "/frontend"
+    else:
+      frontendName = "/frontend.exe"
+    if isfile(INVGEN_PATH + "/invgen"):
+      invgenName = "/invgen"
+    else:
+      invgenName = "/invgen.exe"
+
+    args = [ INVGEN_PATH + frontendName,
               "-main", mainRoutine,
               cppFile,
               "-o", transitionsF.name]
@@ -73,7 +82,7 @@ def runInvGen(cppFile, mainRoutine):
       raise e
     
     error("Transitions file in ", transitionsF.name)
-    args = [ INVGEN_PATH + "/invgen", transitionsF.name]
+    args = [ INVGEN_PATH + invgenName, transitionsF.name]
     error("Invgen output in ", invgenOut.name)
     try:
       raw = check_output(args, stderr=STDOUT);

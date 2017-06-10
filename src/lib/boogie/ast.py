@@ -91,6 +91,11 @@ class AstBinExpr(AstNode):
     def __str__(s):
         return "(" + str(s.lhs) + " " + str(s.op) + " " + str(s.rhs) + ")"
 
+class AstFuncExpr(AstNode):
+    def __init__(s, funcName, *ops):  AstNode.__init__(s, funcName, *ops)
+    def __str__(s):
+        return str(s.funcName) + "(" + ",".join(map(str, s.ops)) +  ")"
+
 class AstBuilder(BoogieParser):
   def onAtom(s, prod, st, loc, toks):
     assert len(toks) == 1

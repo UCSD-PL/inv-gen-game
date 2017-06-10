@@ -1,4 +1,4 @@
-#pylint: disable=global-variable-not-assigned,no-self-argument
+# pylint: disable=global-variable-not-assigned,no-self-argument
 import lib.boogie.ast as ast
 import z3;
 
@@ -13,6 +13,7 @@ import atexit
 
 ctxHolder = local();
 
+
 def val_to_boogie(v):
     if (isinstance(v, z3.IntNumRef)):
         return ast.AstNumber(v.as_long())
@@ -25,173 +26,184 @@ def val_to_boogie(v):
     else:
         return ast.AstNumber(int(v))
 
-def env_to_expr(env, suff = ""):
+
+def env_to_expr(env, suff=""):
     return ast.ast_and(
-            [ ast.AstBinExpr(ast.AstId(k + suff), "==", val_to_boogie(v))
-                for (k,v) in env.iteritems() ])
+        [ast.AstBinExpr(ast.AstId(k + suff), "==", val_to_boogie(v))
+         for (k, v) in env.iteritems()])
+
 
 def getCtx():
-  global ctxHolder
-  ctx = getattr(ctxHolder, "ctx", None)
-  if (ctx == None):
-    ctx = z3.Context();
-    ctxHolder.ctx = ctx;
-  return ctx
+    global ctxHolder
+    ctx = getattr(ctxHolder, "ctx", None)
+    if (ctx == None):
+        ctx = z3.Context();
+        ctxHolder.ctx = ctx;
+    return ctx
+
 
 class WrappedZ3Exception(BaseException):
-  def __init__(s, value):
-    BaseException.__init__(s);
-    s._value = value;
+    def __init__(s, value):
+        BaseException.__init__(s);
+        s._value = value;
+
 
 def wrapZ3Exc(f):
-  def wrapped(*args, **kwargs):
-    try:
-      return f(*args, **kwargs);
-    except z3.z3types.Z3Exception as e:
-      raise WrappedZ3Exception(e.value);
-  return wrapped
+    def wrapped(*args, **kwargs):
+        try:
+            return f(*args, **kwargs);
+        except z3.z3types.Z3Exception as e:
+            raise WrappedZ3Exception(e.value);
+
+    return wrapped
+
 
 class Z3ServerInstance(object):
-  def __init__(s):
-    s._solver = z3.Solver(ctx=getCtx());
+    def __init__(s):
+        s._solver = z3.Solver(ctx=getCtx());
 
-  @Pyro4.expose
-  @wrapZ3Exc
-  def add(s, sPred):
-    pred = z3.parse_smt2_string(sPred, ctx=s._solver.ctx)
-    s._solver.add(pred)
-    return 0;
+    @Pyro4.expose
+    @wrapZ3Exc
+    def add(s, sPred):
+        pred = z3.parse_smt2_string(sPred, ctx=s._solver.ctx)
+        s._solver.add(pred)
+        return 0;
 
-  @Pyro4.expose
-  @wrapZ3Exc
-  def check(s, comm):
-    sys.stderr.write("check(" + comm + "):" + s._solver.to_smt2() + "\n");
-    return str(s._solver.check());
+    @Pyro4.expose
+    @wrapZ3Exc
+    def check(s, sComm):
+        sys.stderr.write("check(" + sComm + "):" + s._solver.to_smt2() + "\n");
+        comm = z3.parse_smt2_string(sComm, ctx=s._solver.ctx)
+        return str(s._solver.check(comm));
 
-  @Pyro4.expose
-  @wrapZ3Exc
-  def model(s):
-    m = s._solver.model()
-    return { x.name(): m[x].as_long() for x in m }
+    @Pyro4.expose
+    @wrapZ3Exc
+    def model(s):
+        m = s._solver.model()
+        return {x.name(): m[x].as_long() for x in m}
 
-  @Pyro4.expose
-  @wrapZ3Exc
-  def push(s):
-    s._solver.push();
-    return 0;
+    @Pyro4.expose
+    @wrapZ3Exc
+    def push(s):
+        s._solver.push();
+        return 0;
 
-  @Pyro4.expose
-  @wrapZ3Exc
-  def pop(s):
-    s._solver.pop();
-    return 0;
+    @Pyro4.expose
+    @wrapZ3Exc
+    def pop(s):
+        s._solver.pop();
+        return 0;
 
 
 def startAndWaitForZ3Instance():
-  q = PQueue();
-  def runDaemon(q):
-    import os
+    q = PQueue();
 
-    out = "z3_child.%d.out" % os.getpid()
-    err = "z3_child.%d.err" % os.getpid()
+    def runDaemon(q):
+        import os
 
-    error("Redirecting child", os.getpid(), "streams to", out, err)
+        out = "z3_child.%d.out" % os.getpid()
+        err = "z3_child.%d.err" % os.getpid()
 
-    sys.stdout.close();
-    sys.stderr.close();
+        error("Redirecting child", os.getpid(), "streams to", out, err)
 
-    sys.stdout = open(out, "w")
-    sys.stderr = open(err, "w")
+        sys.stdout.close();
+        sys.stderr.close();
 
-    daemon = Pyro4.Daemon();
-    uri = daemon.register(Z3ServerInstance)
-    sys.stderr.write( "Notify parent of my uri: " + str(uri) + "\n")
-    sys.stderr.flush();
-    q.put(uri)
-    # Small window for racing
-    daemon.requestLoop();
+        sys.stdout = open(out, "w")
+        sys.stderr = open(err, "w")
 
-  p = Process(target=runDaemon, args=(q,))
-  p.start();
-  uri = q.get();
-  return p, uri
+        daemon = Pyro4.Daemon();
+        uri = daemon.register(Z3ServerInstance)
+        sys.stderr.write("Notify parent of my uri: " + str(uri) + "\n")
+        sys.stderr.flush();
+        q.put(uri)
+        # Small window for racing
+        daemon.requestLoop();
+
+    p = Process(target=runDaemon, args=(q,))
+    p.start();
+    uri = q.get();
+    return p, uri
+
 
 class Unknown(Exception):
-  def __init__(s, q):
-    Exception.__init__(s, str(q) + " returned unknown.")
-    s.query = q;
+    def __init__(s, q):
+        Exception.__init__(s, str(q) + " returned unknown.")
+        s.query = q;
+
 
 class Crashed(Exception):
     pass;
 
+
 class Z3ProxySolver:
     def __init__(s, uri, proc):
-      s._uri = uri;
-      s._proc = proc;
-      s._remote = Pyro4.Proxy(uri);
-      s._timeout = None
+        s._uri = uri;
+        s._proc = proc;
+        s._remote = Pyro4.Proxy(uri);
+        s._timeout = None
 
     def add(s, p):
-      dummy = z3.Solver(ctx=getCtx());
-      dummy.add(p);
-      strP = dummy.to_smt2();
-      strP = strP.replace("(check-sat)\n", "");
-      s._remote.add(strP)
-      return None;
+        dummy = z3.Solver(ctx=getCtx());
+        dummy.add(p);
+        strP = dummy.to_smt2();
+        strP = strP.replace("(check-sat)\n", "");
+        s._remote.add(strP)
+        return None;
 
     def push(s):
-      s._remote.push();
-      return None
+        s._remote.push();
+        return None
 
     def pop(s):
-      s._remote.pop();
-      return None
+        s._remote.pop();
+        return None
 
-    def check(s, timeout = None, comm = ""):
-      old_timeout = s._timeout
-      s._remote._pyroTimeout = timeout;
-      try:
-        r = s._remote.check(comm)
-      except Pyro4.errors.TimeoutError:
-        sys.stderr.write("Child " + str(s._proc.pid) + \
-                         "Timedout. Restarting.\n")
-        r = "unknown"
-        s._restartRemote();
-      except Exception,e:
-        sys.stdout.write("Got exception: " + str(e) + "\n")
-        ecode = s._proc.exitcode
-        s._restartRemote();
-          
-        if (ecode == -11): # Retry Z3 segfaults
-          r = "crashed"
+    def check(s, timeout=None, comm=""):
+        old_timeout = s._timeout
+        s._remote._pyroTimeout = timeout;
+        try:
+            r = s._remote.check(comm)
+        except Pyro4.errors.TimeoutError:
+            sys.stderr.write("Child " + str(s._proc.pid) + \
+                             "Timedout. Restarting.\n")
+            r = "unknown"
+            s._restartRemote();
+        except Exception, e:
+            sys.stdout.write("Got exception: " + str(e) + "\n")
+            ecode = s._proc.exitcode
+            s._restartRemote();
+
+            if (ecode == -11):  # Retry Z3 segfaults
+                r = "crashed"
+            else:
+                r = "unknown"
+        finally:
+            s._remote._pyroTimeout = old_timeout;
+
+        if (r == "sat"):
+            return z3.sat;
+        elif (r == "unsat"):
+            return z3.unsat;
+        elif (r == "unknown"):
+            raise Unknown("storing query NYI in proxy solver")
+        elif (r == "crashed"):
+            raise Crashed()
         else:
-          r = "unknown"
-      finally:
-        s._remote._pyroTimeout = old_timeout;
-
-      if (r=="sat"):
-        return z3.sat;
-      elif (r =="unsat"):
-        return z3.unsat;
-      elif (r == "unknown"):
-        raise Unknown("storing query NYI in proxy solver")
-      elif (r == "crashed"):
-        raise Crashed()
-      else:
-        raise Exception("bad reply to check: " + str(r));
+            raise Exception("bad reply to check: " + str(r));
 
     def model(s):
-      return s._remote.model();
+        return s._remote.model();
 
     def to_smt2(s, p):
-      dummy = z3.Solver(ctx=getCtx());
-      dummy.add(p);
-      strP = dummy.to_smt2();
-      strP = strP.replace("(check-sat)\n", "");
-      strP = strP.replace(
-              "; benchmark generated from python API\n" +\
-              "(set-info :status unknown)\n", "");
-      return strP
+        dummy = z3.Solver(ctx=getCtx());
+        dummy.add(p);
+        strP = dummy.to_smt2();
+        strP = strP.replace("(check-sat)\n", "");
+        strP = strP.replace(
+            "; benchmark generated from python API\n" + \
+            "(set-info :status unknown)\n", "");
+        return strP
 
     def _restartRemote(s):
         # Kill Old Process
@@ -202,15 +214,20 @@ class Z3ProxySolver:
         s._remote = Pyro4.Proxy(s._uri);
         s.push();
 
+
 z3ProcessPoolCond = Condition();
-MAX_Z3_INSTANCES=100;
+MAX_Z3_INSTANCES = 100;
 ports = set(range(8100, 8100 + MAX_Z3_INSTANCES))
-z3ProcessPool = { }
+z3ProcessPool = {}
+
 
 def _cleanupChildProcesses():
-  for proxy in z3ProcessPool:
-    proxy._proc.terminate();
+    for proxy in z3ProcessPool:
+        proxy._proc.terminate();
+
+
 atexit.register(_cleanupChildProcesses)
+
 
 def getSolver():
     try:
@@ -219,32 +236,33 @@ def getSolver():
         # If we have none wait on the condition variable for request to
         # finish or processes to timeout and die.
         while True:
-          free = [ (proxy, busy) for (proxy, busy) in z3ProcessPool.iteritems()
-                      if (not busy) ]
+            free = [(proxy, busy) for (proxy, busy) in z3ProcessPool.iteritems()
+                    if (not busy)]
 
-          if (len(free) == 0 and len(ports) == 0):
-            print "No free instances and no ports for new instances..."
-            z3ProcessPoolCond.wait();
-          else:
-            break;
+            if (len(free) == 0 and len(ports) == 0):
+                print "No free instances and no ports for new instances..."
+                z3ProcessPoolCond.wait();
+            else:
+                break;
 
         # We either have a free z3 solver or a process died and freed
         # up a port for us to launch a new solver with.
         if (len(free) > 0):
-          #print "Assigning existing z3 proxy"
-          solver = free[randint(0, len(free)-1)][0]
+            # print "Assigning existing z3 proxy"
+            solver = free[randint(0, len(free) - 1)][0]
         else:
-          #print "Creating new z3 proxy"
-          p, uri = startAndWaitForZ3Instance()
-          solver = Z3ProxySolver(uri, p)
+            # print "Creating new z3 proxy"
+            p, uri = startAndWaitForZ3Instance()
+            solver = Z3ProxySolver(uri, p)
 
         z3ProcessPool[solver] = (True, False);
-        #print "z3ProcessPool has ", len(z3ProcessPool), "entries"
+        # print "z3ProcessPool has ", len(z3ProcessPool), "entries"
     finally:
         z3ProcessPoolCond.release();
 
     solver.push();
     return solver;
+
 
 def releaseSolver(solver):
     if (solver == None):
@@ -257,121 +275,146 @@ def releaseSolver(solver):
     finally:
         z3ProcessPoolCond.release();
 
+
 def Int(n):
     return z3.Int(n, ctx=getCtx());
+
+
 def Or(*args):
     return z3.Or(*(args + (getCtx(),)))
+
+
 def And(*args):
     return z3.And(*(args + (getCtx(),)))
+
+
 def Not(pred):
     return z3.Not(pred, ctx=getCtx())
-def Implies(a,b):
-    return z3.Implies(a,b, ctx=getCtx())
+
+
+def Implies(a, b):
+    return z3.Implies(a, b, ctx=getCtx())
+
+
 def IntVal(v):
     return z3.IntVal(v, ctx=getCtx())
+
+
 def BoolVal(v):
     return z3.BoolVal(v, ctx=getCtx())
 
-def counterex(pred, timeout=None, comm = ""):
+
+def counterex(pred, timeout=None, comm=""):
     s = None
     try:
-      s = getSolver()
-      while True:
-        try:
-          s.add(Not(pred))
-          res = s.check(timeout, comm)
-          m = None if res == z3.unsat else s.model()
-        except Crashed:
-          continue;
-        break;
+        s = getSolver()
+        while True:
+            try:
+                s.add(Not(pred))
+                res = s.check(timeout, comm)
+                m = None if res == z3.unsat else s.model()
+            except Crashed:
+                continue;
+            break;
 
-      return m;
+        return m;
     finally:
-      if (s):
-          releaseSolver(s);
+        if (s):
+            releaseSolver(s);
 
-def counterexamples(pred, num, timeout=None, comm = ""):
+
+def counterexamples(pred, num, timeout=None, comm=""):
     s = None
     assert num > 0
     try:
-      s = getSolver()
-      s.add(Not(pred))
-      counterexes = [ ]
-      while len(counterexes) < num:
-        try:
-          res = s.check(timeout, comm)
-          if res == z3.unsat:
-              break;
+        s = getSolver()
+        s.add(Not(pred))
+        counterexes = []
+        while len(counterexes) < num:
+            try:
+                res = s.check(timeout, comm)
+                if res == z3.unsat:
+                    break;
 
-          env = s.model()
-          counterexes.append(env)
-          s.add(Not(env_to_expr(env)))
-        except Crashed:
-          continue;
-        break;
+                env = s.model()
+                counterexes.append(env)
+                s.add(Not(env_to_expr(env)))
+            except Crashed:
+                continue;
+            break;
 
-      return counterexes;
+        return counterexes;
     finally:
-      releaseSolver(s);
+        releaseSolver(s);
+
 
 def satisfiable(pred, timeout=None):
     s = None
     try:
-      s = getSolver()
-      s.add(pred);
-      res = s.check(timeout)
-      return res == z3.sat;
+        s = getSolver()
+        s.add(pred);
+        res = s.check(timeout)
+        return res == z3.sat;
     finally:
-      releaseSolver(s)
+        releaseSolver(s)
+
 
 def unsatisfiable(pred, timeout=None):
     s = None
     try:
-      s = getSolver()
-      s.add(pred);
-      res = s.check(timeout)
-      return res == z3.unsat;
+        s = getSolver()
+        s.add(pred);
+        res = s.check(timeout)
+        return res == z3.unsat;
     finally:
-      releaseSolver(s)
+        releaseSolver(s)
+
 
 def model(pred):
     s = None
     try:
-      s = getSolver();
-      s.add(pred);
-      assert s.check() == z3.sat
-      m = s.model();
-      return m;
+        s = getSolver();
+        s.add(pred);
+        assert s.check() == z3.sat
+        m = s.model();
+        return m;
     finally:
-      releaseSolver(s);
+        releaseSolver(s);
+
 
 def maybeModel(pred):
     s = None
     try:
-      s = getSolver();
-      s.add(pred);
-      res = s.check();
-      m = s.model() if res == z3.sat else None
-      return m
+        s = getSolver();
+        s.add(pred);
+        res = s.check();
+        m = s.model() if res == z3.sat else None
+        return m
     finally:
-      releaseSolver(s);
+        releaseSolver(s);
+
 
 def simplify(pred, *args, **kwargs):
     # No need to explicitly specify ctx here since z3.simplify gets it from pred
     return z3.simplify(pred, *args, **kwargs)
 
+
 def implies(inv1, inv2):
     return unsatisfiable(And(inv1, Not(inv2)))
 
+
 def equivalent(inv1, inv2):
-    return implies(inv1,inv2) and implies(inv2, inv1)
+    return implies(inv1, inv2) and implies(inv2, inv1)
+
 
 def tautology(inv):
     return unsatisfiable(Not(inv))
 
+
 class AllIntTypeEnv:
     def __getitem__(s, i):
         return Int
+
 
 def expr_to_z3(expr, typeEnv):
     if isinstance(expr, ast.AstNumber):
@@ -394,7 +437,7 @@ def expr_to_z3(expr, typeEnv):
         e1 = expr_to_z3(expr.lhs, typeEnv)
         e2 = expr_to_z3(expr.rhs, typeEnv)
         if expr.op == "<==>":
-            return And(Implies(e1, e2), Implies(e2,e1))
+            return And(Implies(e1, e2), Implies(e2, e1))
         elif expr.op == "==>":
             return Implies(e1, e2)
         elif expr.op == "||":
@@ -428,6 +471,7 @@ def expr_to_z3(expr, typeEnv):
     else:
         raise Exception("Unknown expression " + str(expr))
 
+
 def stmt_to_z3(stmt, typeEnv):
     if (isinstance(stmt, ast.AstLabel)):
         stmt = stmt.stmt
@@ -443,6 +487,7 @@ def stmt_to_z3(stmt, typeEnv):
     else:
         raise Exception("Can't convert " + str(stmt))
 
+
 def isnum(s):
     try:
         _ = int(s)
@@ -450,29 +495,31 @@ def isnum(s):
     except ValueError:
         return False
 
+
 def ids(z3expr):
     if len(z3expr.children()) == 0:
         return [z3expr] if not isnum(str(z3expr)) else []
     else:
-        childIds = reduce(lambda x,y: x+y, map(ids, z3expr.children()), [])
-        tmp = { str(x): x for x in childIds }
+        childIds = reduce(lambda x, y: x + y, map(ids, z3expr.children()), [])
+        tmp = {str(x): x for x in childIds}
         return list(tmp.keys())
+
 
 def z3_expr_to_boogie(expr):
     d = expr.decl();
     if (d.arity() == 0):
-        #Literals and Identifiers
+        # Literals and Identifiers
         if (isinstance(expr.sort(), z3.BoolSortRef)):
-            if (z3.is_true(expr)): # No need for explicit ctx
+            if (z3.is_true(expr)):  # No need for explicit ctx
                 return ast.AstTrue()
-            elif (z3.is_false(expr)): # No need for explicit ctx
+            elif (z3.is_false(expr)):  # No need for explicit ctx
                 return ast.AstFalse()
             else:
                 return ast.AstId(d.name())
         else:
             assert isinstance(expr.sort(), z3.ArithSortRef), \
-                    "For now only handle bools and ints"
-            if (z3.is_int_value(expr)): # No need for explicit ctx
+                "For now only handle bools and ints"
+            if (z3.is_int_value(expr)):  # No need for explicit ctx
                 return ast.AstNumber(int(str(expr)))
             else:
                 return ast.AstId(d.name())
@@ -484,45 +531,62 @@ def z3_expr_to_boogie(expr):
             'not': '!',
         }[d.name()]
         return ast.AstUnExpr(boogie_op, arg);
+    elif (d.name() == "if" and d.arity() == 2):
+        # TODO: Check types of branches are bool
+        c = expr.children();
+        cond = z3_expr_to_boogie(c[0])
+        thenB = z3_expr_to_boogie(c[1]);
+        return ast.AstBinExpr(cond, "==>", thenB);
     elif (d.arity() == 2):
         # Binary operators
-        boogie_op, assoc = {
-            "+": ("+","left"),
-            "-": ("-","left"),
-            "*": ("*","left"),
-            "div": ("div","left"),
-            "mod": ("mod","none"),
-            "=": ("==","none"),
-            "distinct":("!=","none"),
-            "<": ("<","none"),
-            ">": (">","none"),
-            "<=": ("<=","none"),
-            ">=": (">=","none"),
-            "and": ("&&","left"),
-            "or": ("||","left"),
-            "=>": ("==>", "none"),
-            "Implies": ("==>", "none"),
-        }[d.name()]
-
+        try:
+            boogie_op, assoc = {
+                "+": ("+", "left"),
+                "-": ("-", "left"),
+                "*": ("*", "left"),
+                "div": ("div", "left"),
+                "mod": ("mod", "none"),
+                "=": ("==", "none"),
+                "distinct": ("!=", "none"),
+                "<": ("<", "none"),
+                ">": (">", "none"),
+                "<=": ("<=", "none"),
+                ">=": (">=", "none"),
+                "and": ("&&", "left"),
+                "or": ("||", "left"),
+                "=>": ("==>", "none"),
+                "Implies": ("==>", "none"),
+            }[d.name()]
+        except:
+            boogie_op, assoc = d.name(), "func";
         c = expr.children();
-        while (len(c) > 2):
-            if (assoc == "none"):
-                raise Exception("Error: Expression " + str(expr) + " has " +\
-                    len(c) + " children: " + c + " but root operator " + \
-                    d.name() + " is non-associative.")
+        if assoc == "func":
+            try:
+                pars = map(z3_expr_to_boogie, c)
+                func = ast.AstId(boogie_op)
+                fun = ast.AstFuncExpr(func, *pars)
+            except Exception, ex:
+                error(ex.message)
+            return fun
+        else:
+            while (len(c) > 2):
+                if (assoc == "none"):
+                    raise Exception("Error: Expression " + str(expr) + " has " + \
+                                    len(c) + " children: " + c + " but root operator " + \
+                                    d.name() + " is non-associative.")
 
-            if (assoc == "left"):
-                lhs = z3_expr_to_boogie(c[0]) \
+                if (assoc == "left"):
+                    lhs = z3_expr_to_boogie(c[0]) \
                         if (not isinstance(c[0], ast.AstNode)) else c[0]
-                rhs = z3_expr_to_boogie(c[1])
-                c[0:2] = [ ast.AstBinExpr(lhs, boogie_op, rhs) ]
-            else:
-                raise Exception("NYI")
+                    rhs = z3_expr_to_boogie(c[1])
+                    c[0:2] = [ast.AstBinExpr(lhs, boogie_op, rhs)]
+                else:
+                    raise Exception("NYI")
 
-        lhs = z3_expr_to_boogie(c[0]) \
+            lhs = z3_expr_to_boogie(c[0]) \
                 if (not isinstance(c[0], ast.AstNode)) else c[0]
-        rhs = z3_expr_to_boogie(c[1])
-        return ast.AstBinExpr(lhs, boogie_op, rhs)
+            rhs = z3_expr_to_boogie(c[1])
+            return ast.AstBinExpr(lhs, boogie_op, rhs)
     elif (d.name() == "if"):
         # TODO: Check types of branches are bool
         c = expr.children();
@@ -530,15 +594,16 @@ def z3_expr_to_boogie(expr):
         thenB = z3_expr_to_boogie(c[1]);
         elseB = z3_expr_to_boogie(c[2]);
         return ast.AstBinExpr(
-                ast.AstBinExpr(cond, "==>", thenB),
-                "&&",
-                ast.AstBinExpr(ast.AstUnExpr("!", cond), "==>", elseB));
+            ast.AstBinExpr(cond, "==>", thenB),
+            "&&",
+            ast.AstBinExpr(ast.AstUnExpr("!", cond), "==>", elseB));
     else:
         raise Exception("Can't translate z3 expression " + str(expr) +
-            " to boogie.")
+                        " to boogie.")
+
 
 def to_smt2(p):
-  s = getSolver();
-  res = s.to_smt2(p)
-  releaseSolver(s);
-  return res
+    s = getSolver();
+    res = s.to_smt2(p)
+    releaseSolver(s);
+    return res

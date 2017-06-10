@@ -1,14 +1,17 @@
 from tempfile import NamedTemporaryFile
 from subprocess import call, check_output, STDOUT
 from os.path import dirname, abspath, relpath
+import os
 from pydot import graph_from_dot_file
 from lib.common.util import unique
 from z3 import parse_smt2_string
 import re
 
 MYDIR = dirname(abspath(relpath(__file__)))
+
 CPA_PATH = MYDIR + \
-    "/../../../env/third_party/cpa_checker_1.4/CPAchecker-1.4-svcomp16c-unix/"
+        "/../../../env/third_party/cpa_checker_1.4/CPAchecker-1.4-svcomp16c-unix/"
+
 
 def findLoopHeaderLabel(dotFile):
   g = unique(graph_from_dot_file(dotFile))
@@ -79,11 +82,11 @@ def runCPAChecker(inpFile, timelimit=100,
                       "__VERIFIER_nondet_uint"
   ]
   args = [ CPA_PATH + "scripts/cpa.sh",
-            "-config", CPA_PATH + "config/" + config,
-            "-timelimit", str(timelimit),
-            "-setprop",
-            "cpa.predicate.nondetFunctions=" + ",".join(nondetFunctions),
-            inpFile ]
+        "-config", CPA_PATH + "config/" + config,
+        "-timelimit", str(timelimit),
+        "-setprop",
+        "cpa.predicate.nondetFunctions=" + ",".join(nondetFunctions),
+        inpFile ]
   raw = check_output(args, stderr=STDOUT);
   lines = raw.split("\n");
   lines = [x for x in lines

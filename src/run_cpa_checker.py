@@ -6,13 +6,15 @@ from lib.cpa_checker import runCPAChecker, convertCppFileForCPAChecker
 from lib.boogie.z3_embed import to_smt2, z3_expr_to_boogie, Unknown
 from lib.common.util import error
 from shutil import move
-from signal import signal, SIGALRM,  alarm
+#from signal import signal , SIGALRM,  alarm
+from threading import Timer
 from os.path import exists
 
-def handler(signum):
-  assert (signum == SIGALRM)
+def handler():
+#def handler(signum):
+#  assert (signum == SIGALRM)
   raise Exception("timeout")
-signal(SIGALRM, handler);
+#signal(SIGALRM, handler);
 
 if (__name__ == "__main__"):
   p = argparse.ArgumentParser(description="run CPAChecker on a levelset")
@@ -22,8 +24,11 @@ if (__name__ == "__main__"):
           default=False, help='Print results as a csv table')
   p.add_argument('--time-limit', type=int, default=300, \
           help='Time limit for CPAChecker')
+  p.add_argument('--waitEnter', action="store_true", \
+                 default=False, help='Wait for user to perss Enter before continuing (great for debug)')
   args = p.parse_args();
-
+  if args.waitEnter:
+    input("Press Enter to continue...")
   lvlSetName, lvls = loadBoogieLvlSet(args.lvlset)
 
   res = { }
@@ -48,7 +53,9 @@ if (__name__ == "__main__"):
     if (solved):
       error("z3 invs: ", len(loopInvs), loopInvs)
       try:
-        alarm(args.time_limit)
+        t = Timer(args.time_limit, handler)
+        t.start()
+        #alarm(args.time_limit)
         # On lvl d-14 for example the invariants explode exponentially due to
         # inlining of lets. So add timeout. Seems to be the only level with
         # this problem
@@ -62,7 +69,8 @@ if (__name__ == "__main__"):
             error(to_smt2(i))
           raise
       finally:
-        alarm(0)
+        #alarm(0)
+        t.cancel()
       if (invs != None):
         try:
           (overfitted, nonind, sound, violations) =\
