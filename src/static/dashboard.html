@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Dashboard</title>
+
+  <!-- Third party libraries -->
+  <script src="jquery-1.12.0.min.js"></script>
+  <script src="jquery.jsonrpcclient.js"></script>
+  <link rel="stylesheet" href="bootstrap.min.css">
+  <link rel="stylesheet" href="bootstrap-theme.min.css">
+  <script src="bootstrap.min.js"></script>
+
+  <!-- Our code -->
+  <link rel="stylesheet" href="inv.css">
+  <link rel="stylesheet" href="admin.css">
+  <script src="build/ts/util.js"></script>
+
+  <script type="text/javascript">
+    var adminToken;
+    var refreshIntervalId;
+    var refreshClock = 0;
+
+    function loadDashboard(rpc) {
+      rpc.call("App.getDashboard", [adminToken], function (res) {
+        console.log(new Date(), "App.getDashboard", res);
+
+        var tbody = $("#summary_tbody").empty();
+        $.each(res, function (i, row) {
+          tbody.append($("<tr>")
+            .append($("<td>")
+              .text(row.experiment)
+            )
+            .append($("<td>")
+              .text(row.lvl)
+            )
+            .append($("<td>")
+              .text(row.nStarted)
+            )
+            .append($("<td>")
+              .text(row.nFinished)
+            )
+            .append($("<td>")
+              .text(row.nProved)
+            )
+          );
+        });
+      }, function (err) {
+        clearInterval(refreshIntervalId);
+        $("#refresh_clock").text("never");
+        alert("RPC Error: " + err.message);
+      });
+    }
+
+    $(document).ready(function() {
+      rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
+      adminToken = Args.get_admin_token();
+
+      refreshIntervalId = setInterval(function() {
+        if (refreshClock <= 0) {
+          refreshClock = 5;
+          loadDashboard(rpc);
+        } else {
+          refreshClock -= 1;
+        }
+        $("#refresh_clock").text(refreshClock);
+      }, 1000);
+    });
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h1>Dashboard</h1>
+    <p class="text-muted">
+      Auto-refresh in: <span id="refresh_clock"></span>
+    </p>
+    <div class="panel panel-default">
+      <div class="panel-body">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Experiment</th>
+              <th>Level Name</th>
+              <th># Started</th>
+              <th># Finished</th>
+              <th># Proved</th>
+            </tr>
+          </thead>
+          <tbody id="summary_tbody">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
