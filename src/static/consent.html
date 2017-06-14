@@ -14,15 +14,15 @@
   <script src="build/ts/rpc.js"></script>
   <script src="build/ts/util.js"></script>
 
-  <script>
-    $(document).ready(function() {
+  <script type="text/javascript">
+    $(document).ready(function () {
       if (Args.get_assignment_id() == "ASSIGNMENT_ID_NOT_AVAILABLE") {
         $("#hit-preview-warning").show();
       }
 
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" });
 
-      $("#agree").click(function() {
+      $("#agree").click(function () {
         var append = "";
         if (!window.location.search) {
           append = "?";
@@ -32,11 +32,11 @@
         append += "consent=1";
 
         logEvent("Consent", []).then(
-          function() {
+          function () {
             window.location.replace("mturk_landing.html" +
               window.location.search + append);
           },
-          function() {
+          function () {
             $("#agree-error").show();
           }
         );
@@ -46,13 +46,17 @@
 </head>
 <body>
   <div class="container">
-    <div class="row text-center" id="hit-preview-warning"
-      style="font-family:monospace;display:none">
-      <h1>
+    <div class="row text-center" id="hit-preview-warning" style="display:none">
+      <p class="lead">
         <strong>This is a preview, which only shows you the tutorial</strong>
+      </p>
+    </div>
+    <div class="row text-center" style="font-family:monospace">
+      <h1>
+        <strong>Welcome to <span class="good">InvGen</span>!</strong>
       </h1>
     </div>
-    <div class="row spaced">
+    <div class="row">
       <p>You are being invited to participate in a research study titled
       “Crowdsourced Software Engineering using Gamification”. This study is
       being done by Professor Sorin Lerner, Professor William G. Griswold,
