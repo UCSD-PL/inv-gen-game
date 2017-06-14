@@ -14,7 +14,8 @@ INSERT INTO lvldata (
   lvl,
   time,
   startflag,
-  provedflag
+  provedflag,
+  allinvs
 )
 SELECT
   src,
@@ -24,7 +25,8 @@ SELECT
   json_extract(payload, "$.lvlid"),
   time,
   type = "StartLevel",
-  type = "FinishLevel" AND json_extract(payload, "$.verified")
+  type = "FinishLevel" AND json_extract(payload, "$.verified"),
+  json_extract(payload, "$.all_found")
 FROM events
 WHERE
   (type = "StartLevel" OR type = "FinishLevel")

@@ -42,6 +42,7 @@ class LvlData(Base):
   time = Column(DateTime)
   startflag = Column(Integer, nullable=False)
   provedflag = Column(Integer, nullable=False)
+  allinvs = Column(String(16536))
 
 
 def open_sqlite_db(path):

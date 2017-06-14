@@ -19,7 +19,8 @@ BEGIN
     lvl,
     time,
     startflag,
-    provedflag
+    provedflag,
+    allinvs
   )
   VALUES (
     NEW.src,
@@ -29,6 +30,7 @@ BEGIN
     json_extract(NEW.payload, "$.lvlid"),
     NEW.time,
     NEW.type = "StartLevel",
-    NEW.type = "FinishLevel" AND json_extract(NEW.payload, "$.verified")
+    NEW.type = "FinishLevel" AND json_extract(NEW.payload, "$.verified"),
+    json_extract(NEW.payload, "$.all_found")
   );
 END;

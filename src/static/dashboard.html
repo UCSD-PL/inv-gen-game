@@ -23,13 +23,28 @@
     var refreshIntervalId;
     var refreshClock = 0;
 
+    function stopRefresh() {
+      clearInterval(refreshIntervalId);
+      $("#refresh_clock").text("never");
+      $("#stop_refresh").hide();
+    }
+
     function loadDashboard(rpc) {
       rpc.call("App.getDashboard", [adminToken], function (res) {
         console.log(new Date(), "App.getDashboard", res);
 
-        var tbody = $("#summary_tbody").empty();
-        $.each(res, function (i, row) {
-          tbody.append($("<tr>")
+        expandrows = new Set();
+        $("#summary_tbody .detail-row").each(function (i, trow) {
+          rowkey = $(trow).data("row-key");
+          expandrows.add(rowkey);
+        });
+
+        var tbody = $("<tbody>");
+        for (row of res) {
+          rowkey = JSON.stringify([row.experiment, row.lvl]);
+
+          trow = $("<tr>")
+            .addClass("data-row")
             .append($("<td>")
               .text(row.experiment)
             )
@@ -45,20 +60,68 @@
             .append($("<td>")
               .text(row.nProved)
             )
-          );
-        });
+            .data("row-key", rowkey);
+          tbody.append(trow);
+
+          if (expandrows.has(rowkey)) {
+            populateRowDetail(trow);
+          }
+        }
+
+        // This will flicker on update. We should move/change existing
+        // elements where possible instead of replacing the entire table.
+        $("#summary_tbody").empty().append(tbody.children().detach());
       }, function (err) {
-        clearInterval(refreshIntervalId);
-        $("#refresh_clock").text("never");
+        stopRefresh();
         alert("RPC Error: " + err.message);
       });
     }
 
-    $(document).ready(function() {
+    function populateRowDetail(trow) {
+      rowkey = trow.data("row-key");
+
+      rk = JSON.parse(rowkey);
+      experiment = rk[0];
+      lvl = rk[1];
+
+      rpc.call("App.getDashboardInvs", [adminToken, experiment, lvl],
+        function (res) {
+        console.log(new Date(), "App.getDashboardInvs", res);
+
+        hlist = $("<dl>");
+        $.each(res, function (hit, invs) {
+          invlist = $("<ul>")
+            .addClass("list-inline");
+          for (inv of invs) {
+            invlist.append($("<li>")
+              .text(inv)
+            );
+          }
+
+          hlist.append($("<dt>")
+            .text("HIT: " + hit)
+          )
+          .append($("<dd>")
+            .append(invlist)
+          );
+        });
+
+        trow.after($("<tr>")
+          .addClass("detail-row")
+          .append($("<td>")
+            .attr("colspan", 5)
+              .append(hlist)
+            )
+          .data("row-key", trow.data("row-key"))
+        );
+      });
+    }
+
+    $(document).ready(function () {
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
       adminToken = Args.get_admin_token();
 
-      refreshIntervalId = setInterval(function() {
+      refreshIntervalId = setInterval(function () {
         if (refreshClock <= 0) {
           refreshClock = 5;
           loadDashboard(rpc);
@@ -67,6 +130,22 @@
         }
         $("#refresh_clock").text(refreshClock);
       }, 1000);
+
+      $("#stop_refresh").click(stopRefresh);
+
+      $("#summary_tbody").click(function (event) {
+        event.stopPropagation();
+
+        var trow = $(event.target).closest("tr");
+        if (trow.hasClass("data-row")) {
+          nrow = trow.next();
+          if (nrow.hasClass("detail-row")) {
+            nrow.remove();
+          } else {
+            populateRowDetail(trow);
+          }
+        }
+      });
     });
   </script>
 </head>
@@ -75,6 +154,7 @@
     <h1>Dashboard</h1>
     <p class="text-muted">
       Auto-refresh in: <span id="refresh_clock"></span>
+      <a href="#" id="stop_refresh">stop</a>
     </p>
     <div class="panel panel-default">
       <div class="panel-body">

@@ -18,6 +18,7 @@ from vc_check import _from_dict, tryAndVerifyLvl, loopInvSafetyCtrex
 from levels import _tryUnroll, findNegatingTrace, loadBoogieLvlSet
 
 import argparse
+import json
 import sys
 from pp import pp_BoogieLvl, pp_EsprimaInv, pp_EsprimaInvs, pp_CheckInvsRes, \
         pp_tryAndVerifyRes, pp_mturkId, pp_EsprimaInvPairs
@@ -634,6 +635,36 @@ def getDashboard(inputToken):
       "nFinished",
       "nProved"
     ], r)) for r in rows ]
+
+@api.method("App.getDashboardInvs")
+@pp_exc
+@log_d()
+def getDashboardInvs(inputToken, experiment, lvl):
+  """ Return invariants for the dashboard view; only used by the dashboard.
+  """
+  if inputToken != adminToken:
+    raise Exception(str(inputToken) + " not a valid token.")
+
+  s = sessionF()
+  rows = s.query(
+      LvlData.hit,
+      LvlData.allinvs
+    ) \
+    .filter(
+      LvlData.experiment == experiment,
+      LvlData.lvl == lvl,
+      LvlData.startflag == 0
+    )
+
+  d = dict()
+  for hit, allinvs in rows:
+    try:
+      invs = d[hit]
+    except KeyError:
+      invs = d[hit] = []
+    invs.extend(i[0] for i in json.loads(allinvs))
+
+  return d
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description="invariant gen game server")
