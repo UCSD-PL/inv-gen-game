@@ -2,7 +2,7 @@
 import argparse
 from levels import loadBoogieLvlSet
 from vc_check import tryAndVerifyLvl
-from lib.cpa_checker import runCPAChecker, convertCppFileForCPAChecker
+from lib.ice import runICE
 from lib.boogie.z3_embed import to_smt2, z3_expr_to_boogie, Unknown
 from lib.common.util import error
 from shutil import move
@@ -17,13 +17,13 @@ def handler():
 #signal(SIGALRM, handler);
 
 if (__name__ == "__main__"):
-  p = argparse.ArgumentParser(description="run CPAChecker on a levelset")
+  p = argparse.ArgumentParser(description="run ICE on a levelset")
   p.add_argument('--lvlset', type=str, \
           help='Path to lvlset file', required=True)
   p.add_argument('--csv-table', action="store_true", \
           default=True, help='Print results as a csv table')
   p.add_argument('--time-limit', type=int, default=300, \
-          help='Time limit for CPAChecker')
+          help='Time limit for ICE')
   p.add_argument('--waitEnter', action="store_true", \
                  default=False, help='Wait for user to perss Enter before continuing (great for debug)')
   args = p.parse_args();
@@ -34,17 +34,13 @@ if (__name__ == "__main__"):
   res = { }
   conf = { }
 
+
   for lvlName, lvl in lvls.iteritems():
-    cppFile = lvl["path"][1]
-    preprocessedFile = cppFile + ".cpachecker.preprocessed"
+    boogieFile = lvl["path"][2]
     error("Running ", lvlName)
 
-    if (not exists(preprocessedFile)):
-      convertCppFileForCPAChecker(cppFile, preprocessedFile);
+    res[lvlName] = runICE(boogieFile, args.time_limit);
 
-    res[lvlName] = runCPAChecker(preprocessedFile, args.time_limit);
-
-    move("output", "tmp_outputs/" + lvlName + "");
 
     solved, loopHeaderLbl, loopInvs, rawOutput = res[lvlName]
     conf_status = "N/A"

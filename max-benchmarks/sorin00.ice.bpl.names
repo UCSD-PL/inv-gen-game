@@ -1,0 +1,13 @@
+invariant.
+$pc : b0,$pc_dummy.
+b0$x: continuous.
+b0$y: continuous.
+b0$k: continuous.
+$b0$x+y:= b0$x + b0$y.
+$b0$x-y:= b0$x - b0$y.
+$b0$x+k:= b0$x + b0$k.
+$b0$x-k:= b0$x - b0$k.
+$b0$y+k:= b0$y + b0$k.
+$b0$y-k:= b0$y - b0$k.
+invariant: true, false.
+
