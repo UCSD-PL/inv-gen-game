@@ -9,7 +9,7 @@
 
   <script src="build/ts/util.js"></script>
 
-  <script>
+  <script type="text/javascript">
     function goto_consent() {
       window.location.replace('consent.html' + window.location.search);
     }
@@ -19,17 +19,26 @@
     function goto_game() {
       window.location.replace('game.html' + window.location.search);
     }
-    if (!Args.get_consent())
+    if (!Args.get_consent()) {
       goto_consent();
-    if (Args.get_assignment_id() === "ASSIGNMENT_ID_NOT_AVAILABLE")
+    }
+    else if (Args.get_assignment_id() === "ASSIGNMENT_ID_NOT_AVAILABLE") {
       goto_tut();
-    rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
-    rpc.call('App.getTutorialDone', [Args.get_worker_id()], function(tutDone) {
-      if (tutDone)
-        goto_game()
-      else
-        goto_tut()
-      }, function(error) { console.log("RPC error", error) });
+    }
+    else {
+      rpc = new $.JsonRpcClient({ ajaxUrl: "/api" });
+      rpc.call('App.getTutorialDone', [Args.get_worker_id()],
+        function (tutDone) {
+          if (tutDone)
+            goto_game();
+          else
+            goto_tut();
+        },
+        function (error) {
+          console.log("RPC error", error);
+        }
+      );
+    }
   </script>
 </head>
 <body>
