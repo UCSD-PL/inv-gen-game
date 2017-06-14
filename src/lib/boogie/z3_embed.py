@@ -295,6 +295,8 @@ def Not(pred):
 def Implies(a, b):
     return z3.Implies(a, b, ctx=getCtx())
 
+def Function(name, *params):
+    return z3.Function(name, *params)
 
 def IntVal(v):
     return z3.IntVal(v, ctx=getCtx())
@@ -425,6 +427,11 @@ def expr_to_z3(expr, typeEnv):
         return BoolVal(True);
     elif isinstance(expr, ast.AstFalse):
         return BoolVal(False);
+    elif isinstance(expr, ast.AstFuncExpr):
+        params = map((lambda p : expr_to_z3(p, typeEnv)), expr.ops)
+        intsort = map((lambda p : z3.IntSort(ctx=getCtx())), expr.ops) + [z3.IntSort(ctx=getCtx())]
+        f = Function(expr.funcName.name, *intsort)
+        return f(*params)
     elif isinstance(expr, ast.AstUnExpr):
         z3_inner = expr_to_z3(expr.expr, typeEnv)
         if expr.op == '-':
@@ -506,7 +513,7 @@ def ids(z3expr):
 
 
 def z3_expr_to_boogie(expr):
-    d = expr.decl();
+    d = expr.decl()
     if (d.arity() == 0):
         # Literals and Identifiers
         if (isinstance(expr.sort(), z3.BoolSortRef)):
@@ -530,13 +537,13 @@ def z3_expr_to_boogie(expr):
             '-': '-',
             'not': '!',
         }[d.name()]
-        return ast.AstUnExpr(boogie_op, arg);
+        return ast.AstUnExpr(boogie_op, arg)
     elif (d.name() == "if" and d.arity() == 2):
         # TODO: Check types of branches are bool
         c = expr.children();
         cond = z3_expr_to_boogie(c[0])
-        thenB = z3_expr_to_boogie(c[1]);
-        return ast.AstBinExpr(cond, "==>", thenB);
+        thenB = z3_expr_to_boogie(c[1])
+        return ast.AstBinExpr(cond, "==>", thenB)
     elif (d.arity() == 2):
         # Binary operators
         try:
@@ -558,8 +565,8 @@ def z3_expr_to_boogie(expr):
                 "Implies": ("==>", "none"),
             }[d.name()]
         except:
-            boogie_op, assoc = d.name(), "func";
-        c = expr.children();
+            boogie_op, assoc = d.name(), "func"
+        c = expr.children()
         if assoc == "func":
             try:
                 pars = map(z3_expr_to_boogie, c)
@@ -591,12 +598,12 @@ def z3_expr_to_boogie(expr):
         # TODO: Check types of branches are bool
         c = expr.children();
         cond = z3_expr_to_boogie(c[0])
-        thenB = z3_expr_to_boogie(c[1]);
-        elseB = z3_expr_to_boogie(c[2]);
+        thenB = z3_expr_to_boogie(c[1])
+        elseB = z3_expr_to_boogie(c[2])
         return ast.AstBinExpr(
             ast.AstBinExpr(cond, "==>", thenB),
             "&&",
-            ast.AstBinExpr(ast.AstUnExpr("!", cond), "==>", elseB));
+            ast.AstBinExpr(ast.AstUnExpr("!", cond), "==>", elseB))
     else:
         raise Exception("Can't translate z3 expression " + str(expr) +
                         " to boogie.")
