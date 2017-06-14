@@ -10,12 +10,17 @@
   <script src="build/ts/util.js"></script>
 
   <script>
+    function goto_consent() {
+      window.location.replace('consent.html' + window.location.search);
+    }
     function goto_tut() {
       window.location.replace('tutorial.html' + window.location.search);
     }
     function goto_game() {
       window.location.replace('game.html' + window.location.search);
     }
+    if (!Args.get_consent())
+      goto_consent();
     if (Args.get_assignment_id() === "ASSIGNMENT_ID_NOT_AVAILABLE")
       goto_tut();
     rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })

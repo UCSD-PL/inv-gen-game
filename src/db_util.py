@@ -36,7 +36,9 @@ def addEvent(sourceName, typ, time, ename,  addr, data, session, mturkId):
            "hitId": mturkId[1],
            "assignmentId": mturkId[2] }
 
-  if (typ == "TutorialStart" or typ == "ReplayTutorialAll"):
+  if typ == "Consent":
+    pass
+  elif (typ == "TutorialStart" or typ == "ReplayTutorialAll"):
     pass
   elif (typ == "TutorialDone"):
     pass

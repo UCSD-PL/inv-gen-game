@@ -53,8 +53,8 @@ function assert(c: boolean, msg?: any): void {
   if (!c)
     throw msg || "Assertion failed.";
 }
-function logEvent(name: string, data: any): void {
-  rpc_logEvent(Args.get_worker_id(), name, data);
+function logEvent(name: string, data: any): any {
+  return rpc_logEvent(Args.get_worker_id(), name, data);
 }
 
 function fst<T1, T2>(x: [T1, T2]): T1 { return x[0]; }
@@ -73,6 +73,7 @@ class Args {
   static noifs: boolean = false;
   static use_new_var_powerup: boolean = false;
   static individual_mode: boolean = false;
+  static consent: boolean = false;
 
   static parse_args() {
     if (Args.parsed)
@@ -94,6 +95,7 @@ class Args {
     Args.noifs = Args.args.hasOwnProperty("noifs");
     Args.use_new_var_powerup = !!+Args.args["nvpower"];
     Args.individual_mode = !!+Args.args["individual"];
+    Args.consent = !!+Args.args["consent"];
     Args.parsed = true;
   }
   static get_hit_id(): string {
@@ -135,6 +137,10 @@ class Args {
   static get_individual_mode(): boolean {
     Args.parse_args();
     return Args.individual_mode;
+  }
+  static get_consent(): boolean {
+    Args.parse_args();
+    return Args.consent;
   }
 }
 

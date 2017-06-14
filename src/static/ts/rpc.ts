@@ -78,6 +78,6 @@ function rpc_instantiate(templates: templateT[],
   rpc.call("App.instantiate", [uniq_templates, lvlVars, data, mturkId()], cb, log);
 }
 
-function rpc_logEvent(workerId: string, name: string, data: any): void {
-  rpc.call("App.logEvent", [workerId, name, data, mturkId()], (res) => { }, log);
+function rpc_logEvent(workerId: string, name: string, data: any): any {
+  return rpc.call("App.logEvent", [workerId, name, data, mturkId()], (res) => { }, log);
 }
