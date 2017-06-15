@@ -73,8 +73,7 @@ class Z3ServerInstance(object):
     @wrapZ3Exc
     def check(s, sComm):
         sys.stderr.write("check(" + sComm + "):" + s._solver.to_smt2() + "\n");
-        comm = z3.parse_smt2_string(sComm, ctx=s._solver.ctx)
-        return str(s._solver.check(comm));
+        return str(s._solver.check());
 
     @Pyro4.expose
     @wrapZ3Exc
