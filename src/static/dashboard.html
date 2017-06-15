@@ -22,6 +22,7 @@
     var adminToken;
     var refreshIntervalId;
     var refreshClock = 0;
+    var rowUpdater;
 
     function stopRefresh() {
       clearInterval(refreshIntervalId);
@@ -29,99 +30,154 @@
       $("#stop_refresh").hide();
     }
 
-    function loadDashboard(rpc) {
-      rpc.call("App.getDashboard", [adminToken], function (res) {
-        console.log(new Date(), "App.getDashboard", res);
+    function updater(head) {
+      var cache = new Map();
 
-        expandrows = new Set();
-        $("#summary_tbody .detail-row").each(function (i, trow) {
-          rowkey = $(trow).data("row-key");
-          expandrows.add(rowkey);
-        });
+      var obj = {
+        inject: function(at, key, data, create, update) {
+          var skey = JSON.stringify(key);
+          var item;
+          if (cache.has(skey)) {
+            item = cache.get(skey);
+          } else {
+            item = create(data);
+            cache.set(skey, item);
+          }
+          update(item, data);
+          at.after(item.detach());
+          return item;
+        },
 
-        var tbody = $("<tbody>");
-        for (row of res) {
-          rowkey = JSON.stringify([row.experiment, row.lvl]);
+        update: function(ondata) {
+          var ptr = head;
+          var keepkeys = new Set();
 
-          trow = $("<tr>")
-            .addClass("data-row")
-            .append($("<td>")
-              .text(row.experiment)
-            )
-            .append($("<td>")
-              .text(row.lvl)
-            )
-            .append($("<td>")
-              .text(row.nStarted)
-            )
-            .append($("<td>")
-              .text(row.nFinished)
-            )
-            .append($("<td>")
-              .text(row.nProved)
-            )
-            .data("row-key", rowkey);
-          tbody.append(trow);
+          ondata(function(key, data, create, update) {
+            var skey = JSON.stringify(key);
+            var item = obj.inject(ptr, key, data, create, update);
+            keepkeys.add(skey);
+            ptr = item;
+            return item;
+          });
 
-          if (expandrows.has(rowkey)) {
-            populateRowDetail(trow);
+          for (let skey of cache.keys()) {
+            if (!keepkeys.has(skey)) {
+              cache.get(skey).detach();
+              cache.delete(skey);
+            }
           }
         }
+      };
 
-        // This will flicker on update. We should move/change existing
-        // elements where possible instead of replacing the entire table.
-        $("#summary_tbody").empty().append(tbody.children().detach());
-      }, function (err) {
-        stopRefresh();
-        alert("RPC Error: " + err.message);
-      });
+      return obj;
     }
 
-    function populateRowDetail(trow) {
-      rowkey = trow.data("row-key");
+    function createSummaryRow(data) {
+      return $("<tr>")
+        .addClass("summary-row")
+        .append($("<td>")
+          .text(data.experiment)
+        )
+        .append($("<td>")
+          .text(data.lvl)
+        )
+        .append($("<td>")
+          .addClass("col-nStarted")
+        )
+        .append($("<td>")
+          .addClass("col-nFinished")
+        )
+        .append($("<td>")
+          .addClass("col-nProved")
+        );
+    }
 
-      rk = JSON.parse(rowkey);
-      experiment = rk[0];
-      lvl = rk[1];
+    function updateSummaryRow(row, data) {
+      if (JSON.stringify(row.data("rowdata")) === JSON.stringify(data))
+        return;
 
-      rpc.call("App.getDashboardInvs", [adminToken, experiment, lvl],
-        function (res) {
+      for (let field of ["nStarted", "nFinished", "nProved"]) {
+        row.find(".col-" + field)
+          .text(data[field]);
+      }
+
+      row.data("rowdata", data);
+    }
+
+    function createDetailRow(data) {
+      return $("<tr>")
+        .addClass("detail-row")
+        .append($("<td>")
+          .attr("colspan", 5)
+        );
+    }
+
+    function updateDetailRow(rpc, row, data) {
+      rpc.call("App.getDashboardInvs", [adminToken, data.experiment,
+        data.lvl], function(res) {
         console.log(new Date(), "App.getDashboardInvs", res);
 
+        if (JSON.stringify(row.data("rowdata")) === JSON.stringify(res))
+          return;
+
         hlist = $("<dl>");
-        $.each(res, function (hit, invs) {
+        $.each(res, function(hit, invs) {
           invlist = $("<ul>")
             .addClass("list-inline");
-          for (inv of invs) {
+          for (let inv of invs) {
             invlist.append($("<li>")
               .text(inv)
             );
           }
 
           hlist.append($("<dt>")
-            .text("HIT: " + hit)
-          )
-          .append($("<dd>")
-            .append(invlist)
-          );
+              .text("HIT: " + hit)
+            )
+            .append($("<dd>")
+              .append(invlist)
+            );
         });
 
-        trow.after($("<tr>")
-          .addClass("detail-row")
-          .append($("<td>")
-            .attr("colspan", 5)
-              .append(hlist)
-            )
-          .data("row-key", trow.data("row-key"))
-        );
+        row.find("td")
+          .empty()
+          .append(hlist);
+
+        row.data("rowdata", res);
       });
     }
 
-    $(document).ready(function () {
+    function expandSummary(rpc, item, rowdata, updater) {
+      var dkey = ["detail", rowdata.experiment, rowdata.lvl];
+      updater(dkey, rowdata, createDetailRow,
+        (row, data) => updateDetailRow(rpc, row, data));
+    }
+
+    function loadDashboard(rpc) {
+      rpc.call("App.getDashboard", [adminToken], function(res) {
+        console.log(new Date(), "App.getDashboard", res);
+
+        rowUpdater.update(function(updatekey) {
+          for (let rowdata of res) {
+            var key = [rowdata.experiment, rowdata.lvl];
+            var item = updatekey(key, rowdata, createSummaryRow,
+              updateSummaryRow);
+            if (item.data("expand")) {
+              expandSummary(rpc, item, rowdata, updatekey);
+            }
+          }
+        });
+      }, function(err) {
+        stopRefresh();
+        alert("RPC Error: " + err.message);
+      });
+    }
+
+    $(document).ready(function() {
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
       adminToken = Args.get_admin_token();
+      rowUpdater = updater($("#summary_tbody .head"));
 
-      refreshIntervalId = setInterval(function () {
+      refreshIntervalId = setInterval(function() {
         if (refreshClock <= 0) {
           refreshClock = 5;
           loadDashboard(rpc);
@@ -133,16 +189,19 @@
 
       $("#stop_refresh").click(stopRefresh);
 
-      $("#summary_tbody").click(function (event) {
+      $("#summary_tbody").click(function(event) {
         event.stopPropagation();
 
-        var trow = $(event.target).closest("tr");
-        if (trow.hasClass("data-row")) {
-          nrow = trow.next();
-          if (nrow.hasClass("detail-row")) {
-            nrow.remove();
+        var item = $(event.target).closest("tr");
+        if (item.hasClass("summary-row")) {
+          nitem = item.next();
+          if (nitem.hasClass("detail-row")) {
+            item.data("expand", false);
+            nitem.detach();
           } else {
-            populateRowDetail(trow);
+            item.data("expand", true);
+            expandSummary(rpc, item, item.data("rowdata"),
+              (k, d, c, u) => rowUpdater.inject(item, k, d, c, u));
           }
         }
       });
@@ -169,6 +228,7 @@
             </tr>
           </thead>
           <tbody id="summary_tbody">
+            <tr class="head"></tr>
           </tbody>
         </table>
       </div>
