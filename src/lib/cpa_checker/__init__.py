@@ -9,8 +9,11 @@ import re
 
 MYDIR = dirname(abspath(relpath(__file__)))
 
+#CPA_PATH = MYDIR + \
+#    "/../../../env/third_party/cpa_checker_1.4/CPAchecker-1.4-svcomp16c-unix/"
+
 CPA_PATH = MYDIR + \
-        "/../../../env/third_party/cpa_checker_1.4/CPAchecker-1.4-svcomp16c-unix/"
+        "/../../../env/third_party/cpa_checker/"
 
 
 def findLoopHeaderLabel(dotFile):

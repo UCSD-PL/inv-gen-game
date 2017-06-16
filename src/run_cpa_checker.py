@@ -26,6 +26,8 @@ if (__name__ == "__main__"):
           help='Time limit for CPAChecker')
   p.add_argument('--waitEnter', action="store_true", \
                  default=False, help='Wait for user to perss Enter before continuing (great for debug)')
+  p.add_argument('--config', type=str, \
+          help='configuration file to use for CPA Checker\n(properties files under config in CPA checker folder)', required=False)
   args = p.parse_args();
   if args.waitEnter:
     input("Press Enter to continue...")
@@ -42,7 +44,10 @@ if (__name__ == "__main__"):
     if (not exists(preprocessedFile)):
       convertCppFileForCPAChecker(cppFile, preprocessedFile);
 
-    res[lvlName] = runCPAChecker(preprocessedFile, args.time_limit);
+    if ( args.config==None):
+      res[lvlName] = runCPAChecker(preprocessedFile, args.time_limit);
+    else:
+      res[lvlName] = runCPAChecker(preprocessedFile, args.time_limit, args.config);
 
     move("output", "tmp_outputs/" + lvlName + "");
 

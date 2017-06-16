@@ -37,7 +37,7 @@ if [ ! -d $DIR/third_party ] ; then
   mkdir $DIR/third_party
 fi
 
-if [ ! -e $DIR/bin/z3 ]; then
+if [ ! -e $DIR/third_party/z3 ]; then
   pushd $DIR/third_party
   git clone https://github.com/Z3Prover/z3.git z3
   cd z3
@@ -68,12 +68,24 @@ if [ ! -e $DIR/third_party/invgen ]; then
   popd
 fi
 
-if [ ! -e $DIR/third_party/cpa_checker_1.4 ]; then
+#if [ ! -e $DIR/third_party/cpa_checker_1.4 ]; then
+#  pushd $DIR/third_party
+#  mkdir cpa_checker_1.4
+#  cd cpa_checker_1.4
+#  wget https://cpachecker.sosy-lab.org/CPAchecker-1.4-svcomp16c-unix.tar.bz2
+#  tar jxvf CPAchecker-1.4-svcomp16c-unix.tar.bz2
+#  popd
+#fi
+
+#Latest version of CPA Checker
+if [ ! -e $DIR/third_party/cpa_checker_1.6.1 ]; then
   pushd $DIR/third_party
-  mkdir cpa_checker_1.4
-  cd cpa_checker_1.4
-  wget https://cpachecker.sosy-lab.org/CPAchecker-1.4-svcomp16c-unix.tar.bz2
-  tar jxvf CPAchecker-1.4-svcomp16c-unix.tar.bz2
+  mkdir cpa_checker_1.6.1
+  cd cpa_checker_1.6.1
+  wget https://cpachecker.sosy-lab.org/CPAchecker-1.6.1-unix.tar.bz2
+  tar jxvf CPAchecker-1.6.1-unix.tar.bz2
+  cd ..
+  ln -s cpa_checker_1.6.1/CPAchecker-1.6.1-unix cpa_checker
   popd
 fi
 
@@ -86,6 +98,31 @@ if [ ! -e $DIR/third_party/boogie ]; then
   mozroots --import --sync
   xbuild Source/Boogie.sln
   ln -s $DIR/third_party/z3/build/z3 Binaries/z3.exe
+  popd
+fi
+
+if [ ! -e $DIR/third_party/ice ]; then
+  echo "Creating ICE"
+  pushd $DIR/third_party
+  wget 'https://drive.google.com/uc?export=download&id=0B5QhjSfmC_WGaFdlRzljMWJoR0U' -O ice.zip
+  unzip ice.zip
+  cd ice
+  cd C50
+  make clean
+  make all
+  cd ../Boogie
+  wget https://nuget.org/nuget.exe
+  cert-sync /etc/ssl/certs/ca-certificates.crt
+  mono ./nuget.exe restore Source/Boogie.sln
+  xbuild /p:Configuration=Release Source/Boogie.sln
+  rm Binaries/z3.exe
+  rm Binaries/c5.0.dt_entropy
+  rm Binaries/c5.0.dt_penalty
+  cp $DIR/third_party/z3/build/z3 Binaries/z3.exe
+  cp ../C50/c5.0.dt_entropy Binaries/c5.0.dt_entropy
+  cp ../C50/c5.0.dt_penalty Binaries/c5.0.dt_penalty
+  cd ..
+  rm ice.zip
   popd
 fi
 
