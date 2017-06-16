@@ -48,12 +48,13 @@ if [ ! -e $DIR/third_party/z3 ]; then
   popd
 fi
 
-if [ ! -e $DIR/third_party/daikon ]; then
+if [ ! -e $DIR/third_party/daikon-5.5.6 ]; then
   pushd $DIR/third_party
-  mkdir daikon
-  cd daikon
+  mkdir daikon-5.5.6
+  cd daikon-5.5.6
   wget https://plse.cs.washington.edu/daikon/download/daikon-5.5.6.tar.gz
   tar zxf daikon-5.5.6.tar.gz
+  ln -s daikon-5.5.6 daikon
   popd
 fi
 
