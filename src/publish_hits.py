@@ -11,28 +11,6 @@ from mturk_util import connect, mkParser, error
 from experiments import Experiment, get_unused_port, start_server, \
         HIT_REWARD, ServerRun
 
-p = mkParser("Run experiment", True)
-p.add_argument('--num_hits', type=int, required=True,
-               help='number of HITs to create')
-p.add_argument('--lvlset', type=str, required=True,
-               help='Lvlset to use for serving benchmarks"')
-p.add_argument('--adminToken', type=str,
-               help='Token to use to login to admin interfaces', required=True)
-p.add_argument('--no-ifs', action='store_const', const=True, default=False,
-               help='Dont teach implication in tutorial or show it ingame')
-p.add_argument('--individual', action='store_true',
-               help='Run in individual mode (levels solved by others don\'t count)')
-p.add_argument('--with-new-var-powerup', action='store_true',
-               help='Enable the new variable powerup')
-p.add_argument('--mode', type=str, default="patterns",
-               help='Game mode to play in. ',
-               choices=["patterns", "ctrex", "rounds"])
-p.add_argument('--db', type=str, required=True,
-               help='The database for the servers to use')
-
-args = p.parse_args()
-
-
 def publish_hit(credentials, isSandbox, ename, num_hits, lvlset, adminToken,
                 db, mode, no_ifs, individual, with_new_var_powerup):
     title = "Play a Math Puzzle Game For Science!"
@@ -87,8 +65,28 @@ def publish_hit(credentials, isSandbox, ename, num_hits, lvlset, adminToken,
         exp.add_session(ServerRun(srid, r[0].HITId, p.pid, port))
     return exp
 
-
 if __name__ == "__main__":
+    p = mkParser("Run experiment", True)
+    p.add_argument('--num_hits', type=int, required=True,
+                   help='number of HITs to create')
+    p.add_argument('--lvlset', type=str, required=True,
+                   help='Lvlset to use for serving benchmarks"')
+    p.add_argument('--adminToken', type=str,
+                   help='Token to use to login to admin interfaces', required=True)
+    p.add_argument('--no-ifs', action='store_const', const=True, default=False,
+                   help='Dont teach implication in tutorial or show it ingame')
+    p.add_argument('--individual', action='store_true',
+                   help='Run in individual mode (levels solved by others don\'t count)')
+    p.add_argument('--with-new-var-powerup', action='store_true',
+                   help='Enable the new variable powerup')
+    p.add_argument('--mode', type=str, default="patterns",
+                   help='Game mode to play in. ',
+                   choices=["patterns", "ctrex", "rounds"])
+    p.add_argument('--db', type=str, required=True,
+                   help='The database for the servers to use')
+
+    args = p.parse_args()
+
     try:
         publish_hit(args.credentials_file, args.sandbox, args.ename,
                     args.num_hits, args.lvlset, args.adminToken,
