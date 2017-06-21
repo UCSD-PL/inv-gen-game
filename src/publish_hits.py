@@ -12,7 +12,7 @@ from experiments import Experiment, get_unused_port, start_server, \
         HIT_REWARD, ServerRun
 
 def publish_hit(credentials, isSandbox, ename, num_hits, lvlset, adminToken,
-                db, mode, no_ifs, individual, with_new_var_powerup):
+                db, mode, no_ifs, individual, with_new_var_powerup, mc=None):
     title = "Play a Math Puzzle Game For Science!"
     max_assignments = 1
 
@@ -30,7 +30,8 @@ def publish_hit(credentials, isSandbox, ename, num_hits, lvlset, adminToken,
            Requirement(mastersQualType, "Exists")
         ]
 
-    mc = connect(credentials, isSandbox)
+    if mc is None:
+      mc = connect(credentials, isSandbox)
     balance = mc.get_account_balance()
     print "Balance:", balance[0]
     exp = Experiment(ename, True)
