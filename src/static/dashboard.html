@@ -22,12 +22,43 @@
     var adminToken;
     var refreshIntervalId;
     var refreshClock = 0;
-    var rowUpdater;
+    var experimentRowUpdater;
+    var summaryRowUpdater;
 
     function stopRefresh() {
       clearInterval(refreshIntervalId);
       $("#refresh_clock").text("never");
       $("#stop_refresh").hide();
+    }
+
+    function rpcError(err) {
+      stopRefresh();
+      alert("RPC Error: " + err.message);
+    }
+
+    function refreshExperiments() {
+      var button = $("#refresh_experiments");
+      button.prop("disabled", true);
+
+      rpc.call("App.refreshExperiments", [adminToken], function(res) {
+        console.log(new Date(), "App.refreshExperiments", res);
+
+        button.prop("disabled", false);
+        // Force full refresh
+        refreshClock = 0;
+      }, rpcError);
+    }
+
+    function runAutomation() {
+      var button = $("#run_automation");
+      button.prop("disabled", true);
+
+      rpc.call("App.runAutomation", [adminToken], function(res) {
+        console.log(new Date(), "App.runAutomation", res);
+
+        button.prop("disabled", false);
+        updateFeedback(res);
+      }, rpcError);
     }
 
     function updater(head) {
@@ -72,6 +103,55 @@
       return obj;
     }
 
+    function createExperimentRow(data) {
+      return $("<tr>")
+        .append($("<td>")
+          .text(data.name)
+        )
+        .append($("<td>")
+          .append($("<span>")
+            .addClass("col-nMinFinishedPerLvl")
+          )
+          .append(" (")
+          .append($("<span>")
+            .addClass("col-nRequiredFinishedPerLvl")
+          )
+          .append(")")
+        )
+        .append($("<td>")
+          .append($("<span>")
+            .addClass("col-nActiveHits")
+          )
+          .append(" (")
+          .append($("<span>")
+            .addClass("col-nTotalHits")
+          )
+          .append(")")
+        )
+        .append($("<td>")
+          .addClass("col-nNeededHits")
+        )
+    }
+
+    function updateExperimentRow(row, data) {
+      if (JSON.stringify(row.data("rowdata")) === JSON.stringify(data))
+        return;
+
+      if (data.nActiveHits > 0) {
+        row.addClass("bg-primary");
+      } else {
+        row.removeClass("bg-primary");
+      }
+
+      for (let field of ["nMinFinishedPerLvl", "nRequiredFinishedPerLvl",
+          "nActiveHits", "nTotalHits", "nNeededHits"]) {
+        row.find(".col-" + field)
+          .text(data[field]);
+      }
+
+      row.data("rowdata", data);
+    }
+
     function createSummaryRow(data) {
       return $("<tr>")
         .addClass("summary-row")
@@ -92,9 +172,19 @@
         );
     }
 
+    function colorLvlRow(row, data) {
+      if (data.isActiveExperiment) {
+        row.addClass("bg-info");
+      } else {
+        row.removeClass("bg-info");
+      }
+    }
+
     function updateSummaryRow(row, data) {
       if (JSON.stringify(row.data("rowdata")) === JSON.stringify(data))
         return;
+
+      colorLvlRow(row, data);
 
       for (let field of ["nStarted", "nFinished", "nProved"]) {
         row.find(".col-" + field)
@@ -120,6 +210,8 @@
         if (JSON.stringify(row.data("rowdata")) === JSON.stringify(res))
           return;
 
+        colorLvlRow(row, data);
+
         hlist = $("<dl>");
         $.each(res, function(hit, invs) {
           invlist = $("<ul>")
@@ -143,7 +235,7 @@
           .append(hlist);
 
         row.data("rowdata", res);
-      });
+      }, rpcError);
     }
 
     function expandSummary(rpc, item, rowdata, updater) {
@@ -152,12 +244,62 @@
         (row, data) => updateDetailRow(rpc, row, data));
     }
 
+    function friendlyDuration(s) {
+      if (s >= 60) {
+        var m = Math.trunc(s / 60);
+        return m + " minute" + (m != 1 ? "s" : "");
+      }
+      return Math.trunc(s) + " second" + (s != 1 ? "s" : "");
+    }
+
+    function updateFeedback(feedback) {
+      var feedbackList = $("#auto_feedback").empty();
+      for (let line of feedback) {
+        feedbackList
+          .append($("<li>")
+            .text(line)
+          );
+      }
+    }
+
     function loadDashboard(rpc) {
       rpc.call("App.getDashboard", [adminToken], function(res) {
         console.log(new Date(), "App.getDashboard", res);
 
-        rowUpdater.update(function(updatekey) {
-          for (let rowdata of res) {
+        /* Postprocess data for presentation */
+        var experimentNames = new Set();
+        var nTotalNeededHits = 0;
+        for (let rowdata of res.expstats) {
+          experimentNames.add(rowdata.name);
+          nTotalNeededHits += rowdata.nNeededHits;
+        }
+
+        $("#balance")
+          .text(res.balance);
+        $("#experiments_file")
+          .text(res.experimentsFile);
+        $("#active_hits")
+          .text(res.nTotalActiveHits + " (" + res.nMaxActiveHits + ")");
+        $("#needed_hits")
+          .text(nTotalNeededHits);
+        $("#last_hit_check")
+          .text(friendlyDuration(res.lastHitCheck) + " ago");
+
+        updateFeedback(res.autoFeedback);
+
+        experimentRowUpdater.update(function(updatekey) {
+          for (let rowdata of res.expstats) {
+            var key = rowdata.name;
+            var item = updatekey(key, rowdata, createExperimentRow,
+              updateExperimentRow);
+          }
+        });
+
+        summaryRowUpdater.update(function(updatekey) {
+          for (let rowdata of res.lvlstats) {
+            rowdata.isActiveExperiment =
+              experimentNames.has(rowdata.experiment);
+
             var key = [rowdata.experiment, rowdata.lvl];
             var item = updatekey(key, rowdata, createSummaryRow,
               updateSummaryRow);
@@ -166,16 +308,14 @@
             }
           }
         });
-      }, function(err) {
-        stopRefresh();
-        alert("RPC Error: " + err.message);
-      });
+      }, rpcError);
     }
 
     $(document).ready(function() {
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" })
       adminToken = Args.get_admin_token();
-      rowUpdater = updater($("#summary_tbody .head"));
+      experimentRowUpdater = updater($("#experiment_tbody .head"));
+      summaryRowUpdater = updater($("#summary_tbody .head"));
 
       refreshIntervalId = setInterval(function() {
         if (refreshClock <= 0) {
@@ -186,6 +326,10 @@
         }
         $("#refresh_clock").text(refreshClock);
       }, 1000);
+
+      $("#refresh_experiments").click(refreshExperiments);
+
+      $("#run_automation").click(runAutomation);
 
       $("#stop_refresh").click(stopRefresh);
 
@@ -201,7 +345,7 @@
           } else {
             item.data("expand", true);
             expandSummary(rpc, item, item.data("rowdata"),
-              (k, d, c, u) => rowUpdater.inject(item, k, d, c, u));
+              (k, d, c, u) => summaryRowUpdater.inject(item, k, d, c, u));
           }
         }
       });
@@ -216,7 +360,50 @@
       <a href="#" id="stop_refresh">stop</a>
     </p>
     <div class="panel panel-default">
+      <div class="panel-body bg-info">
+        <div class="clearfix">
+          <h4 class="pull-left">Experiment Stats</h4>
+          <button id="refresh_experiments" class="btn btn-default pull-right"
+            type="submit">
+            Refresh Experiments and HITs
+          </button>
+        </div>
+        <dl class="dl-horizontal">
+          <dt>Configuration File:</dt>
+          <dd id="experiments_file"></dd>
+          <dt>Balance:</dt>
+          <dd id="balance"></dd>
+          <dt>Active HITs (Max):</dt>
+          <dd id="active_hits"></dd>
+          <dt>Last HIT Check:</dt>
+          <dd id="last_hit_check"></dd>
+        </dl>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Experiment</th>
+              <th>Min Finished Per Level (Required)</th>
+              <th>Active HITs (Total)</th>
+              <th>Needed HITs</th>
+            </tr>
+          </thead>
+          <tbody id="experiment_tbody">
+            <tr class="head"></tr>
+          </tbody>
+        </table>
+        <div class="clearfix">
+          <h4 class="pull-left">Automation Feedback</h4>
+          <button id="run_automation" class="btn btn-default pull-right"
+            type="submit">
+            Run Automation
+          </button>
+        </div>
+        <ul id="auto_feedback"></ul>
+      </div>
+    </div>
+    <div class="panel panel-default">
       <div class="panel-body">
+        <h4>Level Stats</h4>
         <table class="table">
           <thead>
             <tr>
