@@ -79,20 +79,20 @@ def convertCppFileForCPAChecker(cppFile, outFile):
   call(cpp_args);
 
 def runCPAChecker(inpFile, timelimit=100,
-                  config="predicateAnalysis-ImpactRefiner-ABEl.properties"):
+                  config="predicateAnalysis-ImpactRefiner-ABEl.properties", keepRawFile = True):
   nondetFunctions = [ "unknown1", "unknown2", "unknown3", "unknown4", \
                       "unknown5", "random", "__VERIFIER_nondet_int", \
-                      "__VERIFIER_nondet_uint"
-  ]
+                      "__VERIFIER_nondet_uint" ]
   args = [ CPA_PATH + "scripts/cpa.sh",
         "-config", CPA_PATH + "config/" + config,
         "-timelimit", str(timelimit),
         "-setprop",
         "cpa.predicate.nondetFunctions=" + ",".join(nondetFunctions),
         inpFile ]
-  raw = check_output(args, stderr=STDOUT);
-  lines = raw.split("\n");
-  lines = [x for x in lines
+  try:
+    raw = check_output(args, stderr=STDOUT);
+    lines = raw.split("\n");
+    lines = [x for x in lines
              if not (x.startswith("Running CPAchecker with") or
                      x.startswith("Using the following resource") or
                      x.startswith("CPAchecker 1.4-svcomp16c (OpenJDK") or
@@ -102,8 +102,17 @@ def runCPAChecker(inpFile, timelimit=100,
                      x.startswith("Stopping analysis ...") or
                      x.startswith("More details about the verification run") or
                      len(x.strip()) == 0) ]
-  verified = len([x for x in lines if "Verification result: TRUE." in x]) > 0
+    verified = len([x for x in lines if "Verification result: TRUE." in x]) > 0
+    headerLabel = findLoopHeaderLabel("output/cfa.dot")
+    try:
+        invs = getLoopInvariants("output/")
+    except:
+        invs = None
+  except:
+    raw = None
+    verified = False
+    invs = None
+    lines = ""
+    headerLabel = ""
 
-  headerLabel = findLoopHeaderLabel("output/cfa.dot")
-  invs = getLoopInvariants("output/")
-  return (verified, headerLabel, invs, "\n".join(lines))
+  return (verified, headerLabel, invs, "\n".join(lines) if keepRawFile else "Raw Output Not Saved")

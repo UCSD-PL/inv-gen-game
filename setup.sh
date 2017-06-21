@@ -48,13 +48,13 @@ if [ ! -e $DIR/third_party/z3 ]; then
   popd
 fi
 
-if [ ! -e $DIR/third_party/daikon-5.5.6 ]; then
+if [ ! -e $DIR/third_party/daikon-5.5.8 ]; then
   pushd $DIR/third_party
-  mkdir daikon-5.5.6
-  cd daikon-5.5.6
-  wget https://plse.cs.washington.edu/daikon/download/daikon-5.5.6.tar.gz
-  tar zxf daikon-5.5.6.tar.gz
-  ln -s daikon-5.5.6 daikon
+  unlink daikon
+  wget https://plse.cs.washington.edu/daikon/download/daikon-5.5.8.tar.gz
+  tar zxf daikon-5.5.8.tar.gz
+  rm daikon-5.5.8.tar.gz
+  ln -s daikon-5.5.8 daikon
   popd
 fi
 
@@ -81,10 +81,12 @@ fi
 #Latest version of CPA Checker
 if [ ! -e $DIR/third_party/cpa_checker_1.6.1 ]; then
   pushd $DIR/third_party
+  unlink cpa_checker
   mkdir cpa_checker_1.6.1
   cd cpa_checker_1.6.1
   wget https://cpachecker.sosy-lab.org/CPAchecker-1.6.1-unix.tar.bz2
   tar jxvf CPAchecker-1.6.1-unix.tar.bz2
+  rm CPAchecker-1.6.1-unix.tar.bz2
   cd ..
   ln -s cpa_checker_1.6.1/CPAchecker-1.6.1-unix cpa_checker
   popd
@@ -122,8 +124,7 @@ if [ ! -e $DIR/third_party/ice ]; then
   cp $DIR/third_party/z3/build/z3 Binaries/z3.exe
   cp ../C50/c5.0.dt_entropy Binaries/c5.0.dt_entropy
   cp ../C50/c5.0.dt_penalty Binaries/c5.0.dt_penalty
-  cd ..
-  rm ice.zip
+  rm $DIR/third_party/ice.zip
   popd
 fi
 
@@ -137,10 +138,10 @@ fi
 
 npm install
 
-echo "export DAIKONDIR=$DIR/third_party/daikon/daikon-5.5.6" >> $DIR/bin/activate
+echo "export DAIKONDIR=$DIR/third_party/daikon" >> $DIR/bin/activate
 echo "export JAVA_HOME=\${JAVA_HOME:-\$(dirname \$(dirname \$(dirname \$(readlink -f \$(/usr/bin/which java)))))}" >> $DIR/bin/activate
 echo "source \$DAIKONDIR/scripts/daikon.bashrc" >> $DIR/bin/activate
 echo "export PATH=\$PATH:$MYDIR/node_modules/.bin/" >> $DIR/bin/activate
-echo "export PATH=\$PATH:$DIR/third_party/invgen/:$DIR/third_party/cpa_checker_1.4/CPAchecker-1.4-svcomp16c-unix/scripts/" >> $DIR/bin/activate
+echo "export PATH=\$PATH:$DIR/third_party/invgen/:$DIR/third_party/cpa_checker/scripts/" >> $DIR/bin/activate
 
 echo "To begin developing run source $DIR/bin/activate and then make"

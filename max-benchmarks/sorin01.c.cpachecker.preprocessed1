@@ -1,12 +1,5 @@
 extern void __VERIFIER_error(void);
-extern void __VERIFIER_assume(int);
-void __VERIFIER_assert(int cond) {
-  if (!(cond)) {
-    ERROR: __VERIFIER_error();
-  }
-  return;
-}
-extern int __VERIFIER_nondet_int();
+int __VERIFIER_nondet_int();
 
 /*
  * Motivation: curious to see if other tools can handle this.
@@ -22,6 +15,9 @@ void main()
     i = i + k;
     j = j + 1;
   }
-  __VERIFIER_assert(i==k*j);
+  if (!(i==k*j))
+  {
+    ERROR: __VERIFIER_error();
+  }
 }
 
