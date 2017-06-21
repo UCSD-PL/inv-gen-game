@@ -1,0 +1,61 @@
+{
+  "name" : "max-new",
+  "levels": [
+    [ "s1", 
+		[
+			"../new-max-benchmarks/s1.desugared.bpl",
+			"../new-max-benchmarks/s1.c",
+			"../max-benchmarks/s1.bpl"
+		]
+	],
+	[ "s2", 
+		[
+			"../new-max-benchmarks/s2.desugared.bpl",
+			"../new-max-benchmarks/s2.c",
+			"../new-max-benchmarks/s2.bpl"
+		]
+	],
+	[ "s3", 
+	[
+			"../new-max-benchmarks/s3.desugared.bpl",
+			"../new-max-benchmarks/s3.c",
+			"../new-max-benchmarks/s3.bpl"
+		]
+	],
+	[ "s4", 
+		[
+			"../new-max-benchmarks/s4.desugared.bpl",
+			"../new-max-benchmarks/s4.c",
+			"../new-max-benchmarks/s4.bpl"
+		]
+	],
+	[ "s5", 
+		[
+			"../new-max-benchmarks/s5.desugared.bpl",
+			"../new-max-benchmarks/s5.c",
+			"../max-benchmarks/s5.bpl"
+		]
+	],
+	[ "s6", 
+		[
+			"../new-max-benchmarks/s6.desugared.bpl",
+			"../new-max-benchmarks/s6.c",
+			"../new-max-benchmarks/s6.bpl"
+		]
+	],
+	[ "s7", 
+	[
+			"../new-max-benchmarks/s7.desugared.bpl",
+			"../new-max-benchmarks/s7.c",
+			"../new-max-benchmarks/s7.bpl"
+		]
+	],
+	[ "s8", 
+		[
+			"../new-max-benchmarks/s8.desugared.bpl",
+			"../new-max-benchmarks/s8.c",
+			"../new-max-benchmarks/s8.bpl"
+		]
+	]
+  ]
+}
