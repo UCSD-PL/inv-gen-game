@@ -227,7 +227,6 @@ def getDashboard(inputToken):
     "nRequiredFinishedPerLvl": e.getRequiredFinishedPerLvl(),
     "nMinFinishedPerLvl": e.getMinFinishedPerLvl()
     } for e in expconf.getConfiguredExperiments() ]
-  expstats.sort(key=lambda x: x["name"])
 
   return {
     "balance": str(balance),
