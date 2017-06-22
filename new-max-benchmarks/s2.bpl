@@ -4,7 +4,7 @@ procedure main() {
   i := 0;
   assume(k>=0);
   while (j < k)
-  invariant i == k*j && j <= k;
+  //invariant i == k*j && j <= k;
   {
     i := i + k;
     j := j + 1;

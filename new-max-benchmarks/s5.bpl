@@ -4,7 +4,7 @@ procedure main() {
   i := 0;
   assume(k>=0);
   while (j < k)
-  invariant i == 2* k*j;
+  //invariant i == 2* k*j;
   {
     i := i + 2* k;
     j := j + 1;

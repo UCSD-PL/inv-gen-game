@@ -3,7 +3,7 @@ procedure main() {
   j := 0;
   i := 0;
   while (j < 1000)
-  invariant i == k*j;
+  //invariant i == k*j;
   {
     i := i + k;
     j := j + 1;

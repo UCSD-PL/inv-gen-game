@@ -4,7 +4,7 @@ procedure main() {
   i := 0;
   z := 0;
   while (j < 1000)
-  invariant i == k*j && i == z;
+  //invariant i == k*j && i == z;
   {
     i := i + k;
     j := j + 1;
