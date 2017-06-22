@@ -1,4 +1,4 @@
-function {:existential true} b0(j:int, i:int, k:int, k:int): bool;
+function {:existential true} b0(j:int, i:int, k:int, z:int): bool;
 
 procedure main() {
   var i,j,k,z: int;

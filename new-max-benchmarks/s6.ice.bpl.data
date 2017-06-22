@@ -1,0 +1,7 @@
+b0,0,1,2,false
+b0,0,0,-2,true
+b0,0,0,2,true
+b0,0,1,-2,false
+b0,0,-2,-2,false
+b0,0,-1,2,false
+

@@ -1,0 +1,12 @@
+{
+  "name" : "max-new",
+  "levels": [
+	[ "s6_1", 
+		[
+			"../new-max-benchmarks/s6_1.desugared.bpl",
+			"../new-max-benchmarks/s6_1.c",
+			"../new-max-benchmarks/s6_1.bpl"
+		]
+	]
+  ]
+}

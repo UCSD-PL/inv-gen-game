@@ -35,7 +35,7 @@ def daikonToBoogieExpr(astn):
           '+' : '+' ,
           '-' : '-' ,
           '*' : '*' ,
-          '/' : '/' ,
+          '/' : 'div' ,
           '%' : 'mod',
           '==>' : '==>'
         }[astn.op]

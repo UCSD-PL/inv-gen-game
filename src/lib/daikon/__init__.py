@@ -204,7 +204,8 @@ def runDaikon(varz, trace, nosuppress=False):
         flattenList([[ "--config_option", x + "=false" ] \
                         for x in filter_opts]) + \
         flattenList([[ "--config_option", x + "=true" ] \
-                        for x in inv_enable_opts])
+                        for x in inv_enable_opts]) + \
+        ["--config_option", "daikon.inv.Invariant.confidence_limit=1"]
     args.append(dtraceF.name)
     raw = check_output(args)
     call(["rm", basename(dtraceF.name)[:-len(".dtrace")]+".inv.gz"])

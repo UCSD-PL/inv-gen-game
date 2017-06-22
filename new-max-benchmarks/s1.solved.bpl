@@ -1,0 +1,61 @@
+procedure main() {
+  var i,j,k: int;
+  j := 0;
+  i := 0;
+  while (j < 1000)
+invariant (i == i);
+invariant (j == j);
+invariant (k == k);
+//invariant ((0 <= i) && (i <= 63));
+//invariant (i <= 24);
+//invariant ((i mod 3) == 0);
+//invariant (i >= 0);
+//invariant (i >= 0);
+//invariant (((((((((i == 0) || (i == 3)) || (i == 6)) || (i == 9)) || (i == 12)) || (i == 15)) || (i == 18)) || (i == 21)) || (i == 24));
+//invariant ((0 <= j) && (j <= 63));
+//invariant (j <= 8);
+invariant (j >= 0);
+invariant (j >= 0);
+//invariant (((((((((j == 0) || (j == 1)) || (j == 2)) || (j == 3)) || (j == 4)) || (j == 5)) || (j == 6)) || (j == 7)) || (j == 8));
+//invariant (k == 3);
+//invariant ((0 <= k) && (k <= 63));
+//invariant (k != 0);
+//invariant (k <= 3);
+//invariant (k >= 0);
+//invariant (k >= 3);
+//invariant (k == 3);
+invariant ((i - i) == 0);
+//invariant ((i == 0) ==> (j == 0));
+invariant ((j == 0) ==> (i == 0));
+//invariant ((i - (3 * j)) == 0);
+//invariant (i >= j);
+//invariant ((i mod k) == 0);
+invariant ((j - j) == 0);
+invariant ((((0 * k) + (0 * k)) + 0) == 0);
+invariant (i == (j * k));
+//invariant (j == (i div k)),19,(3 >= 0);
+invariant (k >= k);
+invariant ((j - j) == 0);
+invariant ((j == 0) ==> (i == 0));
+invariant ((i - (k * j)) == 0);
+invariant ((((0 * k) + (0 * k)) + 0) == 0);
+invariant (3 >= 3);
+invariant (3 <= 3);
+invariant (k <= k);
+invariant (j == j);
+invariant (i == (j * k));
+invariant (3 != 0);
+invariant (k == k);
+invariant (j >= 0);
+invariant (3 == 3);
+invariant (i == i);
+invariant ((((0 * 3) + (0 * 3)) + 0) == 0);
+invariant ((0 <= 3) && (3 <= 63));
+invariant ((i - i) == 0);
+  //invariant i == k*j;
+  {
+    i := i + k;
+    j := j + 1;
+  }
+  assert(i ==  k*1000);
+}
