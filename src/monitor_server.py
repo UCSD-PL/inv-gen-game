@@ -142,7 +142,7 @@ class PublishTask:
     kwargs = dict(adminToken=adminToken, db=args.db, mode="patterns",
       no_ifs=False, individual=False, with_new_var_powerup=False, mc=mc)
     eargs = self.exp.getArgs().copy()
-    del eargs["sandbox"] # Passed below
+    eargs.pop("sandbox", None) # Passed below
     kwargs.update(eargs)
 
     publish_hit(None, args.sandbox, self.exp.getName(), self.num_hits,
