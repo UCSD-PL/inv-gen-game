@@ -1,0 +1,12 @@
+{
+  "name" : "max-new",
+  "levels": [
+	[ "s4", 
+		[
+			"../new-max-benchmarks/s4.desugared.bpl",
+			"../new-max-benchmarks/s4.c",
+			"../new-max-benchmarks/s4.bpl"
+		]
+	]
+  ]
+}

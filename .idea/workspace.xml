@@ -2,11 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="5192d1ab-ddc8-4191-b41d-c03ed4411389" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/inv-gen-game.iml" afterPath="$PROJECT_DIR$/.idea/inv-gen-game.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/new-max-benchmarks/s8.ice.bpl" afterPath="$PROJECT_DIR$/new-max-benchmarks/s8.ice.bpl" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/conversions.py" afterPath="$PROJECT_DIR$/src/conversions.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/new-max-benchmarks/s4.desugared.trace" afterPath="$PROJECT_DIR$/new-max-benchmarks/s4.desugared.trace" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/lib/daikon/__init__.py" afterPath="$PROJECT_DIR$/src/lib/daikon/__init__.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -22,8 +19,8 @@
       <file leaf-file-name="__init__.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/lib/daikon/__init__.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-1940">
-              <caret line="78" column="14" lean-forward="false" selection-start-line="78" selection-start-column="3" selection-end-line="78" selection-end-column="14" />
+            <state relative-caret-position="192">
+              <caret line="209" column="9" lean-forward="false" selection-start-line="209" selection-start-column="9" selection-end-line="209" selection-end-column="9" />
               <folding />
             </state>
           </provider>
@@ -32,8 +29,8 @@
       <file leaf-file-name="inv_networks.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/lib/boogie/inv_networks.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="102">
-              <caret line="29" column="0" lean-forward="false" selection-start-line="29" selection-start-column="0" selection-end-line="29" selection-end-column="0" />
+            <state relative-caret-position="108">
+              <caret line="48" column="23" lean-forward="false" selection-start-line="48" selection-start-column="23" selection-end-line="48" selection-end-column="23" />
               <folding />
             </state>
           </provider>
@@ -42,8 +39,8 @@
       <file leaf-file-name="z3_embed.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/lib/boogie/z3_embed.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-384">
-              <caret line="442" column="0" lean-forward="false" selection-start-line="442" selection-start-column="0" selection-end-line="442" selection-end-column="0" />
+            <state relative-caret-position="102">
+              <caret line="362" column="4" lean-forward="false" selection-start-line="362" selection-start-column="4" selection-end-line="362" selection-end-column="4" />
               <folding>
                 <element signature="e#2203#2916#0" expanded="false" />
                 <element signature="e#2949#3050#0" expanded="false" />
@@ -56,8 +53,8 @@
       <file leaf-file-name="vc_check.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/vc_check.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="111">
-              <caret line="129" column="0" lean-forward="false" selection-start-line="129" selection-start-column="0" selection-end-line="129" selection-end-column="0" />
+            <state relative-caret-position="120">
+              <caret line="130" column="11" lean-forward="false" selection-start-line="130" selection-start-column="11" selection-end-line="130" selection-end-column="11" />
               <folding />
             </state>
           </provider>
@@ -66,8 +63,18 @@
       <file leaf-file-name="run_daikon.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/run_daikon.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="183">
-              <caret line="62" column="27" lean-forward="false" selection-start-line="62" selection-start-column="21" selection-end-line="62" selection-end-column="39" />
+            <state relative-caret-position="228">
+              <caret line="67" column="6" lean-forward="true" selection-start-line="67" selection-start-column="6" selection-end-line="67" selection-end-column="6" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="tempfile.py" pinned="false" current-in-tab="false">
+        <entry file="file:///usr/lib/python2.7/tempfile.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="111">
+              <caret line="433" column="0" lean-forward="false" selection-start-line="433" selection-start-column="0" selection-end-line="433" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -411,7 +418,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="inv-gen-game" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/run_daikon.py" />
-      <option name="PARAMETERS" value="--lvlset ../lvlsets/max_sorin03.lvlset --check-solved --csv-table --no-suppression" />
+      <option name="PARAMETERS" value="--lvlset ../lvlsets/max-new_4.lvlset --check-solved --csv-table --no-suppression --timeout 3000" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="true" />
       <method />
@@ -626,7 +633,7 @@
           <line>74</line>
           <option name="timeStamp" value="124" />
         </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+        <line-breakpoint suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/lib/cpa_checker/__init__.py</url>
           <line>104</line>
           <option name="timeStamp" value="140" />
@@ -636,11 +643,38 @@
           <line>29</line>
           <option name="timeStamp" value="144" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/lib/daikon/__init__.py</url>
+          <line>212</line>
+          <option name="timeStamp" value="146" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/lib/daikon/__init__.py</url>
+          <line>219</line>
+          <option name="timeStamp" value="147" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/lib/daikon/__init__.py</url>
+          <line>227</line>
+          <option name="timeStamp" value="148" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/run_daikon.py</url>
+          <line>67</line>
+          <option name="timeStamp" value="149" />
+        </line-breakpoint>
       </breakpoints>
       <breakpoints-dialog>
         <breakpoints-dialog />
       </breakpoints-dialog>
-      <option name="time" value="145" />
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
+      <option name="time" value="150" />
     </breakpoint-manager>
     <watches-manager>
       <configuration name="PythonConfigurationType">
@@ -649,13 +683,6 @@
     </watches-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/dump_fuzz_trace.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="51">
-          <caret line="3" column="1" lean-forward="false" selection-start-line="3" selection-start-column="1" selection-end-line="3" selection-end-column="1" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/lib/boogie/z3_embed.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="17">
@@ -949,42 +976,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/lib/boogie/inv_networks.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="102">
-          <caret line="29" column="0" lean-forward="false" selection-start-line="29" selection-start-column="0" selection-end-line="29" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/lib/boogie/z3_embed.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-384">
-          <caret line="442" column="0" lean-forward="false" selection-start-line="442" selection-start-column="0" selection-end-line="442" selection-end-column="0" />
-          <folding>
-            <element signature="e#2203#2916#0" expanded="false" />
-            <element signature="e#2949#3050#0" expanded="false" />
-            <element signature="e#3083#3088#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/vc_check.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="111">
-          <caret line="129" column="0" lean-forward="false" selection-start-line="129" selection-start-column="0" selection-end-line="129" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/run_daikon.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="183">
-          <caret line="62" column="27" lean-forward="false" selection-start-line="62" selection-start-column="21" selection-end-line="62" selection-end-column="39" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/conversions.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="144">
@@ -1001,10 +992,54 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/vc_check.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="130" column="11" lean-forward="false" selection-start-line="130" selection-start-column="11" selection-end-line="130" selection-end-column="11" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/lib/boogie/inv_networks.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="108">
+          <caret line="48" column="23" lean-forward="false" selection-start-line="48" selection-start-column="23" selection-end-line="48" selection-end-column="23" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/lib/boogie/z3_embed.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="102">
+          <caret line="362" column="4" lean-forward="false" selection-start-line="362" selection-start-column="4" selection-end-line="362" selection-end-column="4" />
+          <folding>
+            <element signature="e#2203#2916#0" expanded="false" />
+            <element signature="e#2949#3050#0" expanded="false" />
+            <element signature="e#3083#3088#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/lib/python2.7/tempfile.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="111">
+          <caret line="433" column="0" lean-forward="false" selection-start-line="433" selection-start-column="0" selection-end-line="433" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/run_daikon.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="228">
+          <caret line="67" column="6" lean-forward="true" selection-start-line="67" selection-start-column="6" selection-end-line="67" selection-end-column="6" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/lib/daikon/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1940">
-          <caret line="78" column="14" lean-forward="false" selection-start-line="78" selection-start-column="3" selection-end-line="78" selection-end-column="14" />
+        <state relative-caret-position="192">
+          <caret line="209" column="9" lean-forward="false" selection-start-line="209" selection-start-column="9" selection-end-line="209" selection-end-column="9" />
           <folding />
         </state>
       </provider>
