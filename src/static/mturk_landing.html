@@ -19,11 +19,11 @@
     function goto_game() {
       window.location.replace('game.html' + window.location.search);
     }
-    if (!Args.get_consent()) {
-      goto_consent();
-    }
-    else if (Args.get_assignment_id() === "ASSIGNMENT_ID_NOT_AVAILABLE") {
+    if (Args.get_assignment_id() === "ASSIGNMENT_ID_NOT_AVAILABLE") {
       goto_tut();
+    }
+    else if (!Args.get_consent()) {
+      goto_consent();
     }
     else {
       rpc = new $.JsonRpcClient({ ajaxUrl: "/api" });
