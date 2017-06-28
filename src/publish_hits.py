@@ -12,7 +12,8 @@ from experiments import Experiment, get_unused_port, start_server, \
         HIT_REWARD, ServerRun
 
 def publish_hit(credentials, isSandbox, ename, num_hits, lvlset, adminToken,
-                db, mode, no_ifs, individual, with_new_var_powerup, mc=None):
+                db, mode, no_ifs, individual, with_new_var_powerup, mc=None,
+                email=None):
     title = "Play a Math Puzzle Game For Science!"
     max_assignments = 1
 
@@ -40,7 +41,7 @@ def publish_hit(credentials, isSandbox, ename, num_hits, lvlset, adminToken,
     for i in range(num_hits):
         port = get_unused_port()
         srid = exp.create_unique_server_run_id()
-        p = start_server(port, ename, srid, lvlset, adminToken, db)
+        p = start_server(port, ename, srid, lvlset, adminToken, db, email)
         print "Started server run", srid, "on port", port, "with pid", p.pid
         start_url =\
             "https://zoidberg.ucsd.edu:{0}/mturk_landing.html?mode=" + mode

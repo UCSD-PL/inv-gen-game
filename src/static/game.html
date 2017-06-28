@@ -324,6 +324,41 @@
         }
       })
 
+      $("#report_problem").click(function() {
+        $("#problem_form_error").hide();
+        $("#problem_input").val("");
+        $("#problem_screen").fadeIn(1000);
+      });
+
+      $("#problem_form").submit(function(e) {
+        e.preventDefault();
+      });
+
+      $("#problem_send").click(function() {
+        var errorMessage = $("#problem_form_error");
+        var desc = $("#problem_input").val();
+
+        if (desc === "") {
+          errorMessage
+            .text("Please enter a description of the problem.")
+            .show();
+          return;
+        }
+
+        rpc.call("App.reportProblem", [curLvlId, desc], function(res) {
+          $("#problem_screen").fadeOut(1000);
+        }, function() {
+          errorMessage
+            .text("An error occurred. Please try again.")
+            .show();
+        });
+      });
+
+      $("#problem_close").click(function() {
+        $("#problem_screen").fadeOut(1000);
+        $("#problem_input").val("");
+      });
+
       if (dynamicLvlOrder)
         nextLvl()
       else
@@ -490,6 +525,9 @@
                       
                 </h5>
                 </div>
+          <span class="centered">
+            <a id="report_problem" href="#">Something wrong? Let us know!</a>
+          </span>
         </div>
         <div class='row-md-6'>
 
@@ -524,6 +562,22 @@
           <button id='skip-to-next-lvl' class='btn-next' style='display: none;'>Next Lvl</button>
         </div>
       </div>
+    </div>
+  </div>
+  <div id="problem_screen" class="overlay" style="display:none">
+    <div class="container text-center">
+      <h1 class="good">Something wrong?</h1>
+      <form id="problem_form" action="">
+        <fieldset class="form-group">
+          <label for="problem_input">Please enter a description of the problem
+          and click send. We'll look into it as soon as possible.</label>
+          <textarea id="problem_input" name="problem_input"
+            class="form-control" rows="2"></textarea>
+        </fieldset>
+        <div id="problem_form_error" class="highlight"></div>
+        <button id="problem_send" class="btn-next">Send</button>
+        <button id="problem_close" class="btn-next">Close</button>
+      </form>
     </div>
   </div>
   <div class='overlay text-center' style='display: none;' id='tutorial-video'>

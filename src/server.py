@@ -27,6 +27,7 @@ from datetime import datetime
 from models import open_sqlite_db, open_mysql_db, Event
 from db_util import playersWhoStartedLevel, enteredInvsForLevel,\
         getOrAddSource, addEvent, levelSolved, levelFinishedBy
+from mturk_util import send_notification
 from atexit import register
 from server_common import openLog, log, log_d
 
@@ -605,6 +606,26 @@ def getSolutions(): # Lvlset is assumed to be current by default
     res[curLevelSetName + "," + lvlId] = [boogieToEsprimaExpr(boogieSoln)]
   return res
 
+@api.method("App.reportProblem")
+@pp_exc
+@log_d()
+def reportProblem(lvl, desc):
+  """ Accept a problem report from a player and send it to the current
+      notification e-mail address.
+  """
+  lines = []
+  lines.append("A problem report has been submitted.")
+  lines.append("")
+  lines.append("Time: %s" %
+    datetime.now().strftime("%a, %d %b %Y %H:%M:%S %Z"))
+  lines.append("Experiment: %s" % args.ename)
+  lines.append("Level: %s" % lvl)
+  lines.append("Problem description:")
+  lines.append("")
+  lines.append(desc)
+
+  send_notification(args.email, "Inv-Game Problem Report", "\n".join(lines))
+
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description="invariant gen game server")
     p.add_argument('--local', action='store_true',
@@ -624,6 +645,8 @@ if __name__ == "__main__":
             'If omitted will be randomly generated')
     p.add_argument('--timeout', type=int, default=60,
             help='Timeout in seconds for z3 queries.')
+    p.add_argument('--email', type=str,
+            help='E-mail address to notify for problem reports')
 
     args = p.parse_args();
 

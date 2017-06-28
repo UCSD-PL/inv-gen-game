@@ -140,9 +140,11 @@ class PublishTask:
     # Populate default arguments, then override with experiment arguments.
     # These default arguments must match the ones in publish_hits.
     kwargs = dict(adminToken=adminToken, db=args.db, mode="patterns",
-      no_ifs=False, individual=False, with_new_var_powerup=False, mc=mc)
+      no_ifs=False, individual=False, with_new_var_powerup=False, mc=mc,
+      email=args.email)
     eargs = self.exp.getArgs().copy()
     eargs.pop("sandbox", None) # Passed below
+    eargs.pop("email", None) # Not overridden
     kwargs.update(eargs)
 
     publish_hit(None, args.sandbox, self.exp.getName(), self.num_hits,
@@ -315,6 +317,8 @@ if __name__ == "__main__":
     help="Secret token for admin interface; randomly generated if omitted")
   p.add_argument("--experiments", type=str,
     help="Path to experiment configuration file")
+  p.add_argument("--email", type=str,
+    help="E-mail address to notify for problem reports")
 
   args = p.parse_args()
 
