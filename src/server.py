@@ -608,8 +608,8 @@ def getSolutions(): # Lvlset is assumed to be current by default
 
 @api.method("App.reportProblem")
 @pp_exc
-@log_d()
-def reportProblem(lvl, desc):
+@log_d(pp_mturkId, str, str, str)
+def reportProblem(mturkId, lvl, desc):
   """ Accept a problem report from a player and send it to the current
       notification e-mail address.
   """
@@ -618,6 +618,8 @@ def reportProblem(lvl, desc):
   lines.append("")
   lines.append("Time: %s" %
     datetime.now().strftime("%a, %d %b %Y %H:%M:%S %Z"))
+  lines.append("HIT: %s" % mturkId[1])
+  lines.append("Worker: %s" % mturkId[0])
   lines.append("Experiment: %s" % args.ename)
   lines.append("Level: %s" % lvl)
   lines.append("Problem description:")

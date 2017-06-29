@@ -345,13 +345,14 @@
           return;
         }
 
-        rpc.call("App.reportProblem", [curLvlId, desc], function(res) {
-          $("#problem_screen").fadeOut(1000);
-        }, function() {
-          errorMessage
-            .text("An error occurred. Please try again.")
-            .show();
-        });
+        rpc.call("App.reportProblem", [mturkId(), curLvlId, desc],
+          function(res) {
+            $("#problem_screen").fadeOut(1000);
+          }, function() {
+            errorMessage
+              .text("An error occurred. Please try again.")
+              .show();
+          });
       });
 
       $("#problem_close").click(function() {
