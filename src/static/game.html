@@ -181,6 +181,14 @@
                   cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32);
         }
       },
+      {
+        setup: function (cs) {
+          curL = label($("#report_problem_row"),
+            "If you notice a problem, click here to tell us", "left");
+          $("body").focus();
+          cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32);
+        }
+      },
       { setup: function (cs) {
                    $('#formula-entry').focus();
                    curScript = null;
@@ -526,9 +534,9 @@
                       
                 </h5>
                 </div>
-          <span class="centered">
-            <a id="report_problem" href="#">Something wrong? Let us know!</a>
-          </span>
+          <div id="report_problem_row" class="centered">
+            <a id="report_problem" href="#">Report a Problem</a>
+          </div>
         </div>
         <div class='row-md-6'>
 
@@ -567,7 +575,7 @@
   </div>
   <div id="problem_screen" class="overlay" style="display:none">
     <div class="container text-center">
-      <h1 class="good">Something wrong?</h1>
+      <h1 class="good">Report a Problem</h1>
       <form id="problem_form" action="">
         <fieldset class="form-group">
           <label for="problem_input">Please enter a description of the problem
@@ -577,7 +585,7 @@
         </fieldset>
         <div id="problem_form_error" class="highlight"></div>
         <button id="problem_send" class="btn-next">Send</button>
-        <button id="problem_close" class="btn-next">Close</button>
+        <button id="problem_close" class="btn-next">Cancel</button>
       </form>
     </div>
   </div>
