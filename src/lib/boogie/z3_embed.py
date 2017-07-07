@@ -10,7 +10,7 @@ from ..common.util import error
 import Pyro4
 import sys
 import atexit
-from signal import signal, SIGTERM
+from signal import signal, SIGTERM, SIGINT
 
 ctxHolder = local();
 
@@ -234,7 +234,8 @@ def handler(signum, frame):
   _cleanupChildProcesses()
   sys.exit(-1)
 
-signal(SIGTERM, handler)
+for signum in [SIGTERM, SIGINT]:
+  signal(signum, handler)
 
 
 def getSolver():
