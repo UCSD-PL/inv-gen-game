@@ -10,6 +10,7 @@ from ..common.util import error
 import Pyro4
 import sys
 import atexit
+from signal import signal, SIGTERM
 
 ctxHolder = local();
 
@@ -226,6 +227,14 @@ def _cleanupChildProcesses():
 
 
 atexit.register(_cleanupChildProcesses)
+
+# atexit handlers don't get called on SIGTERM.
+# cleanup child z3 processes explicitly on SIGTERM
+def handler(signum, frame):
+  _cleanupChildProcesses()
+  sys.exit(-1)
+
+signal(SIGTERM, handler)
 
 
 def getSolver():
