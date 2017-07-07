@@ -19,7 +19,9 @@ function interpretError(err: Error): (string|Error) {
     return "Not a valid expression."
   } else if (err.name == 'NOT_BOOL') {
     return "Expression should evaluate to true or false, not " + err.message + " for example."
-  } else if (err.name == "UnsupportedError") {
+  } else if (err.name == "UnsupportedError"
+          || err.name == "IMPLICATION_TYPES"
+          || err.name == "OPERATOR_TYPES") {
     return (<InvException>err).message;
   }
 
