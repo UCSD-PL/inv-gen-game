@@ -54,7 +54,7 @@ def jsToZ3Expr(astn, typeEnv):
         '/': lambda x,y: x / y,
         '%': lambda x,y: x % y,
       }[astn.op](ln, rn)
-    except:
+    except KeyError:
       raise Exception("Don't know how to parse " + astn.to_ecma())
   elif (isinstance(astn, jsast.Identifier)):
     name = astn.value
@@ -74,7 +74,7 @@ def esprimaToZ3Expr(astn, typeEnv):
         '-': lambda x:  -x,
         '!': Not
       }[astn["operator"]](arg)
-    except:
+    except KeyError:
       raise Exception("Unknown unary expression " + str(astn))
   elif (astn["type"] == "BinaryExpression"):
     ln = esprimaToZ3Expr(astn["left"], typeEnv)
@@ -94,7 +94,7 @@ def esprimaToZ3Expr(astn, typeEnv):
         '/': lambda x,y: x / y,
         '%': lambda x,y: x % y,
       }[astn["operator"]](ln, rn)
-    except:
+    except KeyError:
       raise Exception("Unkown binary expression " + str(astn))
   elif (astn["type"] == "LogicalExpression"):
     ln = esprimaToZ3Expr(astn["left"], typeEnv)
@@ -105,7 +105,7 @@ def esprimaToZ3Expr(astn, typeEnv):
         '||': Or,
         '->': Implies,
       }[astn["operator"]](ln, rn)
-    except:
+    except KeyError:
       raise Exception("Unkown logical expression " + str(astn))
   elif (astn["type"] == "Identifier"):
     return Int(astn["name"]);
@@ -128,7 +128,7 @@ def _esprimaToBoogieExprAst(astn, typeEnv):
         '-': '-',
         '!': '!'
       }[astn['operator']], arg)
-    except:
+    except KeyError:
       raise Exception("Unknown unary expression " + str(astn))
   elif (astn["type"] == "BinaryExpression"):
     ln = _esprimaToBoogieExprAst(astn["left"], typeEnv)
@@ -150,7 +150,7 @@ def _esprimaToBoogieExprAst(astn, typeEnv):
         '%': 'mod',
       }
       return AstBinExpr(ln, op[astn['operator']], rn)
-    except:
+    except KeyError:
       raise Exception("Unkown binary expression " + str(astn))
   elif (astn["type"] == "LogicalExpression"):
     ln,rn = _esprimaToBoogieExprAst(astn["left"], typeEnv), \
@@ -163,7 +163,7 @@ def _esprimaToBoogieExprAst(astn, typeEnv):
         '->': '==>',
       }
       return AstBinExpr(ln, op[astn['operator']], rn)
-    except:
+    except KeyError:
       raise Exception("Unkown logical expression " + str(astn))
   elif (astn["type"] == "Identifier"):
     return AstId(astn["name"]);
