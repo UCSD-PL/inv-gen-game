@@ -49,6 +49,14 @@ function check_implication(arg1: any, arg2: any) {
   return (!(<boolean>arg1) || (<boolean>arg2));
 }
 
+function both_booleans(arg1: any, arg2: any, op: string) : boolean {
+  if (typeof(arg1) !== "boolean" || typeof(arg2) !== "boolean") {
+    throw new InvException("OPERATOR_TYPES", op + " expects 2 booleans, not " +
+      arg1 + " and " + arg2);
+  }
+  return true;
+}
+
 function both_numbers(arg1: any, arg2: any, op: string): boolean {
   if (typeof(arg1) !== "number" || typeof(arg2) !== "number") {
     throw new InvException("OPERATOR_TYPES", op + " expects 2 numbers, not " +
@@ -378,7 +386,8 @@ function esprimaToEvalStr(nd: ESTree.Node): string {
       if (le.operator == "->")
         return "check_implication(" + args[0] + "," + args[1] + ")";
       else
-        return "(" + args[0] + le.operator + args[1] + ")"
+        return "(both_booleans(" + args[0] + "," + args[1] + ",\"" +
+          le.operator + "\")&&(" + args[0] + le.operator + args[1] + "))";
     }
 
     if (nd.type == "UnaryExpression") {
