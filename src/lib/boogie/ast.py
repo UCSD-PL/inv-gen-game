@@ -232,7 +232,7 @@ def stmt_changed(ast):
     if isinstance(ast, AstAssignment):
         return expr_read(ast.lhs)
     elif isinstance(ast, AstHavoc):
-        return set(ast.ids)
+        return set(map(lambda x:  x.name, ast.ids))
     elif isinstance(ast, AstAssume) or isinstance(ast, AstAssert):
         return set([])
     else:
