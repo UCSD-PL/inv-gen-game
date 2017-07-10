@@ -244,7 +244,7 @@ class StaticGameLogic extends BaseGameLogic implements IGameLogic {
           let gl = this;
           isTautology(ui.canonForm, function(res) {
             if (res) {
-              gl.tracesW.error("This is a always true...")
+              gl.tracesW.error("This is always true...")
               return
             }
 
@@ -428,7 +428,7 @@ class PatternGameLogic extends BaseGameLogic {
 
           isTautology(ui.rawInv, function(res) {
             if (res) {
-              gl.tracesW.error("This is a always true...")
+              gl.tracesW.error("This is always true...")
               return
             }
 
@@ -853,7 +853,7 @@ class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
         let gl = this;
         isTautology(esprima.parse(jsInv), function(res) {
           if (res) {
-            gl.tracesW.error("This is a always true...");
+            gl.tracesW.error("This is always true...");
             gl.tracesW.disableSubmit();
             doProceed = false;
             return;
