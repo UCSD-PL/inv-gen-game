@@ -7,8 +7,6 @@ implementation main()
 
 
   anon0:
-    lock := 0;
-    lock := 1;
     assume choice == 0 ==> lock == 0 && y == x + 1;
     assume choice != 0 ==> lock == 1 && y == x;
     goto anon4_LoopHead;
