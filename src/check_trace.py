@@ -45,7 +45,7 @@ def take_possible(bbs, loop, header_vals, timeout):
       if (not possible(bbs, header_vals[idx], [loop.loop_paths], header_vals[idx+1], args.timeout)):
         break
 
-      res.append(header_vals[idx])
+      res.append(header_vals[idx + 1])
       idx += 1
 
     return res
