@@ -28,9 +28,12 @@ def varproduct(vargens):
   # Take var: gen and generate all var assignments (smallest first), i.e.
   # "A": count(), "B": count() yields
   #   (A, B) = (0, 0), (0, 1), (1, 0), (0, 2), (1, 1), (2, 0), ...
-  vars_, gens = zip(*vargens.items())
-  for vals in product(*gens):
-    yield dict(zip(vars_, vals))
+  if len(vargens.items()) == 0:
+    yield {}
+  else:
+    vars_, gens = zip(*vargens.items())
+    for vals in product(*gens):
+      yield dict(zip(vars_, vals))
 
 def getEnsamble(loop, bbs, exec_limit, tryFind=100, distr=lambda: randint(0,5),
         include_bbhit=False, vargens=None):
@@ -290,12 +293,9 @@ def loadBoogieLvlSet(lvlSetFile):
         lvlName = t[0]
         lvlPath = t[1]
 
-        if lvlPath[0][0] != '/':
-          lvlPath[0] = join(lvlSetDir, lvlPath[0])
-
-        if lvlPath[1][0] != '/':
-          lvlPath[1] = join(lvlSetDir, lvlPath[1])
-
+        for i in range(len(lvlPath)):
+          lvlPath[i] = join(lvlSetDir, lvlPath[i])
+            
         error("Loading level: ", lvlPath[0])
         lvl = loadBoogieFile(lvlPath[0], False)
         lvl["path"] = lvlPath

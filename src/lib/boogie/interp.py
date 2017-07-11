@@ -1,5 +1,5 @@
 from collections import namedtuple
-from bb import BB
+from bb import BB, get_bbs, bbEntry
 from copy import copy
 from ast import AstAssert, AstAssume, AstHavoc, AstAssignment, AstGoto, \
   AstReturn, AstUnExpr, AstBinExpr, AstNumber, AstId, AstTrue, AstFalse
@@ -42,6 +42,7 @@ _arith_bin = {
   "-": lambda x, y:  x - y,
   "*": lambda x, y:  x * y,
   "div": lambda x, y:  x // y,
+  "mod": lambda x, y:  x % y,
 # These are not really arithmetic (return bool not int) but for runtime type checking
 # its sufficient to put them here
   "==": lambda x, y:  x == y,
@@ -133,6 +134,13 @@ def active(s):
   """
   return s.status == RUNNING
 
+def finished(s):
+  # type: (State) -> bool
+  """
+  Return true iff this state is in the finished state
+  """
+  return s.status == FINISHED
+
 
 def interp_one(bbs, state, rand):
   # type: (Program, State, RandF) -> Iterable[State]
@@ -174,7 +182,7 @@ def interp_one(bbs, state, rand):
     elif isinstance(stmt, AstHavoc):
       store = copy(store)
       for var_id in stmt.ids:
-        store[var_id] = rand(store, var_id)
+        store[var_id.name] = rand(store, var_id.name)
     elif isinstance(stmt, AstAssignment):
       v = eval_quick(stmt.rhs, store)
       store = copy(store)
@@ -232,8 +240,11 @@ def trace_n(bbs, state, nsteps, rand, filt):
 
   return (active_traces, inactive_traces)
 
+def trace_n_from_start(bbs, starting_store, nsteps, rand, filt):
+  starting_state = State(PC(bbEntry(bbs), 0), starting_store, RUNNING)
+  return trace_n(bbs, starting_state, nsteps, rand, filt)
+
 if __name__ == "__main__":
-  from bb import get_bbs, bbEntry
   from argparse import ArgumentParser
   from lib.common.util import error
   from random import randint, choice
