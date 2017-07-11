@@ -291,7 +291,7 @@ if __name__ == "__main__":
            ",".join([k + "={}".format(v) for (k, v) in st.store.items()])
 
   def pp_trace(t):
-    return "->".join(map(pp_state, t))
+    return "->\n".join(map(pp_state, t))
 
 
   print "Active({}):".format(len(active))
