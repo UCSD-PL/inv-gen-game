@@ -362,7 +362,7 @@ function esprimaToStr(nd: ESTree.Node): string {
   })
 }
 
-let NUM_BINOPS = new Set(["+", "-", "*", "div", "mod", "<", ">", "<=", ">="]);
+let NUM_BINOPS = new Set(["+", "-", "*", "/", "%", "<", ">", "<=", ">="]);
 
 function esprimaToEvalStr(nd: ESTree.Node): string {
   return estree_reduce<string>(nd,  (nd: ESTree.Node, args: string[]): string => {
