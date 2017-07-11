@@ -49,7 +49,23 @@ function check_implication(arg1: any, arg2: any) {
   return (!(<boolean>arg1) || (<boolean>arg2));
 }
 
-function both_booleans(arg1: any, arg2: any, op: string) : boolean {
+function check_boolean(arg: any, op: string): boolean {
+  if (typeof(arg) !== "boolean") {
+    throw new InvException("OPERATOR_TYPES", op + " expects a boolean, not " +
+      arg);
+  }
+  return true;
+}
+
+function check_number(arg: any, op: string): boolean {
+  if (typeof(arg) !== "number") {
+    throw new InvException("OPERATOR_TYPES", op + " expects a number, not " +
+      arg);
+  }
+  return true;
+}
+
+function both_booleans(arg1: any, arg2: any, op: string): boolean {
   if (typeof(arg1) !== "boolean" || typeof(arg2) !== "boolean") {
     throw new InvException("OPERATOR_TYPES", op + " expects 2 booleans, not " +
       arg1 + " and " + arg2);
@@ -392,10 +408,12 @@ function esprimaToEvalStr(nd: ESTree.Node): string {
 
     if (nd.type == "UnaryExpression") {
       let ue = <ESTree.UnaryExpression>nd;
-      let s = args[0]
-      if (ue.operator == '-' && s[0] == '-')
-        s = '(' + s + ')'
-      return "(" + ue.operator + s + ")"
+      if (ue.operator == "!")
+        checker = "check_boolean";
+      else
+        checker = "check_number";
+      return "(" + checker + "(" + args[0] + ",\"" + ue.operator + "\")&&(" +
+        ue.operator + "(" + args[0] + ")))";
     }
 
     if (nd.type == "Literal") {
