@@ -11,6 +11,7 @@ from sqlalchemy import case, func
 
 import mturk_util
 from experiments import Experiment
+from levels import loadBoogieLvlSet
 from lib.common.util import pp_exc, randomToken
 from models import open_sqlite_db, open_mysql_db, Event, LvlData
 from publish_hits import publish_hit
@@ -37,6 +38,7 @@ class ConfiguredExperiment:
     self.name = expconf["ename"]
     self.args = expconf["args"]
     self.min_finished_per_lvl = expconf["minFinishedPerLvl"]
+    self.lvls = expconf.get("lvls", None)
 
     self.exp = None
     self.load()
@@ -45,10 +47,11 @@ class ConfiguredExperiment:
     self.total_hits = 0
     self.active_hits = 0
 
-    # Sanity check
     lvlset = self.args["lvlset"]
-    if not isfile(lvlset):
-      raise Exception("Level set %s doesn't exist!" % lvlset)
+    _, lvls = loadBoogieLvlSet(lvlset)
+
+    if self.lvls is None:
+      self.lvls = lvls.keys()
 
     try:
       self.exp = Experiment(self.name)
@@ -84,15 +87,20 @@ class ConfiguredExperiment:
 
   def getMinFinishedPerLvl(self):
     s = sessionF()
-    rows = s.query(
-        LvlData.lvl,
-        func.count(case({0: 1}, value=LvlData.startflag))
-      ) \
-      .filter(
-        LvlData.experiment == self.name
-      ) \
-      .group_by(LvlData.lvl) \
-      .all()
+
+    rows = []
+    for lvl in self.lvls:
+      rows.extend(s.query(
+          LvlData.lvl,
+          func.count(case({0: 1}, value=LvlData.startflag))
+        )
+        .filter(
+          LvlData.experiment == self.name
+        )
+        .filter(
+          LvlData.lvl == lvl
+        )
+        .all())
 
     # We can probably compute this directly with the query
     return min(r[1] for r in rows) if rows else 0
