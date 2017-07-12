@@ -213,7 +213,10 @@
         colorLvlRow(row, data);
 
         hlist = $("<dl>");
-        $.each(res, function(hit, invs) {
+        $.each(res, function(hit, invdata) {
+          invs = invdata.invs;
+          proved = invdata.proved;
+
           invlist = $("<ul>")
             .addClass("list-inline");
           for (let inv of invs) {
@@ -224,6 +227,7 @@
 
           hlist.append($("<dt>")
               .text("HIT: " + hit)
+                .append(proved ? " &#10004;" : "")
             )
             .append($("<dd>")
               .append(invlist)

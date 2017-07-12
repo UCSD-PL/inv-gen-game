@@ -261,7 +261,8 @@ def getDashboardInvs(inputToken, experiment, lvl):
   s = sessionF()
   rows = s.query(
       LvlData.hit,
-      LvlData.allinvs
+      LvlData.allinvs,
+      LvlData.provedflag
     ) \
     .filter(
       LvlData.experiment == experiment,
@@ -270,12 +271,11 @@ def getDashboardInvs(inputToken, experiment, lvl):
     )
 
   d = dict()
-  for hit, allinvs in rows:
-    try:
-      invs = d[hit]
-    except KeyError:
-      invs = d[hit] = []
-    invs.extend(i[0] for i in json.loads(allinvs))
+  for hit, allinvs, proved in rows:
+    d[hit] = {
+      "invs": [i[0] for i in json.loads(allinvs)],
+      "proved": True if proved else False
+      }
 
   return d
 
