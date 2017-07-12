@@ -2,10 +2,10 @@
 procedure main()
 {
   var x, y, lock, choice: int;
+  /*
   lock := 0;
 
   lock := 1;
-  /*
   x := y;
   if (*)
   {

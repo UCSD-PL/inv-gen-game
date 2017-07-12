@@ -100,7 +100,8 @@ def get_unused_port():
     s.close()
     return port
 
-def start_server(port, experiment_name, srid, lvlset, adminToken, db):
+def start_server(port, experiment_name, srid, lvlset, adminToken, db,
+                 email=None):
     server_log = get_server_log_fname(experiment_name, srid)
     event_log = get_event_log_fname(experiment_name, srid)
 
@@ -116,6 +117,8 @@ def start_server(port, experiment_name, srid, lvlset, adminToken, db):
                 "--db", db,\
                 "--adminToken", adminToken
               ]
+        if email is not None:
+          cmd.extend(["--email", email])
         p = subprocess.Popen(cmd, stdout=output, stderr=subprocess.STDOUT)
     return p
 

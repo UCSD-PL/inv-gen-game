@@ -15,7 +15,7 @@ p.add_argument("--lvlset", type=str, default="unsolved",
 p.add_argument("--lvl", type=str, default="s-diamond_true-unreach-call1",
   help="lvl to use for generating traces")
 p.add_argument("--write", action="store_true")
-p.add_argument("--length", type=int, default=10, help="try find traces of lenght (defualt 10)")
+p.add_argument("--length", type=int, default=10, help="try find traces of length (defualt 10)")
 p.add_argument("--limit", type=int, default=100, help="max numer of traces found (defualt 100)")
 
 args = p.parse_args()
@@ -93,7 +93,7 @@ def gen():
 bbs = lvl["program"]
 # TODO Refine generators based on BB asserts?
 tracegen = levels.getEnsamble(loop=lvl["loop"], bbs=bbs, exec_limit=args.limit,
-  tryFind=args.lenght, include_bbhit=True, vargens={v: gen() for v in vars_})
+  tryFind=args.length, include_bbhit=True, vargens={v: gen() for v in vars_})
 
 bbset = set(bbs.viewkeys())
 nbbset = len(bbset)

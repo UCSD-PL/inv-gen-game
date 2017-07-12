@@ -11,30 +11,9 @@ from mturk_util import connect, mkParser, error
 from experiments import Experiment, get_unused_port, start_server, \
         HIT_REWARD, ServerRun
 
-p = mkParser("Run experiment", True)
-p.add_argument('--num_hits', type=int, required=True,
-               help='number of HITs to create')
-p.add_argument('--lvlset', type=str, required=True,
-               help='Lvlset to use for serving benchmarks"')
-p.add_argument('--adminToken', type=str,
-               help='Token to use to login to admin interfaces', required=True)
-p.add_argument('--no-ifs', action='store_const', const=True, default=False,
-               help='Dont teach implication in tutorial or show it ingame')
-p.add_argument('--individual', action='store_true',
-               help='Run in individual mode (levels solved by others don\'t count)')
-p.add_argument('--with-new-var-powerup', action='store_true',
-               help='Enable the new variable powerup')
-p.add_argument('--mode', type=str, default="patterns",
-               help='Game mode to play in. ',
-               choices=["patterns", "ctrex", "rounds"])
-p.add_argument('--db', type=str, required=True,
-               help='The database for the servers to use')
-
-args = p.parse_args()
-
-
 def publish_hit(credentials, isSandbox, ename, num_hits, lvlset, adminToken,
-                db, mode, no_ifs, individual, with_new_var_powerup):
+                db, mode, no_ifs, individual, with_new_var_powerup, mc=None,
+                email=None):
     title = "Play a Math Puzzle Game For Science!"
     max_assignments = 1
 
@@ -52,7 +31,8 @@ def publish_hit(credentials, isSandbox, ename, num_hits, lvlset, adminToken,
            Requirement(mastersQualType, "Exists")
         ]
 
-    mc = connect(credentials, isSandbox)
+    if mc is None:
+      mc = connect(credentials, isSandbox)
     balance = mc.get_account_balance()
     print "Balance:", balance[0]
     exp = Experiment(ename, True)
@@ -61,7 +41,7 @@ def publish_hit(credentials, isSandbox, ename, num_hits, lvlset, adminToken,
     for i in range(num_hits):
         port = get_unused_port()
         srid = exp.create_unique_server_run_id()
-        p = start_server(port, ename, srid, lvlset, adminToken, db)
+        p = start_server(port, ename, srid, lvlset, adminToken, db, email)
         print "Started server run", srid, "on port", port, "with pid", p.pid
         start_url =\
             "https://zoidberg.ucsd.edu:{0}/mturk_landing.html?mode=" + mode
@@ -87,8 +67,28 @@ def publish_hit(credentials, isSandbox, ename, num_hits, lvlset, adminToken,
         exp.add_session(ServerRun(srid, r[0].HITId, p.pid, port))
     return exp
 
-
 if __name__ == "__main__":
+    p = mkParser("Run experiment", True)
+    p.add_argument('--num_hits', type=int, required=True,
+                   help='number of HITs to create')
+    p.add_argument('--lvlset', type=str, required=True,
+                   help='Lvlset to use for serving benchmarks"')
+    p.add_argument('--adminToken', type=str,
+                   help='Token to use to login to admin interfaces', required=True)
+    p.add_argument('--no-ifs', action='store_const', const=True, default=False,
+                   help='Dont teach implication in tutorial or show it ingame')
+    p.add_argument('--individual', action='store_true',
+                   help='Run in individual mode (levels solved by others don\'t count)')
+    p.add_argument('--with-new-var-powerup', action='store_true',
+                   help='Enable the new variable powerup')
+    p.add_argument('--mode', type=str, default="patterns",
+                   help='Game mode to play in. ',
+                   choices=["patterns", "ctrex", "rounds"])
+    p.add_argument('--db', type=str, required=True,
+                   help='The database for the servers to use')
+
+    args = p.parse_args()
+
     try:
         publish_hit(args.credentials_file, args.sandbox, args.ename,
                     args.num_hits, args.lvlset, args.adminToken,

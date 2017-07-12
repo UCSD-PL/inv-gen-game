@@ -18,17 +18,16 @@ from vc_check import _from_dict, tryAndVerifyLvl, loopInvSafetyCtrex
 from levels import _tryUnroll, findNegatingTrace, loadBoogieLvlSet
 
 import argparse
-import json
 import sys
 from pp import pp_BoogieLvl, pp_EsprimaInv, pp_EsprimaInvs, pp_CheckInvsRes, \
         pp_tryAndVerifyRes, pp_mturkId, pp_EsprimaInvPairs
 from copy import copy
 from time import time
 from datetime import datetime
-from models import open_sqlite_db, open_mysql_db, Event, LvlData
+from models import open_sqlite_db, open_mysql_db, Event
 from db_util import playersWhoStartedLevel, enteredInvsForLevel,\
         getOrAddSource, addEvent, levelSolved, levelFinishedBy
-from sqlalchemy import case, func
+from mturk_util import send_notification
 from atexit import register
 from server_common import openLog, log, log_d
 
@@ -607,64 +606,27 @@ def getSolutions(): # Lvlset is assumed to be current by default
     res[curLevelSetName + "," + lvlId] = [boogieToEsprimaExpr(boogieSoln)]
   return res
 
-@api.method("App.getDashboard")
+@api.method("App.reportProblem")
 @pp_exc
-@log_d()
-def getDashboard(inputToken):
-  """ Return data for the dashboard view; only used by the dashboard.
+@log_d(pp_mturkId, str, str, str)
+def reportProblem(mturkId, lvl, desc):
+  """ Accept a problem report from a player and send it to the current
+      notification e-mail address.
   """
-  if inputToken != adminToken:
-    raise Exception(str(inputToken) + " not a valid token.")
+  lines = []
+  lines.append("A problem report has been submitted.")
+  lines.append("")
+  lines.append("Time: %s" %
+    datetime.now().strftime("%a, %d %b %Y %H:%M:%S %Z"))
+  lines.append("HIT: %s" % mturkId[1])
+  lines.append("Worker: %s" % mturkId[0])
+  lines.append("Experiment: %s" % args.ename)
+  lines.append("Level: %s" % lvl)
+  lines.append("Problem description:")
+  lines.append("")
+  lines.append(desc)
 
-  s = sessionF()
-  rows = s.query(
-      LvlData.experiment,
-      LvlData.lvl,
-      # count includes all non-null values, so we need case to exclude values
-      # that do not match (the default case returns null)
-      func.count(case({1: 1}, value=LvlData.startflag)),
-      func.count(case({0: 1}, value=LvlData.startflag)),
-      func.count(case({1: 1}, value=LvlData.provedflag))
-    ) \
-    .group_by(LvlData.experiment, LvlData.lvl)
-
-  return [ dict(zip([
-      "experiment",
-      "lvl",
-      "nStarted",
-      "nFinished",
-      "nProved"
-    ], r)) for r in rows ]
-
-@api.method("App.getDashboardInvs")
-@pp_exc
-@log_d()
-def getDashboardInvs(inputToken, experiment, lvl):
-  """ Return invariants for the dashboard view; only used by the dashboard.
-  """
-  if inputToken != adminToken:
-    raise Exception(str(inputToken) + " not a valid token.")
-
-  s = sessionF()
-  rows = s.query(
-      LvlData.hit,
-      LvlData.allinvs
-    ) \
-    .filter(
-      LvlData.experiment == experiment,
-      LvlData.lvl == lvl,
-      LvlData.startflag == 0
-    )
-
-  d = dict()
-  for hit, allinvs in rows:
-    try:
-      invs = d[hit]
-    except KeyError:
-      invs = d[hit] = []
-    invs.extend(i[0] for i in json.loads(allinvs))
-
-  return d
+  send_notification(args.email, "Inv-Game Problem Report", "\n".join(lines))
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description="invariant gen game server")
@@ -685,6 +647,8 @@ if __name__ == "__main__":
             'If omitted will be randomly generated')
     p.add_argument('--timeout', type=int, default=60,
             help='Timeout in seconds for z3 queries.')
+    p.add_argument('--email', type=str,
+            help='E-mail address to notify for problem reports')
 
     args = p.parse_args();
 

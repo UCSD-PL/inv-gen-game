@@ -70,7 +70,7 @@ def tryAndVerify(bbs,\
                                            timeout)
 
 def tryAndVerifyLvl(lvl, userInvs, otherInvs, timeout = None, \
-        useSplitters = True, addSPs = True, generalizeUserInvs = True):
+        useSplitters = True, addSPs = True, generalizeUserInvs = False):
     """ Try and verify a given Lvl.
 
           lvl - level to verify

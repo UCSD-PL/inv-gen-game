@@ -19,7 +19,9 @@ function interpretError(err: Error): (string|Error) {
     return "Not a valid expression."
   } else if (err.name == 'NOT_BOOL') {
     return "Expression should evaluate to true or false, not " + err.message + " for example."
-  } else if (err.name == "UnsupportedError") {
+  } else if (err.name == "UnsupportedError"
+          || err.name == "IMPLICATION_TYPES"
+          || err.name == "OPERATOR_TYPES") {
     return (<InvException>err).message;
   }
 
@@ -45,6 +47,46 @@ function check_implication(arg1: any, arg2: any) {
   }
 
   return (!(<boolean>arg1) || (<boolean>arg2));
+}
+
+function check_boolean(arg: any, op: string): boolean {
+  if (typeof(arg) !== "boolean") {
+    throw new InvException("OPERATOR_TYPES", op + " expects a boolean, not " +
+      arg);
+  }
+  return true;
+}
+
+function check_number(arg: any, op: string): boolean {
+  if (typeof(arg) !== "number") {
+    throw new InvException("OPERATOR_TYPES", op + " expects a number, not " +
+      arg);
+  }
+  return true;
+}
+
+function both_booleans(arg1: any, arg2: any, op: string): boolean {
+  if (typeof(arg1) !== "boolean" || typeof(arg2) !== "boolean") {
+    throw new InvException("OPERATOR_TYPES", op + " expects 2 booleans, not " +
+      arg1 + " and " + arg2);
+  }
+  return true;
+}
+
+function both_numbers(arg1: any, arg2: any, op: string): boolean {
+  if (typeof(arg1) !== "number" || typeof(arg2) !== "number") {
+    throw new InvException("OPERATOR_TYPES", op + " expects 2 numbers, not " +
+      arg1 + " and " + arg2);
+  }
+  return true;
+}
+
+function same_type(arg1: any, arg2: any, op: string): boolean {
+  if (typeof(arg1) !== typeof(arg2)) {
+    throw new InvException("OPERATOR_TYPES", op + " expects operands of the" +
+      " same type, not " + arg1 + " and " + arg2);
+  }
+  return true;
 }
 
 function invEval(inv:invariantT, variables: string[], data: any[][]): any[] {
@@ -336,6 +378,8 @@ function esprimaToStr(nd: ESTree.Node): string {
   })
 }
 
+let NUM_BINOPS = new Set(["+", "-", "*", "/", "%", "<", ">", "<=", ">="]);
+
 function esprimaToEvalStr(nd: ESTree.Node): string {
   return estree_reduce<string>(nd,  (nd: ESTree.Node, args: string[]): string => {
     if (nd.type == "Program") {
@@ -344,7 +388,13 @@ function esprimaToEvalStr(nd: ESTree.Node): string {
 
     if (nd.type == "BinaryExpression") {
       let be = <ESTree.BinaryExpression>nd;
-      return "(" + args[0] + be.operator + args[1] + ")"
+      var checker: String;
+      if (NUM_BINOPS.has(be.operator))
+        checker = "both_numbers";
+      else
+        checker = "same_type";
+      return "(" + checker + "(" + args[0] + "," + args[1] + ",\"" +
+        be.operator + "\")&&(" + args[0] + be.operator + args[1] + "))";
     }
 
     if (nd.type == "LogicalExpression") {
@@ -352,15 +402,18 @@ function esprimaToEvalStr(nd: ESTree.Node): string {
       if (le.operator == "->")
         return "check_implication(" + args[0] + "," + args[1] + ")";
       else
-        return "(" + args[0] + le.operator + args[1] + ")"
+        return "(both_booleans(" + args[0] + "," + args[1] + ",\"" +
+          le.operator + "\")&&(" + args[0] + le.operator + args[1] + "))";
     }
 
     if (nd.type == "UnaryExpression") {
       let ue = <ESTree.UnaryExpression>nd;
-      let s = args[0]
-      if (ue.operator == '-' && s[0] == '-')
-        s = '(' + s + ')'
-      return "(" + ue.operator + s + ")"
+      if (ue.operator == "!")
+        checker = "check_boolean";
+      else
+        checker = "check_number";
+      return "(" + checker + "(" + args[0] + ",\"" + ue.operator + "\")&&(" +
+        ue.operator + "(" + args[0] + ")))";
     }
 
     if (nd.type == "Literal") {

@@ -152,7 +152,7 @@ class CounterexGameLogic extends BaseGameLogic {
 
           isTautology(ui.rawInv, function(res) {
             if (res) {
-              gl.tracesW.error("This is a always true...")
+              gl.tracesW.error("This is always true...")
               return
             }
 
