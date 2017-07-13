@@ -1,0 +1,40 @@
+{
+  "name" : "max-5more",
+  "levels": [
+	[ "s9", 
+		[
+			"../new-max-benchmarks/s9.desugared.bpl",
+			"../new-max-benchmarks/s9.c",
+			"../max-benchmarks/s9.bpl"
+		]
+	],
+	[ "s10", 
+		[
+			"../new-max-benchmarks/s10.desugared.bpl",
+			"../new-max-benchmarks/s10.c",
+			"../new-max-benchmarks/s10.bpl"
+		]
+	],
+	[ "s11", 
+	[
+			"../new-max-benchmarks/s11.desugared.bpl",
+			"../new-max-benchmarks/s11.c",
+			"../new-max-benchmarks/s11.bpl"
+		]
+	],
+	[ "ineq1", 
+		[
+			"../new-max-benchmarks/non_lin_ineq_1.desugared.bpl",
+			"../new-max-benchmarks/non_lin_ineq_1.c",
+			"../new-max-benchmarks/non_lin_ineq_1.bpl"
+		]
+	],
+	[ "ineq2", 
+		[
+			"../new-max-benchmarks/non_lin_ineq_2.desugared.bpl",
+			"../new-max-benchmarks/non_lin_ineq_2.c",
+			"../new-max-benchmarks/non_lin_ineq_2.bpl"
+		]
+	]
+  ]
+}

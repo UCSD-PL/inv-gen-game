@@ -1,0 +1,14 @@
+Reading training data      
+Constructing decision tree   ....................  (0 cases covered)
+Constructing decision tree   >>..................  (15 cases covered)
+Constructing decision tree   >>>.................  (25 cases covered)
+Constructing decision tree   >>>>................  (39 cases covered)
+Constructing decision tree   >>>>>...............  (46 cases covered)
+Constructing decision tree   >>>>>>..............  (62 cases covered)
+Constructing decision tree   >>>>>>>.............  (69 cases covered)
+Constructing decision tree   >>>>>>>>............  (74 cases covered)
+Constructing decision tree   >>>>>>>>>...........  (86 cases covered)
+Constructing decision tree   >>>>>>>>>>>.........  (104 cases covered)
+Constructing decision tree   >>>>>>>>>>>>........  (115 cases covered)
+Simplifying decision tree    ....................  (0 cases covered)
+Evaluating on training data

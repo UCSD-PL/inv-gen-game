@@ -9,8 +9,10 @@ import re
 
 MYDIR = dirname(abspath(relpath(__file__)))
 
+#ICE_PATH = MYDIR + \
+#           "/../../../env/third_party/ice/Boogie/Binaries-full/"
 ICE_PATH = MYDIR + \
-           "/../../../env/third_party/ice/Boogie/Binaries-full/"
+           "/../../../env/third_party/ice/Boogie/Binaries/"
 
 
 def parseAbstractionFile(fname):
