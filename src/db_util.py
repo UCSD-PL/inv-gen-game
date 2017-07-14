@@ -9,9 +9,13 @@ def playersWhoStartedLevel(lvlset, lvl, session):
                                  e.payl()["lvlset"] == lvlset and
                                  e.payl()["lvlid"] == lvl) ])
 
-def enteredInvsForLevel(lvlset, lvl, session):
+def enteredInvsForLevel(lvlset, lvl, session, workerId=None):
+  def filterWorker(q):
+    if workerId is not None:
+      q = q.filter(Event.src == workerId)
+    return q
   invM = { p["canonical"]: p["raw"] for p in
-            [ e.payl() for e in session.query(Event).all()
+            [ e.payl() for e in filterWorker(session.query(Event)).all()
               if e.type == "FoundInvariant"] 
             if p["lvlset"] == lvlset and p["lvlid"] == lvl }
 

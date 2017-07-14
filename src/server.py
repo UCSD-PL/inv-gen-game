@@ -220,10 +220,11 @@ def loadNextLvl(workerId, mturkId, individualMode):
     """ Return the unsolved level seen by the fewest users. """
     session = sessionF();
     level_names = traces[curLevelSetName].keys();
-    num_invs = [len(enteredInvsForLevel(curLevelSetName, x, session))
-                    for x in level_names]
+    num_invs = [len(enteredInvsForLevel(curLevelSetName, x, session,
+      workerId=(workerId if individualMode else None))) for x in level_names]
     ninvs_and_level = zip(num_invs, level_names)
-    ninvs_and_level.sort()
+    # Stable sort on num only to preserve lvlset order
+    ninvs_and_level.sort(key=lambda x: x[0])
 
     for _, lvlId in ninvs_and_level:
         if levelSolved(session, curLevelSetName, lvlId,
