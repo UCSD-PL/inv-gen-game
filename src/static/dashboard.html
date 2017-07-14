@@ -18,6 +18,12 @@
   <link rel="stylesheet" href="admin.css">
   <script src="build/ts/util.js"></script>
 
+  <style type="text/css">
+    dt.proved:after {
+      content: " \2714";
+    }
+  </style>
+
   <script type="text/javascript">
     var adminToken;
     var refreshIntervalId;
@@ -227,7 +233,7 @@
 
           hlist.append($("<dt>")
               .text("HIT: " + hit)
-                .append(proved ? " &#10004;" : "")
+              .addClass((proved ? "" : "not-") + "proved")
             )
             .append($("<dd>")
               .append(invlist)
