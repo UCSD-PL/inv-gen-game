@@ -371,8 +371,6 @@ for s in e.server_runs:
                     print "-- Time: " + time_str
                     if need_to_pay and worker_id == assn_worker_id:
                         found_game_done = True
-                        add_payment(LevelsPayment(worker_id, assn_id, \
-                                                  num_levels))
                         if worker_id in lvlPayments:
                           print "!! ERROR: Multiple GameDone events for ", \
                                 worker_id, "for run", s.srid
