@@ -279,6 +279,29 @@ def getDashboardInvs(inputToken, experiment, lvl):
 
   return d
 
+@api.method("App.getSurvey")
+@pp_exc
+@log_d()
+def getSurvey(inputToken, hit):
+  """ Return survey responses for the given HIT; only used by the dashboard.
+  """
+  if inputToken != adminToken:
+    raise Exception(str(inputToken) + " not a valid token.")
+
+  r = mc.get_assignments(hit)
+  complete = len(r) > 0
+
+  survey = {}
+  if complete:
+    assn = r[0]
+    for ans in assn.answers[0]:
+      survey[ans.qid] = ans.fields[0]
+
+  return {
+    "complete": complete,
+    "survey": survey
+    }
+
 @api.method("App.refreshExperiments")
 @pp_exc
 @log_d()
