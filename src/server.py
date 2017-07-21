@@ -26,7 +26,8 @@ from time import time
 from datetime import datetime
 from models import open_sqlite_db, open_mysql_db, Event
 from db_util import playersWhoStartedLevel, enteredInvsForLevel,\
-        getOrAddSource, addEvent, levelSolved, levelFinishedBy
+        getOrAddSource, addEvent, levelSolved, levelFinishedBy,\
+        levelsPlayedInSession
 from mturk_util import send_notification
 from atexit import register
 from server_common import openLog, log, log_d
@@ -219,6 +220,14 @@ def genNextLvl(workerId, mturkId, levelSet, levelId, invs, individualMode):
 def loadNextLvl(workerId, mturkId, individualMode):
     """ Return the unsolved level seen by the fewest users. """
     session = sessionF();
+
+    if args.maxlvls is not None:
+      hitId = mturkId[1]
+      # It's inefficient to look through all the levels twice.  This can
+      # probably be combined with the logic below with some effort.
+      if levelsPlayedInSession(session, hitId) >= args.maxlvls:
+        return
+
     level_names = traces[curLevelSetName].keys();
     num_invs = [len(enteredInvsForLevel(curLevelSetName, x, session,
       workerId=(workerId if individualMode else None))) for x in level_names]
@@ -650,6 +659,8 @@ if __name__ == "__main__":
             help='Timeout in seconds for z3 queries.')
     p.add_argument('--email', type=str,
             help='E-mail address to notify for problem reports')
+    p.add_argument('--maxlvls', type=int,
+            help='Maximum number of levels that can be played per HIT')
 
     args = p.parse_args();
 

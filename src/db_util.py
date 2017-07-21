@@ -2,6 +2,7 @@ from models import Source, Event
 from json import loads,dumps
 from datetime import datetime
 from js import esprimaToBoogie
+from sqlalchemy import func
 
 def playersWhoStartedLevel(lvlset, lvl, session):
   return set([ e.source.name for e in session.query(Event).all()
@@ -107,3 +108,9 @@ def levelFinishedBy(session, lvlset, lvlid, userId):
   finishLevelPayls = [ x for x in finishLevelPayls\
                          if x["lvlset"] == lvlset and x["lvlid"] == lvlid]
   return len(finishLevelPayls) > 0
+
+def levelsPlayedInSession(session, hitId):
+  return session.query(func.count(Event.id)) \
+    .filter(Event.type == "FinishLevel") \
+    .filter(func.json_extract(Event.payload, "$.hitId") == hitId) \
+    .scalar()
