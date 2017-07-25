@@ -43,8 +43,10 @@ def write_trace_col_format(lvl, trace, marker = None):
 def trace_to_str(trace):
   if len(trace) == 0:
     return ""
-  return " ".join(trace[0].keys()) + "\n" + \
-         "\n".join([" ".join([str(val) for var,val in e.iteritems()]) for e in trace]) + "\n"
+  keys = trace[0].keys()
+  keys.sort()
+  return " ".join(keys) + "\n" + \
+         "\n".join([" ".join([str(e[k]) for k in keys]) for e in trace]) + "\n"
 
 def split_trace(trace, pred):
   if pred == None:
@@ -93,17 +95,22 @@ def cat(fname):
 def print_comparison(lvl_name):
   lvl = lvls[lvl_name]
   print("== Comparison for " + lvl_name + " ==")
-  cat(lvl["path"][2])
+  cat(find_original_boogie_file(lvl))
   print("== Manual Trace ==")
   cat(lvl["path"][0][:-4] + ".trace")
   print("== Auto Trace ==")
   cat(lvl["path"][0][:-4] + ".auto.trace")
 
+def find_original_boogie_file(lvl):
+  for p in lvl["path"][1:]:
+    if p.endswith(".bpl"):
+      return p
+
 def run_lvl(lvl_name):
   print("== " + lvl_name)
   
   lvl = lvls[lvl_name]
-  spliter_pred = find_split_pred(lvl["path"][2])
+  spliter_pred = find_split_pred(find_original_boogie_file(lvl))
   print("Spliter pred: " + str(spliter_pred))
 
   if spliter_pred:
