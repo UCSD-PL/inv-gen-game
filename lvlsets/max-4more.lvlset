@@ -1,0 +1,33 @@
+{
+  "name" : "max-4more",
+  "levels": [
+	[ "NON-LIN-INEQ-3", 
+		[
+			"../new-max-benchmarks/non-lin-ineq-3.desugared.bpl",
+			"../new-max-benchmarks/non-lin-ineq-3.c",
+			"../max-benchmarks/non-lin-ineq-3.bpl"
+		]
+	],
+	[ "NON-LIN-INEQ-4", 
+		[
+			"../new-max-benchmarks/non-lin-ineq-4.desugared.bpl",
+			"../new-max-benchmarks/non-lin-ineq-4.c",
+			"../new-max-benchmarks/non-lin-ineq-4.bpl"
+		]
+	],
+	[ "PROD-BIN", 
+	[
+			"../new-max-benchmarks/prod-bin.desugared.bpl",
+			"../new-max-benchmarks/prod-bin.c",
+			"../new-max-benchmarks/prod-bin.bpl"
+		]
+	],
+	[ "CUBE2", 
+		[
+			"../new-max-benchmarks/cube2.desugared.bpl",
+			"../new-max-benchmarks/cube2.c",
+			"../new-max-benchmarks/cube2.bpl"
+		]
+	]
+  ]
+}
