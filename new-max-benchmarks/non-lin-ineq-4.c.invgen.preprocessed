@@ -1,0 +1,25 @@
+# 1 "/tmp/tmpgHhM8r.cpp"
+# 1 "<built-in>"
+# 1 "<command-line>"
+# 1 "/usr/include/stdc-predef.h" 1 3 4
+# 1 "<command-line>" 2
+# 1 "/tmp/tmpgHhM8r.cpp"
+
+int NONDET;
+extern int NONDET;
+extern void assume(int);
+
+void main()
+{
+  int i = 0;
+  int j = 1;
+  int k = 0;
+  while (i < 1000)
+
+  {
+   i = i + 1;
+   j = j + 1;
+   k = k + i*j;
+  }
+  assert(1000*j<=k);
+}

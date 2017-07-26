@@ -5,7 +5,7 @@
 		[
 			"../new-max-benchmarks/non-lin-ineq-3.desugared.bpl",
 			"../new-max-benchmarks/non-lin-ineq-3.c",
-			"../max-benchmarks/non-lin-ineq-3.bpl"
+			"../new-max-benchmarks/non-lin-ineq-3.bpl"
 		]
 	],
 	[ "NON-LIN-INEQ-4", 

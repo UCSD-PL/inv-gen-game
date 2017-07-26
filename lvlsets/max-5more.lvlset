@@ -5,7 +5,7 @@
 		[
 			"../new-max-benchmarks/s9.desugared.bpl",
 			"../new-max-benchmarks/s9.c",
-			"../max-benchmarks/s9.bpl"
+			"../new-max-benchmarks/s9.bpl"
 		]
 	],
 	[ "s10", 
