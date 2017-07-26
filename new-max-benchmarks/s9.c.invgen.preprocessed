@@ -1,0 +1,26 @@
+# 1 "/tmp/tmpZxr84z.cpp"
+# 1 "<built-in>"
+# 1 "<command-line>"
+# 1 "/usr/include/stdc-predef.h" 1 3 4
+# 1 "<command-line>" 2
+# 1 "/tmp/tmpZxr84z.cpp"
+
+int NONDET;
+extern int NONDET;
+extern void assume(int);
+
+void main()
+{
+  int j = 0;
+  int i = 0;
+  int k;
+  int l;
+  assume(k>=0);
+  while (j < k)
+
+  {
+    i = i + l * k;
+    j = j + 1;
+  }
+  assert(i == k*j*l);
+}

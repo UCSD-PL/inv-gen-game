@@ -1,0 +1,26 @@
+{
+  "name" : "max-5more",
+  "levels": [
+	[ "s9", 
+		[
+			"../new-max-benchmarks/s9.desugared.bpl",
+			"../new-max-benchmarks/s9.c",
+			"../max-benchmarks/s9.bpl"
+		]
+	],
+	[ "s10", 
+		[
+			"../new-max-benchmarks/s10.desugared.bpl",
+			"../new-max-benchmarks/s10.c",
+			"../new-max-benchmarks/s10.bpl"
+		]
+	],
+	[ "s11", 
+	[
+			"../new-max-benchmarks/s11.desugared.bpl",
+			"../new-max-benchmarks/s11.c",
+			"../new-max-benchmarks/s11.bpl"
+		]
+	]
+  ]
+}

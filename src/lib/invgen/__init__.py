@@ -54,19 +54,20 @@ def runInvGen(cppFile, mainRoutine):
   with NamedTemporaryFile(suffix=".front.out", delete=False) as frontOut,\
        NamedTemporaryFile(suffix=".invgen.out", delete=False) as invgenOut,\
        NamedTemporaryFile(suffix=".pl", delete=False) as transitionsF:
-    if isfile(INVGEN_PATH + "/frontend"):
-      frontendName = "/frontend"
-    else:
-      frontendName = "/frontend.exe"
-    if isfile(INVGEN_PATH + "/invgen"):
-      invgenName = "/invgen"
-    else:
-      invgenName = "/invgen.exe"
-
-    args = [ INVGEN_PATH + frontendName,
+#    if isfile(INVGEN_PATH + "frontend"):
+    frontendName = "frontend"
+#    else:
+#     frontendName = "frontend.exe"
+#    if isfile(INVGEN_PATH + "invgen"):
+    invgenName = "invgen"
+#    else:
+#      invgenName = "invgen.exe"
+    fend = INVGEN_PATH + frontendName
+    args = [ fend,
               "-main", mainRoutine,
               cppFile,
               "-o", transitionsF.name]
+    error("Frontend path ", fend)
     error("Frontend output in ", frontOut.name)
     try:
       check_call(args, stderr=STDOUT, stdout=frontOut);
@@ -82,7 +83,9 @@ def runInvGen(cppFile, mainRoutine):
       raise e
     
     error("Transitions file in ", transitionsF.name)
-    args = [ INVGEN_PATH + invgenName, transitionsF.name]
+    igen = INVGEN_PATH + invgenName
+    args = [ igen, transitionsF.name]
+    error("Invgen path ", igen)
     error("Invgen output in ", invgenOut.name)
     try:
       raw = check_output(args, stderr=STDOUT);
