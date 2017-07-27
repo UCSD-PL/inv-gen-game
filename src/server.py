@@ -229,8 +229,8 @@ def loadNextLvl(workerId, mturkId, individualMode):
         return
 
     level_names = traces[curLevelSetName].keys();
-    num_invs = [len(enteredInvsForLevel(curLevelSetName, x, session,
-      workerId=(workerId if individualMode else None))) for x in level_names]
+    num_invs = [len(enteredInvsForLevel(curLevelSetName, x, session))
+      for x in level_names]
     ninvs_and_level = zip(num_invs, level_names)
     # Stable sort on num only to preserve lvlset order
     ninvs_and_level.sort(key=lambda x: x[0])
