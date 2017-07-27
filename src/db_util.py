@@ -22,6 +22,39 @@ def enteredInvsForLevel(lvlset, lvl, session, workerId=None):
 
   return set(invM.iteritems())
 
+def allInvs(session, enames=[], lvls=[], lvlsets=[], workers=[],
+  enameSet=None, lvlSet=None, lvlsetSet=None, workerSet=None):
+  q = session.query(
+      Event.experiment,
+      func.json_extract(Event.payload, "$.lvlid"),
+      func.json_extract(Event.payload, "$.lvlset"),
+      func.json_extract(Event.payload, "$.workerId"),
+      func.json_extract(Event.payload, "$.all_found")
+    ) \
+    .filter(Event.type == "FinishLevel")
+
+  if enames:
+    q = q.filter(Event.experiment.in_(enames))
+  if lvls:
+    q = q.filter(func.json_extract(Event.payload, "$.lvlid").in_(lvls))
+  if lvlsets:
+    q = q.filter(func.json_extract(Event.payload, "$.lvlset").in_(lvlsets))
+  if workers:
+    q = q.filter(func.json_extract(Event.payload, "$.workerId").in_(workers))
+
+  for row in q.all():
+    if enameSet is not None:
+      enameSet.add(row[0])
+    if lvlSet is not None:
+      lvlSet.add(row[1])
+    if lvlsetSet is not None:
+      lvlsetSet.add(row[2])
+    if workerSet is not None:
+      workerSet.add(row[3])
+
+    for raw, canonical in loads(row[4]):
+      yield canonical
+
 def getOrAddSource(name, session):
   srcs = session.query(Source).filter(Source.name == name).all()
   if (len(srcs) != 0):
