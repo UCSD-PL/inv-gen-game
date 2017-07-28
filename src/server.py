@@ -25,8 +25,7 @@ from copy import copy
 from time import time
 from datetime import datetime
 from models import open_sqlite_db, open_mysql_db, Event
-from db_util import playersWhoStartedLevel, enteredInvsForLevel,\
-        getOrAddSource, addEvent, levelSolved, levelFinishedBy,\
+from db_util import addEvent, allInvs, levelSolved, levelFinishedBy,\
         levelsPlayedInSession
 from mturk_util import send_notification
 from atexit import register
@@ -229,7 +228,7 @@ def loadNextLvl(workerId, mturkId, individualMode):
         return
 
     level_names = traces[curLevelSetName].keys();
-    num_invs = [len(enteredInvsForLevel(curLevelSetName, x, session))
+    num_invs = [len(allInvs(session, lvlsets=[curLevelSetName], lvls=[x]))
       for x in level_names]
     ninvs_and_level = zip(num_invs, level_names)
     # Stable sort on num only to preserve lvlset order

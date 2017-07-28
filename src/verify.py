@@ -63,7 +63,7 @@ if __name__ == "__main__":
   dbInvs = allInvs(s, args.enames, args.lvls, args.lvlsets, args.workers,
     actualEnames, actualLvls, actualLvlsets, actualWorkers)
 
-  invs = set(parseExprAst(inv) for inv in dbInvs)
+  invs = set(parseExprAst(inv[0]) for inv in dbInvs)
 
   print "ENAMES:", ", ".join(actualEnames)
   print "LVLS:", ", ".join(actualLvls)
