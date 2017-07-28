@@ -228,13 +228,16 @@ def loadNextLvl(workerId, mturkId, individualMode):
         return
 
     level_names = traces[curLevelSetName].keys();
-    num_invs = [len(allInvs(session, lvlsets=[curLevelSetName], lvls=[x]))
+    sort_keys = [len(allInvs(session, lvlsets=[curLevelSetName], lvls=[x]))
       for x in level_names]
-    ninvs_and_level = zip(num_invs, level_names)
-    # Stable sort on num only to preserve lvlset order
-    ninvs_and_level.sort(key=lambda x: x[0])
+    if individualMode:
+      sort_keys = zip([len(allInvs(session, lvlsets=[curLevelSetName],
+        lvls=[x], workers=[workerId])) for x in level_names], sort_keys)
+    key_and_level = zip(sort_keys, level_names)
+    # Stable sort on key only to preserve lvlset order
+    key_and_level.sort(key=lambda x: x[0])
 
-    for _, lvlId in ninvs_and_level:
+    for _, lvlId in key_and_level:
         if levelSolved(session, curLevelSetName, lvlId,
             workerId=(workerId if individualMode else None)) or \
            (workerId != "" and \
