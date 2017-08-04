@@ -10,26 +10,35 @@ def playersWhoStartedLevel(lvlset, lvl, session):
                                  e.payl()["lvlset"] == lvlset and
                                  e.payl()["lvlid"] == lvl) ])
 
+def filterEvents(query, enames=[], lvls=[], lvlsets=[], workers=[]):
+  if enames:
+    query = query.filter(Event.experiment.in_(enames))
+  if lvls:
+    query = query.filter(func.json_extract(Event.payload, "$.lvlid")
+      .in_(lvls))
+  if lvlsets:
+    query = query.filter(func.json_extract(Event.payload, "$.lvlset")
+      .in_(lvlsets))
+  if workers:
+    query = query.filter(func.json_extract(Event.payload, "$.workerId")
+      .in_(workers))
+
+  return query
+
 def allInvs(session, enames=[], lvls=[], lvlsets=[], workers=[],
-  enameSet=None, lvlSet=None, lvlsetSet=None, workerSet=None):
+  enameSet=None, lvlSet=None, lvlsetSet=None, workerSet=None, colSwaps=None):
   q = session.query(
       Event.experiment,
       func.json_extract(Event.payload, "$.lvlid"),
       func.json_extract(Event.payload, "$.lvlset"),
       func.json_extract(Event.payload, "$.workerId"),
       func.json_extract(Event.payload, "$.canonical"),
-      func.json_extract(Event.payload, "$.raw")
+      func.json_extract(Event.payload, "$.raw"),
+      func.ifnull(func.json_extract(Event.payload, "$.colSwap"), 0)
     ) \
     .filter(Event.type == "FoundInvariant")
 
-  if enames:
-    q = q.filter(Event.experiment.in_(enames))
-  if lvls:
-    q = q.filter(func.json_extract(Event.payload, "$.lvlid").in_(lvls))
-  if lvlsets:
-    q = q.filter(func.json_extract(Event.payload, "$.lvlset").in_(lvlsets))
-  if workers:
-    q = q.filter(func.json_extract(Event.payload, "$.workerId").in_(workers))
+  q = filterEvents(q, enames, lvls, lvlsets, workers)
 
   def gen():
     for row in q.all():
@@ -41,6 +50,11 @@ def allInvs(session, enames=[], lvls=[], lvlsets=[], workers=[],
         lvlsetSet.add(row[2])
       if workerSet is not None:
         workerSet.add(row[3])
+      if colSwaps is not None:
+        try:
+          colSwaps[row[6]] += 1
+        except KeyError:
+          colSwaps[row[6]] = 1
 
       yield (row[4], row[5])
 
@@ -80,11 +94,15 @@ def addEvent(sourceName, typ, time, ename,  addr, data, session, mturkId):
       payl["verified"] = data[2]
       invs = zip(data[3], [ str(esprimaToBoogie(x, {})) for x in data[4] ])
       payl["all_found"] = invs;
+    colSwap = data[-1]
+    if colSwap is not None:
+      payl["colSwap"] = colSwap
   elif (typ == "FoundInvariant" or typ == "TriedInvariant"):
     payl["lvlset"] = data[0]
     payl["lvlid"] = data[1]
     payl["raw"] = data[2]
     payl["canonical"] = str(esprimaToBoogie(data[3], { }))
+    payl["colSwap"] = data[4]
   elif (typ == "PowerupsActivated"):
     payl["lvlset"] = data[0]
     payl["lvlid"] = data[1]

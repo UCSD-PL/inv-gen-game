@@ -128,7 +128,7 @@ class RoundsGameLogic extends BaseGameLogic {
 
       simplify(jsInv, (simplInv: ESTree.Node) => {
         let ui: UserInvariant = new UserInvariant(inv, jsInv, simplInv)
-        logEvent("TriedInvariant", [curLvlSet, gl.curLvl.id, ui.rawUserInp, ui.canonForm]);
+        logEvent("TriedInvariant", [curLvlSet, gl.curLvl.id, ui.rawUserInp, ui.canonForm, gl.curLvl.colSwap]);
 
         let redundant = this.progressW.contains(ui.id)
         if (redundant) {
@@ -181,7 +181,7 @@ class RoundsGameLogic extends BaseGameLogic {
                 //gl.curLvl.data[2] = [];
                 //(<CounterexTracesWindow>gl.tracesW).clearNegRows();
 
-                logEvent("FoundInvariant", [curLvlSet, gl.curLvl.id, ui.rawUserInp, ui.canonForm]);
+                logEvent("FoundInvariant", [curLvlSet, gl.curLvl.id, ui.rawUserInp, ui.canonForm, gl.curLvl.colSwap]);
                 if (!gl.lvlPassedF) {
                   if (gl.foundJSInv.length >= 6) {
                     var coin = Math.random() > .5;
@@ -194,7 +194,8 @@ class RoundsGameLogic extends BaseGameLogic {
                                 gl.curLvl.id,
                                 false,
                                 gl.foundJSInv.map((x)=>x.rawUserInp),
-                                gl.foundJSInv.map((x)=>x.canonForm)]);
+                                gl.foundJSInv.map((x)=>x.canonForm),
+                                gl.curLvl.colSwap]);
                     }
                   } else {
                     /*
@@ -233,7 +234,8 @@ class RoundsGameLogic extends BaseGameLogic {
                                 gl.curLvl.id,
                                 sat,
                                 gl.foundJSInv.map((x)=>x.rawUserInp),
-                                gl.foundJSInv.map((x)=>x.canonForm)]);
+                                gl.foundJSInv.map((x)=>x.canonForm),
+                                gl.curLvl.colSwap]);
                       gl.lvlPassedF = true;
                       gl.lvlPassedCb();
                     });
@@ -286,19 +288,21 @@ class RoundsGameLogic extends BaseGameLogic {
     this.lvlLoadedCb = loadedCb;
     if (this.lvlLoadedCb)
       this.lvlLoadedCb();
-    logEvent("StartLevel", [curLvlSet, this.curLvl.id]);
+    logEvent("StartLevel", [curLvlSet, this.curLvl.id, this.curLvl.colSwap]);
   }
 
   skipToNextLvl() : void {
     logEvent("SkipToNextLevel",
              [curLvlSet,
-              this.curLvl.id]);
+              this.curLvl.id,
+              this.curLvl.colSwap]);
     logEvent("FinishLevel",
              [curLvlSet,
               this.curLvl.id,
               false,
               this.foundJSInv.map((x)=>x.rawUserInp),
-              this.foundJSInv.map((x)=>x.canonForm)]);
+              this.foundJSInv.map((x)=>x.canonForm),
+              this.curLvl.colSwap]);
     this.lvlPassedF = true;
     this.lvlPassedCb();
   }
