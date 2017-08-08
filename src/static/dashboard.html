@@ -22,6 +22,12 @@
     dt.proved:after {
       content: " \2714";
     }
+    dt.recent-day {
+      color: green;
+    }
+    dt.recent-week {
+      color: darkgreen;
+    }
 
     .dash-overlay {
       position: fixed;
@@ -235,10 +241,17 @@
 
         colorLvlRow(row, data);
 
+        let oneDayAgo = new Date();
+        oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+        let oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
         hlist = $("<dl>");
         $.each(res, function(hit, invdata) {
           invs = invdata.invs;
           proved = invdata.proved;
+          recentDay = new Date(invdata.timestamp) > oneDayAgo;
+          recentWeek = new Date(invdata.timestamp) > oneWeekAgo;
 
           invlist = $("<ul>")
             .addClass("list-inline");
@@ -251,6 +264,8 @@
           hlist.append($("<dt>")
               .text("HIT: " + hit)
               .addClass((proved ? "" : "not-") + "proved")
+              .addClass(((recentDay || recentWeek) ? "" : "not-") + "recent" +
+                (recentDay ? "-day" : (recentWeek ? "-week" : "")))
               .addClass("hit")
               .data("hit", hit)
             )
@@ -391,6 +406,14 @@
           overlay.find(".field-" + field)
             .text(value + (opt ? " -" + opt : ""));
         });
+        overlay.find(".field-worker")
+          .text(res.worker);
+        overlay.find(".field-assignment")
+          .text(res.assignment);
+        if (res.submitTimestamp) {
+          overlay.find(".field-submitTimestamp")
+            .text(new Date(res.submitTimestamp));
+        }
 
         overlay.show();
       }, rpcError);
@@ -455,6 +478,13 @@
           <h4>Survey Results for HIT <span class="hit-id"></span></h4>
           <p class="text-danger"><strong>HIT not completed</strong></p>
           <dl class="dl-horizontal">
+            <dt>Worker:</dt>
+            <dd class="field-worker"></dd>
+            <dt>Assignment:</dt>
+            <dd class="field-assignment"></dd>
+            <dt>Submit Time:</dt>
+            <dd class="field-submitTimestamp"></dd>
+            <hr/>
             <dt>Fun:</dt>
             <dd class="field-fun"></dd>
             <dt>Challenging:</dt>

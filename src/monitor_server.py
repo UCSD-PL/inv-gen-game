@@ -262,7 +262,8 @@ def getDashboardInvs(inputToken, experiment, lvl):
   rows = s.query(
       LvlData.hit,
       LvlData.allinvs,
-      LvlData.provedflag
+      LvlData.provedflag,
+      LvlData.time
     ) \
     .filter(
       LvlData.experiment == experiment,
@@ -271,10 +272,11 @@ def getDashboardInvs(inputToken, experiment, lvl):
     )
 
   d = dict()
-  for hit, allinvs, proved in rows:
+  for hit, allinvs, proved, timestamp in rows:
     d[hit] = {
       "invs": [i[0] for i in json.loads(allinvs)],
-      "proved": True if proved else False
+      "proved": True if proved else False,
+      "timestamp": str(timestamp)
       }
 
   return d
@@ -299,6 +301,9 @@ def getSurvey(inputToken, hit):
 
   return {
     "complete": complete,
+    "worker": assn.WorkerId if assn else None,
+    "assignment": assn.AssignmentId if assn else None,
+    "submitTimestamp": str(assn.SubmitTime) if assn else None,
     "survey": survey
     }
 
