@@ -13,7 +13,7 @@ from experiments import Experiment, get_unused_port, start_server, \
 
 def publish_hit(credentials, isSandbox, ename, num_hits, lvlset, adminToken,
                 db, mode, no_ifs, individual, with_new_var_powerup, mc=None,
-                email=None):
+                email=None, maxlvls=None, colSwap=False):
     title = "Play a Math Puzzle Game For Science!"
     max_assignments = 1
 
@@ -41,7 +41,8 @@ def publish_hit(credentials, isSandbox, ename, num_hits, lvlset, adminToken,
     for i in range(num_hits):
         port = get_unused_port()
         srid = exp.create_unique_server_run_id()
-        p = start_server(port, ename, srid, lvlset, adminToken, db, email)
+        p = start_server(port, ename, srid, lvlset, adminToken, db, email,
+            maxlvls, colSwap)
         print "Started server run", srid, "on port", port, "with pid", p.pid
         start_url =\
             "https://zoidberg.ucsd.edu:{0}/mturk_landing.html?mode=" + mode
@@ -86,6 +87,10 @@ if __name__ == "__main__":
                    choices=["patterns", "ctrex", "rounds"])
     p.add_argument('--db', type=str, required=True,
                    help='The database for the servers to use')
+    p.add_argument('--colSwap', action='store_true',
+                   help='Enable column swapping')
+    p.add_argument('--maxlvls', type=int,
+                   help='Maximum number of levels that can be played per HIT')
 
     args = p.parse_args()
 

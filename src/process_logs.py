@@ -311,7 +311,7 @@ for s in e.server_runs:
                 add_time_info(worker_id, time_float, event_name, event_params)
 
                 if event_name == "FoundInvariant":
-                    [lvl_set, lvl_id, js_inv, canon_inv] = event_params
+                    [lvl_set, lvl_id, js_inv, canon_inv] = event_params[:4]
 
                     print bold_green("++ FoundInv: " + lvl_set + "." + lvl_id)
                     print "-- Worker ID: " + worker_id + \
@@ -323,14 +323,14 @@ for s in e.server_runs:
 
 
                 if event_name == "StartLevel":
-                    [lvl_set, lvl_id] = event_params
+                    [lvl_set, lvl_id] = event_params[:2]
                     print bold_green("++ Started: " + lvl_set + "." + lvl_id)
                     print "-- Time: " + time_str
 
 
                 if event_name == "FinishLevel":
-                    [lvl_set, lvl_id, proved_the_level, js_invs, canon_invs] = \
-                            event_params
+                    [lvl_set, lvl_id, proved_the_level, js_invs, canon_invs] \
+                      = event_params[:5]
 
                     print bold_green("++ Finished: " + lvl_set + "." + lvl_id)
                     print "-- " + ("Proved" if proved_the_level else \
@@ -371,8 +371,6 @@ for s in e.server_runs:
                     print "-- Time: " + time_str
                     if need_to_pay and worker_id == assn_worker_id:
                         found_game_done = True
-                        add_payment(LevelsPayment(worker_id, assn_id, \
-                                                  num_levels))
                         if worker_id in lvlPayments:
                           print "!! ERROR: Multiple GameDone events for ", \
                                 worker_id, "for run", s.srid

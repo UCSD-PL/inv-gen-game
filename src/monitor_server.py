@@ -262,7 +262,8 @@ def getDashboardInvs(inputToken, experiment, lvl):
   rows = s.query(
       LvlData.hit,
       LvlData.allinvs,
-      LvlData.provedflag
+      LvlData.provedflag,
+      LvlData.time
     ) \
     .filter(
       LvlData.experiment == experiment,
@@ -271,13 +272,41 @@ def getDashboardInvs(inputToken, experiment, lvl):
     )
 
   d = dict()
-  for hit, allinvs, proved in rows:
+  for hit, allinvs, proved, timestamp in rows:
     d[hit] = {
       "invs": [i[0] for i in json.loads(allinvs)],
-      "proved": True if proved else False
+      "proved": True if proved else False,
+      "timestamp": str(timestamp)
       }
 
   return d
+
+@api.method("App.getSurvey")
+@pp_exc
+@log_d()
+def getSurvey(inputToken, hit):
+  """ Return survey responses for the given HIT; only used by the dashboard.
+  """
+  if inputToken != adminToken:
+    raise Exception(str(inputToken) + " not a valid token.")
+
+  r = mc.get_assignments(hit)
+  complete = len(r) > 0
+
+  survey = {}
+  assn = None
+  if complete:
+    assn = r[0]
+    for ans in assn.answers[0]:
+      survey[ans.qid] = ans.fields[0]
+
+  return {
+    "complete": complete,
+    "worker": assn.WorkerId if assn else None,
+    "assignment": assn.AssignmentId if assn else None,
+    "submitTimestamp": str(assn.SubmitTime) if assn else None,
+    "survey": survey
+    }
 
 @api.method("App.refreshExperiments")
 @pp_exc

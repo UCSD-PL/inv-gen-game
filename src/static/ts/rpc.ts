@@ -6,6 +6,7 @@ interface loadLvlBasicRes {
   data: dataT;
   goal: any;
   hint: any;
+  colSwap: any;
 }
 
 interface loadLvlDynamicRes extends loadLvlBasicRes {

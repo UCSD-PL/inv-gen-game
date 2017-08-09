@@ -25,8 +25,8 @@ from copy import copy
 from time import time
 from datetime import datetime
 from models import open_sqlite_db, open_mysql_db, Event
-from db_util import playersWhoStartedLevel, enteredInvsForLevel,\
-        getOrAddSource, addEvent, levelSolved, levelFinishedBy
+from db_util import addEvent, allInvs, levelSolved, levelFinishedBy,\
+        levelsPlayedInSession
 from mturk_util import send_notification
 from atexit import register
 from server_common import openLog, log, log_d
@@ -70,6 +70,19 @@ def divisionToMul(inv):
                                       inv.op, inv.rhs.lhs);
     return inv
 
+columnSwaps = {
+  2: [[0, 1]],
+  3: [[0, 1, 2],
+      [0, 2, 1]],
+  4: [[0, 1, 2, 3],
+      [2, 0, 3, 1]],
+  5: [[0, 1, 2, 3, 4],
+      [1, 3, 0, 4, 2],
+      [3, 1, 4, 2, 0]]
+}
+
+def swapColumns(row, nSwap):
+  return [row[i] for i in columnSwaps[len(row)][nSwap]]
 
 ## API Entry Points ##################################################
 @api.method("App.logEvent")
@@ -104,11 +117,10 @@ def setTutorialDone(workerId):
         marker = join(ROOT_DIR, 'logs', args.ename, "tut-done-" + workerId)
         open(marker, "w").close()
 
-
 @api.method("App.loadLvl")
 @pp_exc
-@log_d(str, str, pp_mturkId, pp_BoogieLvl)
-def loadLvl(levelSet, lvlId, mturkId): #pylint: disable=unused-argument
+@log_d(str, str, pp_mturkId, bool, pp_BoogieLvl)
+def loadLvl(levelSet, lvlId, mturkId, individualMode=False): #pylint: disable=unused-argument
     """ Load a given level. """
     if (levelSet not in traces):
         raise Exception("Unkonwn level set " + levelSet)
@@ -133,6 +145,33 @@ def loadLvl(levelSet, lvlId, mturkId): #pylint: disable=unused-argument
              'support_ind_ex' : lvl['support_ind_ex'],
              'multiround'     : lvl['multiround'],
       }
+
+    if args.colSwap:
+      nCols = len(lvl["variables"])
+      if nCols not in columnSwaps:
+        raise Exception("No column swap for %d columns" % nCols)
+
+      nSwaps = (nCols + 1) // 2 # swaps are 0 to nSwaps - 1 inclusive
+
+      session = sessionF()
+
+      colSwaps = [0] * nSwaps
+      allInvs(session, enames=[args.ename], lvlsets=[curLevelSetName],
+        lvls=[lvlId], colSwaps=colSwaps)
+      sortKeys = colSwaps
+      if individualMode:
+        workerId = mturkId[0]
+        colSwaps = [0] * nSwaps
+        allInvs(session, enames=[args.ename], lvlsets=[curLevelSetName],
+          lvls=[lvlId], workers=[workerId], colSwaps=colSwaps)
+        sortKeys = zip(colSwaps, sortKeys)
+
+      nSwap = sorted(zip(sortKeys, range(nSwaps)), key=lambda x: x[0])[0][1]
+      lvl["colSwap"] = nSwap
+
+      lvl["variables"] = swapColumns(lvl["variables"], nSwap)
+      lvl["data"] = [[swapColumns(row, nSwap) for row in rows]
+        for rows in lvl["data"]]
 
     return lvl
 
@@ -208,7 +247,7 @@ def genNextLvl(workerId, mturkId, levelSet, levelId, invs, individualMode):
         newLvl["data"][0].extend(greenRows)
         newLvl["data"][2].extend(redRows)
         traces[levelSet][newLvlId] = newLvl;
-        return loadLvl(levelSet, newLvlId, mturkId);
+        return loadLvl(levelSet, newLvlId, mturkId, individualMode)
     else:
         # Else give them the actual next level
         return loadNextLvl(workerId, mturkId, individualMode)
@@ -219,19 +258,32 @@ def genNextLvl(workerId, mturkId, levelSet, levelId, invs, individualMode):
 def loadNextLvl(workerId, mturkId, individualMode):
     """ Return the unsolved level seen by the fewest users. """
     session = sessionF();
-    level_names = traces[curLevelSetName].keys();
-    num_invs = [len(enteredInvsForLevel(curLevelSetName, x, session))
-                    for x in level_names]
-    ninvs_and_level = zip(num_invs, level_names)
-    ninvs_and_level.sort()
 
-    for _, lvlId in ninvs_and_level:
+    if args.maxlvls is not None:
+      hitId = mturkId[1]
+      # It's inefficient to look through all the levels twice.  This can
+      # probably be combined with the logic below with some effort.
+      if levelsPlayedInSession(session, hitId) >= args.maxlvls:
+        return
+
+    level_names = traces[curLevelSetName].keys();
+    sort_keys = [len(allInvs(session, enames=[args.ename],
+      lvlsets=[curLevelSetName], lvls=[x])) for x in level_names]
+    if individualMode:
+      sort_keys = zip([len(allInvs(session, enames=[args.ename],
+        lvlsets=[curLevelSetName], lvls=[x], workers=[workerId]))
+        for x in level_names], sort_keys)
+    key_and_level = zip(sort_keys, level_names)
+    # Stable sort on key only to preserve lvlset order
+    key_and_level.sort(key=lambda x: x[0])
+
+    for _, lvlId in key_and_level:
         if levelSolved(session, curLevelSetName, lvlId,
             workerId=(workerId if individualMode else None)) or \
            (workerId != "" and \
             levelFinishedBy(session, curLevelSetName, lvlId, workerId)):
             continue
-        result = loadLvl(curLevelSetName, lvlId, mturkId)
+        result = loadLvl(curLevelSetName, lvlId, mturkId, individualMode)
         return result
 
 @api.method("App.instantiate")
@@ -649,6 +701,10 @@ if __name__ == "__main__":
             help='Timeout in seconds for z3 queries.')
     p.add_argument('--email', type=str,
             help='E-mail address to notify for problem reports')
+    p.add_argument('--colSwap', action='store_true',
+            help='Enable column swapping')
+    p.add_argument('--maxlvls', type=int,
+            help='Maximum number of levels that can be played per HIT')
 
     args = p.parse_args();
 

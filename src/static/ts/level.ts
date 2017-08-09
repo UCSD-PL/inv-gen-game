@@ -3,11 +3,12 @@ class Level {
     public variables: string[],
     public data: dataT,
     public goal: any,
-    public hint: any) {
+    public hint: any,
+    public colSwap: any) {
   }
   static load(lvlSet: string, id: string, cb: (lvl: Level) => void) {
     rpc_loadLvlBasic(lvlSet, id, function(data) {
-      cb(new Level(id, data.variables, data.data, data.goal, data.hint));
+      cb(new Level(id, data.variables, data.data, data.goal, data.hint, data.colSwap));
     });
   }
 }
@@ -18,13 +19,14 @@ class DynamicLevel extends Level{
     public data:  dataT,
     public goal:  any,
     public hint:  any,
+    public colSwap: any,
     public exploration_state: any) {
-    super(id, variables, data, goal, hint);
+    super(id, variables, data, goal, hint, colSwap);
   }
 
   static load(lvlSet: string, id: string, cb: (lvl: Level)=>void) {
     rpc_loadLvlDynamic(lvlSet, id, function(data) {
-      cb(new DynamicLevel(id, data.variables, data.data, data.goal, data.hint, data.exploration_state))
+      cb(new DynamicLevel(id, data.variables, data.data, data.goal, data.hint, data.colSwap, data.exploration_state))
     })
   }
 }
@@ -35,14 +37,15 @@ class PrepopulatedDynamicLevel extends DynamicLevel {
     data:  dataT,
     goal:  any,
     hint:  any,
+    colSwap: any,
     exploration_state: any,
     public startingInvs: [[invariantT, any[]][], [invariantT, [any[], any[]]][], invariantT[]]) {
-    super(id, variables, data, goal, hint, exploration_state);
+    super(id, variables, data, goal, hint, colSwap, exploration_state);
   }
 
   static load(lvlSet: string, id: string, cb: (lvl: Level)=>void) {
     rpc_loadLvlDynamic(lvlSet, id, function(data) {
-      cb(new PrepopulatedDynamicLevel(id, data.variables, data.data, data.goal, data.hint, data.exploration_state, [[], [], []]))
+      cb(new PrepopulatedDynamicLevel(id, data.variables, data.data, data.goal, data.hint, data.colSwap, data.exploration_state, [[], [], []]))
     })
   }
 
@@ -51,7 +54,7 @@ class PrepopulatedDynamicLevel extends DynamicLevel {
       if (data == null) {
         cb(null);
       } else {
-        let lvl = new PrepopulatedDynamicLevel(data.id, data.variables, data.data, data.goal, data.hint, data.exploration_state, [[], [], []]);
+        let lvl = new PrepopulatedDynamicLevel(data.id, data.variables, data.data, data.goal, data.hint, data.colSwap, data.exploration_state, [[], [], []]);
         cb([lvlSet, lvl]);
       }
     });
@@ -62,7 +65,7 @@ class PrepopulatedDynamicLevel extends DynamicLevel {
       if (data === null)
         cb(null)
       else {
-        let lvl = new PrepopulatedDynamicLevel(data.id, data.variables, data.data, data.goal, data.hint, data.exploration_state, [[], [], []]);
+        let lvl = new PrepopulatedDynamicLevel(data.id, data.variables, data.data, data.goal, data.hint, data.colSwap, data.exploration_state, [[], [], []]);
         cb([data.lvlSet, lvl]);
       }
     })
