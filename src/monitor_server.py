@@ -294,6 +294,7 @@ def getSurvey(inputToken, hit):
   complete = len(r) > 0
 
   survey = {}
+  assn = None
   if complete:
     assn = r[0]
     for ans in assn.answers[0]:
