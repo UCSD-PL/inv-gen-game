@@ -31,7 +31,7 @@ def processLevel(args, lvl, lvlName=None, additionalInvs=[]):
   dbInvs = allInvs(s, args.enames, lvls, args.lvlsets, args.workers,
     actualEnames, actualLvls, actualLvlsets, actualWorkers)
 
-  invs = set(parseExprAst(inv[0]) for inv in dbInvs)
+  invs = set(parseExprAst(inv[1]) for inv in dbInvs)
   invs.update(additionalInvs)
 
   if lvlName is not None:

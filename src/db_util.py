@@ -32,8 +32,8 @@ def allInvs(session, enames=[], lvls=[], lvlsets=[], workers=[],
       func.json_extract(Event.payload, "$.lvlid"),
       func.json_extract(Event.payload, "$.lvlset"),
       func.json_extract(Event.payload, "$.workerId"),
-      func.json_extract(Event.payload, "$.canonical"),
       func.json_extract(Event.payload, "$.raw"),
+      func.json_extract(Event.payload, "$.canonical"),
       func.ifnull(func.json_extract(Event.payload, "$.colSwap"), 0)
     ) \
     .filter(Event.type == "FoundInvariant")
