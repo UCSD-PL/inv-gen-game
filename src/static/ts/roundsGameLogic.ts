@@ -285,6 +285,14 @@ class RoundsGameLogic extends BaseGameLogic {
     }
     */
 
+    for (let [rawInv, canonInv] of lvl.startingInvs) {
+      let jsInv = esprimaToStr(esprima.parse(invToJS(rawInv)));
+      let ui = new UserInvariant(rawInv, jsInv, canonInv);
+      this.foundJSInv.push(ui);
+      this.invMap[ui.id] = ui;
+      this.progressW.addInvariant(ui.id, ui.rawInv);
+    }
+
     this.lvlLoadedCb = loadedCb;
     if (this.lvlLoadedCb)
       this.lvlLoadedCb();

@@ -7,6 +7,7 @@ interface loadLvlBasicRes {
   goal: any;
   hint: any;
   colSwap: any;
+  startingInvs: [string, invariantT][];
 }
 
 interface loadLvlDynamicRes extends loadLvlBasicRes {

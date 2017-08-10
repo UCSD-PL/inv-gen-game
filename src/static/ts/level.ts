@@ -4,11 +4,12 @@ class Level {
     public data: dataT,
     public goal: any,
     public hint: any,
-    public colSwap: any) {
+    public colSwap: any,
+    public startingInvs: [string, invariantT][]) {
   }
   static load(lvlSet: string, id: string, cb: (lvl: Level) => void) {
     rpc_loadLvlBasic(lvlSet, id, function(data) {
-      cb(new Level(id, data.variables, data.data, data.goal, data.hint, data.colSwap));
+      cb(new Level(id, data.variables, data.data, data.goal, data.hint, data.colSwap, data.startingInvs));
     });
   }
 }
@@ -20,13 +21,14 @@ class DynamicLevel extends Level{
     public goal:  any,
     public hint:  any,
     public colSwap: any,
+    public startingInvs: [string, invariantT][],
     public exploration_state: any) {
-    super(id, variables, data, goal, hint, colSwap);
+    super(id, variables, data, goal, hint, colSwap, startingInvs);
   }
 
   static load(lvlSet: string, id: string, cb: (lvl: Level)=>void) {
     rpc_loadLvlDynamic(lvlSet, id, function(data) {
-      cb(new DynamicLevel(id, data.variables, data.data, data.goal, data.hint, data.colSwap, data.exploration_state))
+      cb(new DynamicLevel(id, data.variables, data.data, data.goal, data.hint, data.colSwap, data.startingInvs, data.exploration_state))
     })
   }
 
@@ -35,7 +37,7 @@ class DynamicLevel extends Level{
       if (data === null)
         cb(null)
       else {
-        let lvl = new DynamicLevel(data.id, data.variables, data.data, data.goal, data.hint, data.colSwap, data.exploration_state);
+        let lvl = new DynamicLevel(data.id, data.variables, data.data, data.goal, data.hint, data.colSwap, data.startingInvs, data.exploration_state);
         cb([data.lvlSet, lvl]);
       }
     })

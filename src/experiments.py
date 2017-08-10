@@ -101,7 +101,7 @@ def get_unused_port():
     return port
 
 def start_server(port, experiment_name, srid, lvlset, adminToken, db,
-                 email=None, maxlvls=None, colSwap=False):
+                 email=None, maxlvls=None, colSwap=False, replay=False):
     server_log = get_server_log_fname(experiment_name, srid)
     event_log = get_event_log_fname(experiment_name, srid)
 
@@ -123,6 +123,8 @@ def start_server(port, experiment_name, srid, lvlset, adminToken, db,
           cmd.append("--colSwap")
         if maxlvls is not None:
           cmd.extend(["--maxlvls", str(maxlvls)])
+        if replay:
+          cmd.append("--replay")
         p = subprocess.Popen(cmd, stdout=output, stderr=subprocess.STDOUT)
     return p
 

@@ -526,6 +526,14 @@ class PatternGameLogic extends BaseGameLogic {
     this.allData[lvl.id][1]  = this.allData[lvl.id][1].concat(lvl.data[1])
     this.allData[lvl.id][2]  = this.allData[lvl.id][2].concat(lvl.data[2])
 
+    for (let [rawInv, canonInv] of lvl.startingInvs) {
+      let jsInv = esprimaToStr(esprima.parse(invToJS(rawInv)));
+      let ui = new UserInvariant(rawInv, jsInv, canonInv);
+      this.foundJSInv.push(ui);
+      this.invMap[ui.id] = ui;
+      this.progressW.addInvariant(ui.id, ui.rawInv);
+    }
+
     this.lvlLoadedCb = loadedCb;
     if (this.lvlLoadedCb)
       this.lvlLoadedCb();

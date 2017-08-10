@@ -173,6 +173,14 @@ def loadLvl(levelSet, lvlId, mturkId, individualMode=False): #pylint: disable=un
       lvl["data"] = [[swapColumns(row, nSwap) for row in rows]
         for rows in lvl["data"]]
 
+    if args.replay:
+      # Only show players their own invariants, even if individual mode is off
+      invs = allInvs(session, enames=[args.ename], lvlsets=[curLevelSetName],
+        lvls=[lvlId], workers=[workerId])
+
+      lvl["startingInvs"] = [(inv[0], boogieToEsprima(parseExprAst(inv[1])))
+        for inv in invs]
+
     return lvl
 
 @api.method("App.genNextLvl")
@@ -282,7 +290,7 @@ def loadNextLvl(workerId, mturkId, individualMode):
     for _, lvlId in key_and_level:
         if levelSolved(session, curLevelSetName, lvlId,
             workerId=(workerId if individualMode else None)) or \
-           (workerId != "" and \
+           (not args.replay and workerId != "" and \
             levelFinishedBy(session, curLevelSetName, lvlId, workerId)):
             continue
         result = loadLvl(curLevelSetName, lvlId, mturkId, individualMode)
@@ -707,6 +715,8 @@ if __name__ == "__main__":
             help='Enable column swapping')
     p.add_argument('--maxlvls', type=int,
             help='Maximum number of levels that can be played per HIT')
+    p.add_argument('--replay', action='store_true',
+            help='Enable replaying levels')
 
     args = p.parse_args();
 

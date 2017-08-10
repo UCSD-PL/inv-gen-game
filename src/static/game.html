@@ -189,6 +189,19 @@
           cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32);
         }
       },
+      {
+        setup: function (cs) {
+          if (!$("#discovered-invariants-div .good-invariant").length)
+            return;
+          curL = label($("#discovered-invariants-div"),
+            "You played this level before, so<br />" +
+            "we included your invariants from<br />" +
+            "last time. Try to find more!",
+            "right");
+          $("body").focus();
+          cs.nextStepOnKeyClickOrTimeout(2 * stepTimeout, labelRemover(curL), 32);
+        }
+      },
       { setup: function (cs) {
                    $('#formula-entry').focus();
                    curScript = null;
