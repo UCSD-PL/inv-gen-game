@@ -26,7 +26,7 @@ from time import time
 from datetime import datetime
 from models import open_sqlite_db, open_mysql_db, Event
 from db_util import addEvent, allInvs, levelSolved, levelFinishedBy,\
-        levelsPlayedInSession
+        levelSkipCount, levelsPlayedInSession
 from mturk_util import send_notification
 from atexit import register
 from server_common import openLog, log, log_d
@@ -273,6 +273,8 @@ def loadNextLvl(workerId, mturkId, individualMode):
       sort_keys = zip([len(allInvs(session, enames=[args.ename],
         lvlsets=[curLevelSetName], lvls=[x], workers=[workerId]))
         for x in level_names], sort_keys)
+    sort_keys = zip([levelSkipCount(session, args.ename, curLevelSetName, x,
+      workerId) for x in level_names], sort_keys)
     key_and_level = zip(sort_keys, level_names)
     # Stable sort on key only to preserve lvlset order
     key_and_level.sort(key=lambda x: x[0])

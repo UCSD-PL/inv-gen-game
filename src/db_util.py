@@ -60,6 +60,12 @@ def allInvs(session, enames=[], lvls=[], lvlsets=[], workers=[],
 
   return set(dict(gen()).iteritems())
 
+def levelSkipCount(session, ename, lvlset, lvl, worker):
+  q = session.query(Event.id).filter(Event.type == "SkipToNextLevel")
+  q = filterEvents(q, enames=[ename], lvls=[lvl], lvlsets=[lvlset],
+    workers=[worker])
+  return q.count()
+
 def getOrAddSource(name, session):
   srcs = session.query(Source).filter(Source.name == name).all()
   if (len(srcs) != 0):
