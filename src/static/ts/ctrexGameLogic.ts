@@ -128,7 +128,13 @@ class CounterexGameLogic extends BaseGameLogic {
 
       simplify(jsInv, (simplInv: ESTree.Node) => {
         let ui: UserInvariant = new UserInvariant(inv, jsInv, simplInv)
-        logEvent("TriedInvariant", [curLvlSet, gl.curLvl.id, ui.rawUserInp, ui.canonForm, gl.curLvl.colSwap]);
+        logEvent("TriedInvariant",
+                 [curLvlSet,
+                  gl.curLvl.id,
+                  ui.rawUserInp,
+                  ui.canonForm,
+                  gl.curLvl.colSwap,
+                  gl.curLvl.isReplay()]);
 
         let redundant = this.progressW.contains(ui.id)
         if (redundant) {
@@ -181,7 +187,13 @@ class CounterexGameLogic extends BaseGameLogic {
                 gl.curLvl.data[2] = [];
                 (<CounterexTracesWindow>gl.tracesW).clearNegRows();
 
-                logEvent("FoundInvariant", [curLvlSet, gl.curLvl.id, ui.rawUserInp, ui.canonForm, gl.curLvl.colSwap]);
+                logEvent("FoundInvariant",
+                         [curLvlSet,
+                          gl.curLvl.id,
+                          ui.rawUserInp,
+                          ui.canonForm,
+                          gl.curLvl.colSwap,
+                          gl.curLvl.isReplay()]);
                 if (!gl.lvlPassedF) {
                   if (gl.foundJSInv.length >= 6) {
                     var coin = Math.random() > .5;
@@ -195,7 +207,8 @@ class CounterexGameLogic extends BaseGameLogic {
                                 false,
                                 gl.foundJSInv.map((x)=>x.rawUserInp),
                                 gl.foundJSInv.map((x)=>x.canonForm),
-                                gl.curLvl.colSwap]);
+                                gl.curLvl.colSwap,
+                                gl.curLvl.isReplay()]);
                     }
                   } else {
                     /*
@@ -233,7 +246,8 @@ class CounterexGameLogic extends BaseGameLogic {
                                 sat,
                                 gl.foundJSInv.map((x)=>x.rawUserInp),
                                 gl.foundJSInv.map((x)=>x.canonForm),
-                                gl.curLvl.colSwap]);
+                                gl.curLvl.colSwap,
+                                gl.curLvl.isReplay()]);
                       gl.lvlPassedF = true;
                       gl.lvlPassedCb();
                     });
@@ -277,21 +291,27 @@ class CounterexGameLogic extends BaseGameLogic {
     this.lvlLoadedCb = loadedCb;
     if (this.lvlLoadedCb)
       this.lvlLoadedCb();
-    logEvent("StartLevel", [curLvlSet, this.curLvl.id, this.curLvl.colSwap]);
+    logEvent("StartLevel",
+             [curLvlSet,
+              this.curLvl.id,
+              this.curLvl.colSwap,
+              this.curLvl.isReplay()]);
   }
 
   skipToNextLvl() : void {
     logEvent("SkipToNextLevel",
              [curLvlSet,
               this.curLvl.id,
-              this.curLvl.colSwap]);
+              this.curLvl.colSwap,
+              this.curLvl.isReplay()]);
     logEvent("FinishLevel",
              [curLvlSet,
               this.curLvl.id,
               false,
               this.foundJSInv.map((x)=>x.rawUserInp),
               this.foundJSInv.map((x)=>x.canonForm),
-              this.curLvl.colSwap]);
+              this.curLvl.colSwap,
+              this.curLvl.isReplay()]);
     this.lvlPassedF = true;
     this.lvlPassedCb();
   }

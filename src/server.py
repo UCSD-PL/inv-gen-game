@@ -173,6 +173,7 @@ def loadLvl(levelSet, lvlId, mturkId, individualMode=False): #pylint: disable=un
       lvl["data"] = [[swapColumns(row, nSwap) for row in rows]
         for rows in lvl["data"]]
 
+    lvl["startingInvs"] = []
     if args.replay:
       # Only show players their own invariants, even if individual mode is off
       invs = allInvs(session, enames=[args.ename], lvlsets=[curLevelSetName],

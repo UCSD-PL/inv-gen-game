@@ -12,6 +12,10 @@ class Level {
       cb(new Level(id, data.variables, data.data, data.goal, data.hint, data.colSwap, data.startingInvs));
     });
   }
+
+  isReplay(): boolean {
+    return this.startingInvs.length > 0;
+  }
 }
 
 class DynamicLevel extends Level{

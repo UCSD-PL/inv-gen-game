@@ -108,15 +108,19 @@ def addEvent(sourceName, typ, time, ename,  addr, data, session, mturkId):
       payl["verified"] = data[2]
       invs = zip(data[3], [ str(esprimaToBoogie(x, {})) for x in data[4] ])
       payl["all_found"] = invs;
-    colSwap = data[-1]
+    colSwap = data[-2]
     if colSwap is not None:
       payl["colSwap"] = colSwap
+    replay = data[-1]
+    if replay is not None:
+      payl["replay"] = replay
   elif (typ == "FoundInvariant" or typ == "TriedInvariant"):
     payl["lvlset"] = data[0]
     payl["lvlid"] = data[1]
     payl["raw"] = data[2]
     payl["canonical"] = str(esprimaToBoogie(data[3], { }))
     payl["colSwap"] = data[4]
+    payl["replay"] = data[5]
   elif (typ == "PowerupsActivated"):
     payl["lvlset"] = data[0]
     payl["lvlid"] = data[1]
