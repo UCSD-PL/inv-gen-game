@@ -10,7 +10,8 @@ def playersWhoStartedLevel(lvlset, lvl, session):
                                  e.payl()["lvlset"] == lvlset and
                                  e.payl()["lvlid"] == lvl) ])
 
-def filterEvents(query, enames=[], lvls=[], lvlsets=[], workers=[]):
+def filterEvents(query, enames=[], lvls=[], lvlsets=[], workers=[],
+  assignments=[]):
   if enames:
     query = query.filter(Event.experiment.in_(enames))
   if lvls:
@@ -22,23 +23,28 @@ def filterEvents(query, enames=[], lvls=[], lvlsets=[], workers=[]):
   if workers:
     query = query.filter(func.json_extract(Event.payload, "$.workerId")
       .in_(workers))
+  if assignments:
+    query = query.filter(func.json_extract(Event.payload, "$.assignmentId")
+      .in_(assignments))
 
   return query
 
 def allInvs(session, enames=[], lvls=[], lvlsets=[], workers=[],
-  enameSet=None, lvlSet=None, lvlsetSet=None, workerSet=None, colSwaps=None):
+  assignments=[], enameSet=None, lvlSet=None, lvlsetSet=None, workerSet=None,
+  assignmentSet=None, colSwaps=None):
   q = session.query(
       Event.experiment,
       func.json_extract(Event.payload, "$.lvlid"),
       func.json_extract(Event.payload, "$.lvlset"),
       func.json_extract(Event.payload, "$.workerId"),
+      func.json_extract(Event.payload, "$.assignmentId"),
       func.json_extract(Event.payload, "$.raw"),
       func.json_extract(Event.payload, "$.canonical"),
       func.ifnull(func.json_extract(Event.payload, "$.colSwap"), 0)
     ) \
     .filter(Event.type == "FoundInvariant")
 
-  q = filterEvents(q, enames, lvls, lvlsets, workers)
+  q = filterEvents(q, enames, lvls, lvlsets, workers, assignments)
 
   def gen():
     for row in q.all():
@@ -50,20 +56,22 @@ def allInvs(session, enames=[], lvls=[], lvlsets=[], workers=[],
         lvlsetSet.add(row[2])
       if workerSet is not None:
         workerSet.add(row[3])
+      if assignmentSet is not None:
+        assignmentSet.add(row[4])
       if colSwaps is not None:
         try:
-          colSwaps[row[6]] += 1
+          colSwaps[row[7]] += 1
         except KeyError:
-          colSwaps[row[6]] = 1
+          colSwaps[row[7]] = 1
 
-      yield (row[4], row[5])
+      yield (row[5], row[6])
 
   return set(dict(gen()).iteritems())
 
-def levelSkipCount(session, ename, lvlset, lvl, worker):
+def levelSkipCount(session, ename, lvlset, lvl, worker, assignment):
   q = session.query(Event.id).filter(Event.type == "SkipToNextLevel")
   q = filterEvents(q, enames=[ename], lvls=[lvl], lvlsets=[lvlset],
-    workers=[worker])
+    workers=[worker], assignments=[assignment])
   return q.count()
 
 def getOrAddSource(name, session):
@@ -157,8 +165,7 @@ def levelFinishedBy(session, lvlset, lvlid, userId):
                          if x["lvlset"] == lvlset and x["lvlid"] == lvlid]
   return len(finishLevelPayls) > 0
 
-def levelsPlayedInSession(session, hitId):
-  return session.query(func.count(Event.id)) \
-    .filter(Event.type == "FinishLevel") \
-    .filter(func.json_extract(Event.payload, "$.hitId") == hitId) \
-    .scalar()
+def levelsPlayedInSession(session, assignmentId):
+  q = session.query(Event.id).filter(Event.type == "FinishLevel")
+  q = filterEvents(q, assignments=[assignmentId])
+  return q.count()

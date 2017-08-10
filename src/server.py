@@ -265,13 +265,13 @@ def genNextLvl(workerId, mturkId, levelSet, levelId, invs, individualMode):
 @log_d(str, pp_mturkId, bool, pp_BoogieLvl)
 def loadNextLvl(workerId, mturkId, individualMode):
     """ Return the unsolved level seen by the fewest users. """
+    assignmentId = mturkId[2]
     session = sessionF();
 
     if args.maxlvls is not None:
-      hitId = mturkId[1]
       # It's inefficient to look through all the levels twice.  This can
       # probably be combined with the logic below with some effort.
-      if levelsPlayedInSession(session, hitId) >= args.maxlvls:
+      if levelsPlayedInSession(session, assignmentId) >= args.maxlvls:
         return
 
     level_names = traces[curLevelSetName].keys();
@@ -282,7 +282,7 @@ def loadNextLvl(workerId, mturkId, individualMode):
         lvlsets=[curLevelSetName], lvls=[x], workers=[workerId]))
         for x in level_names], sort_keys)
     sort_keys = zip([levelSkipCount(session, args.ename, curLevelSetName, x,
-      workerId) for x in level_names], sort_keys)
+      workerId, assignmentId) for x in level_names], sort_keys)
     key_and_level = zip(sort_keys, level_names)
     # Stable sort on key only to preserve lvlset order
     key_and_level.sort(key=lambda x: x[0])
