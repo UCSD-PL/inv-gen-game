@@ -257,7 +257,9 @@
             .addClass("list-inline");
           for (let inv of invs) {
             invlist.append($("<li>")
-              .text(inv)
+              .append($("<u>")
+                .text(inv)
+              )
             );
           }
 
