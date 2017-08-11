@@ -28,8 +28,9 @@ def processLevel(args, lvl, lvlName=None, additionalInvs=[]):
   actualLvls = set()
   actualLvlsets = set()
   actualWorkers = set()
-  dbInvs = allInvs(s, args.enames, lvls, args.lvlsets, args.workers,
-    actualEnames, actualLvls, actualLvlsets, actualWorkers)
+  dbInvs = allInvs(s, enames=args.enames, lvls=lvls, lvlsets=args.lvlsets,
+    workers=args.workers, enameSet=actualEnames, lvlSet=actualLvls,
+    lvlsetSet=actualLvlsets, workerSet=actualWorkers)
 
   invs = set(parseExprAst(inv[1]) for inv in dbInvs)
   invs.update(additionalInvs)
