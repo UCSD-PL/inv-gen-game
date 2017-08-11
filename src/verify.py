@@ -47,7 +47,7 @@ def processLevel(args, lvl, lvlName=None, additionalInvs=[]):
   else:
     print "UNIQUE WORKERS:", len(actualWorkers)
   if len(additionalInvs) < 6:
-    print "ADDITIONAL INVARIANTS:", ", ".join(additionalInvs)
+    print "ADDITIONAL INVARIANTS:", ", ".join(str(x) for x in additionalInvs)
   else:
     print "ADDITIONAL INVARIANTS:", len(additionalInvs)
   print "UNIQUE INVARIANTS:", len(invs)
@@ -105,7 +105,7 @@ if __name__ == "__main__":
         invs = []
         for invstr in invlist.split(";"):
           if not len(invstr.strip()):
-            continuer
+            continue
           try:
             inv = parseExprAst(invstr)
             if tautology(expr_to_z3(inv, AllIntTypeEnv())):
