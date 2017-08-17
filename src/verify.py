@@ -65,6 +65,8 @@ if __name__ == "__main__":
     help="The event database to use")
   p.add_argument("--enames", nargs="*",
     help="Include experiment invs; may specify multiple items (unset = any)")
+  p.add_argument("--lvlName",
+    help="A level name for a .bpl file or a level to select from a levelset")
   p.add_argument("--lvls", nargs="*",
     help="Include level invs; may specify multiple items (unset = any)")
   p.add_argument("--lvlset",
@@ -101,7 +103,7 @@ if __name__ == "__main__":
     with open(args.additionalInvs) as f:
       r = csv.reader(f, delimiter=",")
       for row in r:
-        lvl, invlist = row
+        lvlName, invlist = row
         invs = []
         for invstr in invlist.split(";"):
           if not len(invstr.strip()):
@@ -109,21 +111,26 @@ if __name__ == "__main__":
           try:
             inv = parseExprAst(invstr)
             if tautology(expr_to_z3(inv, AllIntTypeEnv())):
+              print "Dropping additional invariant (tautology): ", inv
               continue
           except RuntimeError:
             # Some invariants are too large to parse
+            print "Dropping additional invariant (parse): ", inv
             continue
           except Unknown:
             # Timeouts could be valid invariants
             pass
           invs.append(inv)
-        additionalInvs[lvl] = invs
+        additionalInvs[lvlName] = invs
 
   print "ADDITIONAL INVARIANTS LOADED FOR LVLS:", \
     ", ".join(additionalInvs.keys())
 
   if args.bpl:
-    processLevel(args, lvl)
+    processLevel(args, lvl, args.lvlName, additionalInvs.get(args.lvlName, []))
   elif args.lvlset:
     for lvlName, lvl in lvls.items():
+      if args.lvlName:
+        if lvlName != args.lvlName:
+          continue
       processLevel(args, lvl, lvlName, additionalInvs.get(lvlName, []))
