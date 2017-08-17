@@ -10,28 +10,28 @@ def playersWhoStartedLevel(lvlset, lvl, session):
                                  e.payl()["lvlset"] == lvlset and
                                  e.payl()["lvlid"] == lvl) ])
 
-def filterEvents(query, enames=[], lvls=[], lvlsets=[], workers=[],
-  assignments=[]):
-  if enames:
+def filterEvents(query, enames=None, lvls=None, lvlsets=None, workers=None,
+  assignments=None):
+  if enames is not None:
     query = query.filter(Event.experiment.in_(enames))
-  if lvls:
+  if lvls is not None:
     query = query.filter(func.json_extract(Event.payload, "$.lvlid")
       .in_(lvls))
-  if lvlsets:
+  if lvlsets is not None:
     query = query.filter(func.json_extract(Event.payload, "$.lvlset")
       .in_(lvlsets))
-  if workers:
+  if workers is not None:
     query = query.filter(func.json_extract(Event.payload, "$.workerId")
       .in_(workers))
-  if assignments:
+  if assignments is not None:
     query = query.filter(func.json_extract(Event.payload, "$.assignmentId")
       .in_(assignments))
 
   return query
 
-def allInvs(session, enames=[], lvls=[], lvlsets=[], workers=[],
-  assignments=[], enameSet=None, lvlSet=None, lvlsetSet=None, workerSet=None,
-  assignmentSet=None, colSwaps=None):
+def allInvs(session, enames=None, lvls=None, lvlsets=None, workers=None,
+  assignments=None, enameSet=None, lvlSet=None, lvlsetSet=None,
+  workerSet=None, assignmentSet=None, colSwaps=None):
   q = session.query(
       Event.experiment,
       func.json_extract(Event.payload, "$.lvlid"),

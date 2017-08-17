@@ -80,6 +80,16 @@ if __name__ == "__main__":
 
   args = p.parse_args()
 
+  # Treat empty list as None for filter arguments
+  if not args.enames:
+    args.enames = None
+  if not args.lvls:
+    args.lvls = None
+  if not args.lvlsets:
+    args.lvlsets = None
+  if not args.workers:
+    args.workers = None
+
   if "mysql+mysqldb://" in args.db:
     sessionF = open_mysql_db(args.db)
   else:
