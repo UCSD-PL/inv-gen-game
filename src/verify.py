@@ -22,7 +22,8 @@ def verify(lvl, invs, timeout=None):
   print "SOLVED:", not len(violations)
 
 def processLevel(args, lvl, lvlName=None, additionalInvs=[]):
-  lvls = args.lvls if lvlName is None else [lvlName]
+  lvls = args.lvls if lvlName is None else \
+    ([lvlName] if args.lvls is None else args.lvls)
 
   actualEnames = set()
   actualLvls = set()
