@@ -114,6 +114,8 @@ if __name__ == "__main__":
     with open(args.additionalInvs) as f:
       r = csv.reader(f, delimiter=",")
       for row in r:
+        if not row:
+          continue
         lvlName, invlist = row
         invs = []
         for invstr in invlist.split(";"):
