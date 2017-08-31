@@ -57,6 +57,15 @@ class VerifyData(Base):
   payload = Column(String(16536), nullable=False)
 
 
+class SurveyData(Base):
+  __tablename__ = "surveydata"
+  hit = Column(String(64), primary_key=True)
+  assignment = Column(String(256), nullable=False)
+  worker = Column(String(256), ForeignKey("sources.name"))
+  time = Column(DateTime, nullable=False)
+  payload = Column(String(16536), nullable=False)
+
+
 def open_sqlite_db(path):
     engine = create_engine("sqlite:///" + path, echo=False,
       connect_args={'check_same_thread':False});

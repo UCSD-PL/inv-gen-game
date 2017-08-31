@@ -16,6 +16,7 @@ from lib.common.util import pp_exc, randomToken
 from models import open_sqlite_db, open_mysql_db, Event, LvlData
 from publish_hits import publish_hit
 from server_common import openLog, log_d
+from survey import getSurveyData
 
 class Server(Flask):
   def get_send_file_max_age(self, name):
@@ -290,22 +291,18 @@ def getSurvey(inputToken, hit):
   if inputToken != adminToken:
     raise Exception(str(inputToken) + " not a valid token.")
 
-  r = mc.get_assignments(hit)
-  complete = len(r) > 0
+  s = sessionF()
+  data = getSurveyData(s, mc, hit)
 
-  survey = {}
-  assn = None
-  if complete:
-    assn = r[0]
-    for ans in assn.answers[0]:
-      survey[ans.qid] = ans.fields[0]
+  if data is None:
+    return { "complete": False }
 
   return {
-    "complete": complete,
-    "worker": assn.WorkerId if assn else None,
-    "assignment": assn.AssignmentId if assn else None,
-    "submitTimestamp": str(assn.SubmitTime) if assn else None,
-    "survey": survey
+    "complete": True,
+    "worker": data.worker,
+    "assignment": data.assignment,
+    "submitTimestamp": str(data.time),
+    "survey": json.loads(data.payload)
     }
 
 @api.method("App.refreshExperiments")
