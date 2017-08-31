@@ -45,6 +45,18 @@ class LvlData(Base):
   allinvs = Column(String(16536))
 
 
+class VerifyData(Base):
+  __tablename__ = "verifydata"
+  id = Column(Integer, primary_key=True, autoincrement=True)
+  config = Column(String(16536), nullable=False)
+  lvlset = Column(String(256), nullable=False)
+  lvl = Column(String(256), nullable=False)
+  timeout = Column(Integer, nullable=False)
+  time = Column(DateTime, nullable=False)
+  provedflag = Column(Integer, nullable=False)
+  payload = Column(String(16536), nullable=False)
+
+
 def open_sqlite_db(path):
     engine = create_engine("sqlite:///" + path, echo=False,
       connect_args={'check_same_thread':False});
