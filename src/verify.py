@@ -51,7 +51,10 @@ def processLevel(args, lvl, lvlName=None, additionalInvs=[]):
     print "ADDITIONAL INVARIANTS:", ", ".join(str(x) for x in additionalInvs)
   else:
     print "ADDITIONAL INVARIANTS:", len(additionalInvs)
-  print "UNIQUE INVARIANTS:", len(invs)
+  if len(invs) < 6:
+    print "UNIQUE INVARIANTS:", ", ".join(map(str, invs))
+  else:
+    print "UNIQUE INVARIANTS:", len(invs)
   print
 
   verify(lvl, invs, args.timeout)
