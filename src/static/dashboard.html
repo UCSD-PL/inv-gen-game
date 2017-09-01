@@ -49,6 +49,7 @@
 
   <script type="text/javascript">
     var adminToken;
+    var automateClock = 0;
     var refreshIntervalId;
     var refreshClock = 0;
     var experimentRowUpdater;
@@ -79,6 +80,8 @@
     }
 
     function runAutomation() {
+      automateClock = 5 * 60;
+
       var button = $("#run_automation");
       button.prop("disabled", true);
 
@@ -87,6 +90,9 @@
 
         button.prop("disabled", false);
         updateFeedback(res);
+
+        // Force experiment update
+        setTimeout(refreshExperiments, 10 * 1000);
       }, rpcError);
     }
 
@@ -437,7 +443,26 @@
           refreshClock -= 1;
         }
         $("#refresh_clock").text(refreshClock);
+
+        var automateCheck = $("#auto_automation")[0];
+        if (automateCheck.checked && automateClock <= 0) {
+          runAutomation();
+        } else {
+          automateClock -= 1;
+        }
+        if (automateCheck.checked) {
+          $("#auto_clock").text("(in " + automateClock + ")");
+        }
       }, 1000);
+
+      $("#auto_automation").click(function(event) {
+        var item = $("#auto_clock");
+        if (event.target.checked) {
+          item.text("(in " + automateClock + ")");
+        } else {
+          item.text("");
+        }
+      });
 
       $("#refresh_experiments").click(refreshExperiments);
 
@@ -545,13 +570,22 @@
           </tbody>
         </table>
         <div class="clearfix">
-          <h4 class="pull-left">Automation Feedback</h4>
-          <button id="run_automation" class="btn btn-default pull-right"
-            type="submit">
-            Run Automation
-          </button>
+          <div class="pull-left">
+            <h4>Automation Feedback</h4>
+            <ul id="auto_feedback"></ul>
+          </div>
+          <div class="pull-right">
+            <button id="run_automation" class="btn btn-default" type="submit">
+              Run Automation
+            </button>
+            <div class="checkbox">
+              <label>
+                <input id="auto_automation" type="checkbox"/>Automatic
+                  <span id="auto_clock"></span>
+              </label>
+            </div>
+          </div>
         </div>
-        <ul id="auto_feedback"></ul>
       </div>
     </div>
     <div class="panel panel-default">
