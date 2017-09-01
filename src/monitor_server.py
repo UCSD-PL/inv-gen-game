@@ -3,6 +3,7 @@ import json
 import sys
 import time
 from atexit import register
+from datetime import datetime, timedelta
 from os.path import abspath, dirname, isfile, realpath
 
 from flask import Flask
@@ -33,6 +34,10 @@ api = rpc(app, "/api")
 
 def isHitActive(hit):
   return hit.HITStatus in ("Assignable", "Unassignable")
+
+def isHitPerHour(hit):
+  creationTime = datetime.strptime(hit.CreationTime, "%Y-%m-%dT%H:%M:%SZ")
+  return datetime.now() - creationTime <= timedelta(hours=1)
 
 class ConfiguredExperiment:
   def __init__(self, expconf):
@@ -122,6 +127,7 @@ class ExperimentsConfig:
 
     self.load_time = time.time()
     self.max_active_hits = jsonconf["maxActiveHits"]
+    self.max_hits_per_hour = jsonconf["maxHitsPerHour"]
     self.expconfs = map(ConfiguredExperiment, jsonconf["experiments"])
 
   def getLoadTime(self):
@@ -129,6 +135,9 @@ class ExperimentsConfig:
 
   def getMaxActiveHits(self):
     return self.max_active_hits
+
+  def getMaxHitsPerHour(self):
+    return self.max_hits_per_hour
 
   def getConfiguredExperiments(self):
     return self.expconfs
@@ -169,7 +178,13 @@ def loadExperiments():
   global auto_feedback, balance, expconf, hits
 
   balance = mc.get_account_balance()[0]
-  hits = {h.HITId: h for h in mc.get_all_hits()}
+
+  hits = {}
+  hour_hits = 0
+  for hit in mc.get_all_hits():
+    hits[hit.HITId] = hit
+    if isHitPerHour(hit):
+      hour_hits += 1
 
   if expconf is None:
     expconf = ExperimentsConfig(args.experiments)
@@ -178,7 +193,8 @@ def loadExperiments():
 
   exps = expconf.getConfiguredExperiments()
   total_active_hits = sum(e.getActiveHits() for e in exps)
-  total_allowed_new_hits = expconf.getMaxActiveHits() - total_active_hits
+  total_allowed_new_hits = min(expconf.getMaxActiveHits() - total_active_hits,
+    expconf.getMaxHitsPerHour() - hour_hits)
 
   auto_feedback = []
   for e in exps:
@@ -244,6 +260,8 @@ def getDashboard(inputToken):
     "experimentsFile": expconf.path,
     "nMaxActiveHits": expconf.getMaxActiveHits(),
     "nTotalActiveHits": sum(isHitActive(h) for h in hits.values()),
+    "nMaxHitsPerHour": expconf.getMaxHitsPerHour(),
+    "nTotalHitsPerHour": sum(isHitPerHour(h) for h in hits.values()),
     "lastHitCheck": time.time() - expconf.getLoadTime(),
     "autoFeedback": map(str, auto_feedback),
     "expstats": expstats,

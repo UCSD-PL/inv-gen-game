@@ -326,6 +326,8 @@
           .text(res.experimentsFile);
         $("#active_hits")
           .text(res.nTotalActiveHits + " (" + res.nMaxActiveHits + ")");
+        $("#active_hits_per_hour")
+          .text(res.nTotalHitsPerHour + " (" + res.nMaxHitsPerHour + ")");
         $("#needed_hits")
           .text(nTotalNeededHits);
         $("#last_hit_check")
@@ -524,6 +526,8 @@
           <dd id="balance"></dd>
           <dt>Active HITs (Max):</dt>
           <dd id="active_hits"></dd>
+          <dt>Hourly HITs (Max):</dt>
+          <dd id="active_hits_per_hour"></dd>
           <dt>Last HIT Check:</dt>
           <dd id="last_hit_check"></dd>
         </dl>
