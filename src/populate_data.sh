@@ -16,3 +16,8 @@ db="$1"
   --enames new-benchmarks --lvlsets unsolved-new-benchmarks \
   --modes individual \
   --read --write
+./verify.py --db "$db" \
+  --lvlset ../lvlsets/unsolved-new-benchmarks2.lvlset \
+  --enames new-benchmarks --lvlsets unsolved-new-benchmarks2 \
+  --modes individual \
+  --read --write
