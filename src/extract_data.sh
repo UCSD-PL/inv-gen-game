@@ -5,7 +5,7 @@ set -e
 
 db="$1"
 
-mkdir data
+mkdir -p data
 
 # Solved levels for workers at or below each experience level
 #
