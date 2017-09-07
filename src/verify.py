@@ -3,7 +3,7 @@
 from argparse import ArgumentParser
 from collections import OrderedDict
 from datetime import datetime
-from sqlalchemy import func
+from sqlalchemy import and_, func
 import csv
 import json
 import os.path
@@ -34,16 +34,19 @@ def verify(lvl, invs, timeout=None, soundSet=None):
   return not violations
 
 def processLevel(args, lvl, lvls=None, lvlName=None, additionalInvs=[],
-  onVerify=None, worker=None):
+  onVerify=None, worker=None, assignment=None):
   workers = args.workers if worker is None else [worker]
+  assignments = None if assignment is None else [assignment]
 
   actualEnames = set()
   actualLvls = set()
   actualLvlsets = set()
   actualWorkers = set()
+  actualAssignments = set()
   dbInvs = allInvs(s, enames=args.enames, lvls=lvls, lvlsets=args.lvlsets,
-    workers=workers, enameSet=actualEnames, lvlSet=actualLvls,
-    lvlsetSet=actualLvlsets, workerSet=actualWorkers)
+    workers=workers, assignments=assignments, enameSet=actualEnames,
+    lvlSet=actualLvls, lvlsetSet=actualLvlsets, workerSet=actualWorkers,
+    assignmentSet=actualAssignments)
 
   invs = set(parseExprAst(inv[1]) for inv in dbInvs)
   invs.update(additionalInvs)
@@ -59,6 +62,10 @@ def processLevel(args, lvl, lvls=None, lvlName=None, additionalInvs=[],
     print "WORKERS:", ", ".join(actualWorkers)
   else:
     print "UNIQUE WORKERS:", len(actualWorkers)
+  if len(actualAssignments) < 3:
+    print "ASSIGNMENTS:", ", ".join(actualAssignments)
+  else:
+    print "UNIQUE ASSIGNMENTS:", len(actualAssignments)
   if len(additionalInvs) < 6:
     print "ADDITIONAL INVARIANTS:", ", ".join(str(x) for x in additionalInvs)
   else:
@@ -73,7 +80,8 @@ def processLevel(args, lvl, lvls=None, lvlName=None, additionalInvs=[],
     "enames": list(actualEnames),
     "lvls": list(actualLvls),
     "lvlsets": list(actualLvlsets),
-    "workers": list(actualWorkers)
+    "workers": list(actualWorkers),
+    "assignments": list(actualAssignments)
     }
 
   soundSet = set()
@@ -111,7 +119,8 @@ if __name__ == "__main__":
     help="A levelset file to load levels from")
   p.add_argument("--lvlsets", nargs="*",
     help="Include lvlset invs; may specify multiple items (unset = any)")
-  p.add_argument("--modes", nargs="*", choices=["individual", "combined"],
+  p.add_argument("--modes", nargs="*", choices=["combined", "individual",
+      "individual-play"],
     help="How to combine invariants for verification")
   p.add_argument("--read", action="store_true",
     help="Read verification results from the database (and skip verified)")
@@ -352,6 +361,75 @@ if __name__ == "__main__":
 
               processLevel(args, lvl, [lvlName], lvlName, additionalLvlInvs,
                 onVerify, worker=worker)
+
+          elif mode == "individual-play":
+            # Individual-play mode uses each worker's invariants individually
+            # without combining invariants from different playthroughs.
+
+            vq = s.query(
+              VerifyData.provedflag,
+              VerifyData.time,
+              VerifyData.payload
+              )
+            if args.read:
+              vq = vq \
+                .filter(VerifyData.config == json.dumps(config)) \
+                .filter(VerifyData.lvlset == lvlset) \
+                .filter(VerifyData.lvl == lvlName) \
+                .filter(VerifyData.timeout >= args.timeout)
+            else:
+              vq = vq.filter(False)
+
+            vq = vq.subquery()
+            q = s.query(
+                Event.src,
+                func.json_extract(Event.payload, "$.assignmentId"),
+                func.max(vq.c.provedflag),
+                func.max(vq.c.time)
+              ) \
+              .filter(Event.type == "FoundInvariant") \
+              .outerjoin(vq, and_(
+                Event.src == func.json_extract(vq.c.payload, "$.workers[0]"),
+                func.json_extract(Event.payload, "$.assignmentId") ==
+                  func.json_extract(vq.c.payload, "$.assignments[0]"))) \
+              .group_by(Event.src)
+            q = filterEvents(q,
+                enames=args.enames, lvls=[lvlName], lvlsets=args.lvlsets,
+                workers=args.workers
+              )
+
+            for worker, assignment, proved, verifyTime in q.all():
+              if proved is None:
+                proved = False
+              if verifyTime is None:
+                verifyTime = datetime.fromtimestamp(0)
+
+              if proved:
+                print "Skipping worker", worker, "assignment ", \
+                  assignment, "on", lvlName, "(already proved)"
+                continue
+
+              q = s.query(Event.id).filter(Event.type == "FoundInvariant")
+              q = filterEvents(q,
+                  enames=args.enames, lvls=[lvlName], lvlsets=args.lvlsets,
+                  workers=[worker], assignments=[assignment]
+                ) \
+                .filter(Event.time.between(verifyTime, now))
+
+              res = q.all()
+              newInvs = len(res)
+
+              print "Individual-play mode:",
+              if newInvs:
+                print newInvs, "new invariants for worker", worker, \
+                  "assignment", assignment, "on", lvlName, "since last run"
+              else:
+                print "Skipping worker", worker, "assignment", assignment, \
+                  "on", lvlName, "(no new invariants)"
+                continue
+
+              processLevel(args, lvl, [lvlName], lvlName, additionalLvlInvs,
+                onVerify, worker=worker, assignment=assignment)
 
           else:
             print "UNSUPPORTED MODE:", args.mode
