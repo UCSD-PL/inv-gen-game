@@ -1,0 +1,46 @@
+{
+ "name": "unsolved-new-benchmarks-5-auto.lvlset",
+ "levels": [
+  [
+   "i-sqrt-auto",
+   [
+    "../ice-benchmarks/sqrt-more-rows-swap-columns.auto.bpl",
+    "../ice-benchmarks/sqrt.c",
+    "../ice-benchmarks/sqrt.bpl"
+   ]
+  ],
+  [
+   "s-gauss_sum_true-unreach-call-auto",
+   [
+    "../sv_manual_trans/loop-new/gauss_sum-more-rows.auto.bpl",
+    "../sv_manual_trans/loop-new/gauss_sum_true-unreach-call.c",
+    "../sv_manual_trans/loop-new/gauss_sum_true-unreach-call.bpl"
+   ]
+  ],
+
+  [
+   "m-sorin03-auto",
+   [
+    "../max-benchmarks/sorin03.desugared.auto.bpl",
+    "../max-benchmarks/sorin03.c",
+    "../max-benchmarks/sorin03.bpl"
+   ]
+  ],
+  [
+   "m-sorin04-auto",
+   [
+    "../max-benchmarks/sorin04.desugared.auto.bpl",
+    "../max-benchmarks/sorin04.c",
+    "../max-benchmarks/sorin04.bpl"
+   ]
+  ],
+  [
+   "m-S5auto",
+   [
+    "../max-benchmarks/s5auto.desugared.bpl",
+    "../max-benchmarks/s5.c",
+    "../max-benchmarks/s5.bpl"
+   ]
+  ]
+ ]
+}
