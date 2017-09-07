@@ -8,17 +8,21 @@ db="$1"
 # Pull any missing survey data
 ./survey.py --db "$db"
 
+lvlset1_good_lvls="m-S9 m-S10 m-S11 m-non-lin-ineq-1 m-non-lin-ineq-2
+  m-non-lin-ineq-3 m-non-lin-ineq-4 m-prod-bin m-cube2"
+
 # Solved levels with individual invariants
 #
 # We may need to include more experiments here
 ./verify.py --db "$db" \
   --lvlset ../lvlsets/unsolved-new-benchmarks.lvlset \
-  --enames new-benchmarks --lvlsets unsolved-new-benchmarks \
+  --enames new-benchmarks \
+  --lvls $lvlset1_good_lvls \
   --modes individual \
   --read --write
 ./verify.py --db "$db" \
-  --lvlset ../lvlsets/unsolved-new-benchmarks2.lvlset \
-  --enames new-benchmarks --lvlsets unsolved-new-benchmarks2 \
+  --lvlset ../lvlsets/unsolved-new-benchmarks-5-auto.lvlset \
+  --enames new-benchmarks
   --modes individual \
   --read --write
 
@@ -41,17 +45,15 @@ for exp in math prog; do
     ./verify.py --db "$db" \
       --lvlset "../lvlsets/unsolved-new-benchmarks.lvlset" \
       --enames new-benchmarks \
-      --lvlsets unsolved-new-benchmarks unsolved-new-benchmarks2 \
+      --lvls $lvlset1_good_lvls \
       --workers $workers \
       --tag "$exp-exp-le-$n" \
       --modes combined \
       --read --write
     # We only need levels that differ in levelset2
     ./verify.py --db "$db" \
-      --lvlset "../lvlsets/unsolved-new-benchmarks2.lvlset" \
+      --lvlset "../lvlsets/unsolved-new-benchmarks-5-auto.lvlset" \
       --enames new-benchmarks \
-      --lvlsets unsolved-new-benchmarks2 \
-      --lvls s-gauss_sum_true-unreach-call-auto m-S5auto \
       --workers $workers \
       --tag "$exp-exp-le-$n" \
       --modes combined \
