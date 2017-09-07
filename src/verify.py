@@ -33,10 +33,8 @@ def verify(lvl, invs, timeout=None, soundSet=None):
 
   return not violations
 
-def processLevel(args, lvl, lvlName=None, additionalInvs=[], onVerify=None,
-  worker=None):
-  lvls = args.lvls if lvlName is None else \
-    ([lvlName] if args.lvls is None else args.lvls)
+def processLevel(args, lvl, lvls=None, lvlName=None, additionalInvs=[],
+  onVerify=None, worker=None):
   workers = args.workers if worker is None else [worker]
 
   actualEnames = set()
@@ -198,7 +196,9 @@ if __name__ == "__main__":
   if args.bpl:
     # If a BPL file is specified we just look up invariants and try to prove
     # the level.  This is mostly for one-off testing.
-    processLevel(args, lvl, args.lvlName, additionalInvs.get(args.lvlName, []))
+    lvls = [args.lvlName] if args.lvls is None else args.lvls
+    processLevel(args, lvl, lvls, args.lvlName,
+      additionalInvs.get(args.lvlName, []))
 
   elif args.lvlset:
     # If a levelset is specified we try to prove each level.  Results can be
@@ -285,7 +285,8 @@ if __name__ == "__main__":
               print "Skipping", lvlName, "(no new invariants)"
               continue
 
-            processLevel(args, lvl, lvlName, additionalLvlInvs, onVerify)
+            processLevel(args, lvl, [lvlName], lvlName, additionalLvlInvs,
+              onVerify)
 
           elif mode == "individual":
             # Individual mode uses each worker's invariants individually
@@ -349,8 +350,8 @@ if __name__ == "__main__":
                   "(no new invariants)"
                 continue
 
-              processLevel(args, lvl, lvlName, additionalLvlInvs, onVerify,
-                worker=worker)
+              processLevel(args, lvl, [lvlName], lvlName, additionalLvlInvs,
+                onVerify, worker=worker)
 
           else:
             print "UNSUPPORTED MODE:", args.mode
