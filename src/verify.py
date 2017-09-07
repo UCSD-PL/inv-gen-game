@@ -117,6 +117,8 @@ if __name__ == "__main__":
     help="How to combine invariants for verification")
   p.add_argument("--read", action="store_true",
     help="Read verification results from the database (and skip verified)")
+  p.add_argument("--tag",
+    help="A tag to differentiate results in the database")
   p.add_argument("--timeout", type=int, default=30,
     help="The maximum time (in seconds) to wait for Z3 queries")
   p.add_argument("--workers", nargs="*",
@@ -221,6 +223,8 @@ if __name__ == "__main__":
           # This is stored to record the configuration in case runs need to be
           # repeated and to differentiate results from different runs.
           config = OrderedDict()
+          if args.tag:
+            config["tag"] = args.tag
           config["mode"] = mode
           config["enames"] = sorted(args.enames) if args.enames \
             is not None else None
