@@ -16,7 +16,8 @@ from lib.boogie.z3_embed import AllIntTypeEnv, Unknown, expr_to_z3, tautology
 from models import Event, VerifyData, open_sqlite_db, open_mysql_db
 from vc_check import tryAndVerifyLvl
 
-def verify(lvl, invs, timeout=None, soundSet=None):
+def verify(lvl, invs, timeout=None, overfittedSet=None, nonindSet=None,
+  soundSet=None):
   (overfitted, _), (nonind, _), sound, violations = tryAndVerifyLvl(lvl, invs,
     set(), timeout)
 
@@ -28,6 +29,10 @@ def verify(lvl, invs, timeout=None, soundSet=None):
   print "PROVED:", not violations
   print
 
+  if overfittedSet is not None:
+    overfittedSet.update(x[0] for x in overfitted)
+  if nonindSet is not None:
+    nonindSet.update(x[0] for x in nonind)
   if soundSet is not None:
     soundSet.update(sound)
 
@@ -84,8 +89,13 @@ def processLevel(args, lvl, lvls=None, lvlName=None, additionalInvs=[],
     "assignments": list(actualAssignments)
     }
 
+  overfittedSet = set()
+  nonindSet = set()
   soundSet = set()
-  proved = verify(lvl, invs, timeout=args.timeout, soundSet=soundSet)
+  proved = verify(lvl, invs, timeout=args.timeout,
+    overfittedSet=overfittedSet, nonindSet=nonindSet, soundSet=soundSet)
+  payload["overfitted"] = list(str(s) for s in overfittedSet)
+  payload["nonind"] = list(str(s) for s in nonindSet)
   payload["sound"] = list(str(s) for s in soundSet)
 
   if onVerify:
