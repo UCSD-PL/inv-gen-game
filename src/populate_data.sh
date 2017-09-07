@@ -11,19 +11,20 @@ db="$1"
 lvlset1_good_lvls="m-S9 m-S10 m-S11 m-non-lin-ineq-1 m-non-lin-ineq-2
   m-non-lin-ineq-3 m-non-lin-ineq-4 m-prod-bin m-cube2"
 
-# Solved levels with individual invariants
+# Solved levels with individual invariants (both in a single assignment and
+# across all of a worker's assignments)
 #
 # We may need to include more experiments here
 ./verify.py --db "$db" \
   --lvlset ../lvlsets/unsolved-new-benchmarks.lvlset \
   --enames new-benchmarks \
   --lvls $lvlset1_good_lvls \
-  --modes individual \
+  --modes individual-play individual \
   --read --write
 ./verify.py --db "$db" \
   --lvlset ../lvlsets/unsolved-new-benchmarks-5-auto.lvlset \
   --enames new-benchmarks
-  --modes individual \
+  --modes individual-play individual \
   --read --write
 
 # Solved levels with invariants combined by skill level
