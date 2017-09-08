@@ -84,6 +84,26 @@ def splitGameInstances(session, **kwargs):
 
   return stats, plays
 
+def prunePlays(plays, n):
+  """
+  Prune the plays such that for each level we keep only the first n
+  plays in chronological order.
+  """
+  lvlPlays = {} # map from level to the plays for that level
+  for (k, v) in plays.items():
+    (_, _, (_, lvlid)) = k
+    _add(lvlPlays, lvlid, (k, v))
+
+  # Sort the plays by start time
+  for lvlid in lvlPlays:
+    lvlPlays[lvlid].sort(key=lambda x:  x[1][0].time)
+
+  # Keep only the first n for each level.
+  for lvlid in lvlPlays:
+    lvlPlays[lvlid] = lvlPlays[lvlid][:n]
+
+  return {k: play for lvlId in lvlPlays for (k, play) in lvlPlays[lvlId]}
+
 def interrupted(events):
   """ Given the events of one play, determine if it was interrupted - i.e. if it has a
       GameDone or a SkipLevel event, or none of these and no FinishLevel
@@ -109,6 +129,7 @@ if __name__ == "__main__":
   p.add_argument("--db", required=True, help="Database path")
   p.add_argument("--experiments", nargs='+', help="Only consider plays from these experiments")
   p.add_argument("--lvlids", nargs='+', help="Only consider plays from these levels")
+  p.add_argument("--nplays", type=int, help="Only consider the first N plays for each level")
   p.add_argument("--stat",
     choices=[
       'fun_histo',
@@ -128,8 +149,11 @@ if __name__ == "__main__":
   sessionF = open_db(args.db)
   session = sessionF()
   stats, plays = splitGameInstances(session, **filter_args)
+
+  if (args.nplays is not None):
+    plays = prunePlays(plays, args.nplays)
+
   assignments = set(assignment(play) for play in plays.values())
-  workers = set(worker(play) for play in plays.values())
   """
   print "Stats:"
   for k in stats:
