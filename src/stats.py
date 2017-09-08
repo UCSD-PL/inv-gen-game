@@ -56,8 +56,8 @@ def splitGameInstances(session, **kwargs):
     curLvl = None
     gameDone = None
 
-    ignore = ['Consent', 'TutorialStart', 'TutorialDone', 'ReplayTutorialAll']
-    in_lvl = ['TriedInvariant', 'FoundInvariant', 'VerifyAttempt', 'PowerupsActivated', 'SkipToNextLevel']
+    ignore = ['Consent', 'TutorialStart', 'TutorialDone', 'ReplayTutorialAll', 'VerifyAttempt']
+    in_lvl = ['TriedInvariant', 'FoundInvariant', 'PowerupsActivated', 'SkipToNextLevel']
 
     for (ev, lvlid, lvlset, workerId, assignmentId) in m[k]:
       if (ev.type in ignore):
@@ -69,9 +69,13 @@ def splitGameInstances(session, **kwargs):
 
       if (curLvl != None):
         if ev.type in in_lvl + ['GameDone', 'FinishLevel']:
-          _add(plays, curLvl, ev)
+          if ev.type != 'GameDone':
+            _add(plays, curLvl, ev)
           if ev.type in ['GameDone', 'FinishLevel']:
             curLvl = None
+        elif ev.type == 'StartLevel' and ev.payl()['lvlid'] != curLvl[2][1]:
+          curLvl = (assignmentId, workerId, (lvlset, lvlid))
+          _add(plays, curLvl, ev)
         else:
            _add(stats, 'spurious_event_inlevel', ev)
       else:
@@ -84,7 +88,7 @@ def splitGameInstances(session, **kwargs):
 
   return stats, plays
 
-def prunePlays(plays, n):
+def pruneByNumPlays(plays, n):
   """
   Prune the plays such that for each level we keep only the first n
   plays in chronological order.
@@ -101,6 +105,34 @@ def prunePlays(plays, n):
   # Keep only the first n for each level.
   for lvlid in lvlPlays:
     lvlPlays[lvlid] = lvlPlays[lvlid][:n]
+
+  return {k: play for lvlId in lvlPlays for (k, play) in lvlPlays[lvlId]}
+
+def pruneByNumPlayers(plays, n):
+  """
+  Prune the plays such that for each level we keep only the 
+  plays by the first n unique players in chronological order.
+  """
+  lvlPlays = {} # map from level to the plays for that level
+  for (k, v) in plays.items():
+    (_, _, (_, lvlid)) = k
+    _add(lvlPlays, lvlid, (k, v))
+
+  # Sort the plays by start time
+  for lvlid in lvlPlays:
+    lvlPlays[lvlid].sort(key=lambda x:  x[1][0].time)
+
+  # For each level keep the plays for the first N unique players
+  for lvlid in lvlPlays:
+    unique_players = set()
+    old_plays = lvlPlays[lvlid]
+    new_plays = []
+    while len(unique_players) < n and len(old_plays) > 0:
+      play = old_plays.pop(0)
+      unique_players.add(worker(play[1]))
+      new_plays.append(play)
+
+    lvlPlays[lvlid] = new_plays
 
   return {k: play for lvlId in lvlPlays for (k, play) in lvlPlays[lvlId]}
 
@@ -124,19 +156,25 @@ def worker(events):
   assert len(set(e.payl()['workerId'] for e in events)) == 1
   return events[0].payl()['workerId']
 
+def lvlid(events):
+  assert len(set(e.payl()['lvlid'] for e in events)) == 1,\
+    assignment(events)
+  return events[0].payl()['lvlid']
+
 if __name__ == "__main__":
   p = ArgumentParser(description="Build graphs from database")
   p.add_argument("--db", required=True, help="Database path")
   p.add_argument("--experiments", nargs='+', help="Only consider plays from these experiments")
   p.add_argument("--lvlids", nargs='+', help="Only consider plays from these levels")
   p.add_argument("--nplays", type=int, help="Only consider the first N plays for each level")
+  p.add_argument("--nplayers", type=int, help="Only consider the first N unique players for each level")
   p.add_argument("--stat",
     choices=[
       'fun_histo',
       'math_exp_histo',
       'prog_exp_histo',
       'challenging_histo',
-      'num_players_per_lvl',
+      'lvl_stats',
     ], help='Which stat to print', required=True)
 
   args = p.parse_args()
@@ -146,14 +184,22 @@ if __name__ == "__main__":
   if args.lvlids:
     filter_args['lvls'] = args.lvlids
 
+  if args.nplayers is not None and args.nplays is not None:
+    print "Error: Can't specify both --nplayers and --nplays"
+    exit(-1)
+
   sessionF = open_db(args.db)
   session = sessionF()
   stats, plays = splitGameInstances(session, **filter_args)
 
   if (args.nplays is not None):
-    plays = prunePlays(plays, args.nplays)
+    plays = pruneByNumPlays(plays, args.nplays)
+
+  if (args.nplayers is not None):
+    plays = pruneByNumPlayers(plays, args.nplayers)
 
   assignments = set(assignment(play) for play in plays.values())
+  lvlids = set(lvlid(play) for play in plays.values())
   """
   print "Stats:"
   for k in stats:
@@ -201,13 +247,13 @@ if __name__ == "__main__":
 
     for k in keys:
       print k, ',', histo.get(k, 0)
-  elif args.stat == 'num_players_per_lvl':
-    players = { }
-    interrupts = {}
-    finishes = {}
-    total_time = {}
-    found_invs = {}
-    tried_invs = {}
+  elif args.stat == 'lvl_stats':
+    players = {lvlid: [] for lvlid in lvlids}
+    interrupts = {lvlid: 0 for lvlid in lvlids}
+    finishes = {lvlid: 0 for lvlid in lvlids}
+    total_time = {lvlid: 0.0 for lvlid in lvlids}
+    found_invs = {lvlid: [] for lvlid in lvlids}
+    tried_invs = {lvlid: [] for lvlid in lvlids}
 
     for (assignmentId, workerId, (lvlset, lvlid)) in plays:
       play = plays[(assignmentId, workerId, (lvlset, lvlid))]
@@ -223,20 +269,24 @@ if __name__ == "__main__":
       total_time[lvlid] = total_time.get(lvlid, 0.0) + time_spent
       for e in play:
         if e.type == 'FoundInvariant':
-          _add(found_invs, lvlid, e.payl()['raw'])
+          _add(found_invs, lvlid, e.payl()['canonical'])
         if e.type == 'TriedInvariant':
-          _add(tried_invs, lvlid, e.payl()['raw'])
+          _add(tried_invs, lvlid, e.payl()['canonical'])
 
-    print "Level, # Plays, # Finishes, #Interrupts,  %Finishing, # Unique Players, Average Time Spent(s)"
+    print "Level, # Plays, # Finishes, #Interrupts,  %Finishing, # Unique Players, Average Time Spent(s), # Invariants Found, # Invariants Tried"
     for k in sorted(players.keys()):
       num_plays = len(players[k])
       finished_plays = finishes.get(k, 0)
       interrupted_plays = interrupts.get(k, 0)
       unique_players = len(set(players[k]))
+      num_invs_found = len(set(found_invs[k]))
+      num_invs_tried = len(set(tried_invs[k]))
       print k, ",", \
             num_plays, ",", \
             finished_plays, ",", \
             interrupted_plays, ",", \
             100*(finished_plays*1.0/num_plays), ",", \
             unique_players, ",", \
-            total_time[k] / num_plays
+            total_time[k] / num_plays, ",", \
+            num_invs_found, ",", \
+            num_invs_tried
