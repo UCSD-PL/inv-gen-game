@@ -6,15 +6,28 @@ from datetime import datetime
 from sqlalchemy import and_, func
 import csv
 import json
+import multiprocessing
+import multiprocessing.pool
 import os.path
 import time
 
-from db_util import allInvs, filterEvents
+from db_util import allInvs, filterEvents, open_db
 from levels import loadBoogieFile, loadBoogieLvlSet
 from lib.boogie.ast import parseExprAst
 from lib.boogie.z3_embed import AllIntTypeEnv, Unknown, expr_to_z3, tautology
-from models import Event, VerifyData, open_sqlite_db, open_mysql_db
+from models import Event, VerifyData
 from vc_check import tryAndVerifyLvl
+
+class NoDaemonProcess(multiprocessing.Process):
+  def _get_daemon(self):
+    return False
+  def _set_daemon(self, value):
+    pass
+  daemon = property(_get_daemon, _set_daemon)
+
+# This is needed because daemon processes can't have children (like Z3)
+class NoDaemonPool(multiprocessing.pool.Pool):
+  Process = NoDaemonProcess
 
 def verify(lvl, invs, timeout=None, overfittedSet=None, nonindSet=None,
   soundSet=None):
@@ -38,10 +51,21 @@ def verify(lvl, invs, timeout=None, overfittedSet=None, nonindSet=None,
 
   return not violations
 
+def storeVerify(s, config, lvlset, lvlName, timeout, verifyTime, proved,
+  payload):
+  data = VerifyData(config=json.dumps(config), lvlset=lvlset, lvl=lvlName,
+    timeout=timeout, time=verifyTime, provedflag=proved,
+    payload=json.dumps(payload))
+  s.add(data)
+  s.commit()
+
 def processLevel(args, lvl, lvls=None, lvlName=None, additionalInvs=[],
-  onVerify=None, worker=None, assignment=None):
+  storeArgs=None, worker=None, assignment=None):
   workers = args.workers if worker is None else [worker]
   assignments = None if assignment is None else [assignment]
+
+  sessionF = open_db(args.db)
+  s = sessionF()
 
   actualEnames = set()
   actualLvls = set()
@@ -98,16 +122,10 @@ def processLevel(args, lvl, lvls=None, lvlName=None, additionalInvs=[],
   payload["nonind"] = list(str(s) for s in nonindSet)
   payload["sound"] = list(str(s) for s in soundSet)
 
-  if onVerify:
-    onVerify(proved, payload)
-
-def storeVerify(s, config, lvlset, lvlName, timeout, verifyTime, proved,
-  payload):
-  data = VerifyData(config=json.dumps(config), lvlset=lvlset, lvl=lvlName,
-    timeout=timeout, time=verifyTime, provedflag=proved,
-    payload=json.dumps(payload))
-  s.add(data)
-  s.commit()
+  if storeArgs is not None:
+    config, lvlset, now = storeArgs
+    storeVerify(s, config, lvlset, lvlName, args.timeout, now, proved,
+      payload)
 
 if __name__ == "__main__":
   p = ArgumentParser(description="Verify a level using selected invariants")
@@ -132,6 +150,8 @@ if __name__ == "__main__":
   p.add_argument("--modes", nargs="*", choices=["combined", "individual",
       "individual-play"],
     help="How to combine invariants for verification")
+  p.add_argument("--parallel", action="store_true",
+    help="Run multiple verification tasks in parallel")
   p.add_argument("--read", action="store_true",
     help="Read verification results from the database (and skip verified)")
   p.add_argument("--tag",
@@ -158,10 +178,7 @@ if __name__ == "__main__":
   if not args.modes:
     args.modes = ["combined"]
 
-  if "mysql+mysqldb://" in args.db:
-    sessionF = open_mysql_db(args.db)
-  else:
-    sessionF = open_sqlite_db(args.db)
+  sessionF = open_db(args.db)
   s = sessionF()
 
   if args.bpl:
@@ -228,6 +245,10 @@ if __name__ == "__main__":
       args.lvls = set(args.lvls)
 
     while True:
+      pool = None
+      if args.parallel:
+        pool = NoDaemonPool()
+
       now = datetime.now()
 
       for lvlName, lvl in lvls.items():
@@ -254,11 +275,9 @@ if __name__ == "__main__":
           if additionalInvs:
             config["additionalInvs"] = os.path.basename(args.additionalInvs)
 
+          storeArgs = None
           if args.write:
-            onVerify = lambda proved, payload: storeVerify(s, config, lvlset,
-              lvlName, args.timeout, now, proved, payload)
-          else:
-            onVerify = lambda proved, payload: ()
+            storeArgs = (config, lvlset, now)
 
           if mode == "combined":
             # Combined mode combines invariants from different workers
@@ -304,8 +323,12 @@ if __name__ == "__main__":
               print "Skipping", lvlName, "(no new invariants)"
               continue
 
-            processLevel(args, lvl, [lvlName], lvlName, additionalLvlInvs,
-              onVerify)
+            if pool is None:
+              processLevel(args, lvl, [lvlName], lvlName, additionalLvlInvs,
+                storeArgs=storeArgs)
+            else:
+              pool.apply_async(processLevel, (args, lvl, [lvlName], lvlName,
+                additionalLvlInvs), dict(storeArgs=storeArgs))
 
           elif mode == "individual":
             # Individual mode uses each worker's invariants individually
@@ -369,8 +392,13 @@ if __name__ == "__main__":
                   "(no new invariants)"
                 continue
 
-              processLevel(args, lvl, [lvlName], lvlName, additionalLvlInvs,
-                onVerify, worker=worker)
+              if pool is None:
+                processLevel(args, lvl, [lvlName], lvlName, additionalLvlInvs,
+                  storeArgs=storeArgs, worker=worker)
+              else:
+                pool.apply_async(processLevel, (args, lvl, [lvlName], lvlName,
+                  additionalLvlInvs), dict(storeArgs=storeArgs,
+                    worker=worker))
 
           elif mode == "individual-play":
             # Individual-play mode uses each worker's invariants individually
@@ -438,12 +466,21 @@ if __name__ == "__main__":
                   "on", lvlName, "(no new invariants)"
                 continue
 
-              processLevel(args, lvl, [lvlName], lvlName, additionalLvlInvs,
-                onVerify, worker=worker, assignment=assignment)
+              if pool is None:
+                processLevel(args, lvl, [lvlName], lvlName, additionalLvlInvs,
+                  storeArgs=storeArgs, worker=worker, assignment=assignment)
+              else:
+                pool.apply_async(processLevel, (args, lvl, [lvlName], lvlName,
+                  additionalLvlInvs), dict(storeArgs=storeArgs, worker=worker,
+                    assignment=assignment))
 
           else:
             print "UNSUPPORTED MODE:", args.mode
             exit(1)
+
+      if pool is not None:
+        pool.close()
+        pool.join()
 
       if not args.auto:
         break

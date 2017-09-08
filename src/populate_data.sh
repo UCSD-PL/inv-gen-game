@@ -50,6 +50,7 @@ for exp in math prog; do
       --workers $workers \
       --tag "$exp-exp-le-$n" \
       --modes combined \
+      --parallel \
       --read --write
     # We only need levels that differ in levelset2
     ./verify.py --db "$db" \
@@ -58,6 +59,7 @@ for exp in math prog; do
       --workers $workers \
       --tag "$exp-exp-le-$n" \
       --modes combined \
+      --parallel \
       --read --write
   done
 done

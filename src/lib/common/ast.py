@@ -18,7 +18,10 @@ class AstNode:
                 s._dict[n] = v;
 
     def __getattr__(s, n):
-        return s._dict[n];
+        try:
+            return s._dict[n];
+        except KeyError:
+            raise AttributeError
 
     def __repr__(s):
         try:
@@ -39,6 +42,10 @@ class AstNode:
         except:
           print "Can't hash: ", s
           raise
+
+    # Pickle
+    def __getinitargs__(s):
+        return s._children
 
 def replace(ast, m):
     if (not isinstance(ast, AstNode)):
