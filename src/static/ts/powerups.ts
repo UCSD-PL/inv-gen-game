@@ -127,7 +127,7 @@ class UseOpsPwup extends MultiplierPowerup {
       (inv: invariantT) => {
         let inv_ops = operators(inv);
         for (let i in ops) {
-          if (ops[i] in inv_ops) return true;
+          if (inv_ops.has(ops[i])) return true;
         }
         return false;
       },
