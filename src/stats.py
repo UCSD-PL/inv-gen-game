@@ -1,5 +1,4 @@
 #!/usr/bin/env python2.7
-
 from argparse import ArgumentParser
 from boto.mturk.connection import MTurkRequestError
 from collections import OrderedDict
@@ -161,6 +160,18 @@ def lvlid(events):
     assignment(events)
   return events[0].payl()['lvlid']
 
+def verified_by_worker(lvl, worker, exp):
+  s = session.query(VerifyData)\
+    .filter(VerifyData.lvl == lvl)\
+    .filter(func.json_extract(VerifyData.config, "$.mode") == "individual")\
+    .filter(func.json_extract(VerifyData.config, "$.enames[0]") == exp)\
+    .filter(func.json_extract(VerifyData.payload, "$.workers[0]") == worker)
+  vs = s.all()
+  if not (len(vs) == 1):
+    print "Problem for {}, {}, {} = {}".format(lvl, worker, exp, vs)
+  else:
+    return vs[0]
+
 if __name__ == "__main__":
   p = ArgumentParser(description="Build graphs from database")
   p.add_argument("--db", required=True, help="Database path")
@@ -275,6 +286,8 @@ if __name__ == "__main__":
 
     print "Level, # Plays, # Finishes, #Interrupts,  %Finishing, # Unique Players, Average Time Spent(s), # Invariants Found, # Invariants Tried"
     for k in sorted(players.keys()):
+      for player in players[k]:
+        verified_by_worker(k, player, 'new-benchmarks')
       num_plays = len(players[k])
       finished_plays = finishes.get(k, 0)
       interrupted_plays = interrupts.get(k, 0)
