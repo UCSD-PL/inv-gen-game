@@ -432,7 +432,8 @@ if __name__ == "__main__":
                 Event.src == func.json_extract(vq.c.payload, "$.workers[0]"),
                 func.json_extract(Event.payload, "$.assignmentId") ==
                   func.json_extract(vq.c.payload, "$.assignments[0]"))) \
-              .group_by(Event.src)
+              .group_by(Event.src,
+                func.json_extract(Event.payload, "$.assignmentId"))
             q = filterEvents(q,
                 enames=args.enames, lvls=[lvlName], lvlsets=args.lvlsets,
                 workers=args.workers
