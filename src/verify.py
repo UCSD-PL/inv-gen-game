@@ -246,6 +246,7 @@ if __name__ == "__main__":
 
     while True:
       pool = None
+      asyncres = []
       if args.parallel:
         pool = NoDaemonPool()
 
@@ -327,8 +328,9 @@ if __name__ == "__main__":
               processLevel(args, lvl, [lvlName], lvlName, additionalLvlInvs,
                 storeArgs=storeArgs)
             else:
-              pool.apply_async(processLevel, (args, lvl, [lvlName], lvlName,
-                additionalLvlInvs), dict(storeArgs=storeArgs))
+              asyncres.append(pool.apply_async(processLevel, (args, lvl,
+                [lvlName], lvlName, additionalLvlInvs),
+                dict(storeArgs=storeArgs)))
 
           elif mode == "individual":
             # Individual mode uses each worker's invariants individually
@@ -396,9 +398,9 @@ if __name__ == "__main__":
                 processLevel(args, lvl, [lvlName], lvlName, additionalLvlInvs,
                   storeArgs=storeArgs, worker=worker)
               else:
-                pool.apply_async(processLevel, (args, lvl, [lvlName], lvlName,
-                  additionalLvlInvs), dict(storeArgs=storeArgs,
-                    worker=worker))
+                asyncres.append(pool.apply_async(processLevel, (args, lvl,
+                  [lvlName], lvlName, additionalLvlInvs),
+                  dict(storeArgs=storeArgs, worker=worker)))
 
           elif mode == "individual-play":
             # Individual-play mode uses each worker's invariants individually
@@ -470,9 +472,10 @@ if __name__ == "__main__":
                 processLevel(args, lvl, [lvlName], lvlName, additionalLvlInvs,
                   storeArgs=storeArgs, worker=worker, assignment=assignment)
               else:
-                pool.apply_async(processLevel, (args, lvl, [lvlName], lvlName,
-                  additionalLvlInvs), dict(storeArgs=storeArgs, worker=worker,
-                    assignment=assignment))
+                asyncres.append(pool.apply_async(processLevel, (args, lvl,
+                  [lvlName], lvlName, additionalLvlInvs),
+                  dict(storeArgs=storeArgs, worker=worker,
+                    assignment=assignment)))
 
           else:
             print "UNSUPPORTED MODE:", args.mode
@@ -480,6 +483,11 @@ if __name__ == "__main__":
 
       if pool is not None:
         pool.close()
+        while asyncres:
+          print len(asyncres), "workers remaining"
+          asyncres = filter(lambda res: not res.ready(), asyncres)
+          time.sleep(10)
+        pool.terminate()
         pool.join()
 
       if not args.auto:
