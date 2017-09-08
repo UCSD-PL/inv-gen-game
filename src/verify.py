@@ -493,5 +493,5 @@ if __name__ == "__main__":
       if not args.auto:
         break
 
-      print "Finished pass; waiting 10 seconds"
+      print "Finished pass; waiting 30 seconds"
       time.sleep(30)
