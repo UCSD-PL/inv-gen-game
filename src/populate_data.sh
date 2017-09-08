@@ -22,11 +22,13 @@ lvlset1_manual_lvls="i-sqrt s-gauss_sum_true-unreach-call m-sorin03 m-sorin04
   --enames new-benchmarks \
   --lvls $lvlset1_good_lvls \
   --modes individual-play individual \
+  --parallel \
   --read --write
 ./verify.py --db "$db" \
   --lvlset ../lvlsets/unsolved-new-benchmarks-5-auto.lvlset \
   --enames new-benchmarks \
   --modes individual-play individual \
+  --parallel \
   --read --write
 # Manual levels
 ./verify.py --db "$db" \
@@ -34,6 +36,7 @@ lvlset1_manual_lvls="i-sqrt s-gauss_sum_true-unreach-call m-sorin03 m-sorin04
    --enames new-benchmarks \
    --lvls $lvlset1_manual_lvls \
    --modes individual-play individual \
+   --parallel \
    --read --write
 
 # Solved levels with invariants combined by skill level
