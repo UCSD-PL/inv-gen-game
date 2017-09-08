@@ -1,4 +1,4 @@
-from models import Source, Event
+from models import Source, Event, SurveyData, open_sqlite_db, open_mysql_db
 from json import loads,dumps
 from datetime import datetime
 from js import esprimaToBoogie
@@ -10,8 +10,13 @@ def playersWhoStartedLevel(lvlset, lvl, session):
                                  e.payl()["lvlset"] == lvlset and
                                  e.payl()["lvlid"] == lvl) ])
 
+def filterSurveys(query, assignments=None):
+  if assignments is not None:
+    query = query.filter(SurveyData.assignment.in_(assignments))
+  return query
+
 def filterEvents(query, enames=None, lvls=None, lvlsets=None, workers=None,
-  assignments=None):
+  assignments=None, typ=None):
   if enames is not None:
     query = query.filter(Event.experiment.in_(enames))
   if lvls is not None:
@@ -26,6 +31,9 @@ def filterEvents(query, enames=None, lvls=None, lvlsets=None, workers=None,
   if assignments is not None:
     query = query.filter(func.json_extract(Event.payload, "$.assignmentId")
       .in_(assignments))
+
+  if typ is not None:
+    query = query.filter(Event.type == typ)
 
   return query
 
@@ -173,3 +181,10 @@ def levelsPlayedInSession(session, assignmentId):
   q = session.query(Event.id).filter(Event.type == "FinishLevel")
   q = filterEvents(q, assignments=[assignmentId])
   return q.count()
+
+def open_db(path):
+  if "mysql+mysqldb://" in path:
+    sessionF = open_mysql_db(path)
+  else:
+    sessionF = open_sqlite_db(path)
+  return sessionF
