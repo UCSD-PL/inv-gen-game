@@ -167,6 +167,9 @@ def verified_by_worker(lvl, worker, exp):
     .filter(func.json_extract(VerifyData.config, "$.enames[0]") == exp)\
     .filter(func.json_extract(VerifyData.payload, "$.workers[0]") == worker)
   vs = s.all()
+  if (len(vs) == 0):
+    assert len(events(session, typ='InvariantFound', lvls=[lvl], workers=[worker])) == 0
+    return False
   assert (len(vs) == 1), "Not 1 VerifyData entry for {}, {}, {} = {}".format(lvl, worker, exp, vs)
   return vs[0].provedflag
 
@@ -178,10 +181,14 @@ def verified_by_play(lvl, assignment, worker, exp):
     .filter(func.json_extract(VerifyData.payload, "$.workers[0]") == worker)\
     .filter(func.json_extract(VerifyData.payload, "$.assignments[0]") == assignment)
   vs = s.all()
+  if (len(vs) == 0):
+    assert len(events(session, typ='InvariantFound', lvls=[lvl], workers=[worker])) == 0
+    return False
   assert (len(vs) == 1), "Not 1 VerifyData entry for {}, {}, {}, {} = {}".format(lvl, assignment, worker, exp, vs)
   return vs[0].provedflag
 
 if __name__ == "__main__":
+  all_lvl_cols = ['nplays', 'nplay_solved', 'nfinish', 'ninterrupt', 'nplayers', 'nplayers_solved', 'avetime', 'ninv_found', 'ninv_tried']
   p = ArgumentParser(description="Build graphs from database")
   p.add_argument("--db", required=True, help="Database path")
   p.add_argument("--experiments", nargs='+', help="Only consider plays from these experiments")
@@ -196,6 +203,7 @@ if __name__ == "__main__":
       'challenging_histo',
       'lvl_stats',
     ], help='Which stat to print', required=True)
+  p.add_argument("--columns", nargs='+', choices = all_lvl_cols, help='Optionally pick which columns per benchmarks we want')
 
   args = p.parse_args()
   filter_args = {}
@@ -203,6 +211,11 @@ if __name__ == "__main__":
     filter_args['enames'] = args.experiments
   if args.lvlids:
     filter_args['lvls'] = args.lvlids
+  if args.columns is not None:
+    assert args.stat == 'lvl_stats'
+    lvl_cols = args.columns
+  else:
+    lvl_cols = all_lvl_cols
 
   if args.nplayers is not None and args.nplays is not None:
     print "Error: Can't specify both --nplayers and --nplays"
@@ -295,28 +308,53 @@ if __name__ == "__main__":
         if e.type == 'TriedInvariant':
           _add(tried_invs, lvlid, e.payl()['canonical'])
 
-    print "Level, # Plays, # Solving Plays, # Finishes, #Interrupts,  %Finishing, # Unique Players, # Players Solved Individually, Average Time Spent(s), # Invariants Found, # Invariants Tried"
+    col_header = {
+      'nplays': '# Plays',
+      'nplay_solved': '# Solving Plays',
+      'nfinish': '# Finishes',
+      'ninterrupt': '#Interrupts',
+      'nplayers': '# Unique Players',
+      'nplayers_solved': '# Players Solved Individually',
+      'avetime': 'Average Time Spent(s)',
+      'ninv_found': '# Invariants Found',
+      'ninv_tried': '# Invariants Tried'
+    }
+    header_str = "Level"
+    for col in lvl_cols:
+      header_str += ', ' + col_header[col]
+    print header_str
+
     for k in sorted(players.keys()):
-      num_plays = len(playsPerLvl[k])
-      num_plays_solved = len(filter(None,
-        [verified_by_play(k, assignment(play), worker(play), 'new-benchmarks') for play in playsPerLvl[k]]))
-      finished_plays = finishes.get(k, 0)
-      interrupted_plays = interrupts.get(k, 0)
-      unique_players = len(set(players[k]))
-      unique_players_solved = len(filter(None, [verified_by_worker(k, worker, 'new-benchmarks')\
-        for worker in set(players[k])]))
-      num_invs_found = len(set(found_invs[k]))
-      num_invs_tried = len(set(tried_invs[k]))
-      assert num_plays_solved >= unique_players_solved, \
-        "Fewer plays than players solved for level {}".format(k)
-      print k, ",", \
-            num_plays, ",", \
-            num_plays_solved, ",", \
-            finished_plays, ",", \
-            interrupted_plays, ",", \
-            100*(finished_plays*1.0/num_plays), ",", \
-            unique_players, ",", \
-            unique_players_solved, ",", \
-            total_time[k] / num_plays, ",", \
-            num_invs_found, ",", \
-            num_invs_tried
+      line_str = k
+      for col in lvl_cols:
+        line_str += ', '
+        if col == 'nplays':
+          num_plays = len(playsPerLvl[k])
+          line_str += str(num_plays)
+        elif col == 'nplay_solved':
+          num_plays_solved = len(filter(None,
+            [verified_by_play(k, assignment(play), worker(play), 'new-benchmarks') for play in playsPerLvl[k]]))
+          line_str += str(num_plays_solved)
+        elif col == 'nfinish':
+          finished_plays = finishes.get(k, 0)
+          line_str += str(finished_plays)
+        elif col == 'ninterrupt':
+          interrupted_plays = interrupts.get(k, 0)
+          line_str += str(interrupted_plays)
+        elif col == 'nplayers':
+          unique_players = len(set(players[k]))
+          line_str += str(unique_players)
+        elif col == 'nplayers_solved':
+          unique_players_solved = len(filter(None, [verified_by_worker(k, workerId, 'new-benchmarks')\
+            for workerId in set(players[k])]))
+          line_str += str(unique_players_solved)
+        elif col == 'avetime':
+          line_str += str(total_time[k] / num_plays)
+        elif col == 'ninv_found':
+          num_invs_found = len(set(found_invs[k]))
+          line_str += str(num_invs_found)
+        elif col == 'ninv_tried':
+          num_invs_tried = len(set(tried_invs[k]))
+          line_str += str(num_invs_tried)
+
+      print line_str
