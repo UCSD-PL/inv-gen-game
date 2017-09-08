@@ -10,6 +10,8 @@ db="$1"
 
 lvlset1_good_lvls="m-S9 m-S10 m-S11 m-non-lin-ineq-1 m-non-lin-ineq-2
   m-non-lin-ineq-3 m-non-lin-ineq-4 m-prod-bin m-cube2"
+lvlset1_manual_lvls="i-sqrt s-gauss_sum_true-unreach-call m-sorin03 m-sorin04
+  m-S5"
 
 # Solved levels with individual invariants (both in a single assignment and
 # across all of a worker's assignments)
@@ -26,6 +28,13 @@ lvlset1_good_lvls="m-S9 m-S10 m-S11 m-non-lin-ineq-1 m-non-lin-ineq-2
   --enames new-benchmarks \
   --modes individual-play individual \
   --read --write
+# Manual levels
+./verify.py --db "$db" \
+   --lvlset ../lvlsets/unsolved-new-benchmarks.lvlset \
+   --enames new-benchmarks \
+   --lvls $lvlset1_manual_lvls \
+   --modes individual-play individual \
+   --read --write
 
 # Solved levels with invariants combined by skill level
 #
@@ -56,6 +65,16 @@ for exp in math prog; do
     ./verify.py --db "$db" \
       --lvlset "../lvlsets/unsolved-new-benchmarks-5-auto.lvlset" \
       --enames new-benchmarks \
+      --workers $workers \
+      --tag "$exp-exp-le-$n" \
+      --modes combined \
+      --parallel \
+      --read --write
+    # Manual levels
+    ./verify.py --db "$db" \
+      --lvlset "../lvlsets/unsolved-new-benchmarks.lvlset" \
+      --enames new-benchmarks \
+      --lvls $lvlset1_manual_lvls \
       --workers $workers \
       --tag "$exp-exp-le-$n" \
       --modes combined \
