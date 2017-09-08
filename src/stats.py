@@ -167,10 +167,19 @@ def verified_by_worker(lvl, worker, exp):
     .filter(func.json_extract(VerifyData.config, "$.enames[0]") == exp)\
     .filter(func.json_extract(VerifyData.payload, "$.workers[0]") == worker)
   vs = s.all()
-  if not (len(vs) == 1):
-    print "Problem for {}, {}, {} = {}".format(lvl, worker, exp, vs)
-  else:
-    return vs[0]
+  assert (len(vs) == 1), "Not 1 VerifyData entry for {}, {}, {} = {}".format(lvl, worker, exp, vs)
+  return vs[0].provedflag
+
+def verified_by_play(lvl, assignment, worker, exp):
+  s = session.query(VerifyData)\
+    .filter(VerifyData.lvl == lvl)\
+    .filter(func.json_extract(VerifyData.config, "$.mode") == "individual-play")\
+    .filter(func.json_extract(VerifyData.config, "$.enames[0]") == exp)\
+    .filter(func.json_extract(VerifyData.payload, "$.workers[0]") == worker)\
+    .filter(func.json_extract(VerifyData.payload, "$.assignments[0]") == assignment)
+  vs = s.all()
+  assert (len(vs) == 1), "Not 1 VerifyData entry for {}, {}, {}, {} = {}".format(lvl, assignment, worker, exp, vs)
+  return vs[0].provedflag
 
 if __name__ == "__main__":
   p = ArgumentParser(description="Build graphs from database")
@@ -260,6 +269,7 @@ if __name__ == "__main__":
       print k, ',', histo.get(k, 0)
   elif args.stat == 'lvl_stats':
     players = {lvlid: [] for lvlid in lvlids}
+    playsPerLvl = {lvlid: [] for lvlid in lvlids}
     interrupts = {lvlid: 0 for lvlid in lvlids}
     finishes = {lvlid: 0 for lvlid in lvlids}
     total_time = {lvlid: 0.0 for lvlid in lvlids}
@@ -269,6 +279,7 @@ if __name__ == "__main__":
     for (assignmentId, workerId, (lvlset, lvlid)) in plays:
       play = plays[(assignmentId, workerId, (lvlset, lvlid))]
       _add(players, lvlid, workerId)
+      _add(playsPerLvl, lvlid, play)
 
       assert interrupted(play) or finished(play), _typs(play)
       if interrupted(play):
@@ -284,22 +295,28 @@ if __name__ == "__main__":
         if e.type == 'TriedInvariant':
           _add(tried_invs, lvlid, e.payl()['canonical'])
 
-    print "Level, # Plays, # Finishes, #Interrupts,  %Finishing, # Unique Players, Average Time Spent(s), # Invariants Found, # Invariants Tried"
+    print "Level, # Plays, # Solving Plays, # Finishes, #Interrupts,  %Finishing, # Unique Players, # Players Solved Individually, Average Time Spent(s), # Invariants Found, # Invariants Tried"
     for k in sorted(players.keys()):
-      for player in players[k]:
-        verified_by_worker(k, player, 'new-benchmarks')
-      num_plays = len(players[k])
+      num_plays = len(playsPerLvl[k])
+      num_plays_solved = len(filter(None,
+        [verified_by_play(k, assignment(play), worker(play), 'new-benchmarks') for play in playsPerLvl[k]]))
       finished_plays = finishes.get(k, 0)
       interrupted_plays = interrupts.get(k, 0)
       unique_players = len(set(players[k]))
+      unique_players_solved = len(filter(None, [verified_by_worker(k, worker, 'new-benchmarks')\
+        for worker in set(players[k])]))
       num_invs_found = len(set(found_invs[k]))
       num_invs_tried = len(set(tried_invs[k]))
+      assert num_plays_solved >= unique_players_solved, \
+        "Fewer plays than players solved for level {}".format(k)
       print k, ",", \
             num_plays, ",", \
+            num_plays_solved, ",", \
             finished_plays, ",", \
             interrupted_plays, ",", \
             100*(finished_plays*1.0/num_plays), ",", \
             unique_players, ",", \
+            unique_players_solved, ",", \
             total_time[k] / num_plays, ",", \
             num_invs_found, ",", \
             num_invs_tried
