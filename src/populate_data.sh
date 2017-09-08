@@ -23,7 +23,7 @@ lvlset1_good_lvls="m-S9 m-S10 m-S11 m-non-lin-ineq-1 m-non-lin-ineq-2
   --read --write
 ./verify.py --db "$db" \
   --lvlset ../lvlsets/unsolved-new-benchmarks-5-auto.lvlset \
-  --enames new-benchmarks
+  --enames new-benchmarks \
   --modes individual-play individual \
   --read --write
 
