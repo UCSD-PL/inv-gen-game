@@ -152,6 +152,8 @@ if __name__ == "__main__":
     help="How to combine invariants for verification")
   p.add_argument("--parallel", action="store_true",
     help="Run multiple verification tasks in parallel")
+  p.add_argument("--processes", type=int,
+    help="Override the default number of processes for parallel execution")
   p.add_argument("--read", action="store_true",
     help="Read verification results from the database (and skip verified)")
   p.add_argument("--tag",
@@ -248,7 +250,7 @@ if __name__ == "__main__":
       pool = None
       asyncres = []
       if args.parallel:
-        pool = NoDaemonPool()
+        pool = NoDaemonPool(processes=args.processes)
 
       now = datetime.now()
 
