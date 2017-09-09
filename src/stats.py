@@ -189,6 +189,7 @@ def verified_by_play(lvl, assignment, worker, exp):
 
 if __name__ == "__main__":
   all_lvl_cols = ['nplays', 'nplay_solved', 'nfinish', 'ninterrupt', 'nplayers', 'nplayers_solved', 'avetime', 'ninv_found', 'ninv_tried']
+  all_exp_cols = ['nplays', 'nplay_solved', 'nfinish', 'ninterrupt', 'nplayers', 'nplayers_solved', 'avetime', 'ninv_found', 'ninv_tried']
   p = ArgumentParser(description="Build graphs from database")
   p.add_argument("--db", required=True, help="Database path")
   p.add_argument("--experiments", nargs='+', help="Only consider plays from these experiments")
@@ -202,8 +203,10 @@ if __name__ == "__main__":
       'prog_exp_histo',
       'challenging_histo',
       'lvl_stats',
+      'math_exp_stats',
     ], help='Which stat to print', required=True)
-  p.add_argument("--columns", nargs='+', choices = all_lvl_cols, help='Optionally pick which columns per benchmarks we want')
+  p.add_argument("--lvl-columns", nargs='+', choices = all_lvl_cols, help='Optionally pick which columns per benchmarks we want')
+  p.add_argument("--exp-columns", nargs='+', choices = all_exp_cols, help='Optionally pick which columns per experience level we want')
 
   args = p.parse_args()
   filter_args = {}
@@ -211,9 +214,9 @@ if __name__ == "__main__":
     filter_args['enames'] = args.experiments
   if args.lvlids:
     filter_args['lvls'] = args.lvlids
-  if args.columns is not None:
+  if args.lvl_columns is not None:
     assert args.stat == 'lvl_stats'
-    lvl_cols = args.columns
+    lvl_cols = args.lvl_columns
   else:
     lvl_cols = all_lvl_cols
 
