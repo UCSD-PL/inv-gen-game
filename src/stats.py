@@ -36,6 +36,30 @@ def splitEventsByAssignment(session, **kwargs):
   for k in m:
     m[k].sort(key=lambda e:  e[0].time)
   return m
+
+def splitEventsByLvlPlay(session, **kwargs):
+  """
+  Split the events by their (assignment, worker, lvlid) tuples. Any event
+  without lvlid is ignored
+  """
+  m = splitEventsByAssignment(session, **kwargs)
+  plays = {}
+
+  for k in m:
+
+    ignore = ['Consent', 'TutorialStart', 'TutorialDone', 'ReplayTutorialAll', 'VerifyAttempt']
+
+    for (ev, lvlid, lvlset, workerId, assignmentId) in m[k]:
+      if (ev.type in ignore):
+        continue
+
+      if (lvlid is None):
+        continue
+
+      curLvl = (assignmentId, workerId, (lvlset, lvlid))
+      _add(plays, curLvl, ev)
+
+  return plays
   
 
 def splitGameInstances(session, **kwargs):
@@ -145,7 +169,8 @@ def interrupted(events):
 def finished(events):
   """ Given the events of one play, determine if it was finished - i.e. if its last event is a FinishLevel
   """
-  return events[-1].type == 'FinishLevel'
+  ev_types = [e.type for e in events]
+  return 'FinishLevel' in ev_types
 
 def assignment(events):
   assert len(set(e.payl()['assignmentId'] for e in events)) == 1
@@ -157,7 +182,7 @@ def worker(events):
 
 def lvlid(events):
   assert len(set(e.payl()['lvlid'] for e in events)) == 1,\
-    assignment(events)
+    (assignment(events), worker(events), [set(e.payl()['lvlid'] for e in events)], [(e.type, e.payl()['lvlid']) for e in events])
   return events[0].payl()['lvlid']
 
 def verified_by_worker(lvl, worker, exp):
@@ -170,7 +195,7 @@ def verified_by_worker(lvl, worker, exp):
   if (len(vs) == 0):
     assert len(events(session, typ='InvariantFound', lvls=[lvl], workers=[worker])) == 0
     return False
-  assert (len(vs) == 1), "Not 1 VerifyData entry for {}, {}, {} = {}".format(lvl, worker, exp, vs)
+  assert (len(vs) == 1), "Not 1 VerifyData entry for {}, {}, {}".format(lvl, worker, exp)
   return vs[0].provedflag
 
 def verified_by_play(lvl, assignment, worker, exp):
@@ -226,7 +251,8 @@ if __name__ == "__main__":
 
   sessionF = open_db(args.db)
   session = sessionF()
-  stats, plays = splitGameInstances(session, **filter_args)
+  #stats, plays = splitGameInstances(session, **filter_args)
+  plays = splitEventsByLvlPlay(session, **filter_args)
 
   if (args.nplays is not None):
     plays = pruneByNumPlays(plays, args.nplays)
@@ -236,11 +262,6 @@ if __name__ == "__main__":
 
   assignments = set(assignment(play) for play in plays.values())
   lvlids = set(lvlid(play) for play in plays.values())
-  """
-  print "Stats:"
-  for k in stats:
-    print k, len(stats[k]), [x.type for x in stats[k]]
-  """
 
   if args.stat in ['fun_histo', 'challenging_histo']:
     field = {
