@@ -19,7 +19,9 @@ def publish_hit(credentials, isSandbox, ename, num_hits, lvlset, adminToken,
 
     keywords = "game, math, programming"
 
-    description = """Help us evaluate our verification game InvGen! Each level is structured as a math puzzle, where you try to come up with correct expressions. Your work directly helps with the verification of programs! More specifically, this HIT involves playing at least two non-tutorial levels of our game. Played it before? Come play again! You will bypass the tutorial and get new levels! New player? Come try it out! We aim to pay about $10/hr. More specifically: (a) $1.50 for the HIT, which involves playing the game for at least 2 non-tutorial levels (b) $1.50 bonus for doing the tutorial, which you only do the first time (c) $0.75 bonus for each non-tutorial level you pass beyond two."""
+    description = \
+	""" NOTE: PLEASE DON'T ACCEPT MORE THAN ONE HIT AT A TIME! First finish your current HIT before looking for others!\n """ + \
+	"""Help us evaluate our verification game InvGen! Each level is structured as a math puzzle, where you try to come up with correct expressions. Your work directly helps with the verification of programs! This HIT involves playing at least two non-tutorial levels of our game. Played it before? Come play again! You will bypass the tutorial and get new levels! New player? Come try it out! We aim to pay about $10/hr. More specifically: (a) $1.50 for the HIT, which involves playing the game for at least 2 non-tutorial levels (b) $1.50 bonus for doing the tutorial, which you only do the first time (c) $0.75 bonus for each non-tutorial level you pass beyond two."""
 
     mastersQualType = "2ARFPLSP75KLA8M8DH1HTEQVJT3SY6" if isSandbox else \
                       "2F1QJWKUDD8XADTFD2Q0G6UTO95ALH"
