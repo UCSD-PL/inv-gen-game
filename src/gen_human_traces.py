@@ -6,7 +6,7 @@ import json
 import levels
 import math
 import os
-from random import randint
+from random import randint, choice
 import tabulate
 import pdb
 import itertools
@@ -75,6 +75,7 @@ def gen(v,liveVars):
       yield 0
 
 def find_split_pred(fname):
+  return None
   lines = []
   with open(fname) as f:
     lines = f.readlines()
@@ -136,6 +137,7 @@ def run_lvl(lvl_name):
   target_len = 7
 
   tried = set();
+  #filt_f = lambda bbs, states:  [choice(states)]
   filt_f = lambda bbs, states:  states
   rand_f = lambda state, Id:  randint(-1000, 1000)
 
