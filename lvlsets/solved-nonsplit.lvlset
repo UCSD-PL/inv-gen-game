@@ -1,52 +1,10 @@
 {
- "trivial": [
-  [
-   "d-39",
-   "../dilig-benchmarks/single/39.desugared.bpl"
-  ],
-  [
-   "s-simple_true-unreach-call2",
-   "../sv_manual_trans/loop-acceleration/simple_true-unreach-call2.desugared.bpl"
-  ],
-  [
-   "s-terminator_03_true-unreach-call_true-termination",
-   "../sv_manual_trans/loops/terminator_03_true-unreach-call_true-termination.desugared.bpl"
-  ],
-  [
-   "s-for_infinite_loop_2_true-unreach-call_false-termination",
-   "../sv_manual_trans/loops/for_infinite_loop_2_true-unreach-call_false-termination.desugared.bpl"
-  ],
-  [
-   "s-trex02_true-unreach-call_true-termination",
-   "../sv_manual_trans/loops/trex02_true-unreach-call_true-termination.desugared.bpl"
-  ],
-  [
-   "s-for_infinite_loop_1_true-unreach-call_false-termination",
-   "../sv_manual_trans/loops/for_infinite_loop_1_true-unreach-call_false-termination.desugared.bpl"
-  ],
-  [
-   "s-NetBSD_loop_true-unreach-call",
-   "../sv_manual_trans/loop-invgen/NetBSD_loop_true-unreach-call.desugared.bpl"
-  ],
-  [
-   "s-trex04_true-unreach-call_false-termination",
-   "../sv_manual_trans/loops/trex04_true-unreach-call_false-termination.desugared.bpl"
-  ],
-  [
-   "s-while_infinite_loop_1_true-unreach-call_false-termination",
-   "../sv_manual_trans/loops/while_infinite_loop_1_true-unreach-call_false-termination.desugared.bpl"
-  ],
-  [
-   "s-while_infinite_loop_2_true-unreach-call_false-termination",
-   "../sv_manual_trans/loops/while_infinite_loop_2_true-unreach-call_false-termination.desugared.bpl"
-  ]
- ],
  "name": "solved-nonsplit",
  "levels": [
   [
    "d-01",
    [
-    "../dilig-benchmarks/01.desugared.bpl",
+    "../dilig-benchmarks/01.desugared.auto.bpl",
     "../dilig-benchmarks/01.c",
     "../dilig-benchmarks/01.bpl"
    ]
@@ -54,7 +12,7 @@
   [
    "d-02",
    [
-    "../dilig-benchmarks/02.desugared.bpl",
+    "../dilig-benchmarks/02.desugared.auto.bpl",
     "../dilig-benchmarks/02.c",
     "../dilig-benchmarks/02.bpl"
    ]
@@ -62,7 +20,7 @@
   [
    "d-07",
    [
-    "../dilig-benchmarks/single/07.desugared.bpl",
+    "../dilig-benchmarks/single/07.desugared.auto.bpl",
     "../dilig-benchmarks/single/07.c",
     "../dilig-benchmarks/single/07.bpl"
    ]
@@ -70,7 +28,7 @@
   [
    "d-08",
    [
-    "../dilig-benchmarks/single/08.desugared.bpl",
+    "../dilig-benchmarks/single/08.desugared.auto.bpl",
     "../dilig-benchmarks/single/08.c",
     "../dilig-benchmarks/single/08.bpl"
    ]
@@ -78,7 +36,7 @@
   [
    "d-10",
    [
-    "../dilig-benchmarks/single/10.desugared.bpl",
+    "../dilig-benchmarks/single/10.desugared.auto.bpl",
     "../dilig-benchmarks/single/10.c",
     "../dilig-benchmarks/single/10.bpl"
    ]
@@ -86,7 +44,7 @@
   [
    "d-11",
    [
-    "../dilig-benchmarks/single/11.desugared.bpl",
+    "../dilig-benchmarks/single/11.desugared.auto.bpl",
     "../dilig-benchmarks/single/11.c",
     "../dilig-benchmarks/single/11.bpl"
    ]
@@ -94,7 +52,7 @@
   [
    "d-14",
    [
-    "../dilig-benchmarks/single/14.desugared.bpl",
+    "../dilig-benchmarks/single/14.desugared.auto.bpl",
     "../dilig-benchmarks/single/14.c",
     "../dilig-benchmarks/single/14.bpl"
    ]
@@ -102,7 +60,7 @@
   [
    "d-15",
    [
-    "../dilig-benchmarks/15.desugared.bpl",
+    "../dilig-benchmarks/15.desugared.auto.bpl",
     "../dilig-benchmarks/15.c",
     "../dilig-benchmarks/15.bpl"
    ]
@@ -110,7 +68,7 @@
   [
    "d-16",
    [
-    "../dilig-benchmarks/single/16.desugared.bpl",
+    "../dilig-benchmarks/single/16.desugared.auto.bpl",
     "../dilig-benchmarks/single/16.c",
     "../dilig-benchmarks/single/16.bpl"
    ]
@@ -118,7 +76,7 @@
   [
    "d-21",
    [
-    "../dilig-benchmarks/single/21.desugared.bpl",
+    "../dilig-benchmarks/single/21.desugared.auto.bpl",
     "../dilig-benchmarks/single/21.c",
     "../dilig-benchmarks/single/21.bpl"
    ]
@@ -126,7 +84,7 @@
   [
    "d-22",
    [
-    "../dilig-benchmarks/single/22.desugared.bpl",
+    "../dilig-benchmarks/single/22.desugared.auto.bpl",
     "../dilig-benchmarks/single/22.c",
     "../dilig-benchmarks/single/22.bpl"
    ]
@@ -134,7 +92,7 @@
   [
    "d-23",
    [
-    "../dilig-benchmarks/single/23.desugared.bpl",
+    "../dilig-benchmarks/single/23.desugared.auto.bpl",
     "../dilig-benchmarks/single/23.c",
     "../dilig-benchmarks/single/23.bpl"
    ]
@@ -142,7 +100,7 @@
   [
    "d-30",
    [
-    "../dilig-benchmarks/single/30.desugared.bpl",
+    "../dilig-benchmarks/single/30.desugared.auto.bpl",
     "../dilig-benchmarks/single/30.c",
     "../dilig-benchmarks/single/30.bpl"
    ]
@@ -150,7 +108,7 @@
   [
    "d-41",
    [
-    "../dilig-benchmarks/single/41.desugared.bpl",
+    "../dilig-benchmarks/single/41.desugared.auto.bpl",
     "../dilig-benchmarks/single/41.c",
     "../dilig-benchmarks/single/41.bpl"
    ]
@@ -158,7 +116,7 @@
   [
    "d-43",
    [
-    "../dilig-benchmarks/single/43.desugared.bpl",
+    "../dilig-benchmarks/single/43.desugared.auto.bpl",
     "../dilig-benchmarks/single/43.c",
     "../dilig-benchmarks/single/43.bpl"
    ]
@@ -166,23 +124,15 @@
   [
    "i-cegar1",
    [
-    "../ice-benchmarks/cegar1.dimo.desugared.bpl",
+    "../ice-benchmarks/cegar1.dimo.desugared.auto.bpl",
     "../ice-benchmarks/cegar1.dimo.c",
     "../ice-benchmarks/cegar1.dimo.bpl"
    ]
   ],
   [
-   "i-cggmp",
-   [
-    "../ice-benchmarks/cggmp.desugared.bpl",
-    "../ice-benchmarks/cggmp.c",
-    "../ice-benchmarks/cggmp.bpl"
-   ]
-  ],
-  [
    "i-countud",
    [
-    "../ice-benchmarks/countud.desugared.bpl",
+    "../ice-benchmarks/countud.desugared.auto.bpl",
     "../ice-benchmarks/countud.c",
     "../ice-benchmarks/countud.bpl"
    ]
@@ -198,7 +148,7 @@
   [
    "i-fig9",
    [
-    "../ice-benchmarks/fig9.desugared.bpl",
+    "../ice-benchmarks/fig9.desugared.auto.bpl",
     "../ice-benchmarks/fig9.c",
     "../ice-benchmarks/fig9.bpl"
    ]
@@ -214,7 +164,7 @@
   [
    "i-multiply",
    [
-    "../ice-benchmarks/multiply.desugared.bpl",
+    "../ice-benchmarks/multiply.desugared.auto.bpl",
     "../ice-benchmarks/multiply.c",
     "../ice-benchmarks/multiply.bpl"
    ]
@@ -238,7 +188,7 @@
   [
    "i-sqrt",
    [
-    "../ice-benchmarks/sqrt.desugared.bpl",
+    "../ice-benchmarks/sqrt.desugared.auto.bpl",
     "../ice-benchmarks/sqrt.c",
     "../ice-benchmarks/sqrt.bpl"
    ]
@@ -246,7 +196,7 @@
   [
    "i-square",
    [
-    "../ice-benchmarks/square.desugared.bpl",
+    "../ice-benchmarks/square.desugared.auto.bpl",
     "../ice-benchmarks/square.c",
     "../ice-benchmarks/square.bpl"
    ]
@@ -254,7 +204,7 @@
   [
    "i-sum3",
    [
-    "../ice-benchmarks/sum3.desugared.bpl",
+    "../ice-benchmarks/sum3.desugared.auto.bpl",
     "../ice-benchmarks/sum3.c",
     "../ice-benchmarks/sum3.bpl"
    ]
@@ -262,7 +212,7 @@
   [
    "i-sum4",
    [
-    "../ice-benchmarks/sum4.desugared.bpl",
+    "../ice-benchmarks/sum4.desugared.auto.bpl",
     "../ice-benchmarks/sum4.c",
     "../ice-benchmarks/sum4.bpl"
    ]
@@ -278,7 +228,7 @@
   [
    "i-trex3",
    [
-    "../ice-benchmarks/trex3.dimo.desugared.bpl",
+    "../ice-benchmarks/trex3.dimo.desugared.auto.bpl",
     "../ice-benchmarks/trex3.dimo.c",
     "../ice-benchmarks/trex3.dimo.bpl"
    ]
@@ -286,7 +236,7 @@
   [
    "i-w1",
    [
-    "../ice-benchmarks/w1.desugared.bpl",
+    "../ice-benchmarks/w1.desugared.auto.bpl",
     "../ice-benchmarks/w1.c",
     "../ice-benchmarks/w1.bpl"
    ]
@@ -294,7 +244,7 @@
   [
    "i-w2",
    [
-    "../ice-benchmarks/w2.desugared.bpl",
+    "../ice-benchmarks/w2.desugared.auto.bpl",
     "../ice-benchmarks/w2.c",
     "../ice-benchmarks/w2.bpl"
    ]
@@ -302,7 +252,7 @@
   [
    "s-multivar_true-unreach-call1",
    [
-    "../sv_manual_trans/loop-acceleration/multivar_true-unreach-call1.desugared.bpl",
+    "../sv_manual_trans/loop-acceleration/multivar_true-unreach-call1.desugared.auto.bpl",
     "../sv_manual_trans/loop-acceleration/multivar_true-unreach-call1.c",
     "../sv_manual_trans/loop-acceleration/multivar_true-unreach-call1.bpl"
    ]
@@ -310,7 +260,7 @@
   [
    "s-overflow_true-unreach-call1",
    [
-    "../sv_manual_trans/loop-acceleration/overflow_true-unreach-call1.desugared.bpl",
+    "../sv_manual_trans/loop-acceleration/overflow_true-unreach-call1.desugared.auto.bpl",
     "../sv_manual_trans/loop-acceleration/overflow_true-unreach-call1.c",
     "../sv_manual_trans/loop-acceleration/overflow_true-unreach-call1.bpl"
    ]
@@ -318,7 +268,7 @@
   [
    "s-phases_true-unreach-call2",
    [
-    "../sv_manual_trans/loop-acceleration/phases_true-unreach-call2.desugared.bpl",
+    "../sv_manual_trans/loop-acceleration/phases_true-unreach-call2.desugared.auto.bpl",
     "../sv_manual_trans/loop-acceleration/phases_true-unreach-call2.c",
     "../sv_manual_trans/loop-acceleration/phases_true-unreach-call2.bpl"
    ]
@@ -326,7 +276,7 @@
   [
    "s-simple_true-unreach-call1",
    [
-    "../sv_manual_trans/loop-acceleration/simple_true-unreach-call1.desugared.bpl",
+    "../sv_manual_trans/loop-acceleration/simple_true-unreach-call1.desugared.auto.bpl",
     "../sv_manual_trans/loop-acceleration/simple_true-unreach-call1.c",
     "../sv_manual_trans/loop-acceleration/simple_true-unreach-call1.bpl"
    ]
@@ -334,7 +284,7 @@
   [
    "s-simple_true_unreach-call3",
    [
-    "../sv_manual_trans/loop-acceleration/simple_true-unreach-call3.desugared.bpl",
+    "../sv_manual_trans/loop-acceleration/simple_true-unreach-call3.desugared.auto.bpl",
     "../sv_manual_trans/loop-acceleration/simple_true-unreach-call3.c",
     "../sv_manual_trans/loop-acceleration/simple_true-unreach-call3.bpl"
    ]
@@ -342,7 +292,7 @@
   [
    "s-simple_true_unreach-call4",
    [
-    "../sv_manual_trans/loop-acceleration/simple_true-unreach-call4.desugared.bpl",
+    "../sv_manual_trans/loop-acceleration/simple_true-unreach-call4.desugared.auto.bpl",
     "../sv_manual_trans/loop-acceleration/simple_true-unreach-call4.c",
     "../sv_manual_trans/loop-acceleration/simple_true-unreach-call4.bpl"
    ]
@@ -350,7 +300,7 @@
   [
    "s-underapprox_true-unreach-call1",
    [
-    "../sv_manual_trans/loop-acceleration/underapprox_true-unreach-call1.desugared.bpl",
+    "../sv_manual_trans/loop-acceleration/underapprox_true-unreach-call1.desugared.auto.bpl",
     "../sv_manual_trans/loop-acceleration/underapprox_true-unreach-call1.c",
     "../sv_manual_trans/loop-acceleration/underapprox_true-unreach-call1.bpl"
    ]
@@ -358,7 +308,7 @@
   [
    "s-underapprox_true-unreach-call2",
    [
-    "../sv_manual_trans/loop-acceleration/underapprox_true-unreach-call2.desugared.bpl",
+    "../sv_manual_trans/loop-acceleration/underapprox_true-unreach-call2.desugared.auto.bpl",
     "../sv_manual_trans/loop-acceleration/underapprox_true-unreach-call2.c",
     "../sv_manual_trans/loop-acceleration/underapprox_true-unreach-call2.bpl"
    ]
@@ -366,39 +316,23 @@
   [
    "s-sendmail-close-angle_true-unreach-call",
    [
-    "../sv_manual_trans/loop-invgen/sendmail-close-angle_true-unreach-call.desugared.bpl",
+    "../sv_manual_trans/loop-invgen/sendmail-close-angle_true-unreach-call.desugared.auto.bpl",
     "../sv_manual_trans/loop-invgen/sendmail-close-angle_true-unreach-call.c",
     "../sv_manual_trans/loop-invgen/sendmail-close-angle_true-unreach-call.bpl"
    ]
   ],
   [
-   "s-afnp2014_true-unreach-call",
-   [
-    "../sv_manual_trans/loop-lit/afnp2014_true-unreach-call.desugared.bpl",
-    "../sv_manual_trans/loop-lit/afnp2014_true-unreach-call.c",
-    "../sv_manual_trans/loop-lit/afnp2014_true-unreach-call.bpl"
-   ]
-  ],
-  [
    "s-bhmr2007_true-unreach-call",
    [
-    "../sv_manual_trans/loop-lit/bhmr2007_true-unreach-call.desugared.bpl",
+    "../sv_manual_trans/loop-lit/bhmr2007_true-unreach-call.desugared.auto.bpl",
     "../sv_manual_trans/loop-lit/bhmr2007_true-unreach-call.c",
     "../sv_manual_trans/loop-lit/bhmr2007_true-unreach-call.bpl"
    ]
   ],
   [
-   "s-cggmp2005_true-unreach-call",
-   [
-    "../sv_manual_trans/loop-lit/cggmp2005_true-unreach-call.desugared.bpl",
-    "../sv_manual_trans/loop-lit/cggmp2005_true-unreach-call.c",
-    "../sv_manual_trans/loop-lit/cggmp2005_true-unreach-call.bpl"
-   ]
-  ],
-  [
    "s-cggmp2005_variant_true-unreach-call",
    [
-    "../sv_manual_trans/loop-lit/cggmp2005_variant_true-unreach-call.desugared.bpl",
+    "../sv_manual_trans/loop-lit/cggmp2005_variant_true-unreach-call.desugared.auto.bpl",
     "../sv_manual_trans/loop-lit/cggmp2005_variant_true-unreach-call.c",
     "../sv_manual_trans/loop-lit/cggmp2005_variant_true-unreach-call.bpl"
    ]
@@ -406,7 +340,7 @@
   [
    "s-css2003_true-unreach-call",
    [
-    "../sv_manual_trans/loop-lit/css2003_true-unreach-call.desugared.bpl",
+    "../sv_manual_trans/loop-lit/css2003_true-unreach-call.desugared.auto.bpl",
     "../sv_manual_trans/loop-lit/css2003_true-unreach-call.c",
     "../sv_manual_trans/loop-lit/css2003_true-unreach-call.bpl"
    ]
@@ -414,7 +348,7 @@
   [
    "s-gr2006_true-unreach-call",
    [
-    "../sv_manual_trans/loop-lit/gr2006_true-unreach-call.desugared.bpl",
+    "../sv_manual_trans/loop-lit/gr2006_true-unreach-call.desugared.auto.bpl",
     "../sv_manual_trans/loop-lit/gr2006_true-unreach-call.c",
     "../sv_manual_trans/loop-lit/gr2006_true-unreach-call.bpl"
    ]
@@ -422,7 +356,7 @@
   [
    "s-hhk2008_true-unreach-call",
    [
-    "../sv_manual_trans/loop-lit/hhk2008_true-unreach-call.desugared.bpl",
+    "../sv_manual_trans/loop-lit/hhk2008_true-unreach-call.desugared.auto.bpl",
     "../sv_manual_trans/loop-lit/hhk2008_true-unreach-call.c",
     "../sv_manual_trans/loop-lit/hhk2008_true-unreach-call.bpl"
    ]
@@ -430,7 +364,7 @@
   [
    "s-jm2006_true-unreach-call",
    [
-    "../sv_manual_trans/loop-lit/jm2006_true-unreach-call.desugared.bpl",
+    "../sv_manual_trans/loop-lit/jm2006_true-unreach-call.desugared.auto.bpl",
     "../sv_manual_trans/loop-lit/jm2006_true-unreach-call.c",
     "../sv_manual_trans/loop-lit/jm2006_true-unreach-call.bpl"
    ]
@@ -438,7 +372,7 @@
   [
    "s-jm2006_variant_true-unreach-call",
    [
-    "../sv_manual_trans/loop-lit/jm2006_variant_true-unreach-call.desugared.bpl",
+    "../sv_manual_trans/loop-lit/jm2006_variant_true-unreach-call.desugared.auto.bpl",
     "../sv_manual_trans/loop-lit/jm2006_variant_true-unreach-call.c",
     "../sv_manual_trans/loop-lit/jm2006_variant_true-unreach-call.bpl"
    ]
@@ -446,7 +380,7 @@
   [
    "s-count_by_1_true-unreach-call",
    [
-    "../sv_manual_trans/loop-new/count_by_1_true-unreach-call.desugared.bpl",
+    "../sv_manual_trans/loop-new/count_by_1_true-unreach-call.desugared.auto.bpl",
     "../sv_manual_trans/loop-new/count_by_1_true-unreach-call.c",
     "../sv_manual_trans/loop-new/count_by_1_true-unreach-call.bpl"
    ]
@@ -454,23 +388,15 @@
   [
    "s-count_by_2_true-unreach-call",
    [
-    "../sv_manual_trans/loop-new/count_by_2_true-unreach-call.desugared.bpl",
+    "../sv_manual_trans/loop-new/count_by_2_true-unreach-call.desugared.auto.bpl",
     "../sv_manual_trans/loop-new/count_by_2_true-unreach-call.c",
     "../sv_manual_trans/loop-new/count_by_2_true-unreach-call.bpl"
    ]
   ],
   [
-   "s-count_by_nondet_true-unreach-call",
-   [
-    "../sv_manual_trans/loop-new/count_by_nondet_true-unreach-call.desugared.bpl",
-    "../sv_manual_trans/loop-new/count_by_nondet_true-unreach-call.c",
-    "../sv_manual_trans/loop-new/count_by_nondet_true-unreach-call.bpl"
-   ]
-  ],
-  [
    "s-gauss_sum_true-unreach-call",
    [
-    "../sv_manual_trans/loop-new/gauss_sum_true-unreach-call.desugared.bpl",
+    "../sv_manual_trans/loop-new/gauss_sum_true-unreach-call.desugared.auto.bpl",
     "../sv_manual_trans/loop-new/gauss_sum_true-unreach-call.c",
     "../sv_manual_trans/loop-new/gauss_sum_true-unreach-call.bpl"
    ]
@@ -478,7 +404,7 @@
   [
    "s-count_up_down_true-unreach-call_true-termination",
    [
-    "../sv_manual_trans/loops/count_up_down_true-unreach-call_true-termination.desugared.bpl",
+    "../sv_manual_trans/loops/count_up_down_true-unreach-call_true-termination.desugared.auto.bpl",
     "../sv_manual_trans/loops/count_up_down_true-unreach-call_true-termination.c",
     "../sv_manual_trans/loops/count_up_down_true-unreach-call_true-termination.bpl"
    ]
@@ -486,7 +412,7 @@
   [
    "s-sum03_true-unreach-call_false-termination",
    [
-    "../sv_manual_trans/loops/sum03_true-unreach-call_false-termination.desugared.bpl",
+    "../sv_manual_trans/loops/sum03_true-unreach-call_false-termination.desugared.auto.bpl",
     "../sv_manual_trans/loops/sum03_true-unreach-call_false-termination.c",
     "../sv_manual_trans/loops/sum03_true-unreach-call_false-termination.bpl"
    ]
@@ -494,25 +420,60 @@
   [
    "s-sum04_true-unreach-call_true-termination",
    [
-    "../sv_manual_trans/loops/sum04_true-unreach-call_true-termination.desugared.bpl",
+    "../sv_manual_trans/loops/sum04_true-unreach-call_true-termination.desugared.auto.bpl",
     "../sv_manual_trans/loops/sum04_true-unreach-call_true-termination.c",
     "../sv_manual_trans/loops/sum04_true-unreach-call_true-termination.bpl"
    ]
   ],
   [
+   "s-trex03_true-unreach-call",
+   [
+    "../sv_manual_trans/loops/trex03_true-unreach-call.desugared.auto.bpl",
+    "../sv_manual_trans/loops/trex03_true-unreach-call.c",
+    "../sv_manual_trans/loops/trex03_true-unreach-call.bpl"
+   ]
+  ]
+ ],
+ "missing":
+ [
+  [
+   "i-cggmp",
+   [
+    "../ice-benchmarks/cggmp.desugared.auto.bpl",
+    "../ice-benchmarks/cggmp.c",
+    "../ice-benchmarks/cggmp.bpl"
+   ]
+  ],
+  [
+   "s-cggmp2005_true-unreach-call",
+   [
+    "../sv_manual_trans/loop-lit/cggmp2005_true-unreach-call.desugared.auto.bpl",
+    "../sv_manual_trans/loop-lit/cggmp2005_true-unreach-call.c",
+    "../sv_manual_trans/loop-lit/cggmp2005_true-unreach-call.bpl"
+   ]
+  ],
+  [
+   "s-count_by_nondet_true-unreach-call",
+   [
+    "../sv_manual_trans/loop-new/count_by_nondet_true-unreach-call.desugared.auto.bpl",
+    "../sv_manual_trans/loop-new/count_by_nondet_true-unreach-call.c",
+    "../sv_manual_trans/loop-new/count_by_nondet_true-unreach-call.bpl"
+   ]
+  ],
+  [
    "s-terminator_02_true-unreach-call_true-termination",
    [
-    "../sv_manual_trans/loops/terminator_02_true-unreach-call_true-termination.desugared.bpl",
+    "../sv_manual_trans/loops/terminator_02_true-unreach-call_true-termination.desugared.auto.bpl",
     "../sv_manual_trans/loops/terminator_02_true-unreach-call_true-termination.c",
     "../sv_manual_trans/loops/terminator_02_true-unreach-call_true-termination.bpl"
    ]
   ],
   [
-   "s-trex03_true-unreach-call",
+   "s-afnp2014_true-unreach-call",
    [
-    "../sv_manual_trans/loops/trex03_true-unreach-call.desugared.bpl",
-    "../sv_manual_trans/loops/trex03_true-unreach-call.c",
-    "../sv_manual_trans/loops/trex03_true-unreach-call.bpl"
+    "../sv_manual_trans/loop-lit/afnp2014_true-unreach-call.desugared.auto.bpl",
+    "../sv_manual_trans/loop-lit/afnp2014_true-unreach-call.c",
+    "../sv_manual_trans/loop-lit/afnp2014_true-unreach-call.bpl"
    ]
   ]
  ]
