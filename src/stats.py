@@ -155,6 +155,42 @@ def prog_exp(worker):
     ave_math_exp = sum(int(score[0]) for score in scores) * 1.0 / len(scores)
     return int(round(ave_math_exp))
 
+def ave_exp(worker):
+    """
+    Return the avearge of the programming and math experience rounded to the nearest int
+    """
+    e1 = math_exp(worker)
+    e2 = prog_exp(worker)
+    if e1 is None or e2 is None:
+      return None
+
+    return int(round((e1+e2)/2.0))
+
+def max_exp(worker):
+    """
+    Return the max of the programming and math experience rounded to the nearest int
+    """
+    e1 = math_exp(worker)
+    e2 = prog_exp(worker)
+    if e1 is None:
+        return e2
+
+    if e2 is None:
+        return e1
+
+    return max(e1, e2)
+
+def sum_exp(worker):
+    """
+    Return the sum of the programming and math experience rounded to the nearest int
+    """
+    e1 = math_exp(worker)
+    e2 = prog_exp(worker)
+    if e1 is None or e2 is None:
+      return None
+
+    return e1 + e2
+
 def assignment_experiment(assignId):
     evts = session.query(Event)\
             .filter(func.json_extract(Event.payload, '$.assignmentId') == assignId)
@@ -242,6 +278,7 @@ def sound_invs(lvl):
 if __name__ == "__main__":
   all_lvl_cols = ['nplays', 'nplay_solved', 'nfinish', 'ninterrupt', 'nplayers', 'nplayers_solved', 'avetime', 'ninv_found', 'ninv_sound', 'ninv_tried', 'solved']
   all_exp_cols = ['nplays', 'nplay_solved', 'nfinish', 'ninterrupt', 'nplayers', 'ave_levels_solved_per_player', 'avetime', 'ninv_found', 'ninv_tried', 'nlevels_solved_ind', 'nlevels_solved_cum']
+  combined_exp_cols = ['nplays', 'nplay_solved', 'nfinish', 'ninterrupt', 'nplayers', 'ave_levels_solved_per_player', 'avetime', 'ninv_found', 'ninv_tried', 'nlevels_solved_ind']
   p = ArgumentParser(description="Build graphs from database")
   p.add_argument("--db", required=True, help="Database path")
   p.add_argument("--experiment", type=str, help="Only consider plays from this experiment", required=True)
@@ -257,8 +294,14 @@ if __name__ == "__main__":
       'lvl_stats',
       'math_exp_stats',
       'prog_exp_stats',
+      'ave_exp_stats',
+      'max_exp_stats',
+      'sum_exp_stats',
       'lvl_solved_stacked_math',
       'lvl_solved_stacked_prog',
+      'lvl_solved_stacked_ave',
+      'lvl_solved_stacked_max',
+      'lvl_solved_stacked_sum',
       'viewed_before_solve',
     ], help='Which stat to print', required=True)
   p.add_argument("--lvl-columns", nargs='+', choices = all_lvl_cols, help='Optionally pick which columns per benchmarks we want')
@@ -278,10 +321,17 @@ if __name__ == "__main__":
     lvl_cols = all_lvl_cols
 
   if args.exp_columns is not None:
-    assert args.stat in ['math_exp_stats', 'prog_exp_stats']
+    assert args.stat in ['math_exp_stats', 'prog_exp_stats', 'ave_exp_stats', 'max_exp_stats', 'sum_exp_stats']
     exp_cols = args.exp_columns
   else:
-    exp_cols = all_exp_cols
+    if args.stat in ['math_exp_stats', 'prog_exp_stats']:
+        exp_cols = all_exp_cols
+    else:
+        exp_cols = combined_exp_cols
+
+  if (args.stat in ['ave_exp_stats', 'max_exp_stats', 'sum_exp_stats'] and 'nlevels_solved_cum' in exp_cols):
+    print "Error: Can't use column type 'nlevels_solved_cum' with stat type {}".format(args.stat)
+    exit(-1)
 
   if args.nplayers is not None and args.nplays is not None:
     print "Error: Can't specify both --nplayers and --nplays"
@@ -300,6 +350,12 @@ if __name__ == "__main__":
 
   assignments = set(assignment(play) for play in plays.values())
   lvlids = set(get_lvlid(play) for play in plays.values())
+
+
+  playsPerLvl = {lvlid: [] for lvlid in lvlids}
+  for (assignmentId, workerId, (lvlset, lvlid)) in plays:
+    play = plays[(assignmentId, workerId, (lvlset, lvlid))]
+    _add(playsPerLvl, lvlid, play)
 
   if args.stat in ['fun_histo', 'challenging_histo']:
     field = {
@@ -344,7 +400,6 @@ if __name__ == "__main__":
       print k, ',', histo.get(k, 0)
   elif args.stat == 'lvl_stats':
     players = {lvlid: [] for lvlid in lvlids}
-    playsPerLvl = {lvlid: [] for lvlid in lvlids}
     interrupts = {lvlid: 0 for lvlid in lvlids}
     finishes = {lvlid: 0 for lvlid in lvlids}
     total_time = {lvlid: 0.0 for lvlid in lvlids}
@@ -354,7 +409,6 @@ if __name__ == "__main__":
     for (assignmentId, workerId, (lvlset, lvlid)) in plays:
       play = plays[(assignmentId, workerId, (lvlset, lvlid))]
       _add(players, lvlid, workerId)
-      _add(playsPerLvl, lvlid, play)
 
       assert interrupted(play) or finished(play), _typs(play)
       if interrupted(play):
@@ -427,29 +481,46 @@ if __name__ == "__main__":
           line_str += str(verified(k))
 
       print line_str
-  elif args.stat in ['math_exp_stats', 'prog_exp_stats']:
-    exp_f = math_exp if args.stat == 'math_exp_stats' else prog_exp
-    typ = 'math' if args.stat == 'math_exp_stats' else 'prog'
+  elif args.stat in ['math_exp_stats', 'prog_exp_stats', 'ave_exp_stats', 'max_exp_stats', 'sum_exp_stats']:
+    exp_f = {
+      'math_exp_stats':   math_exp,
+      'prog_exp_stats':   prog_exp,
+      'ave_exp_stats':    ave_exp,
+      'max_exp_stats':    max_exp,
+      'sum_exp_stats':    sum_exp,
+    }[args.stat]
 
-    players = {exp: [] for exp in range(1, 6)}
-    playsPerExp = {exp: [] for exp in range(1, 6)}
-    interrupts = {exp: 0 for exp in range(1, 6)}
-    finishes = {exp: 0 for exp in range(1, 6)}
-    total_time = {exp: 0.0 for exp in range(1, 6)}
-    found_invs = {exp: [] for exp in range(1, 6)}
-    tried_invs = {exp: [] for exp in range(1, 6)}
-    lvls_solved = {exp: [] for exp in range(1, 6)}
-    lvls_solved_cum = {exp: set() for exp in range(1,6)}
+    exp_range = {
+      'math_exp_stats':   (1, 6),
+      'prog_exp_stats':   (1, 6),
+      'ave_exp_stats':    (1, 6),
+      'max_exp_stats':    (1, 6),
+      'sum_exp_stats':    (2, 12),
+    }[args.stat]
+    experiences = range(*exp_range)
 
-    for l in lvlids:
-      for exp in range(1, 6):
-          if (verified_up_to_exp(l, exp, typ, args.experiment)):
-            lvls_solved_cum[exp].add(l)
+    players = {exp: [] for exp in experiences}
+    playsPerExp = {exp: [] for exp in experiences}
+    interrupts = {exp: 0 for exp in experiences}
+    finishes = {exp: 0 for exp in experiences}
+    total_time = {exp: 0.0 for exp in experiences}
+    found_invs = {exp: [] for exp in experiences}
+    tried_invs = {exp: [] for exp in experiences}
+    lvls_solved = {exp: [] for exp in experiences}
+    lvls_solved_cum = {exp: set() for exp in experiences}
 
-    # Some levels appear unsolved at higher levels due to timeouts
-    for l in lvlids:
-      for exp in range(2, 6):
-        lvls_solved_cum[exp] = lvls_solved_cum[exp].union(lvls_solved_cum[exp-1])
+    if (args.stat in ['math_exp_stats', 'prog_exp_stats']):
+        typ = 'math' if args.stat == 'math_exp_stats' else 'prog'
+
+        for l in lvlids:
+          for exp in range(1, 6):
+              if (verified_up_to_exp(l, exp, typ, args.experiment)):
+                lvls_solved_cum[exp].add(l)
+
+        # Some levels appear unsolved at higher levels due to timeouts
+        for l in lvlids:
+          for exp in experiences[1:]:
+            lvls_solved_cum[exp] = lvls_solved_cum[exp].union(lvls_solved_cum[exp-1])
 
 
     for (assignmentId, workerId, (lvlset, lvlid)) in plays:
@@ -534,12 +605,12 @@ if __name__ == "__main__":
         elif col == 'nlevels_solved_ind':
           line_str += str(len(set(lvls_solved[k])))
         elif col == 'nlevels_solved_cum':
+          assert args.stat in ['math_exp_stat', 'prog_exp_stat']
           line_str += str(len(set(lvls_solved_cum[k])))
 
       print line_str
   elif args.stat in ['lvl_solved_stacked_math', 'lvl_solved_stacked_prog']:
     exp_f = math_exp if args.stat == 'lvl_solved_stacked_math' else prog_exp
-
     nsolved_bench_explvl = {lvlid: [0 for x in range(1, 6)] for lvlid in lvlids}
 
     for (assignmentId, workerId, (lvlset, lvlid)) in plays:
@@ -547,24 +618,47 @@ if __name__ == "__main__":
       if verified_by_play(lvlid, assignmentId, workerId, args.experiment):
           nsolved_bench_explvl[lvlid][exp_f(workerId)-1] += 1
 
-    print "Level, " + ",".join(map(str, range(1, 6)))
+    print "Level, " + ",".join(map(str, range(1, 6))) + ", Num Total Plays"
     for lvl in lvlids:
-        print lvl + ',' + ','.join([str(nsolved_bench_explvl[lvl][i]) for i in range(5)])
-  elif args.stat == 'viewed_before_solve':
-    playsPerLvl = {}
+        print lvl + ',' + ','.join([str(nsolved_bench_explvl[lvl][i]) for i in range(5)]) + ", {}".format(str(len(playsPerLvl[lvl])))
+  elif args.stat in ['lvl_solved_stacked_ave', 'lvl_solved_stacked_max', 'lvl_solved_stacked_sum']:
+    exp_f = {
+      'lvl_solved_stacked_ave': ave_exp,
+      'lvl_solved_stacked_max': max_exp,
+      'lvl_solved_stacked_sum': sum_exp
+    }[args.stat]
+    rng = {
+      'lvl_solved_stacked_ave': (1, 6),
+      'lvl_solved_stacked_max': (1, 6),
+      'lvl_solved_stacked_sum': (2, 11)
+    }[args.stat]
+
+    experiences = range(*rng)
+    nsolved_bench_explvl = {lvlid: [0 for x in experiences] for lvlid in lvlids}
 
     for (assignmentId, workerId, (lvlset, lvlid)) in plays:
       play = plays[(assignmentId, workerId, (lvlset, lvlid))]
-      _add(playsPerLvl, lvlid, (play[0].time, assignmentId, workerId))
+      if verified_by_play(lvlid, assignmentId, workerId, args.experiment):
+          nsolved_bench_explvl[lvlid][exp_f(workerId)-1] += 1
 
-    for lvl in playsPerLvl:
-        playsPerLvl[lvl].sort(key=lambda x: x[0])
-        playsPerLvl[lvl] = [(x[1], x[2]) for x in playsPerLvl[lvl]]
+    print "Level, " + ",".join(map(str, experiences)) + ",Num Total Plays"
+    for lvl in lvlids:
+        print lvl + ',' + ','.join([str(nsolved_bench_explvl[lvl][i]) for i in range(len(experiences))]) + ", {}".format(str(len(playsPerLvl[lvl])))
+  elif args.stat == 'viewed_before_solve':
+    timePlaysPerLvl = {}
+
+    for (assignmentId, workerId, (lvlset, lvlid)) in plays:
+      play = plays[(assignmentId, workerId, (lvlset, lvlid))]
+      _add(timePlaysPerLvl, lvlid, (play[0].time, assignmentId, workerId))
+
+    for lvl in timePlaysPerLvl:
+        timePlaysPerLvl[lvl].sort(key=lambda x: x[0])
+        timePlaysPerLvl[lvl] = [(x[1], x[2]) for x in timePlaysPerLvl[lvl]]
 
     for (assignmentId, workerId, (lvlset, lvlid)) in plays:
       if (verified_by_play(lvlid, assignmentId, workerId, args.experiment)):
-          nplay = playsPerLvl[lvlid].index((assignmentId, workerId))
-          previous_plays_by_same_user = [x for x in playsPerLvl[lvlid][:nplay] if x[1] == workerId]
+          nplay = timePlaysPerLvl[lvlid].index((assignmentId, workerId))
+          previous_plays_by_same_user = [x for x in timePlaysPerLvl[lvlid][:nplay] if x[1] == workerId]
           previous_solved_plays_by_same_user = [x for x in previous_plays_by_same_user if verified_by_play(lvlid, x[0], x[1], args.experiment)]
           if (len(previous_plays_by_same_user) > 0):
               print "Solving play {}, {}, {}: seen {}({} solving) times by {} beforehand and {} times total.".format(lvlid, assignmentId, workerId, len(previous_plays_by_same_user), len(previous_solved_plays_by_same_user), workerId, nplay)
