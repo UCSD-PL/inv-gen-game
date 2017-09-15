@@ -135,6 +135,12 @@ def get_lvlid(events):
     (assignment(events), worker(events), [set(e.payl()['lvlid'] for e in events)], [(e.type, e.payl()['lvlid']) for e in events])
   return events[0].payl()['lvlid']
 
+def start_time(events):
+  return events[0].time
+
+def duration(events):
+  return (events[-1].time - events[0].time).total_seconds()
+
 def math_exp(worker):
     """
     Return the avearge self-reported math experience rounded to the nearest int
@@ -303,6 +309,7 @@ if __name__ == "__main__":
       'lvl_solved_stacked_max',
       'lvl_solved_stacked_sum',
       'viewed_before_solve',
+      'first_soln_cost',
     ], help='Which stat to print', required=True)
   p.add_argument("--lvl-columns", nargs='+', choices = all_lvl_cols, help='Optionally pick which columns per benchmarks we want')
   p.add_argument("--exp-columns", nargs='+', choices = all_exp_cols, help='Optionally pick which columns per experience level we want')
@@ -416,8 +423,7 @@ if __name__ == "__main__":
       else:
         finishes[lvlid] = finishes.get(lvlid, 0) + 1
 
-      time_spent = (play[-1].time - play[0].time).total_seconds()
-      total_time[lvlid] = total_time.get(lvlid, 0.0) + time_spent
+      total_time[lvlid] = total_time.get(lvlid, 0.0) + duration(play)
       for e in play:
         if e.type == 'FoundInvariant':
           _add(found_invs, lvlid, e.payl()['canonical'])
@@ -662,3 +668,34 @@ if __name__ == "__main__":
           previous_solved_plays_by_same_user = [x for x in previous_plays_by_same_user if verified_by_play(lvlid, x[0], x[1], args.experiment)]
           if (len(previous_plays_by_same_user) > 0):
               print "Solving play {}, {}, {}: seen {}({} solving) times by {} beforehand and {} times total.".format(lvlid, assignmentId, workerId, len(previous_plays_by_same_user), len(previous_solved_plays_by_same_user), workerId, nplay)
+  elif args.stat == 'first_soln_cost':
+    firstSoln = {}
+
+    for (assignmentId, workerId, (lvlset, lvlid)) in plays:
+      if (verified_by_play(lvlid, assignmentId, workerId, args.experiment)):
+          play = plays[(assignmentId, workerId, (lvlset, lvlid))]
+          if lvlid not in firstSoln or start_time(play) < start_time(firstSoln[lvlid]):
+              firstSoln[lvlid] = play
+
+    print "Level, Person Seconds, Num Plays, Num Unique Users, Cost"
+    for lvl in lvlids:
+        if lvl not in firstSoln:
+            print "{}, -, -, -, -".format(lvl)
+            continue
+
+        sol = firstSoln[lvl]
+        num_plays = 0
+        users = set()
+        total_time = 0.0
+        cost = 0
+
+        for play in playsPerLvl[lvl]:
+            if start_time(play) > start_time(sol):
+                continue
+
+            num_plays += 1
+            users.add(worker(play))
+            total_time += duration(play)
+            cost += 0.75
+
+        print "{}, {}, {}, {}, {}".format(lvl, total_time, num_plays, len(users), cost)
