@@ -6,8 +6,11 @@ from datetime import datetime
 from sqlalchemy import func
 import json
 
+from levels import loadBoogieFile, loadBoogieLvlSet
 from models import Event, SurveyData, VerifyData
 from db_util import open_db, filterEvents, filterSurveys
+from lib.boogie.ast import parseExprAst
+from vc_check import tryAndVerifyLvl
 import mturk_util
 
 def _add(m, k, v):
@@ -37,6 +40,22 @@ def splitEventsByAssignment(session, **kwargs):
     m[k].sort(key=lambda e:  e[0].time)
   return m
 
+def split(lst, pred):
+  res = []
+  cur = []
+  for x in lst:
+    cur.append(x)
+
+    if pred(x):
+      res.append(cur)
+      cur = []
+
+  if (len(cur) > 0):
+    res.append(cur)
+
+  return res
+
+
 def splitEventsByLvlPlay(session, **kwargs):
   """
   Split the events by their (assignment, worker, lvlid) tuples. Any event
@@ -59,57 +78,19 @@ def splitEventsByLvlPlay(session, **kwargs):
       curLvl = (assignmentId, workerId, (lvlset, lvlid))
       _add(plays, curLvl, ev)
 
-  return plays
+  split_plays = {}
+  for ((assignmentId, workerId, (lvlset, lvlid)), play) in plays.items():
+    play.sort(key=lambda x: x.time)
+    play_lst = split(play, lambda evt:  evt.type == 'StartLevel')
+
+    #if (len(play_lst) != 1):
+    #  print play_lst
+
+    for idx, split_play in enumerate(play_lst):
+      split_plays[(assignmentId, workerId, (lvlset, lvlid), idx)] = split_play
+
+  return split_plays
   
-
-def splitGameInstances(session, **kwargs):
-  """
-    Split the events for each (assignment,worker) pair into
-    separate levels. In the process remove any spurious events such as:
-      - StartLevel in the middle of a started level
-      - FinishLevel when there is no level present
-      - Any event after a GameDone
-      - Any in-level events (e.g. FoundInvariant) when there is no level present
-  """
-  stats = {}
-  m = splitEventsByAssignment(session, **kwargs)
-  plays = {}
-
-  for k in m:
-    curLvl = None
-    gameDone = None
-
-    ignore = ['Consent', 'TutorialStart', 'TutorialDone', 'ReplayTutorialAll', 'VerifyAttempt']
-    in_lvl = ['TriedInvariant', 'FoundInvariant', 'PowerupsActivated', 'SkipToNextLevel']
-
-    for (ev, lvlid, lvlset, workerId, assignmentId) in m[k]:
-      if (ev.type in ignore):
-        continue
-
-      if (gameDone is not None):
-        _add(stats, 'spurious_event_after_gamedone', ev)
-        continue
-
-      if (curLvl != None):
-        if ev.type in in_lvl + ['GameDone', 'FinishLevel']:
-          if ev.type != 'GameDone':
-            _add(plays, curLvl, ev)
-          if ev.type in ['GameDone', 'FinishLevel']:
-            curLvl = None
-        elif ev.type == 'StartLevel' and ev.payl()['lvlid'] != curLvl[2][1]:
-          curLvl = (assignmentId, workerId, (lvlset, lvlid))
-          _add(plays, curLvl, ev)
-        else:
-           _add(stats, 'spurious_event_inlevel', ev)
-      else:
-        if ev.type == 'StartLevel':
-          curLvl = (assignmentId, workerId, (lvlset, lvlid))
-          _add(plays, curLvl, ev)
-            
-      if (ev.type == 'GameDone'):
-        gameDone = ev
-
-  return stats, plays
 
 def pruneByNumPlays(plays, n):
   """
@@ -118,8 +99,7 @@ def pruneByNumPlays(plays, n):
   """
   lvlPlays = {} # map from level to the plays for that level
   for (k, v) in plays.items():
-    (_, _, (_, lvlid)) = k
-    _add(lvlPlays, lvlid, (k, v))
+    _add(lvlPlays, lvlid(v), (k, v))
 
   # Sort the plays by start time
   for lvlid in lvlPlays:
@@ -138,8 +118,7 @@ def pruneByNumPlayers(plays, n):
   """
   lvlPlays = {} # map from level to the plays for that level
   for (k, v) in plays.items():
-    (_, _, (_, lvlid)) = k
-    _add(lvlPlays, lvlid, (k, v))
+    _add(lvlPlays, lvlid(v), (k, v))
 
   # Sort the plays by start time
   for lvlid in lvlPlays:
@@ -212,6 +191,12 @@ def verified_by_play(lvl, assignment, worker, exp):
   assert (len(vs) == 1), "Not 1 VerifyData entry for {}, {}, {}, {} = {}".format(lvl, assignment, worker, exp, vs)
   return vs[0].provedflag
 
+def really_verified_by_play(lvl, assignment, worker, exp, play, timeout):
+  invs = set([parseExprAst(x.payl()['canonical']) for x in play if x.type == 'FoundInvariant'])
+  (overfitted, _), (nonind, _), sound, violations = tryAndVerifyLvl(lvl, invs, set(), timeout)
+  assert type(violations) == list
+  return len(violations) == 0
+
 if __name__ == "__main__":
   all_lvl_cols = ['nplays', 'nplay_solved', 'nfinish', 'ninterrupt', 'nplayers', 'nplayers_solved', 'avetime', 'ninv_found', 'ninv_tried']
   all_exp_cols = ['nplays', 'nplay_solved', 'nfinish', 'ninterrupt', 'nplayers', 'nplayers_solved', 'avetime', 'ninv_found', 'ninv_tried']
@@ -232,9 +217,13 @@ if __name__ == "__main__":
     ], help='Which stat to print', required=True)
   p.add_argument("--lvl-columns", nargs='+', choices = all_lvl_cols, help='Optionally pick which columns per benchmarks we want')
   p.add_argument("--exp-columns", nargs='+', choices = all_exp_cols, help='Optionally pick which columns per experience level we want')
+  p.add_argument("--timeout", type=int, help="Z3 timeout")
+  p.add_argument("--lvlset", required=True, help="Include lvlset invs; may specify multiple items (unset = any)")
 
   args = p.parse_args()
   filter_args = {}
+
+  lvlset, lvls = loadBoogieLvlSet(args.lvlset)
   if args.experiments:
     filter_args['enames'] = args.experiments
   if args.lvlids:
@@ -251,7 +240,6 @@ if __name__ == "__main__":
 
   sessionF = open_db(args.db)
   session = sessionF()
-  #stats, plays = splitGameInstances(session, **filter_args)
   plays = splitEventsByLvlPlay(session, **filter_args)
 
   if (args.nplays is not None):
@@ -313,8 +301,8 @@ if __name__ == "__main__":
     found_invs = {lvlid: [] for lvlid in lvlids}
     tried_invs = {lvlid: [] for lvlid in lvlids}
 
-    for (assignmentId, workerId, (lvlset, lvlid)) in plays:
-      play = plays[(assignmentId, workerId, (lvlset, lvlid))]
+    for (assignmentId, workerId, (lvlset, lvlid), idx) in plays:
+      play = plays[(assignmentId, workerId, (lvlset, lvlid), idx)]
       _add(players, lvlid, workerId)
       _add(playsPerLvl, lvlid, play)
 
@@ -357,7 +345,7 @@ if __name__ == "__main__":
           line_str += str(num_plays)
         elif col == 'nplay_solved':
           num_plays_solved = len(filter(None,
-            [verified_by_play(k, assignment(play), worker(play), 'new-benchmarks') for play in playsPerLvl[k]]))
+            [really_verified_by_play(lvls[k], assignment(play), worker(play), 'new-benchmarks', play, args.timeout) for play in playsPerLvl[k]]))
           line_str += str(num_plays_solved)
         elif col == 'nfinish':
           finished_plays = finishes.get(k, 0)
