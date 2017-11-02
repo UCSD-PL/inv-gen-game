@@ -32,6 +32,7 @@ pip install pydot
 pip install frozendict
 pip install infinite
 pip install mysql-python
+pip install pycparser
 
 if [ ! -d $DIR/third_party ] ; then
   mkdir $DIR/third_party
