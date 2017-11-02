@@ -108,62 +108,89 @@ def translate_Decl(c_ast):
     return (name, typ, init)
 
 
-def translate_stmt(c_ast, indent, renames):
-    istr = " "*indent
+class Ctx:
+  def __init__(s, indent, renames, trivial_inv):
+    s._indent = indent;
+    s._renames = renames
+    s._trivial_inv = trivial_inv
+
+  def indent(s):
+    c = Ctx(s._indent + tabsp, s._renames, s._trivial_inv)
+    return c
+
+
+def translate_stmt(c_ast, ctx):
+    istr = " "*ctx._indent
     if isinstance(c_ast, Compound):
-        stmts = [translate_stmt(x, indent+tabsp, renames) for x in c_ast.block_items]
+        stmts = [translate_stmt(x, ctx) for x in c_ast.block_items]
         stmts = [x for x in stmts if len(x.strip()) > 0]
-        s = ";\n".join(stmts)
-        return istr + "{\n" + s + ";\n" + istr + "}"
+        return "\n".join(stmts)
     elif isinstance(c_ast, Decl):
         t = translate_Decl(c_ast)
         if t[2] is not None:
-            return istr + "{} := {}".format(t[0], t[2])
+            return istr + "{} := {};".format(t[0], t[2])
         else:
             return istr + ""
     elif isinstance(c_ast, If):
         cond = translate_exp(c_ast.cond)
-        iftrue = translate_stmt(c_ast.iftrue, indent, renames)
+        iftrue = translate_stmt(c_ast.iftrue, ctx.indent())
         if c_ast.iffalse is None:
-            return istr + "if ({})\n{}" .format(cond, iftrue)
+            return istr + "if ({})\n" .format(cond) +\
+                   istr + "{\n" + \
+                              iftrue + \
+                   istr + "}\n"
         else:
-            iffalse = translate_stmt(c_ast.iffalse, indent, renames)
-            return istr + "if ({})\n{} else\n {}" .format(cond, iftrue, iffalse)
+            iffalse = translate_stmt(c_ast.iffalse, ctx.indent())
+            return istr + "if ({})\n" .format(cond) + \
+                   istr + "{\n" + \
+                              iftrue + \
+                   istr + "} else {\n" +\
+                              iffalse + \
+                   istr + "}\n"
     elif isinstance(c_ast, Label):
-        inner = translate_stmt(c_ast.stmt, 0, renames)
-        return istr + "{}{}: {}".format(" "*indent, c_ast.name, inner)
+        inner = translate_stmt(c_ast.stmt, ctx)
+        return istr + "{}: {}".format(c_ast.name, inner)
     elif isinstance(c_ast, FuncCall):
         if c_ast.name.name in renames:
             c_ast.name.name = renames[c_ast.name.name]
-        return istr + translate_exp(c_ast)
+        return istr + translate_exp(c_ast) + ";"
     elif isinstance(c_ast, Assignment):
         lhs = translate_exp(c_ast.lvalue)
         rhs = translate_exp(c_ast.rvalue)
         if c_ast.op == "=":
-            return istr + "{} := {}".format(lhs, rhs)
+            return istr + "{} := {};".format(lhs, rhs)
         else:
             NYI(c_ast)
     elif isinstance(c_ast, Return):
         e = translate_exp(c_ast.expr)
-        return istr + "__RET:={};\n{}return".format(e, istr)
+        return istr + "__RET:={};\n".format(e) +\
+               istr + "return;"
     elif isinstance(c_ast, For):
-        init = translate_stmt(c_ast.init, indent, renames)
+        init = translate_stmt(c_ast.init, ctx)
         cond = translate_exp(c_ast.cond)
-        nxt = translate_stmt(c_ast.next, indent+tabsp, renames)
-        body = translate_stmt(c_ast.stmt, indent+tabsp, renames)
-        return "{}; \n{}while ({})\n".format(init, istr, cond) + istr + "{\n" + body +\
-               ";\n" + nxt + ";\n" + istr + "}"
+        nxt = translate_stmt(c_ast.next, ctx.indent())
+        body = translate_stmt(c_ast.stmt, ctx.indent())
+        inv_str = "" if not ctx._trivial_inv else istr + "invariant true;\n"
+        return "{}\n".format(init) +\
+               istr + "while ({})\n{}".format(cond, inv_str) + \
+               istr + "{\n" + \
+                        body + "\n" +\
+                        nxt + "\n" +\
+               istr + "}"
     elif isinstance(c_ast, While):
         cond = translate_exp(c_ast.cond)
-        body = translate_stmt(c_ast.stmt, indent, renames)
-        return istr + "while ({})\n".format(cond) + body
-
+        body = translate_stmt(c_ast.stmt, ctx)
+        inv_str = "" if not ctx._trivial_inv else istr + "invariant true;\n"
+        return istr + "while ({})\n{}".format(cond, inv_str) + \
+               istr + "{\n" +\
+               body +\
+               istr + "}\n"
     elif isinstance(c_ast, UnaryOp):
         inner = translate_exp(c_ast.expr)
         if c_ast.op == "p++":
-            return istr + "{} := {} + 1".format(inner, inner)
+            return istr + "{} := {} + 1;".format(inner, inner)
         if c_ast.op == "p--":
-            return istr + "{} := {} - 1".format(inner, inner)
+            return istr + "{} := {} - 1;".format(inner, inner)
         else:
             NYI(c_ast)
     else:
@@ -179,7 +206,7 @@ def format_typ(typ):
         NYI(typ)
 
 
-def translate_FuncDef(c_ast, method_renames):
+def translate_FuncDef(c_ast, ctx):
     decl = translate_Decl(c_ast.decl)
     decls = []
     if c_ast.param_decls is not None:
@@ -211,7 +238,7 @@ def translate_FuncDef(c_ast, method_renames):
         format_typ(typ)) for (name, typ, init) in decls)
 
     # Step 2. Walk over each statement and translate:
-    body = translate_stmt(c_ast.body, tabsp, renames)
+    body = translate_stmt(c_ast.body, ctx.indent())
 
     if len(dec_str.strip()) > 0:
         dec_str += ";\n"
@@ -229,6 +256,9 @@ if __name__ == "__main__":
             help='Name of the C method equivalent to assert', required=True)
     p.add_argument('--assume-method', type=str,
             help='Name of the C method equivalent to assume', required=True)
+    p.add_argument('--add-trivial-invariants', action="store_true",
+            default=False,
+            help='If specified add "invariant true;" to each while loop')
 
     args = p.parse_args()
 
@@ -246,7 +276,16 @@ if __name__ == "__main__":
         args.assume_method: "assume",
     }
 
+    ctx = Ctx(0, renames, args.add_trivial_invariants)
+
+    boogie_text = ""
     for x in ast.ext:
         if isinstance(x, FuncDef) and x.decl.name not in args.skip_methods:
-            t = translate_FuncDef(x, renames)
-            print t
+            t = translate_FuncDef(x, ctx)
+            boogie_text += t
+
+    if args.output == "stdout":
+      sys.stdout.write(boogie_text)
+    else:
+      with open(args.output, "w") as f:
+        f.write(boogie_text)
