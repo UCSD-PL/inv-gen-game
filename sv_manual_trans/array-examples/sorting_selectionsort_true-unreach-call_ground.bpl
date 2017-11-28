@@ -12,7 +12,7 @@ procedure main() returns (__RET: int)
     k := (i+1);
     s := i;
     while ((k<100000))
-    invariant (forall l : int :: (i <= l && l < k) ==> a[s] <= a[l]);
+    invariant (forall l : int :: (i <= l && l < k) ==> a[s] <= a[l]) && i <= s && i < k;
     { 
       if ((a[k]<a[s]))
       { 
@@ -35,7 +35,7 @@ procedure main() returns (__RET: int)
     {
       y := (x+1);
       while ((y<i))
-      invariant true;
+      invariant x < y;
       {
         assert((a[x]<=a[y]));
         y := y + 1;
@@ -44,7 +44,7 @@ procedure main() returns (__RET: int)
     } 
     x := i;
     while ((x<100000))
-    invariant true;
+    invariant x>= i;
     {
       assert((a[x]>=a[i]));
       x := x + 1;
@@ -58,7 +58,7 @@ procedure main() returns (__RET: int)
   {
     y := (x+1);
     while ((y<100000))
-    invariant true;
+    invariant y>x;
     {
       assert((a[x]<=a[y]));
       y := y + 1;

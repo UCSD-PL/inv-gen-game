@@ -7,6 +7,9 @@ procedure main() returns (__RET: int)
   var a5: [int]int;
   var a6: [int]int;
   var a7: [int]int;
+  var a8: [int]int;
+  var a9: [int]int;
+  var a0: [int]int;
   var i: int;
   var x: int;
   i := 0;
@@ -66,12 +69,53 @@ procedure main() returns (__RET: int)
     a7[i] := a6[i];
     i := i + 1;
   }
-
+  i := 0;
+  while ((i<100000))
+  invariant (forall k : int :: (0 <= k && k < 100000) ==> a1[k] == a2[k]);
+  invariant (forall k : int :: (0 <= k && k < 100000) ==> a2[k] == a3[k]);
+  invariant (forall k : int :: (0 <= k && k < 100000) ==> a3[k] == a4[k]);
+  invariant (forall k : int :: (0 <= k && k < 100000) ==> a5[k] == a4[k]);
+  invariant (forall k : int :: (0 <= k && k < 100000) ==> a5[k] == a6[k]);
+  invariant (forall k : int :: (0 <= k && k < 100000) ==> a7[k] == a6[k]);
+  invariant (forall k : int :: (0 <= k && k < i) ==> a7[k] == a8[k]) && i <= 100000;
+  {
+    a8[i] := a7[i];
+    i := i + 1;
+  }
+  i := 0;
+  while ((i<100000))
+  invariant (forall k : int :: (0 <= k && k < 100000) ==> a1[k] == a2[k]);
+  invariant (forall k : int :: (0 <= k && k < 100000) ==> a2[k] == a3[k]);
+  invariant (forall k : int :: (0 <= k && k < 100000) ==> a3[k] == a4[k]);
+  invariant (forall k : int :: (0 <= k && k < 100000) ==> a5[k] == a4[k]);
+  invariant (forall k : int :: (0 <= k && k < 100000) ==> a5[k] == a6[k]);
+  invariant (forall k : int :: (0 <= k && k < 100000) ==> a7[k] == a6[k]);
+  invariant (forall k : int :: (0 <= k && k < 100000) ==> a7[k] == a8[k]);
+  invariant (forall k : int :: (0 <= k && k < i) ==> a9[k] == a8[k]) && i <= 100000;
+  {
+    a9[i] := a8[i];
+    i := i + 1;
+  }
+  i := 0;
+  while ((i<100000))
+  invariant (forall k : int :: (0 <= k && k < 100000) ==> a1[k] == a2[k]);
+  invariant (forall k : int :: (0 <= k && k < 100000) ==> a2[k] == a3[k]);
+  invariant (forall k : int :: (0 <= k && k < 100000) ==> a3[k] == a4[k]);
+  invariant (forall k : int :: (0 <= k && k < 100000) ==> a5[k] == a4[k]);
+  invariant (forall k : int :: (0 <= k && k < 100000) ==> a5[k] == a6[k]);
+  invariant (forall k : int :: (0 <= k && k < 100000) ==> a7[k] == a6[k]);
+  invariant (forall k : int :: (0 <= k && k < 100000) ==> a7[k] == a8[k]);
+  invariant (forall k : int :: (0 <= k && k < 100000) ==> a8[k] == a9[k]);
+  invariant (forall k : int :: (0 <= k && k < i) ==> a9[k] == a0[k]) && i <= 100000;
+  {
+    a0[i] := a9[i];
+    i := i + 1;
+  }
   x := 0;
   while ((x<100000))
-  invariant (forall k : int :: (0 <= k && k < 100000) ==> a1[k] == a7[k]);
+  invariant (forall k : int :: (0 <= k && k < 100000) ==> a1[k] == a0[k]);
   {
-    assert((a1[x]==a7[x]));
+    assert((a1[x]==a0[x]));
     x := x + 1;
   }
   __RET:=0;
