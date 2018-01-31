@@ -59,11 +59,11 @@ if __name__ == "__main__":
   q = session.query(hitq.c.hit) \
     .filter(hitq.c.hit.notin_(session.query(SurveyData.hit)))
   for hit, in q.distinct():
-    print "Loading new HIT %s..." % hit,
+    print("Loading new HIT %s..." % hit, end=' ')
 
     try:
       getSurveyData(session, mc, hit)
     except MTurkRequestError:
-      print "error"
+      print("error")
     else:
-      print "done"
+      print("done")

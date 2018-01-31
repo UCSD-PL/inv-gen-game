@@ -28,13 +28,13 @@ if (__name__ == "__main__"):
                  default=False, help='Wait for user to perss Enter before continuing (great for debug)')
   args = p.parse_args();
   if args.waitEnter:
-    input("Press Enter to continue...")
+    eval(input("Press Enter to continue..."))
   lvlSetName, lvls = loadBoogieLvlSet(args.lvlset)
 
   res = { }
   conf = { }
 
-  for lvlName, lvl in lvls.iteritems():
+  for lvlName, lvl in lvls.items():
     cppFile = lvl["path"][1]
     preprocessedFile = cppFile + ".cpachecker.preprocessed"
     error("Running ", lvlName)
@@ -58,8 +58,8 @@ if (__name__ == "__main__"):
         # On lvl d-14 for example the invariants explode exponentially due to
         # inlining of lets. So add timeout. Seems to be the only level with
         # this problem
-        invs = map(z3_expr_to_boogie, loopInvs)
-      except Exception,e:
+        invs = list(map(z3_expr_to_boogie, loopInvs))
+      except Exception as e:
         if (e.message == "timeout"):
           invs = None
           conf_status = "timeout"
@@ -84,16 +84,16 @@ if (__name__ == "__main__"):
             conf_status = False
           else:
             conf_status = True
-        except Exception, e:
+        except Exception as e:
             conf_status = "verification error: " + e.value
         conf[lvlName] = conf_status
     # if (args.csv_table):
     #   print lvlName, ",", res[lvlName][0], ",", conf_status
     # else:
-    print "Level", lvlName, "solved: ", solved, "confirmed?: ", conf_status
+    print("Level", lvlName, "solved: ", solved, "confirmed?: ", conf_status)
 
 if (args.csv_table):
   if (args.csv_table):
-    print "Level,Solved,Confirmed"
+    print("Level,Solved,Confirmed")
   for lvlName in res:
-    print lvlName, ",", res[lvlName][0], ",", conf[lvlName] if conf.has_key(lvlName) else "N/A"
+    print(lvlName, ",", res[lvlName][0], ",", conf[lvlName] if lvlName in conf else "N/A")

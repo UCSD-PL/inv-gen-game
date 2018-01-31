@@ -2,10 +2,11 @@ from copy import copy
 from lib.boogie.bb import bbEntry, get_bbs, bbExit
 from lib.boogie.ast import AstAssert, AstAssume, AstHavoc, \
         AstAssignment, stmt_read, stmt_changed, AstBinExpr, expr_read
+from functools import reduce
 
 #TODO: Need to introduce a separation between top and bottom
 def forwarddflow(bbs, transformer_m, union_f, initial_vals, start_val):
-    state = { bb: copy(initial_vals) for bb in bbs.iterkeys() }
+    state = { bb: copy(initial_vals) for bb in bbs.keys() }
     state[bbEntry(bbs)] = start_val
     wlist = [ bbEntry(bbs) ]
     while len(wlist) > 0:
@@ -28,7 +29,7 @@ def forwarddflow(bbs, transformer_m, union_f, initial_vals, start_val):
 # TODO: How does this work without one node starting with less than maximal?
 # What is Top and Bottom in my current use caes (livevars)?
 def backdflow(bbs, transformer_m, union_f, initial_vals):
-    state = { bb: copy(initial_vals) for bb in bbs.iterkeys() }
+    state = { bb: copy(initial_vals) for bb in bbs.keys() }
     wlist = [ bbExit(bbs) ]
     while len(wlist) > 0:
         curBB = wlist.pop()
@@ -50,7 +51,7 @@ def livevars(bbs):
             (inS - stmt_changed(stmt)).union(stmt_read(stmt))
     }
     def union_f(sets):
-        sets = filter(lambda x:  x != None, sets)
+        sets = [x for x in sets if x != None]
         return reduce(lambda x,y:   x.union(y), sets, set([]))
     return backdflow(bbs, transformer_m, union_f, None)
 
@@ -73,7 +74,7 @@ def propagate_sp(bbs):
     }
 
     def union_f(sets):
-        something_sets = filter(lambda x:  x != None, sets)
+        something_sets = [x for x in sets if x != None]
         if (len(something_sets)) == 0:
             return None
         base = something_sets[0]
@@ -84,6 +85,6 @@ def propagate_sp(bbs):
 
 if __name__ == "__main__":
     bbm = get_bbs("desugared3_no_inv.bpl")
-    print livevars(bbm)
+    print(livevars(bbm))
     bbm = get_bbs("desugared-boogie-benchmarks/02.bpl")
-    print livevars(bbm)
+    print(livevars(bbm))

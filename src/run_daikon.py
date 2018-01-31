@@ -32,13 +32,13 @@ if (__name__ == "__main__"):
 
   if (args.csv_table):
     if (args.check_solved):
-      print "Level, Num Invariants Found, Invariants Found, " +\
-            "Num Sound Invariants, Sound Invariants, IsSolved"
+      print("Level, Num Invariants Found, Invariants Found, " +\
+            "Num Sound Invariants, Sound Invariants, IsSolved")
     else:
-      print "Level, Num Invariants Found, Invariants Found, " +\
-            "Num Sound Invariants, Sound Invariants"
+      print("Level, Num Invariants Found, Invariants Found, " +\
+            "Num Sound Invariants, Sound Invariants")
 
-  for lvlName, lvl in lvls.iteritems():
+  for lvlName, lvl in lvls.items():
     (vs, header_vals) = (lvl["variables"], lvl["data"][0])
     fuzz_path = lvl["path"][0][:-len(".bpl")] + ".fuzz_traces"
     if (exists(fuzz_path)):
@@ -49,8 +49,7 @@ if (__name__ == "__main__"):
         if ("splitterPreds" in lvl):
           splitterPred = bast.ast_and(lvl["splitterPreds"])
           t_loop_headers = \
-                  filter(lambda row:  evalPred(splitterPred, row[1][0]),
-                         t_loop_headers)
+                  [row for row in t_loop_headers if evalPred(splitterPred, row[1][0])]
 
         t_header_vals = [ [ row[1][0][v] for v in vs ] \
                           for row in t_loop_headers ]
@@ -77,10 +76,10 @@ if (__name__ == "__main__"):
       solved = "";
 
     if (args.csv_table):
-      print ",".join([lvlName, \
+      print(",".join([lvlName, \
                       str(len(binvs)), \
                       ";".join(map(str, binvs)), str(len(soundInvs)), \
-                      ";".join(map(str, soundInvs)) ]) + solved
+                      ";".join(map(str, soundInvs)) ]) + solved)
     else:
-      print "For lvl", lvlName, " daikon found", len(binvs), ":", binvs,\
-            "of which", len(soundInvs), " are sound: ", soundInvs
+      print("For lvl", lvlName, " daikon found", len(binvs), ":", binvs,\
+            "of which", len(soundInvs), " are sound: ", soundInvs)

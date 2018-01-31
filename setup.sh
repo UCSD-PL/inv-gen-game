@@ -1,7 +1,16 @@
 #! /usr/bin/env bash
 
-if [[ $# -ne 1 ]] ; then
-  echo "Usage $0 <target-directory>"
+if [[ $# -ne 2 ]] ; then
+  echo "Usage $0 <target-directory> <python-version>"
+  exit -1
+fi
+
+if [[ "$2" -eq "2" ]] ; then
+  PY="$(which python)"
+elif [[ "$2" -eq "3" ]] ; then
+  PY="$(which python3)"
+else
+  echo "$2 is not a valid python version. Enter 2 or 3"
   exit -1
 fi
 
@@ -13,26 +22,38 @@ fi
 MYDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 DIR="$( cd $1 && pwd )"
 
-
-virtualenv $DIR
+$PY -m venv $DIR
 
 source $DIR/bin/activate
 
-pip install flask
-pip install flask-jsonrpc
-pip install slimit
-pip install pyparsing
-pip install boto
-pip install pyOpenSSL
-pip install colorama
-pip install sqlalchemy
-pip install tabulate
-pip install Pyro4
-pip install pydot
-pip install frozendict
-pip install infinite
-pip install mysql-python
-pip install pycparser
+if [[ "$2" -eq "2" ]] ; then
+  PY="$(which python)"
+else
+  PY="$(which python3)"
+fi
+
+$PY -m pip install flask
+$PY -m pip install flask-jsonrpc
+$PY -m pip install slimit
+$PY -m pip install pyparsing
+$PY -m pip install boto
+$PY -m pip install pyOpenSSL
+$PY -m pip install colorama
+$PY -m pip install sqlalchemy
+$PY -m pip install tabulate
+$PY -m pip install Pyro4
+$PY -m pip install pydot
+$PY -m pip install frozendict
+$PY -m pip install infinite
+# TODO: Need to find a Python3 compatible replacement for this
+$PY -m pip install mysql-python
+$PY -m pip install infinite
+$PY -m pip install mysql-python
+$PY -m pip install pycparser
+
+if [ "$2" == "3" ] ; then
+  $PY -m pip install mypy
+fi
 
 if [ ! -d $DIR/third_party ] ; then
   mkdir $DIR/third_party
@@ -53,8 +74,8 @@ if [ ! -e $DIR/third_party/daikon ]; then
   pushd $DIR/third_party
   mkdir daikon
   cd daikon
-  wget https://plse.cs.washington.edu/daikon/download/daikon-5.5.6.tar.gz
-  tar zxf daikon-5.5.6.tar.gz
+  wget https://plse.cs.washington.edu/daikon/download/daikon-5.6.0.tar.gz
+  tar zxf daikon-5.6.0.tar.gz
   popd
 fi
 

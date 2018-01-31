@@ -2,6 +2,7 @@ import traceback
 from itertools import chain, combinations
 from sys import exc_info, stderr
 from random import choice
+from functools import reduce
 
 def error(*args):
   if (len(args) > 0 and str(args[0]) and '%' in args[0]):
@@ -57,7 +58,7 @@ def split(pred, itr):
 def nonempty(lst):
     """ Filter out the empty elements of a list (where empty is len(x) == 0)
     """
-    return filter(lambda x: len(x) > 0, lst)
+    return [x for x in lst if len(x) > 0]
 
 def nodups(s):
   return list(set(s))
@@ -71,4 +72,4 @@ def flattenList(s):
 def randomToken(l):
   alphanum = "".join([chr(ord('a') + i) for i in range(26) ] +\
           [ str(i) for i in range(0,10)])
-  return "".join([ choice(alphanum) for _ in xrange(l) ]);
+  return "".join([ choice(alphanum) for _ in range(l) ]);

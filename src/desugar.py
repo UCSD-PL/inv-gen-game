@@ -44,12 +44,12 @@ def desugar(fname):
 if (__name__ == "__main__"):
   args = p.parse_args();
 
-  print "Desugaring ", args.inp_file, " to ", args.out_file
+  print("Desugaring ", args.inp_file, " to ", args.out_file)
   res = desugar(args.inp_file);
 
   if (len(res) > 1):
-      error("More than one function: " + ",".join(res.keys()));
+      error("More than one function: " + ",".join(list(res.keys())));
 
   f = open(args.out_file, "w");
-  f.write(res.values()[0]);
+  f.write(list(res.values())[0]);
   f.close();

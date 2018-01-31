@@ -27,20 +27,20 @@ else:
 
 for sr in exp.server_runs:
     if sr.srid == args.srid:
-        print "Found srid", args.srid
+        print("Found srid", args.srid)
         if sr.pid != 0:
-            print "Trying to kill process", sr.pid
+            print("Trying to kill process", sr.pid)
             try:
                 os.kill(sr.pid, signal.SIGTERM)
-                print "Success in killing process", sr.pid
+                print("Success in killing process", sr.pid)
             except Exception:
-                print "Could not kill process " + str(sr.pid) + \
-                      ", probably already dead, but please check"
+                print("Could not kill process " + str(sr.pid) + \
+                      ", probably already dead, but please check")
             sr.pid = 0
         new_srid = exp.create_unique_server_run_id()
         port = sr.port
         p = start_server(port, args.ename, new_srid, args.lvlset, adminToken, args.db)
-        print "Started server run", new_srid, "on port", port, "with pid", p.pid
+        print("Started server run", new_srid, "on port", port, "with pid", p.pid)
         exp.add_session(ServerRun(new_srid, sr.hit_id, p.pid, port))
         exit(0)
-print "Could not find srid", args.srid
+print("Could not find srid", args.srid)

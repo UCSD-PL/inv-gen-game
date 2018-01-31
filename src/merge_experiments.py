@@ -22,7 +22,7 @@ if __name__ == "__main__":
     e2.read_server_runs();
     try:
       e3 = Experiment(args.out, False);
-      print "Error: Experiment ", args.out, "already exists"
+      print("Error: Experiment ", args.out, "already exists")
       exit(-1)
     except IOError:
       e3 = Experiment(args.out, True)

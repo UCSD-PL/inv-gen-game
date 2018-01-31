@@ -97,8 +97,8 @@ if __name__ == "__main__":
     curLevelSetName, lvls = loadBoogieLvlSet(args.lvlset)
     traces = { curLevelSetName: lvls }
 
-    print "Admin Token: ", adminToken
-    print "Admin URL: ", "admin.html?adminToken=" + adminToken
+    print("Admin Token: ", adminToken)
+    print("Admin URL: ", "admin.html?adminToken=" + adminToken)
     app.run(host='0.0.0.0',\
             port=args.port,\
             ssl_context=(MYDIR + '/cert.pem', MYDIR + '/privkey.pem'),\

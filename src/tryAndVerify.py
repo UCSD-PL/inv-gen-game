@@ -36,8 +36,8 @@ for inv in args.invs:
 overfitted = set(overfitted).union(overfitted_p2)
 nonind = set(nonind).union(nonind_p2)
 
-print "Overfitted: ", overfitted
-print "Nonind: ", nonind
-print "Sound: ", sound
-print "Violations: ", violations
-print "Verified? ", len(violations) == 0
+print("Overfitted: ", overfitted)
+print("Nonind: ", nonind)
+print("Sound: ", sound)
+print("Violations: ", violations)
+print("Verified? ", len(violations) == 0)

@@ -18,14 +18,14 @@ def _from_dict(vs, vals, missing= None):
         return ( _from_dict(vs, vals[0]), _from_dict(vs, vals[1]) )
     else:
         return [ (vals[vs[i]] if vs[i] in vals else missing) \
-                 for i in xrange(0, len(vs)) ]
+                 for i in range(0, len(vs)) ]
 
 def traceConstantVars(lvl):
   vs = lvl['variables']
   table = lvl['data'][0]
   cInds = [ (x[0], list(x[1])[0]) for x in
-    enumerate([set([table[row][col] for row in xrange(len(table))])
-                for col in xrange(len(vs))]) if len(x[1]) == 1 ]
+    enumerate([set([table[row][col] for row in range(len(table))])
+                for col in range(len(vs))]) if len(x[1]) == 1 ]
   return [ (vs[x[0]], x[1])  for x in cInds ]
 
 def substitutions(expr, replMs):

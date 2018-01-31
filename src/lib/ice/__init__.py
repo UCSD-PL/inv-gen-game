@@ -14,8 +14,7 @@ ICE_PATH = MYDIR + \
 
 
 def parseAbstractionFile(fname):
-    lines = filter(lambda x: x != '',
-                   map(lambda x: x.strip(), open(fname).read().split("\n")))
+    lines = [x for x in [x.strip() for x in open(fname).read().split("\n")] if x != '']
     decls = []
     invs = {}
     label_re = re.compile(
@@ -35,8 +34,7 @@ def parseAbstractionFile(fname):
 
 
 def parseInvariantsFile(fname):
-    lines = filter(lambda x: x != '',
-                   map(lambda x: x.strip(), open(fname).read().split("\n")))
+    lines = [x for x in [x.strip() for x in open(fname).read().split("\n")] if x != '']
     label_re = re.compile("^[^ ]* [^ :]*:$")
     label_lines = [l for l in lines if label_re.match(l)]
     assert (len(label_lines) == 1)  # Single loop header so single invariant

@@ -7,16 +7,16 @@ import sys;
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print "Usage: <db_file>"
+        print("Usage: <db_file>")
 
     s = open_sqlite_db(sys.argv[1])()
 
     for w in workers(s):
-        print w.name, done_tutorial(w), len(list(w.events)), experiments(w)
-        print "Finished lvls: "
+        print(w.name, done_tutorial(w), len(list(w.events)), experiments(w))
+        print("Finished lvls: ")
         for lvl in finished_levels(w):
-            print "   ", lvl
+            print("   ", lvl)
 
-        print "Found invs: "
+        print("Found invs: ")
         for inv in found_invs(w):
-            print "   ", inv
+            print("   ", inv)

@@ -34,13 +34,13 @@ def verify(lvl, invs, timeout=None, overfittedSet=None, nonindSet=None,
   (overfitted, _), (nonind, _), sound, violations = tryAndVerifyLvl(lvl, invs,
     set(), timeout)
 
-  print "OVERFITTED:", overfitted
-  print "NONIND:", nonind
-  print "SOUND:", sound
-  print "VIOLATIONS:", violations
-  print
-  print "PROVED:", not violations
-  print
+  print("OVERFITTED:", overfitted)
+  print("NONIND:", nonind)
+  print("SOUND:", sound)
+  print("VIOLATIONS:", violations)
+  print()
+  print("PROVED:", not violations)
+  print()
 
   if overfittedSet is not None:
     overfittedSet.update(x[0] for x in overfitted)
@@ -81,29 +81,29 @@ def processLevel(args, lvl, lvls=None, lvlName=None, additionalInvs=[],
   invs.update(additionalInvs)
 
   if lvlName is not None:
-    print "_" * 40
-    print "RESULTS FOR LEVEL", lvlName
-    print
-  print "ENAMES:", ", ".join(actualEnames)
-  print "LVLS:", ", ".join(actualLvls)
-  print "LVLSETS:", ", ".join(actualLvlsets)
+    print("_" * 40)
+    print("RESULTS FOR LEVEL", lvlName)
+    print()
+  print("ENAMES:", ", ".join(actualEnames))
+  print("LVLS:", ", ".join(actualLvls))
+  print("LVLSETS:", ", ".join(actualLvlsets))
   if len(actualWorkers) < 6:
-    print "WORKERS:", ", ".join(actualWorkers)
+    print("WORKERS:", ", ".join(actualWorkers))
   else:
-    print "UNIQUE WORKERS:", len(actualWorkers)
+    print("UNIQUE WORKERS:", len(actualWorkers))
   if len(actualAssignments) < 3:
-    print "ASSIGNMENTS:", ", ".join(actualAssignments)
+    print("ASSIGNMENTS:", ", ".join(actualAssignments))
   else:
-    print "UNIQUE ASSIGNMENTS:", len(actualAssignments)
+    print("UNIQUE ASSIGNMENTS:", len(actualAssignments))
   if len(additionalInvs) < 6:
-    print "ADDITIONAL INVARIANTS:", ", ".join(str(x) for x in additionalInvs)
+    print("ADDITIONAL INVARIANTS:", ", ".join(str(x) for x in additionalInvs))
   else:
-    print "ADDITIONAL INVARIANTS:", len(additionalInvs)
+    print("ADDITIONAL INVARIANTS:", len(additionalInvs))
   if len(invs) < 6:
-    print "UNIQUE INVARIANTS:", ", ".join(map(str, invs))
+    print("UNIQUE INVARIANTS:", ", ".join(map(str, invs)))
   else:
-    print "UNIQUE INVARIANTS:", len(invs)
-  print
+    print("UNIQUE INVARIANTS:", len(invs))
+  print()
 
   payload = {
     "enames": list(actualEnames),
@@ -185,20 +185,20 @@ if __name__ == "__main__":
 
   if args.bpl:
     if args.auto or args.read or args.write:
-      print "--auto, --modes, --read, --write are not supported with --bpl"
+      print("--auto, --modes, --read, --write are not supported with --bpl")
       exit(1)
     try:
       lvl = loadBoogieFile(args.bpl, False)
     except Exception as e:
-      print "Couldn't load boogie file--is it desugared?"
+      print("Couldn't load boogie file--is it desugared?")
       raise e
   elif args.lvlset:
     if args.auto and not args.read:
-      print "--read must be specified with --auto"
+      print("--read must be specified with --auto")
       exit(1)
     lvlset, lvls = loadBoogieLvlSet(args.lvlset)
   else:
-    print "Either --bpl or --lvlset must be specified"
+    print("Either --bpl or --lvlset must be specified")
     exit(1)
 
   additionalInvs = {}
@@ -215,11 +215,11 @@ if __name__ == "__main__":
           try:
             inv = parseExprAst(invstr)
             if tautology(expr_to_z3(inv, AllIntTypeEnv())):
-              print "Dropping additional invariant (tautology): ", inv
+              print("Dropping additional invariant (tautology): ", inv)
               continue
           except RuntimeError:
             # Some invariants are too large to parse
-            print "Dropping additional invariant (parse): ", inv
+            print("Dropping additional invariant (parse): ", inv)
             continue
           except Unknown:
             # Timeouts could be valid invariants
@@ -227,9 +227,9 @@ if __name__ == "__main__":
           invs.append(inv)
         additionalInvs[lvlName] = invs
 
-  print "ADDITIONAL INVARIANTS LOADED FOR LVLS:", \
-    ", ".join(additionalInvs.keys())
-  print
+  print("ADDITIONAL INVARIANTS LOADED FOR LVLS:", \
+    ", ".join(list(additionalInvs.keys())))
+  print()
 
   if args.bpl:
     # If a BPL file is specified we just look up invariants and try to prove
@@ -254,7 +254,7 @@ if __name__ == "__main__":
 
       now = datetime.now()
 
-      for lvlName, lvl in lvls.items():
+      for lvlName, lvl in list(lvls.items()):
         # Allow processing of only some levels in a levelset
         if args.lvls:
           if lvlName not in args.lvls:
@@ -306,7 +306,7 @@ if __name__ == "__main__":
                 proved, verifyTime = res
 
             if proved:
-              print "Skipping", lvlName, "(already proved)"
+              print("Skipping", lvlName, "(already proved)")
               continue
 
             q = s.query(Event.id).filter(Event.type == "FoundInvariant")
@@ -319,11 +319,11 @@ if __name__ == "__main__":
             res = q.all()
             newInvs = len(res)
 
-            print "Combined mode:",
+            print("Combined mode:", end=' ')
             if newInvs:
-              print newInvs, "new invariants for", lvlName, "since last run"
+              print(newInvs, "new invariants for", lvlName, "since last run")
             else:
-              print "Skipping", lvlName, "(no new invariants)"
+              print("Skipping", lvlName, "(no new invariants)")
               continue
 
             if pool is None:
@@ -373,8 +373,8 @@ if __name__ == "__main__":
                 verifyTime = datetime.fromtimestamp(0)
 
               if proved:
-                print "Skipping worker", worker, "on", lvlName, \
-                  "(already proved)"
+                print("Skipping worker", worker, "on", lvlName, \
+                  "(already proved)")
                 continue
 
               q = s.query(Event.id).filter(Event.type == "FoundInvariant")
@@ -387,13 +387,13 @@ if __name__ == "__main__":
               res = q.all()
               newInvs = len(res)
 
-              print "Individual mode:",
+              print("Individual mode:", end=' ')
               if newInvs:
-                print newInvs, "new invariants for worker", worker, "on", \
-                  lvlName, "since last run"
+                print(newInvs, "new invariants for worker", worker, "on", \
+                  lvlName, "since last run")
               else:
-                print "Skipping worker", worker, "on", lvlName, \
-                  "(no new invariants)"
+                print("Skipping worker", worker, "on", lvlName, \
+                  "(no new invariants)")
                 continue
 
               if pool is None:
@@ -448,8 +448,8 @@ if __name__ == "__main__":
                 verifyTime = datetime.fromtimestamp(0)
 
               if proved:
-                print "Skipping worker", worker, "assignment ", \
-                  assignment, "on", lvlName, "(already proved)"
+                print("Skipping worker", worker, "assignment ", \
+                  assignment, "on", lvlName, "(already proved)")
                 continue
 
               q = s.query(Event.id).filter(Event.type == "FoundInvariant")
@@ -462,13 +462,13 @@ if __name__ == "__main__":
               res = q.all()
               newInvs = len(res)
 
-              print "Individual-play mode:",
+              print("Individual-play mode:", end=' ')
               if newInvs:
-                print newInvs, "new invariants for worker", worker, \
-                  "assignment", assignment, "on", lvlName, "since last run"
+                print(newInvs, "new invariants for worker", worker, \
+                  "assignment", assignment, "on", lvlName, "since last run")
               else:
-                print "Skipping worker", worker, "assignment", assignment, \
-                  "on", lvlName, "(no new invariants)"
+                print("Skipping worker", worker, "assignment", assignment, \
+                  "on", lvlName, "(no new invariants)")
                 continue
 
               if pool is None:
@@ -481,14 +481,14 @@ if __name__ == "__main__":
                     assignment=assignment)))
 
           else:
-            print "UNSUPPORTED MODE:", args.mode
+            print("UNSUPPORTED MODE:", args.mode)
             exit(1)
 
       if pool is not None:
         pool.close()
         while asyncres:
-          print len(asyncres), "workers remaining"
-          asyncres = filter(lambda res: not res.ready(), asyncres)
+          print(len(asyncres), "workers remaining")
+          asyncres = [res for res in asyncres if not res.ready()]
           time.sleep(10)
         pool.terminate()
         pool.join()
@@ -496,5 +496,5 @@ if __name__ == "__main__":
       if not args.auto:
         break
 
-      print "Finished pass; waiting 30 seconds"
+      print("Finished pass; waiting 30 seconds")
       time.sleep(30)

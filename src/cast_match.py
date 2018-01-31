@@ -49,7 +49,7 @@ class Substitution(dict):
 
 
 def NYI(ast):
-    print "Can't handle: "
+    print("Can't handle: ")
     ast.show()
     assert False
 
@@ -95,7 +95,7 @@ def unify(ast1, ast2, subst=None):
 
     if isinstance(ast1, Var):
         if not ast1.is_optional() and ast2 is None:
-            print "Required var {} not matched to anything".format(ast1)
+            print("Required var {} not matched to anything".format(ast1))
             return None
         add_to_substitution(subst, ast1, ast2)
         return subst
@@ -116,7 +116,7 @@ def unify(ast1, ast2, subst=None):
             add_to_substitution(subst, attr1, attr2)
         else:
             if attr1 != attr2:
-                print "Different attrs: ", attr1, attr2
+                print("Different attrs: ", attr1, attr2)
                 return None
 
     def aggregate_children(children):
@@ -146,7 +146,7 @@ def unify(ast1, ast2, subst=None):
     ast1_children = aggregate_children(ast1.children())
     ast2_children = aggregate_children(ast2.children())
 
-    for name in set(ast1_children.keys()).union(ast2_children.keys()):
+    for name in set(ast1_children.keys()).union(list(ast2_children.keys())):
         child1 = ast1_children.get(name, None)
         child2 = ast2_children.get(name, None)
 
@@ -157,19 +157,19 @@ def unify(ast1, ast2, subst=None):
 
         if isinstance(child1, dict) and isinstance(child2, dict):
             if set(child1.keys()) == set(child2.keys()):
-                for idx in child1.keys():
+                for idx in list(child1.keys()):
                     subst = unify(child1[idx], child2[idx], subst)
-            elif (len(child1.keys())) == 1 or (len(child2.keys())) == 1:
-                if len(child2.keys()) == 1:
+            elif (len(list(child1.keys()))) == 1 or (len(list(child2.keys()))) == 1:
+                if len(list(child2.keys())) == 1:
                     t = child1
                     child1 = child2
                     child2 = t
 
-                child1_subp = child1[child1.keys()[0]]
-                for (idx, child) in child2.items():
+                child1_subp = child1[list(child1.keys())[0]]
+                for (idx, child) in list(child2.items()):
                     suffix = "[{}]".format(idx)
                     new_subst = unify(child1_subp, child, copy(subst))
-                    new_keys = set(new_subst.keys()).difference(subst.keys())
+                    new_keys = set(new_subst.keys()).difference(list(subst.keys()))
                     for new_k in new_keys:
                         subst[new_k.instantiate(suffix)] = new_subst[new_k]
             else:

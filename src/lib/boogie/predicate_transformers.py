@@ -37,7 +37,7 @@ def sp_stmt(stmt, pred, typeEnv):
         assignee = str(stmt.lhs)
         # Should already be SSA-ed
         assert(assignee not in expr_read(stmt.rhs) and \
-              (assignee not in map(str, ids(pred))))
+              (assignee not in list(map(str, ids(pred)))))
         lhs = typeEnv[stmt.lhs](assignee)
         rhs = expr_to_z3(stmt.rhs, typeEnv)
         return And(lhs == rhs, pred)

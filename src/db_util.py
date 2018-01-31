@@ -74,7 +74,7 @@ def allInvs(session, enames=None, lvls=None, lvlsets=None, workers=None,
 
       yield (row[5], row[6])
 
-  return set(dict(gen()).iteritems())
+  return set(dict(gen()).items())
 
 def allWorkers(session, **kwargs):
   workers = set()
@@ -120,7 +120,7 @@ def addEvent(sourceName, typ, time, ename,  addr, data, session, mturkId):
     payl["lvlid"] = data[1]
     if typ == "FinishLevel":
       payl["verified"] = data[2]
-      invs = zip(data[3], [ str(esprimaToBoogie(x, {})) for x in data[4] ])
+      invs = list(zip(data[3], [ str(esprimaToBoogie(x, {})) for x in data[4] ]))
       payl["all_found"] = invs;
     colSwap = data[-2]
     if colSwap is not None:
@@ -148,7 +148,7 @@ def addEvent(sourceName, typ, time, ename,  addr, data, session, mturkId):
   elif (typ == "GenNext.Solved" or typ == "GenNext.NoNewRows"):
     payl = data
   else:
-    print "Unknown event type: ", typ
+    print("Unknown event type: ", typ)
 
   e = Event(type=typ,\
             source=src,\

@@ -59,7 +59,7 @@ def strongly_connected_components(graph):
 def collapse_scc(g, ccs):
     # TODO: Assert ccs is a partitioning of g's edges
     cc_i = { x : ind for (ind, comp) in enumerate(ccs) for x in comp }
-    g1 = { i : set([]) for i in xrange(len(ccs)) }
+    g1 = { i : set([]) for i in range(len(ccs)) }
     for n in g:
         for n1 in g[n]:
             if (cc_i[n] != cc_i[n1]):
@@ -67,17 +67,17 @@ def collapse_scc(g, ccs):
     return g1
 
 def topo_sort(g):
-    rev_g = { n : set() for n in g.iterkeys() }
+    rev_g = { n : set() for n in g.keys() }
 
     for n in g:
         for n1 in g[n]:
             rev_g[n1].add(n)
 
-    roots = set([ n for n in g.keys() if len(g[n]) == 0 ])
+    roots = set([ n for n in list(g.keys()) if len(g[n]) == 0 ])
     wl = [ x for x in roots ]
     ind = 0
-    order = { n : 0 for n in g.keys() }
-    cnt = { n : (1 if n in roots else 0) for n in g.keys() }
+    order = { n : 0 for n in list(g.keys()) }
+    cnt = { n : (1 if n in roots else 0) for n in list(g.keys()) }
 
     while (len(wl) > 0):
         # INV: cnt[n] == # times n appears in wl
@@ -103,4 +103,4 @@ def topo_sort(g):
         for n1 in g[n]:
             assert order[n] > order[n1]
 
-    return [ order[i] for i in xrange(len(g)) ]
+    return [ order[i] for i in range(len(g)) ]

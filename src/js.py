@@ -252,5 +252,5 @@ def boogieToEsprima(inv):
 if __name__ == "__main__":
   tmpP = Parser()
   tmpT = tmpP.parse("  i == 4 && b == 44")
-  print invJSToZ3("i == 4", { "i" : Int })
-  print invJSToZ3("  i == 4 && b == 44", { "i" : Int, "b" : Int })
+  print(invJSToZ3("i == 4", { "i" : Int }))
+  print(invJSToZ3("  i == 4 && b == 44", { "i" : Int, "b" : Int }))

@@ -18,10 +18,10 @@ mc = connect(args.credentials_file, args.sandbox)
 notification_subj = "Inv-Game Experiment Notifaction"
 previous_num_left = None
 while 1:
-    print ""
+    print("")
     num_left = hit_status(mc, e, args.sandbox)
     if num_left == 0:
-        print "All HITs in this experiment are done"
+        print("All HITs in this experiment are done")
         send_notification(args.email, notification_subj, \
                 "All hits in experiment {0} are done.".format(args.ename))
         exit (0)
@@ -32,7 +32,7 @@ while 1:
               "An additional {0} HIT(s) are done in experiment {1}." +\
               " {2} HIT(s) left.".format(done_in_period, args.ename, num_left))
         previous_num_left = num_left
-        print "\nHITS left :", num_left
-        print   "Time      :", str(datetime.datetime.now())
-        print   "Sleeping  :", args.delay, "seconds"
+        print("\nHITS left :", num_left)
+        print("Time      :", str(datetime.datetime.now()))
+        print("Sleeping  :", args.delay, "seconds")
         time.sleep(args.delay)

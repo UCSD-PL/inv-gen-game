@@ -38,7 +38,7 @@ class SSAEnv:
         del s._cnt[v]
 
     def changed(s):
-        return s._cnt.keys()
+        return list(s._cnt.keys())
 
     def replm(s):
         replm = copy(s._parent.replm()) if (s._parent) else {}
@@ -54,9 +54,9 @@ def unssa_str(s):
     return s[:s.rfind("_ssa_")]
 
 def unssa_z3_model(m, repl_m):
-    updated = map(str, repl_m.iterkeys())
-    original = [ x for x in m.iterkeys() if not is_ssa_str(x) and x not in updated ]
+    updated = list(map(str, iter(repl_m.keys())))
+    original = [ x for x in m.keys() if not is_ssa_str(x) and x not in updated ]
     res = { (unssa_str(x) if is_ssa_str(x) else x) : m.get(x, None)
-                for x in original + list(map(str, repl_m.itervalues()))
+                for x in original + list(map(str, iter(repl_m.values())))
           }
     return frozendict(res)

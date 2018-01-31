@@ -36,16 +36,16 @@ def publish_hit(credentials, isSandbox, ename, num_hits, lvlset, adminToken,
     if mc is None:
       mc = connect(credentials, isSandbox)
     balance = mc.get_account_balance()
-    print "Balance:", balance[0]
+    print("Balance:", balance[0])
     exp = Experiment(ename, True)
-    print "Running under experiment", ename
+    print("Running under experiment", ename)
 
     for i in range(num_hits):
         port = get_unused_port()
         srid = exp.create_unique_server_run_id()
         p = start_server(port, ename, srid, lvlset, adminToken, db, email,
             maxlvls, colSwap, replay)
-        print "Started server run", srid, "on port", port, "with pid", p.pid
+        print("Started server run", srid, "on port", port, "with pid", p.pid)
         start_url =\
             "https://zoidberg.ucsd.edu:{0}/mturk_landing.html?mode=" + mode
         if (no_ifs):
@@ -66,7 +66,7 @@ def publish_hit(credentials, isSandbox, ename, num_hits, lvlset, adminToken,
                           duration=timedelta(0, 45*60),
                           qualifications=Qualifications(quals))
         assert len(r) == 1
-        print "Created", kind, "HIT", r[0].HITId
+        print("Created", kind, "HIT", r[0].HITId)
         exp.add_session(ServerRun(srid, r[0].HITId, p.pid, port))
     return exp
 

@@ -24,11 +24,11 @@ def entryFactory(ind):
     return entryF
 
 def start_tp(loopId):
-    print "Starting tracepoint ", loopId
+    print("Starting tracepoint ", loopId)
     return 0
 
 def end_tp(loopId):
-    print "Ending tracepoint ", loopId
+    print("Ending tracepoint ", loopId)
     return 0
 
 def type_conv(typeId):
@@ -45,8 +45,8 @@ def val_conv(ptr, typ):
 def add_val(name, typ, addr):
     s = cast(name, c_char_p)
     typ = type_conv(typ)
-    print "Adding value of ", s.value, " of type ", typ, " located at ", addr,\
-     " with value ", val_conv(addr, typ)
+    print("Adding value of ", s.value, " of type ", typ, " located at ", addr,\
+     " with value ", val_conv(addr, typ))
     return 0
 
 funcs = {
@@ -84,8 +84,8 @@ end_tp_ftype = CFUNCTYPE(c_int, c_int)
 end_tp_cb = end_tp_ftype(end_tp)
 l.register_cb(9, end_tp_cb);
 
-for i in xrange(1, 2):
+for i in range(1, 2):
     name = "/home/dimo/work/inv_game/inv-gen-game/dilig-benchmarks/%s.so" % str(i).zfill(2)
-    print name
+    print(name)
     l1 = cdll.LoadLibrary(name)
     l1.main()

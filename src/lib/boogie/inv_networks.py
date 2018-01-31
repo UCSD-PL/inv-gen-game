@@ -23,7 +23,7 @@ def filterCandidateInvariants(bbs, preCond, postCond, cutPoints, timeout=None):
     # Single loop case. So for now only handle these. Can probably extend later
 
     aiTyEnv = AllIntTypeEnv()
-    cpWorkQ = set([ entryBB ] + cps.keys())
+    cpWorkQ = set([ entryBB ] + list(cps.keys()))
 
     while (len(cpWorkQ) > 0):
       cp = cpWorkQ.pop()
@@ -106,7 +106,7 @@ def filterCandidateInvariants(bbs, preCond, postCond, cutPoints, timeout=None):
     violations = checkInvNetwork(bbs, preCond, postCond, sound, timeout)
     for v in violations:
       if (not v.isSafety()):
-        print v
+        print(v)
       assert (v.isSafety()) # sound should be an inductive network
 
     return (overfitted, nonind, sound, violations)
@@ -128,8 +128,8 @@ def checkInvNetwork(bbs, preCond, postCond, cutPoints, timeout=None):
 
         nextBB, nextReplMaps = path[-1]
         processedStmts = []
-        ssa_stmts = zip(_ssa_stmts(bbs[nextBB].stmts, nextReplMaps),
-                        nextReplMaps)
+        ssa_stmts = list(zip(_ssa_stmts(bbs[nextBB].stmts, nextReplMaps),
+                        nextReplMaps))
 
         for (s, replM) in ssa_stmts:
           if (isinstance(s, AstAssert)):

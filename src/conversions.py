@@ -13,12 +13,12 @@ def daikonToBoogieExpr(astn):
     except:
       raise Exception("Don't know how to translate " + str(astn))
   elif (isinstance(astn, dast.AstBinExpr)):
-    ln,rn = map(daikonToBoogieExpr, [astn.lhs, astn.rhs])
+    ln,rn = list(map(daikonToBoogieExpr, [astn.lhs, astn.rhs]))
 
     # We can translate power operators to a constant power
     if (astn.op == "**" and isinstance(astn.rhs, dast.AstNumber)):
       res = ln;
-      for _ in xrange(astn.rhs.num-1):
+      for _ in range(astn.rhs.num-1):
         res = bast.AstBinExpr(res, '*', ln)
       return res
     else:
@@ -88,7 +88,7 @@ def daikonToBoogieExpr(astn):
       raise Exception("Can't convert HasValues: Too many options: " +\
                       str(len(astn.values)));
     cn = daikonToBoogieExpr(astn.expr)
-    values = map(daikonToBoogieExpr, astn.values)
+    values = list(map(daikonToBoogieExpr, astn.values))
     return bast.ast_or([bast.AstBinExpr(cn, "==", v) for v in values])
   else:
     raise Exception("Don't know how to translate " + str(astn))

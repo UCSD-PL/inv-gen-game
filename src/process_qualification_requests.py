@@ -31,10 +31,10 @@ for server_run in exp.server_runs:
 
 try:
     balance = mc.get_account_balance()
-    print "Balance:", balance[0]
+    print("Balance:", balance[0])
     r = mc.get_qualification_requests(args.qualtype)
-    print "Id                             Submitted            " +\
-          "Worker         Code  Action"
+    print("Id                             Submitted            " +\
+          "Worker         Code  Action")
     for qt in r:
         answers = qt.answers
         code = answers[0][0].fields[0]
@@ -46,8 +46,8 @@ try:
         else:
             action = "nothing - you must reject manually"
 
-        print qt.QualificationRequestId, qt.SubmitTime, qt.SubjectId, \
-              code, action
+        print(qt.QualificationRequestId, qt.SubmitTime, qt.SubjectId, \
+              code, action)
 except Exception:
     print_exc()
     error("Failed...")

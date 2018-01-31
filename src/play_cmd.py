@@ -26,7 +26,7 @@ set_history_length(1000);
 if __name__ == "__main__":
     args = p.parse_args();
     lvlsetName, lvls = loadBoogieLvlSet(args.lvlset)
-    lvlNames = lvls.keys();
+    lvlNames = list(lvls.keys());
 
     while (len(lvlNames) > 0):
       lvlName = lvlNames.pop();
@@ -52,53 +52,53 @@ if __name__ == "__main__":
 
       while (True):
         # Display Menu
-        print lvlName, "round", roundN
-        print "All Tried(", len(curInvs),"): ", " ".join(map(str, curInvs))
-        print "Sound(", len(sound),"): ", " ".join(map(str, sound))
-        print "Overfit(", len(overfitted),"): ", " ".join(map(str, overfitted))
-        print "Nonind(", len(nonind),"): ", " ".join(map(str, nonind))
-        print "Green Rows:"
-        print " ".join(vs), "InvFalse?";
-        for i in xrange(len(greenRows)):
+        print(lvlName, "round", roundN)
+        print("All Tried(", len(curInvs),"): ", " ".join(map(str, curInvs)))
+        print("Sound(", len(sound),"): ", " ".join(map(str, sound)))
+        print("Overfit(", len(overfitted),"): ", " ".join(map(str, overfitted)))
+        print("Nonind(", len(nonind),"): ", " ".join(map(str, nonind)))
+        print("Green Rows:")
+        print(" ".join(vs), "InvFalse?");
+        for i in range(len(greenRows)):
           row = greenRows[i]
           if i < len(greenRowsEvals):
             ev = 'x' if not greenRowsEvals[i] else ""
           else:
             ev = ""
-          print " ".join(map(str, row)), ev
+          print(" ".join(map(str, row)), ev)
 
-        print "Red Rows: "
-        for i in xrange(len(redRowsL)):
+        print("Red Rows: ")
+        for i in range(len(redRowsL)):
           row = redRowsL[i]
           if i < len(redRowsEvals):
             ev = 'x' if redRowsEvals[i] else ""
           else:
             ev = ""
-          print " ".join(map(str, row)), ev;
+          print(" ".join(map(str, row)), ev);
 
         # Ask for Input
         while (True):
-          inv = raw_input("Your invariant: ");
+          inv = input("Your invariant: ");
           pp_inv = sub(r'([^<>=])=([^<>=])', r'\1==\2', inv)
-          print pp_inv
+          print(pp_inv)
           try:
             binv = parseExprAst(pp_inv)
             break
           except Exception:
-            print "Error: Can't parse ", inv
+            print("Error: Can't parse ", inv)
 
         invVars = set(expr_read(binv))
 
-        for i in xrange(len(greenRows)):
+        for i in range(len(greenRows)):
           gR = greenRows[i]
           env = { vs[i]: (gR[i] if gR[i] != None else 0)
-                    for i in xrange(len(gR)) }
+                    for i in range(len(gR)) }
           greenRowsEvals[i] = evalPred(binv, env);
 
         redRowsEvals = { }
-        for i in xrange(len(redRows)):
+        for i in range(len(redRows)):
           rR = redRowsL[i]
-          env = { vs[i]: rR[i] for i in xrange(len(rR)) if rR[i] != '*' }
+          env = { vs[i]: rR[i] for i in range(len(rR)) if rR[i] != '*' }
           if (len(invVars.difference(set(env.keys()))) > 0):
             # Not all cariables in binv are defined - can't evalute
             pass
@@ -107,15 +107,15 @@ if __name__ == "__main__":
 
         if (len([x for x in greenRowsEvals if not greenRowsEvals[x]]) > 0 or\
             len([x for x in redRowsEvals if redRowsEvals[x]])):
-          print "======================================================="
-          print "Doesn't satisfy all rows!"
+          print("=======================================================")
+          print("Doesn't satisfy all rows!")
           continue;
 
-        redRowsL = [ redRowsL[i] for i in xrange(0, len(redRowsL))
+        redRowsL = [ redRowsL[i] for i in range(0, len(redRowsL))
                         if i not in redRowsEvals ]
         redRows = set(redRowsL);
 
-        print "Verifying..."
+        print("Verifying...")
         curInvs.add(binv);
         # Try and Verify
         ((overfitted, _), (nonind, _), sound, violations) =\
@@ -133,5 +133,5 @@ if __name__ == "__main__":
           redRows.add(tuple([endEnv.get(v, '*') for v in vs]))
         redRowsL = list(redRows)
         roundN += 1
-        print "======================================================="
-      print "Congrats! You solved :", lvlName, " after ", roundN, " rounds!"
+        print("=======================================================")
+      print("Congrats! You solved :", lvlName, " after ", roundN, " rounds!")

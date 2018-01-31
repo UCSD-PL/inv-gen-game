@@ -42,8 +42,8 @@ def connect(credentials_file, sandbox, quiet = False):
     HOST = None if (not sandbox) else "mechanicalturk.sandbox.amazonaws.com"
 
     if (not quiet):
-        print "Connecting to", ("production" if HOST == None else "sandbox"),\
-            " as ", user, " with access key ", a_key, "..."
+        print("Connecting to", ("production" if HOST == None else "sandbox"),\
+            " as ", user, " with access key ", a_key, "...")
 
     try:
         mc = MTurkConnection(a_key, s_key, host=HOST)
@@ -51,7 +51,7 @@ def connect(credentials_file, sandbox, quiet = False):
         error("Failed connecting")
 
     if (not quiet):
-        print "Connected."
+        print("Connected.")
     return mc
 
 
@@ -71,31 +71,31 @@ def hit_disposed(mc, hit_id):
     return not (hit_id in all_hits)
     
 def hit_status(mc, e, sandbox):
-    print "HIT ID                         Assignment ID                  Worker ID"
+    print("HIT ID                         Assignment ID                  Worker ID")
     changed = False
     num_left = 0
     for sr in e.server_runs:
         try:
             r = mc.get_assignments(sr.hit_id)
         except:
-            print sr.hit_id, "cannot get HIT; probably was in", ("production" if sandbox else "sandbox")
+            print(sr.hit_id, "cannot get HIT; probably was in", ("production" if sandbox else "sandbox"))
             continue
             
         assert(len(r) == 0 or len(r) == 1)
         if hit_disposed(mc, sr.hit_id):
-            print sr.hit_id, "was disposed"
+            print(sr.hit_id, "was disposed")
         elif len(r) == 0:
-            print sr.hit_id, "not completed                  not completed"
+            print(sr.hit_id, "not completed                  not completed")
             num_left = num_left + 1
             continue
         elif len(r) == 1:
             assn = r[0]
-            print sr.hit_id, assn.AssignmentId, assn.WorkerId
+            print(sr.hit_id, assn.AssignmentId, assn.WorkerId)
         if (sr.pid != 0):
             try:
                 os.kill(sr.pid, signal.SIGTERM)
             except:
-                print "Could not kill process " + str(sr.pid) + ", probably already dead"
+                print("Could not kill process " + str(sr.pid) + ", probably already dead")
             sr.pid = 0
             changed = True
 

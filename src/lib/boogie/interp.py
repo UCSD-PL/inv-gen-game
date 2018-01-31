@@ -1,7 +1,7 @@
 from collections import namedtuple
-from bb import BB, get_bbs, bbEntry
+from .bb import BB, get_bbs, bbEntry
 from copy import copy
-from ast import AstAssert, AstAssume, AstHavoc, AstAssignment, AstGoto, \
+from .ast import AstAssert, AstAssume, AstHavoc, AstAssignment, AstGoto, \
   AstReturn, AstUnExpr, AstBinExpr, AstNumber, AstId, AstTrue, AstFalse
 
 # Program = Dict[str, BB]
@@ -218,7 +218,7 @@ def trace_n(bbs, state, nsteps, rand, filt):
   active_traces = [ [state] ] 
   inactive_traces = []
 
-  for step in xrange(nsteps):
+  for step in range(nsteps):
     new_traces = [ ]
 
     for t in active_traces:
@@ -286,7 +286,7 @@ if __name__ == "__main__":
         check(v, bool)
         return v
 
-      feasible_states = filter(lambda x:  lookahead_one_filter(bbs, x), states)
+      feasible_states = [x for x in states if lookahead_one_filter(bbs, x)]
       return [choice(feasible_states)]
     filt_f = f
   else:
@@ -299,15 +299,15 @@ if __name__ == "__main__":
 
   def pp_state(st):
     return "[{},{}]: ".format(st.pc.bb, st.pc.next_stmt) + \
-           ",".join([k + "={}".format(v) for (k, v) in st.store.iteritems()])
+           ",".join([k + "={}".format(v) for (k, v) in st.store.items()])
 
   def pp_trace(t):
     return "->\n".join(map(pp_state, t))
 
 
-  print "Active({}):".format(len(active))
+  print("Active({}):".format(len(active)))
   for t in active:
-    print pp_trace(t)
-  print "Inactive({}):".format(len(inactive))
+    print(pp_trace(t))
+  print("Inactive({}):".format(len(inactive)))
   for t in inactive:
-    print pp_trace(t)
+    print(pp_trace(t))

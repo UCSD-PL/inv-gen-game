@@ -31,7 +31,7 @@ def get_bbs(filename):
             isinstance(stmt, AstAssignment)):
             bbs[curLbl].stmts.append(stmt)
         elif (isinstance(stmt, AstGoto)):
-            bbs[curLbl].successors.extend(map(str, stmt.labels))
+            bbs[curLbl].successors.extend(list(map(str, stmt.labels)))
             curLbl = None;
         elif (isinstance(stmt, AstReturn)):
             curLbl = None;

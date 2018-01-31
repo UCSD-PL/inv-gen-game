@@ -36,14 +36,14 @@ def write_trace_col_format(lvl, trace, marker = None):
   trace_str = trace_to_str(trace)
   marker_str = ("." + marker) if marker else ""
   trace_file = lvl["path"][0][:-4] + marker_str + ".auto.trace"
-  print "Writing trace to file:", trace_file
+  print("Writing trace to file:", trace_file)
   with open(trace_file, "w") as fh:
     fh.write(trace_str)
 
 def trace_to_str(trace):
   if len(trace) == 0:
     return ""
-  keys = trace[0].keys()
+  keys = list(trace[0].keys())
   keys.sort()
   return " ".join(keys) + "\n" + \
          "\n".join([" ".join([str(e[k]) for k in keys]) for e in trace]) + "\n"
@@ -89,13 +89,13 @@ def find_split_pred(fname):
 def cat(fname):
   try:
     with open(fname, 'r') as f:
-      print(f.read())
+      print((f.read()))
   except IOError:
-    print("Could not read" + fname)
+    print(("Could not read" + fname))
 
 def print_comparison(lvl_name):
   lvl = lvls[lvl_name]
-  print("== Comparison for " + lvl_name + " ==")
+  print(("== Comparison for " + lvl_name + " =="))
   cat(find_original_boogie_file(lvl))
   print("== Manual Trace ==")
   cat(lvl["path"][0][:-4] + ".trace")
@@ -108,11 +108,11 @@ def find_original_boogie_file(lvl):
       return p
 
 def run_lvl(lvl_name):
-  print("== " + lvl_name)
+  print(("== " + lvl_name))
   
   lvl = lvls[lvl_name]
   spliter_pred = find_split_pred(find_original_boogie_file(lvl))
-  print("Spliter pred: " + str(spliter_pred))
+  print(("Spliter pred: " + str(spliter_pred)))
 
   if spliter_pred:
     print("Skiping programs with spliter preds.")
@@ -126,7 +126,7 @@ def run_lvl(lvl_name):
   entry = loop.header[0]
   liveVars = list(livevars(bbs)[entry])
   liveVars.sort()
-  print("live vars: " + str(liveVars))
+  print(("live vars: " + str(liveVars)))
   loopHdr = loop.loop_paths[0][0]
 
   store_gen = levels.varproduct({v: gen(v,liveVars) for v in liveVars})
@@ -153,17 +153,17 @@ def run_lvl(lvl_name):
       print("Exhausted candidate stores (getting duplicate stores)")
       break
     tried.add(hashable)
-    print("Evaluating in starting store: " + str(starting_store))
+    print(("Evaluating in starting store: " + str(starting_store)))
     (active, inactive) = trace_n_from_start(bbs, starting_store, args.limit, rand_f, filt_f)
     traces = active + [ t for t in inactive if finished(t[-1]) ]
     traces = [ [ st.store for st in tr if st.pc.bb == loopHdr ] for tr in traces]
     for trace in traces:
-      print("Found trace of length " + str(len(trace)) + ": ")
+      print(("Found trace of length " + str(len(trace)) + ": "))
       print((trace_to_str(trace)))
       if spliter_pred:
         (t0,t1) = split_trace(trace, spliter_pred)
         if len(t0) >= target_len and len(t1) >= target_len:
-          print("Found split traces with lengths >= " + str(target_len) + ". Writing first " + str(target_len) + " elmts.")
+          print(("Found split traces with lengths >= " + str(target_len) + ". Writing first " + str(target_len) + " elmts."))
           write_trace_col_format(lvl, trace[0:target_len])
           write_trace_col_format(lvl, t0[0:target_len], "0")
           write_trace_col_format(lvl, t1[0:target_len], "1")
@@ -171,7 +171,7 @@ def run_lvl(lvl_name):
           break
       else:
         if len(trace) >= target_len:
-          print("Found trace with length >= " + str(target_len) + ". Writing first " + str(target_len) + " elmts.")
+          print(("Found trace with length >= " + str(target_len) + ". Writing first " + str(target_len) + " elmts."))
           write_trace_col_format(lvl, trace[0:target_len])
           done = True
           break
@@ -209,7 +209,7 @@ def run_lvl(lvl_name):
 if (args.lvl != ""):
   run_lvl(args.lvl)
 else:
-  for lvl_name in lvls.iterkeys():
+  for lvl_name in lvls.keys():
     run_lvl(lvl_name)
 
 #pdb.set_trace()

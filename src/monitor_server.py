@@ -57,12 +57,12 @@ class ConfiguredExperiment:
     _, lvls = loadBoogieLvlSet(lvlset)
 
     if self.lvls is None:
-      self.lvls = lvls.keys()
+      self.lvls = list(lvls.keys())
 
     try:
       self.exp = Experiment(self.name)
     except IOError:
-      print "Error loading experiment %s" % self.name
+      print("Error loading experiment %s" % self.name)
       # Ignore missing experiments
       return
 
@@ -128,7 +128,7 @@ class ExperimentsConfig:
     self.load_time = time.time()
     self.max_active_hits = jsonconf["maxActiveHits"]
     self.max_hits_per_hour = jsonconf["maxHitsPerHour"]
-    self.expconfs = map(ConfiguredExperiment, jsonconf["experiments"])
+    self.expconfs = list(map(ConfiguredExperiment, jsonconf["experiments"]))
 
   def getLoadTime(self):
     return self.load_time
@@ -152,7 +152,7 @@ class PublishTask:
       "s" * (self.num_hits != 1), self.exp.getName(), self.formatArgs())
 
   def formatArgs(self):
-    return ", ".join("%s=%s" % kv for kv in self.exp.getArgs().items())
+    return ", ".join("%s=%s" % kv for kv in list(self.exp.getArgs().items()))
 
   def execute(self, feedback):
     # Populate default arguments, then override with experiment arguments.
@@ -237,13 +237,13 @@ def getDashboard(inputToken):
     ) \
     .group_by(LvlData.experiment, LvlData.lvl)
 
-  lvlstats = [ dict(zip([
+  lvlstats = [ dict(list(zip([
       "experiment",
       "lvl",
       "nStarted",
       "nFinished",
       "nProved"
-    ], r)) for r in rows ]
+    ], r))) for r in rows ]
   lvlstats.sort(key=lambda x: (x["experiment"], x["lvl"]))
 
   expstats = [ {
@@ -259,11 +259,11 @@ def getDashboard(inputToken):
     "balance": str(balance),
     "experimentsFile": expconf.path,
     "nMaxActiveHits": expconf.getMaxActiveHits(),
-    "nTotalActiveHits": sum(isHitActive(h) for h in hits.values()),
+    "nTotalActiveHits": sum(isHitActive(h) for h in list(hits.values())),
     "nMaxHitsPerHour": expconf.getMaxHitsPerHour(),
-    "nTotalHitsPerHour": sum(isHitPerHour(h) for h in hits.values()),
+    "nTotalHitsPerHour": sum(isHitPerHour(h) for h in list(hits.values())),
     "lastHitCheck": time.time() - expconf.getLoadTime(),
-    "autoFeedback": map(str, auto_feedback),
+    "autoFeedback": list(map(str, auto_feedback)),
     "expstats": expstats,
     "lvlstats": lvlstats
     }
@@ -397,6 +397,6 @@ if __name__ == "__main__":
     host = "0.0.0.0"
     sslContext = MYDIR + "/cert.pem", MYDIR + "/privkey.pem"
 
-  print "Admin Token:", adminToken
-  print "Dashboard URL:", "dashboard.html?adminToken=" + adminToken
+  print("Admin Token:", adminToken)
+  print("Dashboard URL:", "dashboard.html?adminToken=" + adminToken)
   app.run(host=host, port=args.port, ssl_context=sslContext, threaded=True)

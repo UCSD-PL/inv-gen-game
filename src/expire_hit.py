@@ -10,6 +10,6 @@ args = p.parse_args()
 try:
     mc = connect(args.credentials_file, args.sandbox)
     r = mc.expire_hit(args.HITId)
-except Exception,e:
+except Exception as e:
     print_exc()
     error("Failed...")

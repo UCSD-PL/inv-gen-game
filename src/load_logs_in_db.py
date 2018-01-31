@@ -13,7 +13,7 @@ import json
 import sys;
 
 if len(sys.argv) != 4:
-    print "Usage: <db_file> <log_file> <ename>"
+    print("Usage: <db_file> <log_file> <ename>")
     sys.exit(-1)
 
 s = open_sqlite_db(sys.argv[1])()

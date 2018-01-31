@@ -60,8 +60,7 @@ def log_evnt_get_params(aData):
 #
 ###############################################################################
 
-class Payment:
-    __metaclass__ = ABCMeta
+class Payment(metaclass=ABCMeta):
     @abstractmethod
     def make_payment(self):
         pass
@@ -129,27 +128,27 @@ class TutorialPayment(Payment):
 payments = []
 
 def process_payments():
-    print bold_green("\n** Payments")
+    print(bold_green("\n** Payments"))
     total = 0
     for pay in payments:
         if pay.amount() > 0:
-            print "-- " + bold_red("NEED TO PAY") + "  : " + str(pay)
+            print("-- " + bold_red("NEED TO PAY") + "  : " + str(pay))
             total = total + pay.amount()
-    print "-- TOTAL TO PAY : $" + str(total)
+    print("-- TOTAL TO PAY : $" + str(total))
     balance = mc.get_account_balance()
-    print "-- BALANCE      : " + str(balance[0])
+    print("-- BALANCE      : " + str(balance[0]))
     if args.pay:
         if total > balance[0].amount:
-            print "-- INSUFFICIANT FUNDS to pay"
+            print("-- INSUFFICIANT FUNDS to pay")
         else:
-            raw = raw_input("-- Proceed with all the above payments? " +\
+            raw = input("-- Proceed with all the above payments? " +\
                             "[yes to continue] ")
             if raw == "yes":
                 for pay in payments:
                     if pay.amount() > 0:
                         pay.make_payment()
-                        print "-- " + bold_green("PAYED") + "        : " + \
-                              str(pay)
+                        print("-- " + bold_green("PAYED") + "        : " + \
+                              str(pay))
 
 
 def add_payment(pay):
@@ -191,9 +190,9 @@ def add_time_info(aWorkerId, aTime, aEventName, aEventParams):
 
 def process_time_info():
     for workerId in workers:
-        print bold_green("\n** Timing for worker " + workerId)
+        print(bold_green("\n** Timing for worker " + workerId))
         tl = time_info[workerId]
-        print "-- Total time : " + seconds_to_str(tl[-1].time - tl[0].time)
+        print("-- Total time : " + seconds_to_str(tl[-1].time - tl[0].time))
         curr_lvl = ""
         curr_start = 0
         for te in tl:
@@ -206,9 +205,9 @@ def process_time_info():
                 if curr_lvl == "Tutorial":
                     curr_lvl = ""
                     delta = te.time - curr_start
-                    print "-- Tutorial : " + seconds_to_str(delta)
+                    print("-- Tutorial : " + seconds_to_str(delta))
                 else:
-                    print "-- Tutorial : TutorialDone without TutorialStart"
+                    print("-- Tutorial : TutorialDone without TutorialStart")
 
             if te.event_name == "StartLevel":
                 _lvl_set = te.event_params[0]
@@ -223,16 +222,16 @@ def process_time_info():
                 if curr_lvl == fullLvlId:
                     curr_lvl = ""
                     delta = te.time - curr_start
-                    print "-- " + fullLvlId  + " : " + seconds_to_str(delta)
+                    print("-- " + fullLvlId  + " : " + seconds_to_str(delta))
                 else:
-                    print "-- " + fullLvlId + \
-                          " : FinishLevel without StartLevel"
+                    print("-- " + fullLvlId + \
+                          " : FinishLevel without StartLevel")
 
             if te.event_name == "GameDone":
                 if curr_lvl != "":
                     delta = te.time - curr_start
-                    print "-- " + curr_lvl + " (interrupted by GameDone): " +\
-                            seconds_to_str(delta)
+                    print("-- " + curr_lvl + " (interrupted by GameDone): " +\
+                            seconds_to_str(delta))
 
 
 ################################################################################
@@ -254,9 +253,9 @@ e = load_experiment_or_die(args.ename)
 mc = connect(args.credentials_file, args.sandbox)
 
 for s in e.server_runs:
-    print "\n** Server run " + str(s.srid)
+    print("\n** Server run " + str(s.srid))
 
-    print bold_green("++ HIT Status")
+    print(bold_green("++ HIT Status"))
 
     assn_worker_id = None
     assn_id = None
@@ -267,21 +266,21 @@ for s in e.server_runs:
     try:
         r = mc.get_assignments(s.hit_id)
     except Exception:
-        print "-- " + s.hit_id + " cannot get HIT; it was probably in " + \
-                ("production" if args.sandbox else "sandbox")
+        print("-- " + s.hit_id + " cannot get HIT; it was probably in " + \
+                ("production" if args.sandbox else "sandbox"))
         continue
 
     assert(len(r) == 0 or len(r) == 1)
     if len(r) == 0:
-        print "-- HIT: " + s.hit_id + " not completed"
+        print("-- HIT: " + s.hit_id + " not completed")
     else:
-        print "-- HIT: " + s.hit_id + " completed"
+        print("-- HIT: " + s.hit_id + " completed")
         assn = r[0]
         assn_worker_id = assn.WorkerId
         assn_id = assn.AssignmentId
-        print "-- Assignment ID: " + assn_id
-        print "-- Worker ID: " + assn_worker_id
-        print "-- Assignment Status: " + assn.AssignmentStatus
+        print("-- Assignment ID: " + assn_id)
+        print("-- Worker ID: " + assn_worker_id)
+        print("-- Assignment Status: " + assn.AssignmentStatus)
         need_to_pay = assn.AssignmentStatus == "Submitted" # vs "Approved"
         if need_to_pay:
             add_payment(HITPayment(assn_worker_id, s.hit_id, assn_id))
@@ -291,8 +290,8 @@ for s in e.server_runs:
                 answers[ans.qid] = ans.fields[0]
         q = ["fun", "challenging", "prog_experience", "math_experience", \
               "likes", "dislikes", "suggestions", "experience"]
-        print "\n".join(["-- " + n + ": " + str(answers[n])
-                            for n in q if n in answers])
+        print("\n".join(["-- " + n + ": " + str(answers[n])
+                            for n in q if n in answers]))
 
     # process logs
     fname = get_event_log_fname(args.ename, s.srid)
@@ -313,34 +312,34 @@ for s in e.server_runs:
                 if event_name == "FoundInvariant":
                     [lvl_set, lvl_id, js_inv, canon_inv] = event_params[:4]
 
-                    print bold_green("++ FoundInv: " + lvl_set + "." + lvl_id)
-                    print "-- Worker ID: " + worker_id + \
+                    print(bold_green("++ FoundInv: " + lvl_set + "." + lvl_id))
+                    print("-- Worker ID: " + worker_id + \
                             ( "" if worker_id == assn_worker_id else \
-                              " (NOTE: different from worker ID in assignment)")
-                    print "-- IP: " + ip
-                    print "-- Time: " + time_str
-                    print "-- User inv: " + js_inv
+                              " (NOTE: different from worker ID in assignment)"))
+                    print("-- IP: " + ip)
+                    print("-- Time: " + time_str)
+                    print("-- User inv: " + js_inv)
 
 
                 if event_name == "StartLevel":
                     [lvl_set, lvl_id] = event_params[:2]
-                    print bold_green("++ Started: " + lvl_set + "." + lvl_id)
-                    print "-- Time: " + time_str
+                    print(bold_green("++ Started: " + lvl_set + "." + lvl_id))
+                    print("-- Time: " + time_str)
 
 
                 if event_name == "FinishLevel":
                     [lvl_set, lvl_id, proved_the_level, js_invs, canon_invs] \
                       = event_params[:5]
 
-                    print bold_green("++ Finished: " + lvl_set + "." + lvl_id)
-                    print "-- " + ("Proved" if proved_the_level else \
-                                    "Not Proved")
-                    print "-- Worker ID: " + worker_id + \
+                    print(bold_green("++ Finished: " + lvl_set + "." + lvl_id))
+                    print("-- " + ("Proved" if proved_the_level else \
+                                    "Not Proved"))
+                    print("-- Worker ID: " + worker_id + \
                             ( "" if worker_id == assn_worker_id else \
-                              " (NOTE: different from worker ID in assignment)")
-                    print "-- IP: " + ip
-                    print "-- Time when finished: " + time_str
-                    print "-- User invs: " + ", ".join(js_invs)
+                              " (NOTE: different from worker ID in assignment)"))
+                    print("-- IP: " + ip)
+                    print("-- Time when finished: " + time_str)
+                    print("-- User invs: " + ", ".join(js_invs))
 
                     boogie_user_invs = [ esprimaToBoogie(x, {}) \
                                             for x in canon_invs ]
@@ -355,44 +354,44 @@ for s in e.server_runs:
                                 found = False
                                 for boogie_user_inv in boogie_user_invs:
                                     if equiv(boogie_soln_inv, boogie_user_inv):
-                                        print header + "Found as user " +\
+                                        print(header + "Found as user " +\
                                               "predicate (canon version): " + \
-                                              str(boogie_user_inv)
+                                              str(boogie_user_inv))
                                         found = True
                                 if not found:
-                                    print header + "No equiv found"
+                                    print(header + "No equiv found")
                     except IOError:
-                        print "-- No .soln file"
+                        print("-- No .soln file")
 
                 if event_name == "GameDone":
                     [num_levels] = event_params
-                    print bold_green("++ GameDone: " + worker_id + \
-                                     " finished " + str(num_levels) + " levels")
-                    print "-- Time: " + time_str
+                    print(bold_green("++ GameDone: " + worker_id + \
+                                     " finished " + str(num_levels) + " levels"))
+                    print("-- Time: " + time_str)
                     if need_to_pay and worker_id == assn_worker_id:
                         found_game_done = True
                         if worker_id in lvlPayments:
-                          print "!! ERROR: Multiple GameDone events for ", \
-                                worker_id, "for run", s.srid
+                          print("!! ERROR: Multiple GameDone events for ", \
+                                worker_id, "for run", s.srid)
                         else:
                           add_payment(LevelsPayment(worker_id, assn_id, \
                                                     num_levels))
                           lvlPayments[worker_id] = True
 
                 if event_name == "TutorialStart":
-                    print bold_green("++ " + worker_id + " started tutorial")
-                    print "-- Time: " + time_str
+                    print(bold_green("++ " + worker_id + " started tutorial"))
+                    print("-- Time: " + time_str)
 
                 if event_name == "TutorialDone":
-                    print bold_green("++ " + worker_id + " finished tutorial")
-                    print "-- Time: " + time_str
+                    print(bold_green("++ " + worker_id + " finished tutorial"))
+                    print("-- Time: " + time_str)
                     if need_to_pay and worker_id == assn_worker_id:
                         add_payment(TutorialPayment(worker_id, assn_id))
 
 
     if need_to_pay and not found_game_done:
-        print "!! ERROR: Need to pay {0} but could not find GameDone " + \
-              "event to pay bonus".format(assn_worker_id)
+        print("!! ERROR: Need to pay {0} but could not find GameDone " + \
+              "event to pay bonus".format(assn_worker_id))
 
 process_time_info()
 

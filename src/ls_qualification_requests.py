@@ -30,15 +30,15 @@ for server_run in exp.server_runs:
 
 try:
     balance = mc.get_account_balance()
-    print "Balance:", balance[0]
+    print("Balance:", balance[0])
     r = mc.get_qualification_requests(args.qualtype)
-    print "Id                             Submitted"+\
-          "            Worker         Code  Correct?"
+    print("Id                             Submitted"+\
+          "            Worker         Code  Correct?")
     for qt in r:
         answers = qt.answers
         code = answers[0][0].fields[0]
-        print qt.QualificationRequestId, qt.SubmitTime, qt.SubjectId, \
-                code, code in codeS
-except Exception,e:
+        print(qt.QualificationRequestId, qt.SubmitTime, qt.SubjectId, \
+                code, code in codeS)
+except Exception as e:
     print_exc()
     error("Failed...")

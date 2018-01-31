@@ -21,4 +21,4 @@ if __name__ == "__main__":
     query = query.filter(func.json_extract(Event.payload, "$.assignmentId") == args.assignmentId)
 
   for evt in query.all():
-    print evt.time, evt.type, evt.experiment, evt.src, evt.payl()
+    print(evt.time, evt.type, evt.experiment, evt.src, evt.payl())

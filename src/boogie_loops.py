@@ -64,7 +64,7 @@ def loops(bbs):
     loop_m = _loops(bbs, [], {})
     return [ Loop(k, v, [[ v[0][0], loop_exit_bb(v, bbs) ]],
                         ast_or([loop_path_entry_cond(p, bbs) for p in v])) \
-        for (k,v) in loop_m.iteritems() ]
+        for (k,v) in loop_m.items() ]
 
 def loop_exit_bb(body_paths, bbs):
     loop_header_succ = set(bbs[body_paths[0][0]].successors)
@@ -81,7 +81,7 @@ def unroll_loop(loop, nunrolls, extra_pred_bb = None, exact = False):
 def bad_envs_to_expr(bad_envs):
     s = "&&".join(["!(" + \
                     "&&".join([("(%s==%s)" %(k, str(v))) \
-                                for (k,v) in bad_env.iteritems()]) + \
+                                for (k,v) in bad_env.items()]) + \
                     ")"
                     for bad_env in bad_envs])
     if (s == ""):

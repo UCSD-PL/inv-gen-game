@@ -47,10 +47,8 @@ api = rpc(app, '/api')
 def getLastVerResult(lvlset, lvlid, session, workerId=None):
     events = session.query(Event)
     verifyAttempts = events.filter(Event.type == "VerifyAttempt").all();
-    verifyAttempts = filter(
-        lambda x: x.payl()["lvlset"] == lvlset and x.payl()["lvlid"] == lvlid
-          and (workerId is None or x.payl()["workerId"] == workerId),
-        verifyAttempts);
+    verifyAttempts = [x for x in verifyAttempts if x.payl()["lvlset"] == lvlset and x.payl()["lvlid"] == lvlid
+          and (workerId is None or x.payl()["workerId"] == workerId)];
     if (len(verifyAttempts) > 0):
       return verifyAttempts[-1].payl();
     else:
@@ -164,9 +162,9 @@ def loadLvl(levelSet, lvlId, mturkId, individualMode=False): #pylint: disable=un
         colSwaps = [0] * nSwaps
         allInvs(session, enames=[args.ename], lvlsets=[curLevelSetName],
           lvls=[lvlId], workers=[workerId], colSwaps=colSwaps)
-        sortKeys = zip(colSwaps, sortKeys)
+        sortKeys = list(zip(colSwaps, sortKeys))
 
-      nSwap = sorted(zip(sortKeys, range(nSwaps)), key=lambda x: x[0])[0][1]
+      nSwap = sorted(zip(sortKeys, list(range(nSwaps))), key=lambda x: x[0])[0][1]
       lvl["colSwap"] = nSwap
 
       lvl["variables"] = swapColumns(lvl["variables"], nSwap)
@@ -237,15 +235,15 @@ def genNextLvl(workerId, mturkId, levelSet, levelId, invs, individualMode):
 
     fix = lambda env:   _from_dict(lvl['variables'], env, 0)
     greenRows = [ fix(v.endEnv()) for v in overfitted if type(v) != tuple]
-    print "Invs: ", otherInvs.union(userInvs)
-    print "GreenRows: ", greenRows
+    print("Invs: ", otherInvs.union(userInvs))
+    print("GreenRows: ", greenRows)
     bbs = lvl["program"]
     loop = lvl["loop"]
     ctrexInvs = lastSoundInvs.union(userInvs)
     safetyCtrex =\
         loopInvSafetyCtrex(loop, ctrexInvs, bbs, args.timeout)
     redRows = [ fix(x) for x in safetyCtrex if len(x) != 0 ]
-    print "RedRows: ", redRows
+    print("RedRows: ", redRows)
     if (len(redRows) > 0 or len(greenRows) > 0):
         # Lets give them another level
         payl = [levelSet, levelId, invs, [ boogieToEsprimaExpr(e) for e in ctrexInvs ]]
@@ -275,16 +273,16 @@ def loadNextLvl(workerId, mturkId, individualMode):
       if levelsPlayedInSession(session, assignmentId) >= args.maxlvls:
         return
 
-    level_names = traces[curLevelSetName].keys();
+    level_names = list(traces[curLevelSetName].keys());
     sort_keys = [len(allInvs(session, enames=[args.ename],
       lvlsets=[curLevelSetName], lvls=[x])) for x in level_names]
     if individualMode:
-      sort_keys = zip([len(allInvs(session, enames=[args.ename],
+      sort_keys = list(zip([len(allInvs(session, enames=[args.ename],
         lvlsets=[curLevelSetName], lvls=[x], workers=[workerId]))
-        for x in level_names], sort_keys)
-    sort_keys = zip([levelSkipCount(session, args.ename, curLevelSetName, x,
-      workerId, assignmentId) for x in level_names], sort_keys)
-    key_and_level = zip(sort_keys, level_names)
+        for x in level_names], sort_keys))
+    sort_keys = list(zip([levelSkipCount(session, args.ename, curLevelSetName, x,
+      workerId, assignmentId) for x in level_names], sort_keys))
+    key_and_level = list(zip(sort_keys, level_names))
     # Stable sort on key only to preserve lvlset order
     key_and_level.sort(key=lambda x: x[0])
 
@@ -313,7 +311,7 @@ def instantiate(invs, traceVars, trace, mturkId): #pylint: disable=unused-argume
     res = []
     z3Invs = []
     templates = [ (esprimaToBoogie(x[0], {}), x[1], x[2]) for x in invs]
-    vals = map(lambda x:    _to_dict(traceVars, x), trace)
+    vals = [_to_dict(traceVars, x) for x in trace]
 
     for (bInv, symConsts, symVars) in templates:
         for instInv in instantiateAndEval(bInv, vals, symVars, symConsts):
@@ -332,7 +330,7 @@ def instantiate(invs, traceVars, trace, mturkId): #pylint: disable=unused-argume
             res.append(instInv)
             z3Invs.append(instZ3Inv)
 
-    return map(boogieToEsprima, res)
+    return list(map(boogieToEsprima, res))
 
 @api.method("App.getPositiveExamples")
 @pp_exc
@@ -515,7 +513,7 @@ def tryAndVerify(levelSet, levelId, invs, mturkId, individualMode):
                       str(levelSet) + " not a dynamic boogie level.")
 
     workerId, _, _ = mturkId
-    print repr(set);
+    print(repr(set));
     userInvs = set([ esprimaToBoogie(x, {}) for x in invs ])
     otherInvs = set([])
     lastVer = getLastVerResult(levelSet, levelId, s,
@@ -577,7 +575,7 @@ def simplifyInv(inv, mturkId): #pylint: disable=unused-argument
     boogieInv = esprimaToBoogie(inv, {});
     noDivBoogie = divisionToMul(boogieInv);
     z3_inv = expr_to_z3(noDivBoogie, AllIntTypeEnv())
-    print z3_inv, boogieInv
+    print(z3_inv, boogieInv)
     simpl_z3_inv = simplify(z3_inv, arith_lhs=True);
     simpl_boogie_inv = z3_expr_to_boogie(simpl_z3_inv);
     return boogieToEsprima(simpl_boogie_inv);
@@ -597,7 +595,7 @@ def getVal(key):
     """ Generic Key/Value store get() used by two-player gameplay for
         synchronizing shared state. 
     """
-    if (type(key) != unicode):
+    if (type(key) != str):
       raise Exception("Key must be string");
 
     return kvStore[key];
@@ -609,7 +607,7 @@ def setVal(key, val, expectedGen):
     """ Generic Key/Value store set() used by two-player gameplay for
         synchronizing shared state. 
     """
-    if (type(key) != unicode):
+    if (type(key) != str):
       raise Exception("Key must be string");
 
     if (expectedGen != -1):
@@ -747,6 +745,6 @@ if __name__ == "__main__":
     curLevelSetName, lvls = loadBoogieLvlSet(args.lvlset)
     traces = { curLevelSetName: lvls }
 
-    print "Admin Token: ", adminToken
-    print "Admin URL: ", "admin.html?adminToken=" + adminToken
+    print("Admin Token: ", adminToken)
+    print("Admin URL: ", "admin.html?adminToken=" + adminToken)
     app.run(host=host, port=args.port, ssl_context=sslContext, threaded=True)

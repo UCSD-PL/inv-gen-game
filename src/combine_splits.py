@@ -8,6 +8,7 @@ from vc_check import tryAndVerifyLvl
 from re import compile as reComp
 from models import open_sqlite_db, Event
 from datetime import datetime, timedelta
+from functools import reduce
 
 p = argparse.ArgumentParser(description=\
         "given an experiment ran over a split levelset see if " +\
@@ -62,15 +63,15 @@ for e in s.query(Event).all():
     lvlS["invariantsFound"].add((p['raw'], p['canonical']))
 
 
-for lvl_name, lvl in lvls.iteritems():
+for lvl_name, lvl in lvls.items():
   if "splitterPreds" in lvl and not endsWithNumP.match(lvl_name):
-    print "Print split traces level has name not ending in number: ", lvl_name
+    print("Print split traces level has name not ending in number: ", lvl_name)
 
   if (endsWithNumP.match(lvl_name) and not "splitterPreds" in lvl):
-    print "Print split lvl ", lvl_name, "is missing splitterPreds"
+    print("Print split lvl ", lvl_name, "is missing splitterPreds")
 
   if (endsWithNumP.match(lvl_name) and not "partialInv" in lvl):
-    print "Print split lvl ", lvl_name, "is missing partialInv"
+    print("Print split lvl ", lvl_name, "is missing partialInv")
 
   if (endsWithNumP.match(lvl_name)):
     origName = justEnd.split(lvl_name)[0]
@@ -79,8 +80,8 @@ for lvl_name, lvl in lvls.iteritems():
     splitToOriginal[lvl_name] = origName
 
 
-print "Level, #Splits, Solved, #FoundInvariants, #Added Implications, " +\
-      "#Added SPs, #Sound, #Overfit, #Nonind"
+print("Level, #Splits, Solved, #FoundInvariants, #Added Implications, " +\
+      "#Added SPs, #Sound, #Overfit, #Nonind")
 for origName in originalToSplitM:
   found = reduce(lambda x,y:  x.union(y),
     [lvlStats[z]["invariantsFound"] for z in originalToSplitM[origName]], set())
@@ -107,7 +108,7 @@ for origName in originalToSplitM:
   assert (len(dummy2) == 0 and len(dummy1) == 0);
 
   solved = len(violations) == 0
-  print ",".join(map(str, [
+  print(",".join(map(str, [
     origName,\
     len(originalToSplitM[origName]),\
     solved,\
@@ -117,4 +118,4 @@ for origName in originalToSplitM:
     len(sound),\
     len(overfitted),\
     len(nonind)\
-  ]))
+  ])))

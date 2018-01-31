@@ -9,6 +9,7 @@ from lib.boogie.ast import parseExprAst
 from lib.boogie.z3_embed import Unknown, tautology, expr_to_z3, AllIntTypeEnv
 from vc_check import tryAndVerifyLvl
 import csv
+from functools import reduce
 
 p = ArgumentParser(description="Compute stats over an experiment");
 p.add_argument('--ename', type=str, help='Name for experiment', required=True);
@@ -170,8 +171,8 @@ if __name__ == "__main__":
         try:
           parsed = str(parseExprAst(b))
           invM[parsed]=raw
-        except Exception, e:
-          print "Failed parsing: ", raw,b
+        except Exception as e:
+          print("Failed parsing: ", raw,b)
 
       userInvs = set();
 
@@ -179,7 +180,7 @@ if __name__ == "__main__":
         try:
           userInvs.add(parseExprAst(x[1]))
         except:
-          print "Failed parsing: ", x[1]
+          print("Failed parsing: ", x[1])
 
       if (lvlName in otherInvs):
         oInvs = set(otherInvs[lvlName])
@@ -200,9 +201,9 @@ if __name__ == "__main__":
                         "Ave #Invs Tried/Usr", "#Invs Found", "#Invs Found",\
                         "Ave #Invs Found/Usr", "#Sound", "Sound", \
                         "#Overfitted", "Overfitted", "#Nonind", "Nonind"]
-      print ", ".join(lvlStatColumns)
-      for (lvlName, lvlS) in lvlStats.iteritems():
-        print ", ".join([\
+      print(", ".join(lvlStatColumns))
+      for (lvlName, lvlS) in lvlStats.items():
+        print(", ".join([\
           lvlName,\
           str(lvlS["solved"]),\
           str(lvlS["nusersStarted"]),\
@@ -218,7 +219,7 @@ if __name__ == "__main__":
           str(len(lvlS["overfitted"])),\
           ";".join(lvlS["overfitted"]),\
           str(len(lvlS["nonind"])),\
-          ";".join(lvlS["nonind"])]);
+          ";".join(lvlS["nonind"])]));
 
     if (args.userStats):
         raise Exception("NYI!");

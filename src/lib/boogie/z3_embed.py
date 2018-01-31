@@ -11,6 +11,7 @@ import Pyro4
 import sys
 import atexit
 from signal import signal, SIGTERM, SIGINT
+from functools import reduce
 
 ctxHolder = local();
 
@@ -31,7 +32,7 @@ def val_to_boogie(v):
 def env_to_expr(env, suff=""):
     return ast.ast_and(
         [ast.AstBinExpr(ast.AstId(k + suff), "==", val_to_boogie(v))
-         for (k, v) in env.iteritems()])
+         for (k, v) in env.items()])
 
 
 def getCtx():
@@ -169,7 +170,7 @@ class Z3ProxySolver:
                              "Timedout. Restarting.\n")
             r = "unknown"
             s._restartRemote();
-        except Exception, e:
+        except Exception as e:
             sys.stdout.write("Got exception: " + str(e) + "\n")
             ecode = s._proc.exitcode
             s._restartRemote();
@@ -245,11 +246,11 @@ def getSolver():
         # If we have none wait on the condition variable for request to
         # finish or processes to timeout and die.
         while True:
-            free = [(proxy, busy) for (proxy, busy) in z3ProcessPool.iteritems()
+            free = [(proxy, busy) for (proxy, busy) in z3ProcessPool.items()
                     if (not busy)]
 
             if (len(free) == 0 and len(ports) == 0):
-                print "No free instances and no ports for new instances..."
+                print("No free instances and no ports for new instances...")
                 z3ProcessPoolCond.wait();
             else:
                 break;
@@ -437,8 +438,8 @@ def expr_to_z3(expr, typeEnv):
     elif isinstance(expr, ast.AstFalse):
         return BoolVal(False);
     elif isinstance(expr, ast.AstFuncExpr):
-        params = map((lambda p : expr_to_z3(p, typeEnv)), expr.ops)
-        intsort = map((lambda p : z3.IntSort(ctx=getCtx())), expr.ops) + [z3.IntSort(ctx=getCtx())]
+        params = list(map((lambda p : expr_to_z3(p, typeEnv)), expr.ops))
+        intsort = list(map((lambda p : z3.IntSort(ctx=getCtx())), expr.ops)) + [z3.IntSort(ctx=getCtx())]
         f = Function(expr.funcName.name, *intsort)
         return f(*params)
     elif isinstance(expr, ast.AstUnExpr):
@@ -516,7 +517,7 @@ def ids(z3expr):
     if len(z3expr.children()) == 0:
         return [z3expr] if not isnum(str(z3expr)) else []
     else:
-        childIds = reduce(lambda x, y: x + y, map(ids, z3expr.children()), [])
+        childIds = reduce(lambda x, y: x + y, list(map(ids, z3expr.children())), [])
         tmp = {str(x): x for x in childIds}
         return list(tmp.keys())
 
@@ -578,10 +579,10 @@ def z3_expr_to_boogie(expr):
         c = expr.children()
         if assoc == "func":
             try:
-                pars = map(z3_expr_to_boogie, c)
+                pars = list(map(z3_expr_to_boogie, c))
                 func = ast.AstId(boogie_op)
                 fun = ast.AstFuncExpr(func, *pars)
-            except Exception, ex:
+            except Exception as ex:
                 error(ex.message)
             return fun
         else:

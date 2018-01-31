@@ -2,6 +2,7 @@
 from lib.boogie.grammar import BoogieParser
 from pyparsing import ParseResults
 from ..common.ast import AstNode, replace, reduce_nodes
+from functools import reduce
 
 def _strip(arg):
     if isinstance(arg, ParseResults):
@@ -117,7 +118,7 @@ class AstBuilder(BoogieParser):
     else:
       assert(len(toks) > 3);
       base = AstBinExpr(*toks[:3])
-      rest = [ [toks[3+2*k], toks[3+2*k+1]] for k in xrange((len(toks)-3)/2) ]
+      rest = [ [toks[3+2*k], toks[3+2*k+1]] for k in range(int((len(toks)-3)/2)) ]
       return [ reduce(lambda acc,el:  AstBinExpr(acc, el[0], el[1]), \
                       rest, base)
              ]
@@ -161,7 +162,7 @@ class AstBuilder(BoogieParser):
   def onProgram(s, prod, st, loc, toks): 
     return [ AstProgram(toks) ]
   def onLocalVarDecl(s, prod, st, loc, toks): 
-    return [ AstBinding(map(str, toks[:-1]), toks[-1]) ]
+    return [ AstBinding(list(map(str, toks[:-1])), toks[-1]) ]
   def onType(s, prod, st, loc, toks):
     # Currently only handle ints
     assert len(toks) == 1 and toks[0] == s.INT;
@@ -188,14 +189,14 @@ def parseExprAst(s):
   try:
     return astBuilder.parseExpr(s);
   except:
-    print "Failed parsing";
+    print("Failed parsing");
     raise;
 
 def parseAst(s):
   try:
     return astBuilder.parseProgram(s);
   except:
-    print "Failed parsing";
+    print("Failed parsing");
     raise;
 
 def expr_read(ast):
@@ -232,7 +233,7 @@ def stmt_changed(ast):
     if isinstance(ast, AstAssignment):
         return expr_read(ast.lhs)
     elif isinstance(ast, AstHavoc):
-        return set(map(lambda x:  x.name, ast.ids))
+        return set([x.name for x in ast.ids])
     elif isinstance(ast, AstAssume) or isinstance(ast, AstAssert):
         return set([])
     else:

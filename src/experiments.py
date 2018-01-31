@@ -81,7 +81,7 @@ def load_experiment_or_die(ename):
     try:
         return Experiment(ename)
     except IOError:
-        print "Experiment", ename, "does not exist"
+        print("Experiment", ename, "does not exist")
         exit(-1)
 
 # def create_new_experiment():

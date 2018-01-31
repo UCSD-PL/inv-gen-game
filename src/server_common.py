@@ -7,7 +7,7 @@ from flask import request
 import traceback
 # Profiling import
 from cProfile import Profile
-from StringIO import StringIO
+from io import StringIO
 from pstats import Stats
 
 colorama_init();
@@ -26,7 +26,7 @@ def log(action, *pps):
         logF.flush()
     else:
         if (len(pps) == 0):
-          print dumps(action) + "\n";
+          print(dumps(action) + "\n");
         else:
           assert(len(action['kwargs']) == 0);
           assert(len(pps) >= len(action['args']));
@@ -60,7 +60,7 @@ def log(action, *pps):
           if (len(action['args']) + 1 == len(pps) and 'res' in action):
             call += "=" + pps[len(action['args'])](action['res']);
 
-          print prompt + call;
+          print(prompt + call);
         stdout.flush();
 
 def log_d(*pps):
@@ -95,6 +95,6 @@ def prof_d(f):
             s = StringIO()
             ps = Stats(pr, stream=s).sort_stats('cumulative')
             ps.print_stats()
-            print s.getvalue()
+            print(s.getvalue())
     return decorated
 

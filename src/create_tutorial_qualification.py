@@ -60,13 +60,13 @@ def question_form(serverPort):
 try:
     mc = connect(args.credentials_file, args.sandbox)
     balance = mc.get_account_balance()
-    print "Balance:", balance[0]
+    print("Balance:", balance[0])
 
     exp = Experiment(args.ename, True);
     srid = exp.create_unique_server_run_id()
     port = get_unused_port()
     p = start_server(port, args.ename, srid, args.lvlset, "fuzzy")
-    print "Started server run", srid, "on port", port, "with pid", p.pid
+    print("Started server run", srid, "on port", port, "with pid", p.pid)
 
     r = mc.create_qualification_type("InvGame Tutorial Completed", \
             "Complete the short tutorial to the game",\
@@ -75,7 +75,7 @@ try:
             test = question_form(port), test_duration = 30 * 60);
     assert len(r) == 1
     exp.add_session(ServerRun(srid, r[0].QualificationTypeId, p.pid, port))
-    print "Created qualification: ", r[0].QualificationTypeId
+    print("Created qualification: ", r[0].QualificationTypeId)
 except Exception:
     print_exc()
     error("Failed...")

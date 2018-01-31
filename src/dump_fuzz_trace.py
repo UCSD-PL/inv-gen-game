@@ -26,15 +26,15 @@ lvl = lvls[args.lvl]
 trace_dir = None
 if args.write:
   trace_dir = lvl["path"][0][:-4] + ".new_fuzz_traces"
-  print "Making trace directory:", trace_dir
+  print("Making trace directory:", trace_dir)
   try:
     os.mkdir(trace_dir)
   except OSError:
     pass
 
-print
-print "=== LEVEL ==="
-print lvl
+print()
+print("=== LEVEL ===")
+print(lvl)
 
 vars_ = lvl["variables"]
 vars_.sort()
@@ -42,7 +42,7 @@ vars_.sort()
 def write_trace(rowsL, prefix=""):
   trace_str = json.dumps(rowsL)
   trace_file = "%s/%s%d.trace" % (trace_dir, prefix, hash(trace_str))
-  print "Writing trace to file:", trace_file
+  print("Writing trace to file:", trace_file)
   with open(trace_file, "w") as fh:
     fh.write(trace_str)
 
@@ -87,7 +87,7 @@ bbs = lvl["program"]
 tracegen = levels.getEnsamble(loop=lvl["loop"], bbs=bbs, exec_limit=1000,
   tryFind=1000, include_bbhit=True, vargens={v: gen() for v in vars_})
 
-bbset = set(bbs.viewkeys())
+bbset = set(bbs.keys())
 nbbset = len(bbset)
 bbneed = set(bbset)
 
@@ -96,7 +96,7 @@ mintraces = 0
 # Attempt to get 2x traces needed for full coverage (arbitrary heuristic)
 while bbneed or len(alltraces) < 2 * mintraces:
   try:
-    valss, bbhit = tracegen.next()
+    valss, bbhit = next(tracegen)
   except StopIteration:
     break
   if bbneed:
@@ -110,9 +110,9 @@ while bbneed or len(alltraces) < 2 * mintraces:
     write_trace(valss)
 
   nbbcov = len(bbset.intersection(bbhit))
-  print "Found a trace of length %d with coverage %d/%d (%f%%)" % (len(valss),
-    nbbcov, nbbset, nbbcov * 100. / nbbset)
-  print "Still need:", bbneed
+  print("Found a trace of length %d with coverage %d/%d (%f%%)" % (len(valss),
+    nbbcov, nbbset, nbbcov * 100. / nbbset))
+  print("Still need:", bbneed)
 
 # Weighted set cover
 # NOTE Cost heuristic has odd behavior: cost = len will pick many short traces
@@ -132,19 +132,19 @@ for valss, _ in ctraces:
 if trace_dir:
   write_trace(rows, prefix="combined-")
 
-print "Selected %d/%d rows (%d/%d traces)" % (len(rows),
-  sum(len(valss) for valss, _ in alltraces), len(ctraces), len(alltraces))
-print "Naive would have used %d rows (%d traces)" % (
-  sum(len(valss) for valss, _ in alltraces[:mintraces]), mintraces)
+print("Selected %d/%d rows (%d/%d traces)" % (len(rows),
+  sum(len(valss) for valss, _ in alltraces), len(ctraces), len(alltraces)))
+print("Naive would have used %d rows (%d traces)" % (
+  sum(len(valss) for valss, _ in alltraces[:mintraces]), mintraces))
 
-print
-print "=== TRACE ==="
-print tabulate.tabulate([[vals[v] for v in vars_] for vals in rows],
-  headers=vars_)
+print()
+print("=== TRACE ===")
+print(tabulate.tabulate([[vals[v] for v in vars_] for vals in rows],
+  headers=vars_))
 
 nbbcov = nbbset - len(bbneed)
-print
-print "=== COVERAGE ==="
-print "BBSET:", bbset
-print "BBNEED:", bbneed
-print "COVERAGE:", "%d/%d, (%f%%)" % (nbbcov, nbbset, nbbcov * 100. / nbbset)
+print()
+print("=== COVERAGE ===")
+print("BBSET:", bbset)
+print("BBNEED:", bbneed)
+print("COVERAGE:", "%d/%d, (%f%%)" % (nbbcov, nbbset, nbbcov * 100. / nbbset))

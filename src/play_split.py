@@ -79,7 +79,7 @@ def evenness(x, y):
 
 def prettyPredRanks(pred_ranks):
   return ", ".join("%s (rank %s)" % (pred, str(rank)) for pred, rank in
-    pred_ranks.items())
+    list(pred_ranks.items()))
 
 def evaluatePreds(trace_dir, preds, correct_preds):
   trace_rows = loadTraceRows(trace_dir)
@@ -112,13 +112,13 @@ def evaluatePreds(trace_dir, preds, correct_preds):
     if pred in correct_ranks:
       correct_ranks[pred] = i
 
-  print
-  print "traces:", trace_dir
-  print "correct_preds:", prettyPredRanks(correct_ranks)
-  print "chosen_pred:", results[0]["pred"], "(rank 0)"
+  print()
+  print("traces:", trace_dir)
+  print("correct_preds:", prettyPredRanks(correct_ranks))
+  print("chosen_pred:", results[0]["pred"], "(rank 0)")
   columns = ["pred", "t", "f", "evenness"]
-  print tabulate.tabulate([[r[c] for c in columns] for r in results],
-    headers=[c.upper() for c in columns])
+  print(tabulate.tabulate([[r[c] for c in columns] for r in results],
+    headers=[c.upper() for c in columns]))
 
 for data in DATA_SET:
   evaluatePreds(**data)

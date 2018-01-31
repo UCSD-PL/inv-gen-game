@@ -168,7 +168,7 @@ def translate_stmt(c_ast, ctx):
     elif isinstance(c_ast, For):
         init = translate_stmt(c_ast.init, ctx)
         cond = translate_exp(c_ast.cond)
-        nxt = translate_stmt(c_ast.next, ctx.indent())
+        nxt = translate_stmt(c_ast.__next__, ctx.indent())
         body = translate_stmt(c_ast.stmt, ctx.indent())
         inv_str = "" if not ctx._trivial_inv else istr + "invariant true;\n"
         return "{}\n".format(init) +\

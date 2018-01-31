@@ -11,6 +11,7 @@ from infinite import product
 from json import load, dumps
 from random import randint
 from vc_check import loopInvOverfittedCtrex
+from functools import reduce
 
 def _tryUnroll(loop, bbs, min_un, max_un, bad_envs, good_env):
     # Lets first try to find a terminating loop between min and max iterations
@@ -29,12 +30,12 @@ def varproduct(vargens):
   # Take var: gen and generate all var assignments (smallest first), i.e.
   # "A": count(), "B": count() yields
   #   (A, B) = (0, 0), (0, 1), (1, 0), (0, 2), (1, 1), (2, 0), ...
-  if len(vargens.items()) == 0:
+  if len(list(vargens.items())) == 0:
     yield {}
   else:
-    vars_, gens = zip(*vargens.items())
+    vars_, gens = list(zip(*list(vargens.items())))
     for vals in product(*gens):
-      yield dict(zip(vars_, vals))
+      yield dict(list(zip(vars_, vals)))
 
 def getEnsamble(loop, bbs, exec_limit, tryFind=100, distr=lambda: randint(0,5),
         include_bbhit=False, vargens=None):
@@ -50,7 +51,7 @@ def getEnsamble(loop, bbs, exec_limit, tryFind=100, distr=lambda: randint(0,5),
     tried = set();
     #TODO: Not a smart way for generating random start values. Fix.
     s = 0
-    print "Trying to find ", tryFind, " traces of length up to ", exec_limit
+    print("Trying to find ", tryFind, " traces of length up to ", exec_limit)
     while s < tryFind:
         candidate = next(candidategen)
         hashable = tuple(candidate[v] for v in traceVs)
@@ -114,8 +115,8 @@ def findNegatingTrace(loop, bbs, nunrolls, invs, invVrs = None):
         invVrs = traceVs
 
     def diversity(vals):
-        lsts = [ [ vals[i][k] for i in xrange(len(vals)) ]
-                 for k in vals[0].iterkeys() ]
+        lsts = [ [ vals[i][k] for i in range(len(vals)) ]
+                 for k in vals[0].keys() ]
         return average([len(set(lst)) for lst in lsts])
         #return average([len(set(lst)) / 1.0 * len(lst) for lst in lsts])
 
@@ -123,9 +124,9 @@ def findNegatingTrace(loop, bbs, nunrolls, invs, invVrs = None):
         hold_for_data.extend(instantiateAndEval(inv, vals, invVrs,
                                                 ["_sc_a", "_sc_b", "_sc_c"]))
 
-    print "The following invariants hold for initial trace: ", hold_for_data
+    print("The following invariants hold for initial trace: ", hold_for_data)
     hold_for_data = list(set(hold_for_data))
-    print "The following remain after clearing duplicates: ", hold_for_data
+    print("The following remain after clearing duplicates: ", hold_for_data)
     res = [ ]
     no_ctrex = set([])
     for s in powerset(hold_for_data):
@@ -139,7 +140,7 @@ def findNegatingTrace(loop, bbs, nunrolls, invs, invVrs = None):
               trace, terminates = \
                       _tryUnroll(loop, bbs, 0, nunrolls, None, ctrex)
               if (len(trace) > 0):
-                  print "Ctrexample for ", inv, " is ", trace
+                  print("Ctrexample for ", inv, " is ", trace)
                   res.append((diversity(trace), len(s), list(s),
                               ctrex, (trace, terminates)))
         else:
@@ -153,16 +154,15 @@ def findNegatingTrace(loop, bbs, nunrolls, invs, invVrs = None):
 
 def readTrace(fname):
     trace = open(fname, "r").read();
-    lines = filter(lambda (x): len(x) != 0,
-                   map(lambda x:   x.strip(), trace.split('\n')))
-    vs = filter(lambda x:   len(x) != 0, lines[0].split(' '))
+    lines = [x for x in [x.strip() for x in trace.split('\n')] if len(x) != 0]
+    vs = [x for x in lines[0].split(' ') if len(x) != 0]
     header_vals = [ ]
     for l in lines[1:]:
         if (l[0] == '#'):
             continue;
 
         env = { }
-        for (var,val) in zip(vs, filter(lambda x:   len(x) != 0, l.split(' '))):
+        for (var,val) in zip(vs, [x for x in l.split(' ') if len(x) != 0]):
             env[var] = val
         header_vals.append(env);
     return (vs, header_vals)
@@ -171,7 +171,7 @@ def writeTrace(fname, header_vals):
     f = open(fname, "w");
 
     if (len(header_vals) != 0):
-      vs = header_vals[0].keys();
+      vs = list(header_vals[0].keys());
       f.write(" ".join(vs) + "\n");
       for env in header_vals:
         f.write(" ".join([str(env[v]) for v in vs]) + "\n")
@@ -306,9 +306,7 @@ def loadBoogieLvlSet(lvlSetFile):
           splitterPred = ast_and(splitterPreds)
           remainderInv = parseExprAst(t[3])
 
-          lvl['data'][0] = filter(
-            lambda row: evalPred(splitterPred, _to_dict(lvl['variables'], row)),
-            lvl['data'][0]);
+          lvl['data'][0] = [row for row in lvl['data'][0] if evalPred(splitterPred, _to_dict(lvl['variables'], row))];
 
           if (len(lvl['data'][0]) == 0):
             error("SKIPPING : ", lvlName, " due to no filtered rows.")

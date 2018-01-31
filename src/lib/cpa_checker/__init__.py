@@ -17,15 +17,14 @@ def findLoopHeaderLabel(dotFile):
   g = unique(graph_from_dot_file(dotFile))
   nodes = g.get_nodes();
   shapeList = [(n.get_shape(), n.get_label()) for n in nodes]
-  doubleCircles = [t for t in shapeList if t[0] == u'"doublecircle"']
+  doubleCircles = [t for t in shapeList if t[0] == '"doublecircle"']
   # The loop header should be the unique node with a double circle shape
   # Its label will be a string of the form '"N[0-9]*\\n[0-9]"'. We care
   # just about the first [0-9]* part.
   return unique(doubleCircles)[1].split("\\n")[0][2:]
 
 def parseAbstractionFile(fname):
-  lines = filter(lambda x:  x != '',
-                 map(lambda x:  x.strip(), open(fname).read().split("\n")))
+  lines = [x for x in [x.strip() for x in open(fname).read().split("\n")] if x != '']
   decls = [ ]
   invs = { }
   label_re = re.compile(
@@ -44,8 +43,7 @@ def parseAbstractionFile(fname):
   return invs
 
 def parseInvariantsFile(fname):
-  lines = filter(lambda x:  x != '',
-                 map(lambda x:  x.strip(), open(fname).read().split("\n")))
+  lines = [x for x in [x.strip() for x in open(fname).read().split("\n")] if x != '']
   label_re = re.compile("^[^ ]* [^ :]*:$")
   label_lines = [l for l in lines if label_re.match(l)]
   assert (len(label_lines) == 1) # Single loop header so single invariant

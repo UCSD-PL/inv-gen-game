@@ -10,13 +10,12 @@ from itertools import permutations
 from copy import deepcopy
 
 def _to_dict(vs, vals):
-    return { vs[i]: vals[i] for i in xrange(0, len(vs)) }
+    return { vs[i]: vals[i] for i in range(0, len(vs)) }
 
 def evalPred(boogie_expr, env):
     typeEnv = { x : Int for x in env }
-    q = And(map(lambda stmt:    stmt_to_z3(stmt, typeEnv),
-        [AstAssume(env_to_expr(env)),
-         AstAssert(boogie_expr)]))
+    q = And([stmt_to_z3(stmt, typeEnv) for stmt in [AstAssume(env_to_expr(env)),
+         AstAssert(boogie_expr)]])
     res = satisfiable(q)
     return res
 
@@ -39,26 +38,26 @@ def instantiateAndEval(inv, vals,
 
     nonSymVs = set(expr_read(inv)).difference(set(symVs))\
             .difference(set(symConsts))
-    traceVs = vals[0].keys()
-    prms = permutations(range(len(traceVs)), len(symVs))
+    traceVs = list(vals[0].keys())
+    prms = permutations(list(range(len(traceVs))), len(symVs))
 
     typeEnv = { str(x) + str(i) : Int
-                    for x in vals[0].iterkeys()
-                        for i in xrange(len(vals)) }
+                    for x in vals[0].keys()
+                        for i in range(len(vals)) }
     typeEnv.update({ str(c) : Int for c in symConsts })
 
     for prm in prms:
-        varM = { symVs[i]: traceVs[prm[i]] for i in xrange(len(symVs)) }
+        varM = { symVs[i]: traceVs[prm[i]] for i in range(len(symVs)) }
         varM.update({ nonSymV: nonSymV for nonSymV in nonSymVs })
 
         inst_inv = replace(inv, { AstId(x) : AstId(varM[x]) for x in symVs })
         p = [ AstAssume(env_to_expr(x, str(i))) for (i,x) in enumerate(vals) ]
         p += [ AstAssert(replace(inst_inv,
                                  { AstId(x) : AstId(x + str(i))
-                                     for x in varM.itervalues() }))
-               for i in xrange(len(vals)) ]
+                                     for x in varM.values() }))
+               for i in range(len(vals)) ]
 
-        m = maybeModel(And(map(lambda s: stmt_to_z3(s, typeEnv), p)))
+        m = maybeModel(And([stmt_to_z3(s, typeEnv) for s in p]))
 
         if (m):
             const_vals = { AstId(x) : AstNumber(m[x]) for x in symConsts }

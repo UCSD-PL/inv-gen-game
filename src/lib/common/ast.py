@@ -40,7 +40,7 @@ class AstNode:
         try:
           return hash((s.__class__,) + s._children)
         except:
-          print "Can't hash: ", s
+          print("Can't hash: ", s)
           raise
 
     # Pickle

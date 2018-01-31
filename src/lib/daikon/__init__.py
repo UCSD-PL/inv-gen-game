@@ -210,12 +210,11 @@ def runDaikon(varz, trace, nosuppress=False):
     call(["rm", basename(dtraceF.name)[:-len(".dtrace")]+".inv.gz"])
     start = raw.index("LoopEntry:::") + len("LoopEntry:::")
     end = raw.index("Exiting Daikon.", start)
-    invs = filter(lambda x: x != "",
-                  map(lambda x:  x.strip(), raw[start:end].split("\n")))
+    invs = [x for x in [x.strip() for x in raw[start:end].split("\n")] if x != ""]
     # I don't understand how LinearTeranry invariants without justification are
     # displayed... Also getting lazy to fix the long line..
-    invs = filter(lambda x: "warning: too few samples for daikon.inv.ternary.threeScalar.LinearTernary invariant" not in x, invs); #pylint: disable=line-too-long
-    invs = filter(lambda x: "(mod 0)" not in x, invs);
+    invs = [x for x in invs if "warning: too few samples for daikon.inv.ternary.threeScalar.LinearTernary invariant" not in x]; #pylint: disable=line-too-long
+    invs = [x for x in invs if "(mod 0)" not in x];
     parsable = []
     for i in invs:
       try:

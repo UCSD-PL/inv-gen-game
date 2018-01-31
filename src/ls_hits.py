@@ -15,13 +15,13 @@ mc = connect(args.credentials_file, args.sandbox)
 
 try:
     balance = mc.get_account_balance()
-    print "Balance:", balance[0]
+    print("Balance:", balance[0])
     r = mc.get_all_hits()
-    print "Id                             Created              Expires              Review Stat. Status    #Av #C"
+    print("Id                             Created              Expires              Review Stat. Status    #Av #C")
     for hit in r:
-        print hit.HITId, hit.CreationTime, hit.Expiration, hit.HITReviewStatus, \
+        print(hit.HITId, hit.CreationTime, hit.Expiration, hit.HITReviewStatus, \
             hit.HITStatus, hit.NumberOfAssignmentsAvailable, " ",\
-            hit.NumberOfAssignmentsCompleted#, hit.Description
-except Exception,e:
+            hit.NumberOfAssignmentsCompleted)#, hit.Description
+except Exception as e:
     print_exc()
     error("Failed...")

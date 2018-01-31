@@ -11,8 +11,8 @@ args = p.parse_args()
 try:
     mc = connect(args.credentials_file, args.sandbox)
     for hitid in args.hitids:
-        print "Disabling", hitid
+        print("Disabling", hitid)
         r = mc.disable_hit(hitid)
-except Exception,e:
+except Exception as e:
     print_exc()
     error("Failed...")

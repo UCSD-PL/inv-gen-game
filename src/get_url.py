@@ -11,7 +11,7 @@ args = p.parse_args()
 try:
     mc = connect(args.credentials_file, args.sandbox, True)
     r = mc.get_file_upload_url(args.AssignmentId, args.QuestionId)
-    print r[0].FileUploadURL
-except Exception,e:
+    print(r[0].FileUploadURL)
+except Exception as e:
     print_exc()
     error("Failed...")

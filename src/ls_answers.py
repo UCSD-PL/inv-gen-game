@@ -10,9 +10,9 @@ mc = connect(args.credentials_file, args.sandbox)
 
 try:
     assgn, hit = mc.get_assignment(args.AssignmentId)
-    print "qid         Fields"
+    print("qid         Fields")
     for ans in assgn.answers[0]:
-        print ans.qid, ans.fields
-except Exception,e:
+        print(ans.qid, ans.fields)
+except Exception as e:
     print_exc()
     error("Failed...")

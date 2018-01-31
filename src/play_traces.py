@@ -39,4 +39,4 @@ if __name__ == "__main__":
     
     all_preds = preds(lvl["program"])
     t = eval(open('../sv_manual_trans/loop-lit/gj2007_true-unreach-call.desugared.new_fuzz_traces/3108380886538425170.trace').read())
-    print "Transition points in trace: ", transition_points(all_preds, t)
+    print("Transition points in trace: ", transition_points(all_preds, t))

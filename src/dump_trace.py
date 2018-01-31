@@ -21,21 +21,21 @@ LVLSET_PATH = "lvlsets/%s.lvlset" % args.lvlset
 curLevelSetName, lvls = levels.loadBoogieLvlSet(LVLSET_PATH)
 
 lvl = lvls[args.lvl]
-print
-print "=== LEVEL ==="
-print lvl
+print()
+print("=== LEVEL ===")
+print(lvl)
 
 trace = levels.getInitialData(lvl["loop"], lvl["program"], args.nunrolls,
   [boogie.ast.parseExprAst(inv)[0] for inv in []]) # Invariant placeholder
-print
-print "=== RAW TRACE ==="
-print trace
+print()
+print("=== RAW TRACE ===")
+print(trace)
 
 vars_ = lvl["variables"]
 vars_.sort()
 data = trace[0]
 
-print
-print "=== TRACE ==="
-print tabulate.tabulate([[d[v] for v in vars_] for d in data],
-  headers=vars_)
+print()
+print("=== TRACE ===")
+print(tabulate.tabulate([[d[v] for v in vars_] for d in data],
+  headers=vars_))

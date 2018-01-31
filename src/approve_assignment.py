@@ -13,6 +13,6 @@ args = p.parse_args()
 try:
     mc = connect(args.credentials_file, args.sandbox)
     r = mc.approve_assignment(args.AssignmentId, args.feedback)
-except Exception,e:
+except Exception as e:
     print_exc()
     error("Failed...")

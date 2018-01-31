@@ -28,9 +28,9 @@ if (__name__ == "__main__"):
 
   res = { }
   if (args.csv_table):
-    print "Level,Invariants,TranslatedTo,Solved,Confirmed"
+    print("Level,Invariants,TranslatedTo,Solved,Confirmed")
 
-  for lvlName, lvl in lvls.iteritems():
+  for lvlName, lvl in lvls.items():
     cppFile = lvl["path"][1]
     invgenCppFile = cppFile + ".invgen.preprocessed"
 
@@ -53,7 +53,7 @@ if (__name__ == "__main__"):
 
     if (solved == True):
       error("z3 invs: ", len(loopInvs), loopInvs)
-      boogieInvs = map(parseInvGenInvariant, loopInvs);
+      boogieInvs = list(map(parseInvGenInvariant, loopInvs));
       bbs = lvl["program"]
       loop = lvl["loop"]
       try:
@@ -69,7 +69,7 @@ if (__name__ == "__main__"):
           conf_status = False
         else:
           conf_status = True
-      except Exception,e:
+      except Exception as e:
         if (e.message == "Unknown binary operator /"):
           conf_status = "unhandled division"
         else:
@@ -78,11 +78,11 @@ if (__name__ == "__main__"):
       boogieInvs = []
 
     if (args.csv_table):
-      print lvlName, ",",\
+      print(lvlName, ",",\
             ";".join(map(str, loopInvs)), ",",\
             ";".join(map(str, boogieInvs)), ",",\
             res[lvlName][0], ",",\
-            conf_status
+            conf_status)
     else:
-      print "Level", lvlName, "discovered:", loopInvs, "solved: ", solved,\
-            "confirmed?: ", conf_status
+      print("Level", lvlName, "discovered:", loopInvs, "solved: ", solved,\
+            "confirmed?: ", conf_status)

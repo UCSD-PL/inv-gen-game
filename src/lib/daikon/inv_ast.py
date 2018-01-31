@@ -2,6 +2,7 @@
 from lib.daikon.inv_grammar import DaikonInvParser
 from ..common.ast import AstNode as AstNode
 from ..common.util import error
+from functools import reduce
 
 class AstUnExpr(AstNode):
     def __init__(s, op, expr):
@@ -103,7 +104,7 @@ class AstBuilder(DaikonInvParser):
     else:
       assert(len(toks) > 3);
       base = AstBinExpr(*toks[:3])
-      rest = [ [toks[3+2*k], toks[3+2*k+1]] for k in xrange((len(toks)-3)/2) ]
+      rest = [ [toks[3+2*k], toks[3+2*k+1]] for k in range(int((len(toks)-3)/2)) ]
       return [ reduce(lambda acc,el:  AstBinExpr(acc, el[0], el[1]),
                       rest,
                       base) ]

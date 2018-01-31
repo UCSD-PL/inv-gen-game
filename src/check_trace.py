@@ -17,14 +17,14 @@ def possible(bbs, start_env, path, end_env, timeout):
   if start_env != None:
     bb_name = "tmp_{}".format(uid) 
     uid += 1
-    stmts = [AstAssignment(AstId(k), AstNumber(v)) for (k, v) in start_env.iteritems()]
+    stmts = [AstAssignment(AstId(k), AstNumber(v)) for (k, v) in start_env.items()]
     bbs[bb_name] = BB(set(), stmts, set())
     path = [bb_name] + path
 
   if end_env != None:
     bb_name = "tmp_{}".format(uid) 
     uid += 1
-    stmts = [AstAssert(AstBinExpr(AstId(k), "==", AstNumber(v))) for (k, v) in end_env.iteritems()]
+    stmts = [AstAssert(AstBinExpr(AstId(k), "==", AstNumber(v))) for (k, v) in end_env.items()]
     bbs[bb_name] = BB(set(), stmts, set())
     path = path + [bb_name]
 
@@ -57,7 +57,7 @@ def does_split(bbs, loop, header_vals, timeout):
       taken = take_possible(bbs, loop, t, timeout)
       total.extend(taken)
       if len(taken) == 0:
-        print ("Failed on iteration {}".format(len(total)))
+        print(("Failed on iteration {}".format(len(total))))
         return False
 
       t = t[len(taken):]

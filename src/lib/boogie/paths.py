@@ -68,7 +68,7 @@ def nd_bb_path_to_ssa(p, bbs, ssa_env, cur_p = ""):
                 bb = BB(set(), bb_stmts, set())
                 bbs[bb_name] = bb
                 subp.append((bb_name, bb_replmps))
-            path.append((choice_var, map(lambda x:  x[0], tmp)))
+            path.append((choice_var, [x[0] for x in tmp]))
 
     return (path, ssa_env)
 
@@ -84,7 +84,7 @@ def ssa_stmt(stmt, prev_replm, cur_replm):
 
 def _ssa_stmts(stmts, envs):
     return [ssa_stmt(stmts[i], envs[i], envs[i+1])
-                for i in xrange(0, len(stmts))]
+                for i in range(0, len(stmts))]
 
 def ssa_path_to_z3(ssa_path, bbs):
     def f(arg):
@@ -95,7 +95,7 @@ def ssa_path_to_z3(ssa_path, bbs):
         else:
             return And([stmt_to_z3(stmt, AllIntTypeEnv())
                 for stmt in _ssa_stmts(bbs[arg[0]].stmts, arg[1])])
-    return And(map(f, ssa_path))
+    return And(list(map(f, ssa_path)))
 
 def is_nd_bb_path_possible(bbpath, bbs):
     nd_ssa_p, _ = nd_bb_path_to_ssa(bbpath, bbs, SSAEnv(None, ""))
@@ -116,7 +116,7 @@ def extract_ssa_path_vars(ssa_p, m):
                 (bb, repl_ms) = arg
                 envs = []
                 for repl_m in repl_ms:
-                    vs = set(map(str, repl_m.iterkeys())).union(argsS)
+                    vs = set(map(str, iter(repl_m.keys()))).union(argsS)
                     new_env = { orig_name : m.get(ssa_name, None)
                                     for (orig_name, ssa_name) in
                                         [(x, str(repl_m.get(AstId(x), x)))

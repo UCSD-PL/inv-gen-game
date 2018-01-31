@@ -11,8 +11,8 @@ args = p.parse_args()
 try:
     mc = connect(args.credentials_file, args.sandbox)
     for hitid in args.hitids:
-        print "Disposing", hitid
+        print("Disposing", hitid)
         r = mc.dispose_hit(hitid)
-except Exception,e:
+except Exception as e:
     print_exc()
     error("Failed...")
