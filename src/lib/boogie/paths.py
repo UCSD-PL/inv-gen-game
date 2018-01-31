@@ -116,7 +116,7 @@ def extract_ssa_path_vars(ssa_p, m):
                 (bb, repl_ms) = arg
                 envs = []
                 for repl_m in repl_ms:
-                    vs = set(map(str, repl_m.keys())).union(argsS)
+                    vs = set(map(str, repl_m.iterkeys())).union(argsS)
                     new_env = { orig_name : m.get(ssa_name, None)
                                     for (orig_name, ssa_name) in
                                         [(x, str(repl_m.get(AstId(x), x)))

@@ -17,14 +17,14 @@ def possible(bbs, start_env, path, end_env, timeout):
   if start_env != None:
     bb_name = "tmp_{}".format(uid) 
     uid += 1
-    stmts = [AstAssignment(AstId(k), AstNumber(v)) for (k, v) in start_env.items()]
+    stmts = [AstAssignment(AstId(k), AstNumber(v)) for (k, v) in start_env.iteritems()]
     bbs[bb_name] = BB(set(), stmts, set())
     path = [bb_name] + path
 
   if end_env != None:
     bb_name = "tmp_{}".format(uid) 
     uid += 1
-    stmts = [AstAssert(AstBinExpr(AstId(k), "==", AstNumber(v))) for (k, v) in end_env.items()]
+    stmts = [AstAssert(AstBinExpr(AstId(k), "==", AstNumber(v))) for (k, v) in end_env.iteritems()]
     bbs[bb_name] = BB(set(), stmts, set())
     path = path + [bb_name]
 

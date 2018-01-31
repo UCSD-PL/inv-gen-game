@@ -5,7 +5,7 @@ from lib.boogie.ast import AstAssert, AstAssume, AstHavoc, \
 
 #TODO: Need to introduce a separation between top and bottom
 def forwarddflow(bbs, transformer_m, union_f, initial_vals, start_val):
-    state = { bb: copy(initial_vals) for bb in bbs.keys() }
+    state = { bb: copy(initial_vals) for bb in bbs.iterkeys() }
     state[bbEntry(bbs)] = start_val
     wlist = [ bbEntry(bbs) ]
     while len(wlist) > 0:
@@ -28,7 +28,7 @@ def forwarddflow(bbs, transformer_m, union_f, initial_vals, start_val):
 # TODO: How does this work without one node starting with less than maximal?
 # What is Top and Bottom in my current use caes (livevars)?
 def backdflow(bbs, transformer_m, union_f, initial_vals):
-    state = { bb: copy(initial_vals) for bb in bbs.keys() }
+    state = { bb: copy(initial_vals) for bb in bbs.iterkeys() }
     wlist = [ bbExit(bbs) ]
     while len(wlist) > 0:
         curBB = wlist.pop()

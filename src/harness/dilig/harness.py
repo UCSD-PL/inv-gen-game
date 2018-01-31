@@ -40,7 +40,7 @@ def val_conv(ptr, typ):
     if (typ == int):
         return cast(ptr, c_int_p).contents.value
     else:
-        raise "Can't convert type: ", typ
+        raise Exception("Can't convert type: " + str(typ))
 
 def add_val(name, typ, addr):
     s = cast(name, c_char_p)

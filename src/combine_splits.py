@@ -62,7 +62,7 @@ for e in s.query(Event).all():
     lvlS["invariantsFound"].add((p['raw'], p['canonical']))
 
 
-for lvl_name, lvl in lvls.items():
+for lvl_name, lvl in lvls.iteritems():
   if "splitterPreds" in lvl and not endsWithNumP.match(lvl_name):
     print "Print split traces level has name not ending in number: ", lvl_name
 

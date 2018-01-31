@@ -299,7 +299,7 @@ if __name__ == "__main__":
 
   def pp_state(st):
     return "[{},{}]: ".format(st.pc.bb, st.pc.next_stmt) + \
-           ",".join([k + "={}".format(v) for (k, v) in st.store.items()])
+           ",".join([k + "={}".format(v) for (k, v) in st.store.iteritems()])
 
   def pp_trace(t):
     return "->\n".join(map(pp_state, t))

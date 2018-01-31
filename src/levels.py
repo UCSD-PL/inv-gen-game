@@ -115,7 +115,7 @@ def findNegatingTrace(loop, bbs, nunrolls, invs, invVrs = None):
 
     def diversity(vals):
         lsts = [ [ vals[i][k] for i in xrange(len(vals)) ]
-                 for k in vals[0].keys() ]
+                 for k in vals[0].iterkeys() ]
         return average([len(set(lst)) for lst in lsts])
         #return average([len(set(lst)) / 1.0 * len(lst) for lst in lsts])
 

@@ -67,7 +67,7 @@ def collapse_scc(g, ccs):
     return g1
 
 def topo_sort(g):
-    rev_g = { n : set() for n in g.keys() }
+    rev_g = { n : set() for n in g.iterkeys() }
 
     for n in g:
         for n1 in g[n]:

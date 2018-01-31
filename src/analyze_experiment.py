@@ -201,7 +201,7 @@ if __name__ == "__main__":
                         "Ave #Invs Found/Usr", "#Sound", "Sound", \
                         "#Overfitted", "Overfitted", "#Nonind", "Nonind"]
       print ", ".join(lvlStatColumns)
-      for (lvlName, lvlS) in lvlStats.items():
+      for (lvlName, lvlS) in lvlStats.iteritems():
         print ", ".join([\
           lvlName,\
           str(lvlS["solved"]),\

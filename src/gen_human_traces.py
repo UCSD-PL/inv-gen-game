@@ -209,7 +209,7 @@ def run_lvl(lvl_name):
 if (args.lvl != ""):
   run_lvl(args.lvl)
 else:
-  for lvl_name in lvls.keys():
+  for lvl_name in lvls.iterkeys():
     run_lvl(lvl_name)
 
 #pdb.set_trace()

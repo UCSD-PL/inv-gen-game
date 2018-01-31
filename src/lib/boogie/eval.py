@@ -43,7 +43,7 @@ def instantiateAndEval(inv, vals,
     prms = permutations(range(len(traceVs)), len(symVs))
 
     typeEnv = { str(x) + str(i) : Int
-                    for x in vals[0].keys()
+                    for x in vals[0].iterkeys()
                         for i in xrange(len(vals)) }
     typeEnv.update({ str(c) : Int for c in symConsts })
 
@@ -55,7 +55,7 @@ def instantiateAndEval(inv, vals,
         p = [ AstAssume(env_to_expr(x, str(i))) for (i,x) in enumerate(vals) ]
         p += [ AstAssert(replace(inst_inv,
                                  { AstId(x) : AstId(x + str(i))
-                                     for x in varM.values() }))
+                                     for x in varM.itervalues() }))
                for i in xrange(len(vals)) ]
 
         m = maybeModel(And(map(lambda s: stmt_to_z3(s, typeEnv), p)))
