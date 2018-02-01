@@ -1,15 +1,17 @@
 #pylint: disable=no-self-argument
+from typing import Any, Dict, Callable, List, TypeVar
+
 class AstNode:
-    def __init__(s, *args):
+    def __init__(s, *args: Any) -> None:
         s._children = args;
-        real_init = s.__init__.__code__
+        real_init = s.__init__.__code__ # type: ignore
         assert ((real_init.co_argcount - 1 == len(args) and\
                 real_init.co_argcount == len(real_init.co_varnames)) or \
                 real_init.co_flags & 0x04)
 
         # Attribute names are based on the formal argument names of the
         # most specific class constructor.
-        s._dict = {}
+        s._dict : Dict[str, Any] = {}
         for (n,v) in zip(real_init.co_varnames[1:], args):
             if (real_init.co_flags & 0x04) and n==real_init.co_varnames[-1]:
                 l = len(real_init.co_varnames) - 2;
@@ -17,13 +19,13 @@ class AstNode:
             else:
                 s._dict[n] = v;
 
-    def __getattr__(s, n):
+    def __getattr__(s, n: str) -> Any:
         try:
             return s._dict[n];
         except KeyError:
             raise AttributeError
 
-    def __repr__(s):
+    def __repr__(s) -> str:
         try:
             return s.__str__();
         except: #pylint: disable=bare-except
@@ -31,12 +33,12 @@ class AstNode:
             return s.__class__.__name__ + "[" + str(s._children) + "]"
 
     # Structural equality
-    def __eq__(s, other):
+    def __eq__(s, other: object) -> bool:
         return isinstance(other, AstNode) and \
                s.__class__ == other.__class__ and \
                s._children == other._children
 
-    def __hash__(s):
+    def __hash__(s) -> int:
         try:
           return hash((s.__class__,) + s._children)
         except:
@@ -47,7 +49,7 @@ class AstNode:
     def __getinitargs__(s):
         return s._children
 
-def replace(ast, m):
+def replace(ast: AstNode, m: Dict[AstNode, AstNode]) -> AstNode:
     if (not isinstance(ast, AstNode)):
         return ast;
     elif ast in m:
@@ -55,7 +57,8 @@ def replace(ast, m):
     else:
         return ast.__class__(*[replace(x,m) for x in ast._children])
 
-def reduce_nodes(node, cb):
+T = TypeVar("T")
+def reduce_nodes(node: AstNode, cb: Callable[[AstNode, List[T]], T]) -> T:
     return cb(node,
               [ reduce_nodes(x, cb)
                   for x in node._children if isinstance(x, AstNode) ])

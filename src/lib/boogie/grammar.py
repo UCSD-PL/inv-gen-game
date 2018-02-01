@@ -1,6 +1,7 @@
 #pylint: disable=no-self-argument,unused-argument, multiple-statements
+from typing import Any, TypeVar, Iterable, Union
 from pyparsing import delimitedList,nums, ParserElement, operatorPrecedence, \
-        opAssoc, StringEnd
+        opAssoc, StringEnd, ParseResults
 from ..common.parser import InfixExprParser
 from pyparsing import ZeroOrMore as ZoM,\
     OneOrMore as OoM,\
@@ -13,25 +14,27 @@ from pyparsing import ZeroOrMore as ZoM,\
     Word as W,\
     Group as G
 
+T=TypeVar("T")
+
 ParserElement.enablePackrat()
 csl = delimitedList
 
-class BoogieParser(InfixExprParser):
+class BoogieParser(InfixExprParser[T]):
   # Statements
-  def onAssert(s, prod, st, loc, toks): raise Exception("NYI")
-  def onAssume(s, prod, st, loc, toks): raise Exception("NYI")
-  def onReturn(s, prod, st, loc, toks): raise Exception("NYI")
-  def onGoto(s, prod, st, loc, toks): raise Exception("NYI")
-  def onAssignment(s, prod, st, loc, toks): raise Exception("NYI")
-  def onHavoc(s, prod, st, loc, toks): raise Exception("NYI")
-  def onProgram(s, prod, st, loc, toks): raise Exception("NYI")
-  def onImplementationDecl(s, prod, st, loc, toks): raise Exception("NYI")
-  def onBody(s, prod, st, loc, toks): raise Exception("NYI")
-  def onLocalVarDecl(s, prod, st, loc, toks): raise Exception("NYI")
-  def onType(s, prod, st, loc, toks): raise Exception("NYI")
-  def onLabeledStatement(s, prod, st, loc, toks): raise Exception("NYI")
+  def onAssert(s, prod: ParserElement[T], st: str, loc: int, toks:ParseResults[T]) -> Iterable[T]: raise Exception("NYI")
+  def onAssume(s, prod: ParserElement[T], st: str, loc: int, toks:ParseResults[T]) -> Iterable[T]: raise Exception("NYI")
+  def onReturn(s, prod: ParserElement[T], st: str, loc: int, toks:ParseResults[T]) -> Iterable[T]: raise Exception("NYI")
+  def onGoto(s, prod: ParserElement[T], st: str, loc: int, toks:ParseResults[T]) -> Iterable[T]: raise Exception("NYI")
+  def onAssignment(s, prod: ParserElement[T], st: str, loc: int, toks:ParseResults[T]) -> Iterable[T]: raise Exception("NYI")
+  def onHavoc(s, prod: ParserElement[T], st: str, loc: int, toks:ParseResults[T]) -> Iterable[T]: raise Exception("NYI")
+  def onProgram(s, prod: ParserElement[T], st: str, loc: int, toks:ParseResults[T]) -> Iterable[T]: raise Exception("NYI")
+  def onImplementationDecl(s, prod: ParserElement[T], st: str, loc: int, toks:ParseResults[T]) -> Iterable[T]: raise Exception("NYI")
+  def onBody(s, prod: ParserElement[T], st: str, loc: int, toks:ParseResults[T]) -> Iterable[T]: raise Exception("NYI")
+  def onLocalVarDecl(s, prod: ParserElement[T], st: str, loc: int, toks:ParseResults[T]) -> Iterable[T]: raise Exception("NYI")
+  def onType(s, prod: ParserElement[T], st: str, loc: int, toks:ParseResults[T]) -> Iterable[T]: raise Exception("NYI")
+  def onLabeledStatement(s, prod: ParserElement[T], st: str, loc: int, toks:ParseResults[T]) -> Iterable[T]: raise Exception("NYI")
 
-  def __init__(s):
+  def __init__(s) -> None:
     s.LT = L("<")
     s.GT = L(">")
     s.EQ = L("=")
@@ -57,10 +60,10 @@ class BoogieParser(InfixExprParser):
     s.UNIQUE = K("unique")
     s.RETURNS = K("returns")
     s.FUNCTION = K("function")
-    s.FALSE = K("false")
+    s.FALSE : ParserElement[T] = K("false")
     s.FALSE.setParseAction(\
             lambda st, loc, toks:  s.onAtom(s.FALSE, st, loc, toks))
-    s.TRUE = K("true")
+    s.TRUE : ParserElement[T] = K("true")
     s.TRUE.setParseAction(\
             lambda st, loc, toks:  s.onAtom(s.TRUE, st, loc, toks))
     s.OLD = K("old")
@@ -91,7 +94,7 @@ class BoogieParser(InfixExprParser):
     s.RETURN = K("return")
     s.IMPLEMENTATION = K("implementation")
 
-    s.Id = R("[a-zA-Z_][a-zA-Z0-9_#]*")
+    s.Id : ParserElement[T] = R("[a-zA-Z_][a-zA-Z0-9_#]*")
     s.Id.setParseAction(lambda st, loc, toks:  s.onAtom(s.Id, st, loc, toks))
     s.ParentEdge = O(s.UNIQUE) + s.Id
     s.ParentInfo = S("<:") + csl(s.ParentEdge)
@@ -116,31 +119,31 @@ class BoogieParser(InfixExprParser):
     s.QOp = (s.FORALL | s.EXISTS)
     s.QSep = L("::")
 
-    s.Expr = F();
+    s.Expr : ParserElement[T] = F();
 
-    s.Number = W(nums)
+    s.Number : ParserElement[T] = W(nums)
     s.Number.setParseAction(
             lambda st, loc, toks:  s.onAtom(s.Number, st, loc, toks))
-    s.BitVector = R("[0-9][0-9]*bv[0-9][0-9]*")
+    s.BitVector : ParserElement[T] = R("[0-9][0-9]*bv[0-9][0-9]*")
     s.BitVector.setParseAction(
             lambda st, loc, toks:  s.onAtom(s.BitVector, st, loc, toks))
     # TODO
     # TrigAttr = Trigger | Attribute
-    s.Fun_App = s.Id + s.LPARN + csl(s.Expr) + s.RPARN
+    s.Fun_App : ParserElement[T] = s.Id + s.LPARN + csl(s.Expr) + s.RPARN
     s.Fun_App.setParseAction(
             lambda st, loc, toks:  s.onAtom(s.Fun_App, st, loc, toks))
-    s.Old = s.OLD + s.LPARN + s.Expr + s.RPARN
+    s.Old : ParserElement[T] = s.OLD + s.LPARN + s.Expr + s.RPARN
     s.Old.setParseAction(
             lambda st, loc, toks:  s.onAtom(s.Old, st, loc, toks))
-    s.Primitive = s.FALSE | s.TRUE | s.Number | s.BitVector
+    s.Primitive : ParserElement[T] = s.FALSE | s.TRUE | s.Number | s.BitVector
     # TODO: Handle TriggerAttrs in Quantified expressions
     #E9_Quantified = LPARN + QOp + O(TypeArgs) + csl(IdsType) \
     #        + QSep + ZoM(TrigAttr) + Expr  +  RPARN
     #s.Quantified = s.LPARN + s.QOp + O(s.TypeArgs) + \
     #        csl(s.IdsType) + s.QSep + s.Expr  +  s.RPARN
 
-    s.Atom = s.Primitive | s.Fun_App | s.Old | s.Id #| s.Quantified
-    s.ArithExpr = operatorPrecedence(s.Atom, [
+    s.Atom : ParserElement[T] = s.Primitive | s.Fun_App | s.Old | s.Id #| s.Quantified
+    s.ArithExpr : ParserElement[T] = operatorPrecedence(s.Atom, [
       (s.ArithUnOp, 1, opAssoc.RIGHT, \
            lambda st, loc, toks:  s.onUnaryOp(s.ArithUnOp, st, loc, toks[0])),
       (s.MulOp, 2, opAssoc.LEFT, \
@@ -155,11 +158,11 @@ class BoogieParser(InfixExprParser):
     #E8 = E9 + ZoM(MapOp)
     # TODO: Add support for ConcatOp
     #E4 << E5 + ZoM(ConcatOp + E4)
-    s.RelExpr = s.ArithExpr + s.RelOp + s.ArithExpr
+    s.RelExpr : ParserElement[T] = s.ArithExpr + s.RelOp + s.ArithExpr
     s.RelExpr.setParseAction(
             lambda st, loc, toks: s.onNABinOp(s.RelExpr, st, loc, toks))
 
-    s.BoolExpr = operatorPrecedence((s.RelExpr | s.Atom), [
+    s.BoolExpr : ParserElement[T] = operatorPrecedence((s.RelExpr | s.Atom), [
       (s.BoolUnOp, 1, opAssoc.RIGHT, \
               lambda st, loc, toks:  s.onUnaryOp(s.BoolUnOp, st, loc, toks[0])),
       (s.AndOrOp, 2, opAssoc.LEFT, \
@@ -178,14 +181,14 @@ class BoogieParser(InfixExprParser):
     s.AttrList = ZoM(s.Attribute)
 
     ####### Types
-    s.Type = F();
+    s.Type : ParserElement[T] = F();
     s.BVType = R("bv[0-9][0-9]*")
     s.TypeAtom = s.INT | s.BOOL | s.BVType | s.LPARN + s.Type + s.RPARN
     s.TypeArgs = S(s.LT) + csl(s.Type) + S(s.GT)
     s.MapType = O(s.TypeArgs) + s.LSQBR + csl(s.Type) + s.RSQBR + s.Type
 
     s.TypeCtorArgs = F()
-    s.TypeCtorArgs = s.TypeAtom + O(s.TypeCtorArgs) |\
+    s.TypeCtorArgs << s.TypeAtom + O(s.TypeCtorArgs) |\
                    s.Id + O(s.TypeCtorArgs) |\
                    s.MapType
 
@@ -230,7 +233,7 @@ class BoogieParser(InfixExprParser):
             s.RPARN + O(s.OutParameters)
 
 
-    s.LocalVarDecl = S(s.VAR) + ZoM(s.Attribute) + csl(s.IdsTypeWhere) + \
+    s.LocalVarDecl : ParserElement[T] = S(s.VAR) + ZoM(s.Attribute) + csl(s.IdsTypeWhere) + \
             S(s.SEMI);
     s.LocalVarDecl.setParseAction(
             lambda st, loc, toks: s.onLocalVarDecl(s.LocalVarDecl,
@@ -243,9 +246,9 @@ class BoogieParser(InfixExprParser):
 
     s.LoopInv = O(s.FREE) + s.INVARIANT + s.Expr + s.SEMI
 
-    s.IfStmt = F()
+    s.IfStmt : Union[F, ParserElement[T]]= F()
     s.Else = s.ELSE + s.BlockStmt | s.ELSE + s.IfStmt
-    s.IfStmt = s.IF + s.LBRAC + s.WildcardExpr + s.RBRAC + s.BlockStmt + \
+    s.IfStmt << s.IF + s.LBRAC + s.WildcardExpr + s.RBRAC + s.BlockStmt + \
             O(s.Else)
 
     s.CallLhs = csl(s.Id) + s.ASSGN
@@ -253,23 +256,23 @@ class BoogieParser(InfixExprParser):
     s.Lhs = s.Id + ZoM(s.MapSelect)
     s.Label = s.Id | s.Number
 
-    s.AssertStmt = S(s.ASSERT) + s.Expr + S(s.SEMI)
+    s.AssertStmt : ParserElement[T] = S(s.ASSERT) + s.Expr + S(s.SEMI)
     s.AssertStmt.setParseAction(
             lambda st, loc, toks: s.onAssert(s.AssertStmt, st, loc, toks))
-    s.AssumeStmt = S(s.ASSUME) + O(S("{:partition}")) + s.Expr + S(s.SEMI)
+    s.AssumeStmt : ParserElement[T] = S(s.ASSUME) + O(S("{:partition}")) + s.Expr + S(s.SEMI)
     s.AssumeStmt.setParseAction(
             lambda st, loc, toks: s.onAssume(s.AssumeStmt, st, loc, toks))
-    s.ReturnStmt = S(s.RETURN) + S(s.SEMI)
+    s.ReturnStmt : ParserElement[T] = S(s.RETURN) + S(s.SEMI)
     s.ReturnStmt.setParseAction(
             lambda st, loc, toks: s.onReturn(s.ReturnStmt, st, loc, toks))
-    s.GotoStmt = S(s.GOTO) + csl(s.Label) + S(s.SEMI)
+    s.GotoStmt : ParserElement[T] = S(s.GOTO) + csl(s.Label) + S(s.SEMI)
     s.GotoStmt.setParseAction(
             lambda st, loc, toks: s.onGoto(s.GotoStmt, st, loc, toks))
-    s.AssignmentStmt = G(csl(s.Lhs)) + S(s.ASSGN) + G(csl(s.Expr)) + S(s.SEMI)
+    s.AssignmentStmt : ParserElement[T] = G(csl(s.Lhs)) + S(s.ASSGN) + G(csl(s.Expr)) + S(s.SEMI)
     s.AssignmentStmt.setParseAction(
             lambda st, loc, toks: s.onAssignment(s.AssignmentStmt, st,
                                                  loc, toks))
-    s.HavocStmt = S(s.HAVOC) + csl(s.Id) + S(s.SEMI)
+    s.HavocStmt : ParserElement[T] = S(s.HAVOC) + csl(s.Id) + S(s.SEMI)
     s.HavocStmt.setParseAction(
             lambda st, loc, toks: s.onHavoc(s.HavocStmt, st, loc, toks))
 
@@ -282,7 +285,7 @@ class BoogieParser(InfixExprParser):
             ZoM(s.LoopInv) + s.BlockStmt
     s.BreakStmt = s.BREAK + O(s.Id) + S(s.SEMI)
 
-    s.Stmt = s.AssertStmt \
+    s.Stmt : ParserElement[T] = s.AssertStmt \
           | s.AssumeStmt \
           | s.HavocStmt \
           | s.AssignmentStmt \
@@ -295,7 +298,7 @@ class BoogieParser(InfixExprParser):
           | s.GotoStmt
 
     s.LStmt = F();
-    s.LabeledStatement = s.Label + S(s.COLN) + s.LStmt
+    s.LabeledStatement : ParserElement[T] = s.Label + S(s.COLN) + s.LStmt
     s.LStmt << (s.Stmt | s.LabeledStatement) #pylint: disable=pointless-statement
     s.LEmpty = F();
     s.LEmpty <<(s.Id + s.COLN + O(s.LEmpty)) #pylint: disable=expression-not-assigned
@@ -306,7 +309,7 @@ class BoogieParser(InfixExprParser):
     s.StmtList << (ZoM(s.LStmt) + O(s.LEmpty)) #pylint: disable=expression-not-assigned
 
 
-    s.Body = S(s.LBRAC) + G(ZoM(s.LocalVarDecl)) + G(s.StmtList) + S(s.RBRAC)
+    s.Body : ParserElement[T] = S(s.LBRAC) + G(ZoM(s.LocalVarDecl)) + G(s.StmtList) + S(s.RBRAC)
     s.Body.setParseAction(lambda st, loc, toks: s.onBody(s.Body, st, loc, toks))
 
     s.ProcedureDecl = \
@@ -316,14 +319,14 @@ class BoogieParser(InfixExprParser):
     s.IOutParameters = s.RETURNS + s.LPARN + csl(s.IdsType) + s.RPARN
     s.ISig = G(O(s.TypeArgs)) + s.LPARN + G(O(csl(s.IdsType))) + s.RPARN +\
             G(O(s.IOutParameters))
-    s.ImplementationDecl = S(s.IMPLEMENTATION) + G(ZoM(s.Attribute)) + s.Id +\
+    s.ImplementationDecl : ParserElement[T] = S(s.IMPLEMENTATION) + G(ZoM(s.Attribute)) + s.Id +\
             G(s.ISig) + G(ZoM(s.Body))
     s.ImplementationDecl.setParseAction(
       lambda st, loc, toks: s.onImplementationDecl(s.ImplementationDecl,
                                                    st, loc, toks))
 
 
-    s.Decl = s.TypeDecl |\
+    s.Decl : ParserElement[T] = s.TypeDecl |\
              s.ConstantDecl |\
              s.FunctionDecl |\
              s.AxiomDecl |\
@@ -331,12 +334,12 @@ class BoogieParser(InfixExprParser):
              s.ProcedureDecl |\
              s.ImplementationDecl
 
-    s.Program = ZoM(s.Decl);
+    s.Program : ParserElement[T] = ZoM(s.Decl);
     s.Program.setParseAction(
             lambda st, loc, toks: s.onProgram(s.Program, st, loc, toks))
 
-  def parseExpr(s, st):
+  def parseExpr(s, st:str) -> T:
     return (s.Expr + StringEnd()).parseString(st)[0]
 
-  def parseProgram(s, st):
+  def parseProgram(s, st:str) -> T:
     return (s.Program + StringEnd()).parseString(st)[0]
