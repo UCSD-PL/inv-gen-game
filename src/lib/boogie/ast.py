@@ -3,7 +3,7 @@ from lib.boogie.grammar import BoogieParser
 from pyparsing import ParseResults, Token, ParserElement
 from ..common.ast import AstNode, replace, reduce_nodes
 from functools import reduce
-from typing import List, Iterable, Set
+from typing import List, Iterable, Set, TYPE_CHECKING
 
 class AstProgram(AstNode):
     def __init__(s, decls) -> None: AstNode.__init__(s, decls)
@@ -94,8 +94,12 @@ class AstFuncExpr(AstExpr):
     def __str__(s) -> str:
         return str(s.funcName) + "(" + ",".join(map(str, s.ops)) +  ")"
 
-PE=ParserElement[AstNode]
-PR=ParseResults[AstNode]
+if TYPE_CHECKING:
+  PE=ParserElement[AstNode]
+  PR=ParseResults[AstNode]
+else:
+  PE=None
+  PR=None
 
 class AstBuilder(BoogieParser[AstNode]):
   def onAtom(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:

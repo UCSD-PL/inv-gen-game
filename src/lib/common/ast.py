@@ -11,7 +11,7 @@ class AstNode:
 
         # Attribute names are based on the formal argument names of the
         # most specific class constructor.
-        s._dict : Dict[str, Any] = {}
+        s._dict = {} # type: Dict[str, Any]
         for (n,v) in zip(real_init.co_varnames[1:], args):
             if (real_init.co_flags & 0x04) and n==real_init.co_varnames[-1]:
                 l = len(real_init.co_varnames) - 2;

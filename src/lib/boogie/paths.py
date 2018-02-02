@@ -1,18 +1,27 @@
 from lib.boogie.ast import stmt_changed, AstAssignment, AstId, AstHavoc, \
-        AstAssert, AstTrue, replace
+        AstAssert, AstTrue, replace, AstNode
 from lib.boogie.z3_embed import Or, And, Int, And, stmt_to_z3, \
-        AllIntTypeEnv, satisfiable, model
-from lib.boogie.bb import BB
-from lib.boogie.ssa import SSAEnv, is_ssa_str
+        AllIntTypeEnv, satisfiable, model, Env_T
+from lib.boogie.bb import BB, Label_T, BBs_T
+from lib.boogie.ssa import SSAEnv, is_ssa_str, ReplMap_T
 from lib.boogie.predicate_transformers import wp_stmts, sp_stmts
+
+from typing import TYPE_CHECKING, List, Union, Any, Set, Tuple
+import z3
+
+
+BBPath_T= List[Label_T]
+NondetBBPath_T = List[Any]
+NondetSSABBPath_T = List[Any]
+NondetPathEnvs_T = List[Any]
 
 #BB_PATH = [ BB_LABEL ]
 #NONDET_BB_PATH = [ (BB | [ NONDET_BB_PATH ] ) ]
 #NONDET_SSA_BB_PATH = [ (BB, [ REPL_M ]) |
 #                       ( CHOICE_VAR, [ NONDET_SSA_BB_PATH ] ) ]
 
-def nd_bb_path_to_ssa(p, bbs, ssa_env, cur_p = ""):
-    path = []
+def nd_bb_path_to_ssa(p: NondetBBPath_T, bbs: BBs_T, ssa_env: SSAEnv, cur_p: str = "") -> Tuple[NondetSSABBPath_T, SSAEnv]:
+    path = [] # type: NondetSSABBPath_T 
     for ind, arg in enumerate(p):
         if isinstance(arg, str):
             repl_ms = [ ssa_env.replm() ]
@@ -23,7 +32,7 @@ def nd_bb_path_to_ssa(p, bbs, ssa_env, cur_p = ""):
                 repl_ms.append(ssa_env.replm())
             path.append((arg, repl_ms))
         else:
-            tmp = []
+            tmp = [] # type: List[Tuple[NondetSSABBPath_T, SSAEnv]]
             choice_var = "_split_" + cur_p + "." + str(ind)
 
             # Build each SSA-ed subpath
@@ -35,8 +44,8 @@ def nd_bb_path_to_ssa(p, bbs, ssa_env, cur_p = ""):
                 tmp.append(ssaed_subpath)
 
             # Compute the set of variables changed across ALL paths
-            changed = set()
-            for (_, sub_env) in tmp:
+            changed = set() #type: Set[str]
+            for (dummy, sub_env) in tmp:
                 changed.update(sub_env.changed())
 
             # Compute their ssa name BEFORE the paths
@@ -72,7 +81,7 @@ def nd_bb_path_to_ssa(p, bbs, ssa_env, cur_p = ""):
 
     return (path, ssa_env)
 
-def ssa_stmt(stmt, prev_replm, cur_replm):
+def ssa_stmt(stmt: AstNode, prev_replm: ReplMap_T, cur_replm: ReplMap_T) -> AstNode:
     # Havoc's turn into no-ops when SSA-ed.
     if isinstance(stmt, AstHavoc):
         return AstAssert(AstTrue());
@@ -82,11 +91,11 @@ def ssa_stmt(stmt, prev_replm, cur_replm):
     else:
         return replace(stmt, cur_replm)
 
-def _ssa_stmts(stmts, envs):
+def _ssa_stmts(stmts: List[AstNode], envs: List[ReplMap_T]) -> List[AstNode]:
     return [ssa_stmt(stmts[i], envs[i], envs[i+1])
                 for i in range(0, len(stmts))]
 
-def ssa_path_to_z3(ssa_path, bbs):
+def ssa_path_to_z3(ssa_path: NondetSSABBPath_T, bbs: BBs_T) -> z3.ExprRef:
     def f(arg):
         if (arg[0].startswith("_split_")):
             split_var = arg[0]
@@ -97,11 +106,11 @@ def ssa_path_to_z3(ssa_path, bbs):
                 for stmt in _ssa_stmts(bbs[arg[0]].stmts, arg[1])])
     return And(list(map(f, ssa_path)))
 
-def is_nd_bb_path_possible(bbpath, bbs):
+def is_nd_bb_path_possible(bbpath: NondetBBPath_T, bbs: BBs_T) -> bool:
     nd_ssa_p, _ = nd_bb_path_to_ssa(bbpath, bbs, SSAEnv(None, ""))
     return satisfiable(ssa_path_to_z3(nd_ssa_p, bbs))
 
-def extract_ssa_path_vars(ssa_p, m):
+def extract_ssa_path_vars(ssa_p: NondetSSABBPath_T, m: Env_T) -> NondetPathEnvs_T:
     argsS = set([str(x) for x in m
         if (not is_ssa_str(str(x)) and '_split_' not in str(x))])
 

@@ -8,14 +8,14 @@ class Parser:
     pass
 
 class InfixExprParser(Parser, Generic[T]):
-  def onAtom(s, prod: ParserElement[T], st: str, loc: int, toks: ParseResults[T]) -> Iterable[T]:
+  def onAtom(s, prod: "ParserElement[T]", st: str, loc: int, toks: "ParseResults[T]") -> "Iterable[T]":
       raise Exception("NYI")
-  def onUnaryOp(s, prod: ParserElement[T], st: str, loc: int, toks: ParseResults[T]) -> Iterable[T]:
+  def onUnaryOp(s, prod: "ParserElement[T]", st: str, loc: int, toks: "ParseResults[T]") -> "Iterable[T]":
       raise Exception("NYI")
-  def onLABinOp(s, prod: ParserElement[T], st: str, loc: int, toks: ParseResults[T]) -> Iterable[T]:
+  def onLABinOp(s, prod: "ParserElement[T]", st: str, loc: int, toks: "ParseResults[T]") -> "Iterable[T]":
       raise Exception("NYI")
-  def onRABinOp(s, prod: ParserElement[T], st: str, loc: int, toks: ParseResults[T]) -> Iterable[T]:
+  def onRABinOp(s, prod: "ParserElement[T]", st: str, loc: int, toks: "ParseResults[T]") -> "Iterable[T]":
       raise Exception("NYI")
-  def onNABinOp(s, prod: ParserElement[T], st: str, loc: int, toks: ParseResults[T]) -> Iterable[T]:
+  def onNABinOp(s, prod: "ParserElement[T]", st: str, loc: int, toks: "ParseResults[T]") -> "Iterable[T]":
       raise Exception("NYI")
 

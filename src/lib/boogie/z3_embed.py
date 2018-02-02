@@ -1,5 +1,5 @@
 # pylint: disable=global-variable-not-assigned,no-self-argument
-from typing import Union, Tuple, Dict, Callable, Optional, Any, NoReturn, List, cast
+from typing import Union, Tuple, Dict, Callable, Optional, Any, List, cast
 import lib.boogie.ast as ast
 import z3
 
@@ -102,7 +102,7 @@ class Z3ServerInstance(object):
 
 
 def startAndWaitForZ3Instance() -> Tuple[Process, Pyro4.URI]:
-    q : PQueue = PQueue()
+    q = PQueue() # type: PQueue 
 
     def runDaemon(q) -> None:
         import os
@@ -224,7 +224,7 @@ class Z3ProxySolver:
 z3ProcessPoolCond = Condition()
 MAX_Z3_INSTANCES = 100
 ports = set(range(8100, 8100 + MAX_Z3_INSTANCES))
-z3ProcessPool : Dict[Z3ProxySolver, bool] = {}
+z3ProcessPool = {} # type: Dict[Z3ProxySolver, bool]
 
 
 def _cleanupChildProcesses() -> None:
@@ -236,7 +236,7 @@ atexit.register(_cleanupChildProcesses)
 
 # atexit handlers don't get called on SIGTERM.
 # cleanup child z3 processes explicitly on SIGTERM
-def handler(signum: int, frame: Any) -> NoReturn:
+def handler(signum: int, frame: Any) -> None:
   _cleanupChildProcesses()
   sys.exit(-1)
 
@@ -348,7 +348,7 @@ def counterexamples(pred: z3.ExprRef, num: int, timeout: Optional[int] =None, co
     try:
         s = getSolver()
         s.add(Not(pred))
-        counterexes : List[Env_T] = []
+        counterexes = [] # type: List[Env_T]
         while len(counterexes) < num:
             try:
                 res = s.check(timeout, comm)
@@ -523,7 +523,7 @@ def ids(z3expr: z3.AstRef) -> List[str]:
     if len(z3expr.children()) == 0:
         return [str(z3expr)] if not isnum(str(z3expr)) else []
     else:
-        base : List[str] = []
+        base = [] # type: List[str]
         childIds = reduce(lambda x, y: x + y, list(map(ids, z3expr.children())), base)
         tmp = {str(x): x for x in childIds}
         return list(tmp.keys())
@@ -597,10 +597,11 @@ def z3_expr_to_boogie(expr: z3.ExprRef) -> ast.AstExpr:
                     lambda acc, x:    ast.AstBinExpr(acc, boogie_op, z3_expr_to_boogie(x)),
                     c[1:],
                     z3_expr_to_boogie(c[0]))
-        elif (assoc == "none"):
-            raise Exception("Error: Expression " + str(expr) + " has " + \
-                            str(len(c)) + " children: " + str(c) + " but root operator " + \
-                            d.name() + " is non-associative.")
+        elif (assoc == "none" or assoc == "right"):
+            assert len(c) == 2, "NYI otherwise"
+            lhs = z3_expr_to_boogie(c[0])
+            rhs = z3_expr_to_boogie(c[1])
+            return ast.AstBinExpr(lhs, boogie_op, rhs)
         else:
             raise Exception("NYI")
     elif (d.name() == "if"):

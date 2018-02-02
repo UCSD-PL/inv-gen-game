@@ -1,20 +1,18 @@
 #pylint: disable=no-self-argument
-from lib.boogie.ast import AstId;
-from copy import copy, deepcopy;
+from lib.boogie.ast import AstId, AstNode
+from copy import copy, deepcopy
 from frozendict import frozendict
 from typing import Optional, Dict, List, TYPE_CHECKING
+from lib.boogie.z3_embed import Env_T
 
-if TYPE_CHECKING:
-  from lib.boogie.z3_embed import Env_T
-
-ReplMap_T = Dict[AstId, AstId]
+ReplMap_T = Dict[AstNode, AstNode]
 
 class SSAEnv:
-    def __init__(s, parent : Optional[SSAEnv] = None, prefix: str = ".") -> None:
-        s._cnt : Dict[str, int] = {}
+    def __init__(s, parent : Optional["SSAEnv"] = None, prefix: str = ".") -> None:
+        s._cnt = {} #type: Dict[str, int]
         parent_pfix = parent._prefix if parent else ""
-        s._prefix : str = parent_pfix + prefix
-        s._parent : Optional[SSAEnv] = deepcopy(parent)
+        s._prefix = parent_pfix + prefix #type: str
+        s._parent = deepcopy(parent) #type: Optional[SSAEnv]
 
     def _lookup_cnt(s, v: str) -> int:
         if v in s._cnt:

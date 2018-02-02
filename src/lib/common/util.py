@@ -1,4 +1,4 @@
-from typing import Any, NoReturn, TypeVar, Iterable, Callable, Set, Union, List, Tuple, Sized
+from typing import Any, TypeVar, Iterable, Callable, Set, Union, List, Tuple, Sized
 import traceback
 from itertools import chain, combinations
 from sys import exc_info, stderr
@@ -19,7 +19,7 @@ def error(*args: Any) -> None:
   else:
     stderr.write(" ".join(map(str, args)) + "\n")
 
-def fatal(*args: Any) -> NoReturn:
+def fatal(*args: Any) -> None:
   error(*args)
   exit(-1)
 
@@ -46,7 +46,7 @@ def powerset(s: SizedIterable) -> Iterable[Set[T]]:
   for subS in it:
     yield set(subS)
 
-def average(vals: SizedIterable[Union[int, float]]) -> float:
+def average(vals: "SizedIterable[Union[int, float]]") -> float:
     return sum(vals) / (1.0 * len(vals))
 
 def split(pred: Callable[[T], bool], itr: Iterable[T]) -> Tuple[Iterable[T], Iterable[T]]:

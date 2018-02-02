@@ -11,7 +11,7 @@ BBs_T = Dict[Label_T, BB]
 
 def get_bbs(filename: str) -> BBs_T:
     ast = parseAst(open(filename).read())
-    fun : AstNode = ast._children[0][0]
+    fun = ast._children[0][0] #type: AstNode
     assert (isinstance(fun, AstImplementation))
     # Step 1: Break statements into basic blocks
     bbs = {}
