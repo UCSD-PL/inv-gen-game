@@ -32,7 +32,7 @@ def unique(iterable: Iterable[T], msg: str ="") -> T:
 def pp_exc(f: Callable) -> Callable:
     """ Wrap a function to catch, pretty print the exception and re-raise it.
     """
-    def decorated(*args, **kwargs):
+    def decorated(*args: Any, **kwargs: Any) -> Any:
         try:
             return f(*args, **kwargs)
         except Exception:

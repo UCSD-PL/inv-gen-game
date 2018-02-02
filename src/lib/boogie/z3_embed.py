@@ -34,7 +34,7 @@ def val_to_boogie(v: Z3Val_T) -> ast.AstExpr:
         return ast.AstNumber(int(v))
 
 
-def env_to_expr(env: Env_T, suff="") -> ast.AstExpr:
+def env_to_expr(env: Env_T, suff:str ="") -> ast.AstExpr:
     return ast.ast_and(
         [ast.AstBinExpr(ast.AstId(k + suff), "==", val_to_boogie(v))
          for (k, v) in env.items()])
@@ -50,13 +50,13 @@ def getCtx() -> z3.Context:
 
 
 class WrappedZ3Exception(BaseException):
-    def __init__(s, value) -> None:
+    def __init__(s, value: Any) -> None:
         BaseException.__init__(s)
         s._value = value
 
 
 def wrapZ3Exc(f: Callable) -> Callable:
-    def wrapped(*args, **kwargs):
+    def wrapped(*args: Any, **kwargs: Any) -> Any:
         try:
             return f(*args, **kwargs)
         except z3.z3types.Z3Exception as e:
@@ -104,7 +104,7 @@ class Z3ServerInstance(object):
 def startAndWaitForZ3Instance() -> Tuple[Process, Pyro4.URI]:
     q = PQueue() # type: PQueue 
 
-    def runDaemon(q) -> None:
+    def runDaemon(q: PQueue) -> None:
         import os
 
         out = "z3_child.%d.out" % os.getpid()
@@ -434,7 +434,7 @@ class AllIntTypeEnv(TypeEnv_T):
     def __getitem__(s, i: str) -> Z3ValFactory_T:
         return Int
 
-def expr_to_z3(expr: ast.AstExpr, typeEnv: TypeEnv_T):
+def expr_to_z3(expr: ast.AstExpr, typeEnv: TypeEnv_T) -> z3.ExprRef:
     if isinstance(expr, ast.AstNumber):
         return IntVal(expr.num)
     elif isinstance(expr, ast.AstId):

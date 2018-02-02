@@ -3,28 +3,28 @@ from lib.boogie.grammar import BoogieParser
 from pyparsing import ParseResults, Token, ParserElement
 from ..common.ast import AstNode, replace, reduce_nodes
 from functools import reduce
-from typing import List, Iterable, Set, TYPE_CHECKING
+from typing import List, Iterable, Set, TYPE_CHECKING, Any
 
 class AstProgram(AstNode):
-    def __init__(s, decls) -> None: AstNode.__init__(s, decls)
+    def __init__(s, decls: Iterable[AstNode]) -> None: AstNode.__init__(s, decls)
     def __str__(s) -> str: return "\n".join(map(str, s.decls))
 
 class AstImplementation(AstNode):
-    def __init__(s, name, signature, body) -> None:
+    def __init__(s, name: str, signature: Any, body: List[AstNode]) -> None:
         AstNode.__init__(s, name, signature, body)
     def __str__(s) -> str:
         return "implementation " + s.name + " " + str(s.signature) + str(s.body)
 
 class AstBinding(AstNode):
-    def __init__(s, names, typ) -> None:  AstNode.__init__(s, names, typ)
+    def __init__(s, names: Iterable[str], typ: AstNode) -> None:  AstNode.__init__(s, names, typ)
     def __str__(s) -> str: return ",".join(map(str, s.names)) + " : " + str(s.typ)
 
 class AstLabel(AstNode):
-    def __init__(s, label, stmt) -> None:  AstNode.__init__(s, label, stmt)
+    def __init__(s, label: str, stmt: AstStmt) -> None:  AstNode.__init__(s, label, stmt)
     def __str__(s) -> str: return str(s.label) + " : " + str(s.stmt)
 
 class AstAssignment(AstNode):
-    def __init__(s, lhs, rhs) -> None:  AstNode.__init__(s, lhs, rhs)
+    def __init__(s, lhs: AstId, rhs: AstExpr) -> None:  AstNode.__init__(s, lhs, rhs)
     def __str__(s) -> str: return str(s.lhs) + " := " + str(s.rhs) + ";"
 
 class AstIntType(AstNode):
@@ -32,7 +32,7 @@ class AstIntType(AstNode):
     def __str__(s) -> str: return "int"
 
 class AstBody(AstNode):
-    def __init__(s, bindings, stmts) -> None:   AstNode.__init__(s, bindings, stmts)
+    def __init__(s, bindings: Iterable[AstBinding], stmts: Iterable[AstNode]) -> None:   AstNode.__init__(s, bindings, stmts)
     def __str__(s) -> str:
         return "{\n" + "\n".join(["var " + str(x) + ";" for x in s.bindings]) +\
                 "\n" +\
@@ -41,7 +41,7 @@ class AstBody(AstNode):
 
 class AstStmt(AstNode): pass
 class AstOneExprStmt(AstStmt):
-    def __init__(s, expr) -> None:  AstStmt.__init__(s, expr)
+    def __init__(s, expr: AstExpr) -> None:  AstStmt.__init__(s, expr)
 
 class AstAssert(AstOneExprStmt):
     def __str__(s) -> str: return "assert (" + str(s.expr) + ");";
@@ -50,7 +50,8 @@ class AstAssume(AstOneExprStmt):
     def __str__(s) -> str: return "assume (" + str(s.expr) + ");";
 
 class AstHavoc(AstStmt):
-    def __init__(s, ids) -> None:  AstStmt.__init__(s, ids)
+    #TODO: Should be more precise here: Iterable[AstId]
+    def __init__(s, ids: Iterable[AstNode]) -> None:  AstStmt.__init__(s, ids)
     def __str__(s) -> str: return "havoc " + ",".join(map(str, s.ids)) + ";"
 
 # Returns is for now without argument
@@ -59,13 +60,14 @@ class AstReturn(AstStmt):
     def __str__(s) -> str: return "return ;"
 
 class AstGoto(AstStmt):
-    def __init__(s, labels) -> None:  AstStmt.__init__(s, labels)
+    #TODO: Should be more precise here: Iterable[AstId]
+    def __init__(s, labels: Iterable[AstNode]) -> None:  AstStmt.__init__(s, labels)
     def __str__(s) -> str: return "goto " + ",".join(map(str, s.labels)) + ";"
 
 
 class AstExpr(AstNode): pass
 class AstUnExpr(AstExpr):
-    def __init__(s, op, expr) -> None:  AstExpr.__init__(s, op, expr)
+    def __init__(s, op: str, expr: AstExpr) -> None:  AstExpr.__init__(s, op, expr)
     def __str__(s) -> str: return s.op + str(s.expr)
 
 class AstFalse(AstExpr): 
@@ -77,20 +79,20 @@ class AstTrue(AstExpr):
     def __str__(s) -> str: return "true"
 
 class AstNumber(AstExpr): 
-    def __init__(s, num) -> None:   AstExpr.__init__(s,num)
+    def __init__(s, num: int) -> None:   AstExpr.__init__(s,num)
     def __str__(s) -> str: return str(s.num)
 
 class AstId(AstExpr): 
-    def __init__(s, name) -> None:  AstExpr.__init__(s, name)
+    def __init__(s, name: str) -> None:  AstExpr.__init__(s, name)
     def __str__(s) -> str: return str(s.name)
 
 class AstBinExpr(AstExpr):
-    def __init__(s, lhs, op, rhs) -> None:  AstExpr.__init__(s, lhs, op, rhs)
+    def __init__(s, lhs: AstExpr, op: str, rhs: AstExpr) -> None:  AstExpr.__init__(s, lhs, op, rhs)
     def __str__(s) -> str:
         return "(" + str(s.lhs) + " " + str(s.op) + " " + str(s.rhs) + ")"
 
 class AstFuncExpr(AstExpr):
-    def __init__(s, funcName, *ops) -> None:  AstExpr.__init__(s, funcName, *ops)
+    def __init__(s, funcName: AstId, *ops: AstExpr) -> None:  AstExpr.__init__(s, funcName, *ops)
     def __str__(s) -> str:
         return str(s.funcName) + "(" + ",".join(map(str, s.ops)) +  ")"
 
@@ -100,6 +102,12 @@ if TYPE_CHECKING:
 else:
   PE=None
   PR=None
+
+def _mkBinExp(lhs: Any, op: Any, rhs: Any) -> AstBinExpr:
+  assert isinstance(lhs, AstExpr) and isinstance(rhs, AstExpr) and \
+         isinstance(op, str)
+  return AstBinExpr(lhs, op, rhs)
+
 
 class AstBuilder(BoogieParser[AstNode]):
   def onAtom(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
@@ -114,40 +122,35 @@ class AstBuilder(BoogieParser[AstNode]):
       return [ AstId(str(toks[0])) ]
 
   def onUnaryOp(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
-    return [ AstUnExpr(*toks) ]
+    op = str(toks[0])
+    expr = toks[1]
+    assert isinstance(expr, AstExpr)
+    return [ AstUnExpr(op, expr) ]
 
   def onLABinOp(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
     if (len(toks) == 3):
-      return [ AstBinExpr(*toks) ]
+      return [ _mkBinExp(*toks) ]
     else:
       assert(len(toks) > 3);
-      base = AstBinExpr(*toks[:3])
+      base = _mkBinExp(*toks[:3])
       rest = [ [toks[3+2*k], toks[3+2*k+1]] for k in range(int((len(toks)-3)/2)) ]
-      return [ reduce(lambda acc,el:  AstBinExpr(acc, el[0], el[1]), \
+      return [ reduce(lambda acc,el:  _mkBinExp(acc, el[0], el[1]), \
                       rest, base)
              ]
 
   def onRABinOp(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
-    if (len(toks) == 3):
-      return [ AstBinExpr(*toks) ]
-    else:
-      assert(len(toks) > 3);
-      rev_toks = list(reversed(toks))
-      base = AstBinExpr(*rev_toks[:3])
-      return [ reduce(lambda acc,el:  AstBinExpr(acc, el[0], el[1]), \
-                      rev_toks[3:], base)
-             ]
+    raise Exception("NYI")
 
   def onNABinOp(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
     assert (len(toks) == 3);
-    return [ AstBinExpr(*toks) ]
+    return [ _mkBinExp(*toks) ]
 
   # Statements
   def onAssert(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
-    assert (len(toks) == 1)
+    assert (len(toks) == 1 and isinstance(toks[0], AstExpr))
     return [ AstAssert(toks[0]) ]
   def onAssume(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
-    assert (len(toks) == 1)
+    assert (len(toks) == 1 and isinstance(toks[0], AstExpr))
     return [ AstAssume(toks[0]) ]
   def onReturn(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
     assert (len(toks) == 0)
@@ -185,7 +188,10 @@ class AstBuilder(BoogieParser[AstNode]):
     body = toks[3][0]
     return [ AstImplementation(name, signature, body) ]
   def onLabeledStatement(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
-    return AstLabel(*toks);
+    label = str(toks[0])
+    stmt = toks[1]
+    assert isinstance(stmt, AstStmt)
+    return AstLabel(label, stmt);
 
 astBuilder = AstBuilder();
 
@@ -278,7 +284,7 @@ def normalize(ast: AstNode) -> AstNode:
     return ast;
 
 def ast_constants(n: AstNode) -> Set[int]:
-  def cb(node, children):
+  def cb(node: AstNode, children: Iterable[Set[int]]) -> Set[int]:
     if isinstance(node, AstNumber):
       return set([node.num])
     else:
@@ -287,24 +293,28 @@ def ast_constants(n: AstNode) -> Set[int]:
 
 
 def ast_boolean_exprs(n: AstNode) -> Set[AstExpr]:
-  def cb(node, children):
+  def cb(node: AstNode, children: Iterable[Set[AstExpr]]) -> Set[AstExpr]:
     relOps = [ "<", ">", "<=", ">=", "==",  "!=" ]
     boolOps = [ "||", "&&", "==>", "<==>" ]
     isBoolean = (isinstance(node, AstUnExpr) and node.op == "!") or \
                 (isinstance(node, AstBinExpr) and node.op in (relOps + boolOps))
-    boolSubexp = reduce(lambda x,y: x.union(y), children, set([]))
+    base = set([]) # type: Set[AstExpr]
+    boolSubexp = reduce(lambda x,y: x.union(y), children, base)
     if (isBoolean):
+      assert isinstance(node, AstExpr)
       boolSubexp.add(node)
     return boolSubexp
 
   return reduce_nodes(n, cb)
 
 def ast_primitive_boolean_exprs(n: AstNode) -> Set[AstExpr]:
-  def cb(node, children):
+  def cb(node: AstNode, children: Iterable[Set[AstExpr]]) -> Set[AstExpr]:
     relOps = [ "<", ">", "<=", ">=", "==",  "!=" ]
     isBoolean = (isinstance(node, AstBinExpr) and node.op in relOps)
-    boolSubexp = reduce(lambda x,y: x.union(y), children, set([]))
+    base = set([]) # type: Set[AstExpr]
+    boolSubexp = reduce(lambda x,y: x.union(y), children, base)
     if (isBoolean):
+      assert isinstance(node, AstExpr)
       boolSubexp.add(node)
     return boolSubexp
 

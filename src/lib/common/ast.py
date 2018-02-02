@@ -1,5 +1,5 @@
 #pylint: disable=no-self-argument
-from typing import Any, Dict, Callable, List, TypeVar
+from typing import Any, Dict, Callable, List, TypeVar, Iterable
 
 class AstNode:
     def __init__(s, *args: Any) -> None:
@@ -46,7 +46,7 @@ class AstNode:
           raise
 
     # Pickle
-    def __getinitargs__(s):
+    def __getinitargs__(s) -> Iterable[Any]:
         return s._children
 
 def replace(ast: AstNode, m: Dict[AstNode, AstNode]) -> AstNode:
