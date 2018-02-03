@@ -1,19 +1,26 @@
 from lib.boogie.z3_embed import And, stmt_to_z3, env_to_expr, satisfiable, Int,\
-    maybeModel, expr_to_z3, AllIntTypeEnv, simplify, model
+    maybeModel, expr_to_z3, AllIntTypeEnv, simplify, model, Env_T, TypeEnv_T,\
+    _force_expr as _z3_force_expr
 from lib.boogie.ast import expr_read, AstAssume, AstAssert, replace, AstId,\
-        AstNumber
+        AstNumber, AstExpr, _force_expr, AstStmt, ReplMap_T
 from lib.boogie.paths import get_path_vars, nd_bb_path_to_ssa, sp_nd_ssa_path, \
-        extract_ssa_path_vars
+        extract_ssa_path_vars, BBPath_T, NondetSSABBPath_T, NondetPathEnvs_T
 from lib.boogie.predicate_transformers import sp_stmts
 from lib.boogie.ssa import SSAEnv
+from lib.boogie.bb import BBs_T, Label_T
 from itertools import permutations
 from copy import deepcopy
+from typing import TypeVar, List, Dict, Iterator, Tuple, Any
+import z3
 
-def _to_dict(vs, vals):
+T=TypeVar("T")
+U=TypeVar("U")
+
+def _to_dict(vs: List[T], vals: List[U]) -> Dict[T,U]:
     return { vs[i]: vals[i] for i in range(0, len(vs)) }
 
-def evalPred(boogie_expr, env):
-    typeEnv = { x : Int for x in env }
+def evalPred(boogie_expr: AstExpr, env: Env_T) -> bool:
+    typeEnv = { x : Int for x in env } # type: TypeEnv_T
     q = And([stmt_to_z3(stmt, typeEnv) for stmt in [AstAssume(env_to_expr(env)),
          AstAssert(boogie_expr)]])
     res = satisfiable(q)
@@ -22,9 +29,10 @@ def evalPred(boogie_expr, env):
 # Given an invariant template as a boogie expression where [x,y,z] are
 # variables and [a,b,c] constants And a series of environments, find all
 # instantiations of the template that holds for all elements of the series.
-def instantiateAndEval(inv, vals,
-        var_names = None,
-        const_names = None):
+def instantiateAndEval(inv: AstExpr,
+        vals: List[Env_T],
+        var_names : List[str] = None,
+        const_names : List[str] = None) -> List[AstExpr]:
 
     if (var_names == None):
         var_names = ["_sv_x", "_sv_y", "_sv_z"]
@@ -32,7 +40,7 @@ def instantiateAndEval(inv, vals,
     if (const_names == None):
         const_names = ["_sc_a", "_sc_b", "_sc_c"]
 
-    res = []
+    res = [] # type: List[AstExpr]
     symVs = [ x for x in expr_read(inv) if x in var_names ]
     symConsts = [ x for x in expr_read(inv) if x in const_names ]
 
@@ -43,7 +51,7 @@ def instantiateAndEval(inv, vals,
 
     typeEnv = { str(x) + str(i) : Int
                     for x in vals[0].keys()
-                        for i in range(len(vals)) }
+                    for i in range(len(vals)) } # type: TypeEnv_T
     typeEnv.update({ str(c) : Int for c in symConsts })
 
     for prm in prms:
@@ -51,31 +59,31 @@ def instantiateAndEval(inv, vals,
         varM.update({ nonSymV: nonSymV for nonSymV in nonSymVs })
 
         inst_inv = replace(inv, { AstId(x) : AstId(varM[x]) for x in symVs })
-        p = [ AstAssume(env_to_expr(x, str(i))) for (i,x) in enumerate(vals) ]
-        p += [ AstAssert(replace(inst_inv,
+        p = [ AstAssume(env_to_expr(x, str(i))) for (i,x) in enumerate(vals) ] # type: List[AstStmt]
+        p += [ AstAssert(_force_expr(replace(inst_inv,
                                  { AstId(x) : AstId(x + str(i))
-                                     for x in varM.values() }))
+                                     for x in varM.values() })))
                for i in range(len(vals)) ]
 
         m = maybeModel(And([stmt_to_z3(s, typeEnv) for s in p]))
 
         if (m):
-            const_vals = { AstId(x) : AstNumber(m[x]) for x in symConsts }
-            res.append(replace(inst_inv, const_vals))
+            const_vals = { AstId(x) : AstNumber(m[x]) for x in symConsts } # type: ReplMap_T
+            res.append(_force_expr(replace(inst_inv, const_vals)))
 
     return res
 
-def execute(env, bb, bbs, limit):
+def execute(env: Env_T, bb: Label_T, bbs: BBs_T, limit: int) -> Iterator[Tuple[z3.ExprRef, SSAEnv, BBPath_T, NondetSSABBPath_T, NondetPathEnvs_T]]:
     q = [ (expr_to_z3(env_to_expr(env), AllIntTypeEnv()),
            bb ,
            SSAEnv(None, ""),
            [ ],
-           [ ]) ]
+           [ ]) ] # type: List[Tuple[z3.ExprRef, Label_T, SSAEnv, List[str], List[Any]]]
 
-    def bb_sp(bb, initial_ssa_env, precond):
+    def bb_sp(bb: Label_T, initial_ssa_env: SSAEnv, precond: z3.ExprRef) -> Tuple[z3.ExprRef, SSAEnv, NondetSSABBPath_T]:
       nd_path, final_env = nd_bb_path_to_ssa([bb], bbs, initial_ssa_env)
       sp = sp_nd_ssa_path(nd_path, bbs, precond, AllIntTypeEnv())
-      return simplify(sp), final_env, nd_path
+      return _z3_force_expr(simplify(sp)), final_env, nd_path
 
     while len(q) > 0:
       precond, bb, ssa_env, curp, cur_ssap = q.pop()

@@ -58,15 +58,6 @@ def bbExits(bbs: BBs_T) -> List[Label_T]:
 def bbExit(bbs: BBs_T) -> Label_T:
     return unique(bbExits(bbs))
 
-def bbpath_to_stmts(bb_path, bbs):
-    r = []
-    for b in bb_path:
-        if (isinstance(b, BB)):
-            r.extend(bbs[b].stmts)
-        else:
-            r.append([ bbpath_to_stmts(x, bbs) for x in b ])
-    return r
-
 def ensureSingleExit(bbs: BBs_T) -> None:
     e = bbExits(bbs)
     if (len(e) == 1):

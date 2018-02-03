@@ -1,7 +1,7 @@
 from lib.boogie.ast import stmt_changed, AstAssignment, AstId, AstHavoc, \
-        AstAssert, AstTrue, replace, AstNode
+        AstAssert, AstTrue, replace, AstNode, AstExpr, AstStmt_T, AstStmt, _force_stmt
 from lib.boogie.z3_embed import Or, And, Int, And, stmt_to_z3, \
-        AllIntTypeEnv, satisfiable, model, Env_T
+        AllIntTypeEnv, satisfiable, model, Env_T, TypeEnv_T
 from lib.boogie.bb import BB, Label_T, BBs_T
 from lib.boogie.ssa import SSAEnv, is_ssa_str, ReplMap_T
 from lib.boogie.predicate_transformers import wp_stmts, sp_stmts
@@ -81,22 +81,25 @@ def nd_bb_path_to_ssa(p: NondetBBPath_T, bbs: BBs_T, ssa_env: SSAEnv, cur_p: str
 
     return (path, ssa_env)
 
-def ssa_stmt(stmt: AstNode, prev_replm: ReplMap_T, cur_replm: ReplMap_T) -> AstNode:
+def ssa_stmt(stmt: AstStmt, prev_replm: ReplMap_T, cur_replm: ReplMap_T) -> AstStmt:
     # Havoc's turn into no-ops when SSA-ed.
     if isinstance(stmt, AstHavoc):
         return AstAssert(AstTrue());
     if isinstance(stmt, AstAssignment):
-        return AstAssignment(replace(stmt.lhs, cur_replm),
-                             replace(stmt.rhs, prev_replm))
+        lhs = replace(stmt.lhs, cur_replm)
+        rhs = replace(stmt.rhs, prev_replm)
+        assert isinstance(lhs, AstId)
+        assert isinstance(rhs, AstExpr)
+        return AstAssignment(lhs,rhs)
     else:
-        return replace(stmt, cur_replm)
+        return _force_stmt(replace(stmt, cur_replm))
 
-def _ssa_stmts(stmts: List[AstNode], envs: List[ReplMap_T]) -> List[AstNode]:
+def _ssa_stmts(stmts: List[AstStmt], envs: List[ReplMap_T]) -> List[AstStmt]:
     return [ssa_stmt(stmts[i], envs[i], envs[i+1])
                 for i in range(0, len(stmts))]
 
 def ssa_path_to_z3(ssa_path: NondetSSABBPath_T, bbs: BBs_T) -> z3.ExprRef:
-    def f(arg):
+    def f(arg: Any) -> z3.ExprRef:
         if (arg[0].startswith("_split_")):
             split_var = arg[0]
             return Or([And((Int(split_var) == ind), ssa_path_to_z3(x, bbs))
@@ -114,8 +117,8 @@ def extract_ssa_path_vars(ssa_p: NondetSSABBPath_T, m: Env_T) -> NondetPathEnvs_
     argsS = set([str(x) for x in m
         if (not is_ssa_str(str(x)) and '_split_' not in str(x))])
 
-    def _helper(ssa_p):
-        concrete_ssa_path = []
+    def _helper(ssa_p: Any) -> List[Any]:
+        concrete_ssa_path : List[Any] = []
         for (_, arg) in enumerate(ssa_p):
             if (arg[0].startswith("_split_")):
                 choice_var, nd_paths = arg
@@ -140,12 +143,12 @@ def extract_ssa_path_vars(ssa_p: NondetSSABBPath_T, m: Env_T) -> NondetPathEnvs_
     return [x for x in _helper(ssa_p) if '_union_' not in x[0]]
 
 
-def get_path_vars(bbpath, bbs):
+def get_path_vars(bbpath: BBPath_T, bbs: BBs_T) -> NondetPathEnvs_T:
     ssa_p, _ = nd_bb_path_to_ssa(bbpath, bbs, SSAEnv(None, ""))
     m = model(ssa_path_to_z3(ssa_p, bbs))
     return extract_ssa_path_vars(ssa_p, m);
 
-def wp_nd_ssa_path(ssa_p, bbs, pred, typeEnv):
+def wp_nd_ssa_path(ssa_p: NondetSSABBPath_T, bbs: BBs_T, pred: z3.ExprRef, typeEnv: TypeEnv_T) -> z3.ExprRef:
     for arg in reversed(ssa_p):
         if (arg[0].startswith("_split_")):
             pred = Or([wp_nd_ssa_path(subp, bbs, pred, typeEnv)
@@ -156,7 +159,7 @@ def wp_nd_ssa_path(ssa_p, bbs, pred, typeEnv):
                             typeEnv)
     return pred
 
-def sp_nd_ssa_path(ssa_p, bbs, pred, typeEnv):
+def sp_nd_ssa_path(ssa_p: NondetSSABBPath_T, bbs: BBs_T, pred: z3.ExprRef, typeEnv: TypeEnv_T) -> z3.ExprRef:
     for arg in ssa_p:
         if (arg[0].startswith("_split_")):
             pred = Or([sp_nd_ssa_path(subp, bbs, pred, typeEnv)

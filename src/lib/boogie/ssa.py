@@ -1,11 +1,9 @@
 #pylint: disable=no-self-argument
-from lib.boogie.ast import AstId, AstNode
+from lib.boogie.ast import AstId, AstNode, ReplMap_T
 from copy import copy, deepcopy
 from frozendict import frozendict
 from typing import Optional, Dict, List, TYPE_CHECKING
 from lib.boogie.z3_embed import Env_T
-
-ReplMap_T = Dict[AstNode, AstNode]
 
 class SSAEnv:
     def __init__(s, parent : Optional["SSAEnv"] = None, prefix: str = ".") -> None:

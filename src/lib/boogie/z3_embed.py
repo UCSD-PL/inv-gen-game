@@ -434,6 +434,14 @@ class AllIntTypeEnv(TypeEnv_T):
     def __getitem__(s, i: str) -> Z3ValFactory_T:
         return Int
 
+def _force_arith(a: Any) -> z3.ArithRef:
+    assert isinstance(a, z3.ArithRef)
+    return a
+
+def _force_expr(a: Any) -> z3.ExprRef:
+    assert isinstance(a, z3.ExprRef)
+    return a
+
 def expr_to_z3(expr: ast.AstExpr, typeEnv: TypeEnv_T) -> z3.ExprRef:
     if isinstance(expr, ast.AstNumber):
         return IntVal(expr.num)
@@ -451,6 +459,7 @@ def expr_to_z3(expr: ast.AstExpr, typeEnv: TypeEnv_T) -> z3.ExprRef:
     elif isinstance(expr, ast.AstUnExpr):
         z3_inner = expr_to_z3(expr.expr, typeEnv)
         if expr.op == '-':
+            assert isinstance(z3_inner, z3.ArithRef)
             return -z3_inner
         elif expr.op == '!':
             return Not(z3_inner)
@@ -468,26 +477,35 @@ def expr_to_z3(expr: ast.AstExpr, typeEnv: TypeEnv_T) -> z3.ExprRef:
         elif expr.op == "&&":
             return And(e1, e2)
         elif expr.op == "==":
-            return e1 == e2
+            return _force_arith(e1 == e2)
         elif expr.op == "!=":
-            return e1 != e2
+            return _force_arith(e1 != e2)
         elif expr.op == "<":
+            assert isinstance(e1, z3.ArithRef) and isinstance(e2, z3.ArithRef)
             return e1 < e2
         elif expr.op == ">":
+            assert isinstance(e1, z3.ArithRef) and isinstance(e2, z3.ArithRef)
             return e1 > e2
         elif expr.op == "<=":
+            assert isinstance(e1, z3.ArithRef) and isinstance(e2, z3.ArithRef)
             return e1 <= e2
         elif expr.op == ">=":
+            assert isinstance(e1, z3.ArithRef) and isinstance(e2, z3.ArithRef)
             return e1 >= e2
         elif expr.op == "+":
+            assert isinstance(e1, z3.ArithRef) and isinstance(e2, z3.ArithRef)
             return e1 + e2
         elif expr.op == "-":
+            assert isinstance(e1, z3.ArithRef) and isinstance(e2, z3.ArithRef)
             return e1 - e2
         elif expr.op == "*":
+            assert isinstance(e1, z3.ArithRef) and isinstance(e2, z3.ArithRef)
             return e1 * e2
         elif expr.op == "div":
+            assert isinstance(e1, z3.ArithRef) and isinstance(e2, z3.ArithRef)
             return e1 / e2
         elif expr.op == "mod":
+            assert isinstance(e1, z3.ArithRef) and isinstance(e2, z3.ArithRef)
             return e1 % e2
         else:
             raise Exception("Unknown binary operator " + str(expr.op))
@@ -502,7 +520,7 @@ def stmt_to_z3(stmt: ast.AstNode, typeEnv: TypeEnv_T) -> z3.ExprRef:
     if (isinstance(stmt, ast.AstAssignment)):
         lvalue = typeEnv[stmt.lhs](str(stmt.lhs))
         rhs = expr_to_z3(stmt.rhs, typeEnv)
-        return (lvalue == rhs)
+        return _force_arith(lvalue == rhs)
     elif (isinstance(stmt, ast.AstAssert)):
         return (expr_to_z3(stmt.expr, typeEnv))
     elif (isinstance(stmt, ast.AstAssume)):

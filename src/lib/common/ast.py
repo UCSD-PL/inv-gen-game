@@ -49,7 +49,8 @@ class AstNode:
     def __getinitargs__(s) -> Iterable[Any]:
         return s._children
 
-def replace(ast: AstNode, m: Dict[AstNode, AstNode]) -> AstNode:
+ReplMap_T = Dict[AstNode, AstNode]
+def replace(ast: AstNode, m: ReplMap_T) -> AstNode:
     if (not isinstance(ast, AstNode)):
         return ast;
     elif ast in m:

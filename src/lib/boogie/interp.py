@@ -1,21 +1,19 @@
-from collections import namedtuple
-from .bb import BB, get_bbs, bbEntry
+from .bb import BB, get_bbs, bbEntry, BBs_T
 from copy import copy
 from .ast import AstAssert, AstAssume, AstHavoc, AstAssignment, AstGoto, \
-  AstReturn, AstUnExpr, AstBinExpr, AstNumber, AstId, AstTrue, AstFalse
+  AstReturn, AstUnExpr, AstBinExpr, AstNumber, AstId, AstTrue, AstFalse, \
+  AstExpr
+from typing import Any, Dict, Callable, Union, Iterable, Tuple, Set, List, NamedTuple
 
-# Program = Dict[str, BB]
-# Value = Union[int, bool]
-# PC = Tuple[str, int]
-# Store = Dict[str, Value]
-# State = Tuple[PC, Store, str]
-# RandF = Callable[State, str]->Value
-# ChoiceF = Callable[Program, [Set[State]], Set[State]]
+BoogieVal = Union[int, bool]
+Store = Dict[str, BoogieVal]
+PC = NamedTuple("PC", [("bb", str), ("next_stmt", int)])
+State = NamedTuple("State", [("pc", PC), ("store", Store), ("status", str)])
+Trace = List[State]
+States = Set[State]
 
-# A program counter is a tuple (bb_name, next_stmt)
-PC = namedtuple("PC", ["bb", "next_stmt"])
-# Program state is a tuple (PC, Dict[str, int], str)
-State = namedtuple("State", ["pc", "store", "status"])
+RandF = Callable[[State, str], BoogieVal]
+ChoiceF = Callable[[BBs_T, Iterable[State]], List[State]]
 
 # Possible statuses:
 STALLED="STALLED"   # reached an assume that is false
@@ -25,17 +23,19 @@ RUNNING="RUNNING"   # can still make progress
 
 _logical_un = {
   '!':  lambda x: not x,
-}
+} #type: Dict[str, Callable[[bool], bool]]
 
 _arith_un = {
   '-':  lambda x: -x,
-}
+} #type: Dict[str, Callable[[int], int]]
+
 
 _logical_bin = {
   "&&": lambda x, y:  x and y,
   "||": lambda x, y:  x or y,
   "==>": lambda x, y:  (not x) or y,
-}
+} #type: Dict[str, Callable[[bool, bool], bool]]
+
 
 _arith_bin = {
   "+": lambda x, y:  x + y,
@@ -43,27 +43,20 @@ _arith_bin = {
   "*": lambda x, y:  x * y,
   "div": lambda x, y:  x // y,
   "mod": lambda x, y:  x % y,
-# These are not really arithmetic (return bool not int) but for runtime type checking
-# its sufficient to put them here
+} #type: Dict[str, Callable[[int, int], int]]
+
+_relational_bin = {
   "==": lambda x, y:  x == y,
   "!=": lambda x, y:  x != y,
   "<": lambda x, y:  x < y,
   ">": lambda x, y:  x > y,
   "<=": lambda x, y:  x <= y,
   ">=": lambda x, y:  x >= y,
-}
+} #type: Dict[str, Callable[[int, int], bool]]
 
 class BoogieRuntimeExc(Exception):  pass
 
-def check(v, typ):
-  """
-  Raise a runtime exception of the type of v is not typ
-  """
-  if not type(v) == typ:
-    raise BoogieRuntimeExc("Expected {} not {}.".format(typ, v))
-
-def eval_quick(expr, store):
-  # type: (AstNode, Store) -> Value
+def eval_quick(expr: AstExpr, store: Store) -> BoogieVal:
   """
   Evaluate an expression in a given environment. Boogie expressions are always
   pure so we don't modify the store. Raise a runtime error on:
@@ -80,7 +73,7 @@ def eval_quick(expr, store):
   elif isinstance(expr, AstId):
     try:
       v = store[expr.name]
-      check(v, int) # Currently can only handle int vars
+      assert isinstance(v, int) # Currently can only handle int vars
       return v
     except KeyError:
       raise BoogieRuntimeExc("Unkown id {}".format(expr.name))
@@ -89,11 +82,11 @@ def eval_quick(expr, store):
     op = expr.op
 
     if (op in _logical_un):
-      check(inner, bool)
+      assert isinstance(inner, bool)
       return _logical_un[op](inner)
     
     if (op in _arith_un):
-      check(inner, int)
+      assert isinstance(inner, int)
       return _arith_un[op](inner)
 
     assert False, "Unknown unary op {}".format(op)
@@ -102,16 +95,22 @@ def eval_quick(expr, store):
     op = expr.op
 
     if (op in _logical_bin):
-      check(lhs, bool)
-      check(rhs, bool)
+      assert isinstance(lhs, bool)
+      assert isinstance(rhs, bool)
       return _logical_bin[op](lhs, rhs)
     
     if (op in _arith_bin):
-      check(lhs, int)
-      check(rhs, int)
+      assert isinstance(lhs, int)
+      assert isinstance(rhs, int)
 
       if (op == 'div' and rhs == 0):
         raise BoogieRuntimeExc("Divide by 0")
+
+      return _arith_bin[op](lhs, rhs)
+
+    if (op in _relational_bin):
+      assert isinstance(lhs, int)
+      assert isinstance(rhs, int)
 
       return _arith_bin[op](lhs, rhs)
     assert False, "Unknown binary op {}".format(op)
@@ -142,8 +141,7 @@ def finished(s):
   return s.status == FINISHED
 
 
-def interp_one(bbs, state, rand):
-  # type: (Program, State, RandF) -> Iterable[State]
+def interp_one(bbs: BBs_T, state: State, rand: RandF) -> Iterable[State]:
   """
   Given a program bbs and a current state, return the set of possible next
   states
@@ -172,7 +170,7 @@ def interp_one(bbs, state, rand):
 
     if isinstance(stmt, AstAssert):
       v = eval_quick(stmt.expr, store)
-      check(v, bool)
+      assert isinstance(v, bool)
       if (not v):
         status = FAILED
     elif isinstance(stmt, AstAssume):
@@ -182,7 +180,7 @@ def interp_one(bbs, state, rand):
     elif isinstance(stmt, AstHavoc):
       store = copy(store)
       for var_id in stmt.ids:
-        store[var_id.name] = rand(store, var_id.name)
+        store[var_id.name] = rand(state, var_id.name)
     elif isinstance(stmt, AstAssignment):
       v = eval_quick(stmt.rhs, store)
       store = copy(store)
@@ -192,8 +190,7 @@ def interp_one(bbs, state, rand):
 
     yield State(PC(bb, next_stmt + 1), store, status)
 
-def trace_n(bbs, state, nsteps, rand, filt):
-  # type: (Program, State, int, RandF, ChoiceF) -> Tuple[List[Trace], List[Trace]]
+def trace_n(bbs: BBs_T, state: State, nsteps: int, rand: RandF, filt: ChoiceF)-> Tuple[List[Trace], List[Trace]]:
   """
   Given a program bbs and a current state state, and number of steps nsteps
   interpret the program for up to nsteps. Return two lists - the active traces
@@ -215,14 +212,14 @@ def trace_n(bbs, state, nsteps, rand, filt):
               inative_traces - a list of traces of length UP TO nsteps that are
                                either failed or finished.
   """
-  active_traces = [ [state] ] 
-  inactive_traces = []
+  active_traces = [ [state] ] # type: List[Trace]
+  inactive_traces = [] # type: List[Trace]
 
   for step in range(nsteps):
-    new_traces = [ ]
+    new_traces = [ ] # type: List[Trace]
 
     for t in active_traces:
-      new_states = list(interp_one(bbs, t[-1], rand))
+      new_states = list(interp_one(bbs, t[-1], rand)) # type: List[State]
       # Don't care about stalled traces
       new_states = [x for x in new_states if not(stalled(x))]
       if (len(new_states) > 1):
@@ -240,7 +237,7 @@ def trace_n(bbs, state, nsteps, rand, filt):
 
   return (active_traces, inactive_traces)
 
-def trace_n_from_start(bbs, starting_store, nsteps, rand, filt):
+def trace_n_from_start(bbs: BBs_T, starting_store: Store, nsteps: int, rand: RandF, filt: ChoiceF) -> Tuple[List[Trace], List[Trace]]:
   starting_state = State(PC(bbEntry(bbs), 0), starting_store, RUNNING)
   return trace_n(bbs, starting_state, nsteps, rand, filt)
 
@@ -271,10 +268,10 @@ if __name__ == "__main__":
   }
 
   if (args.nond_mode == "all"):
-    filt_f = lambda bbs, states:  states
+    filt_f = lambda bbs, states:  list(states) # type: ChoiceF
   elif (args.nond_mode == "random_lookahead_1"):
-    def f(bbs, states):
-      def lookahead_one_filter(bbs, s):
+    def f(bbs: BBs_T, states: Iterable[State]) -> List[State]:
+      def lookahead_one_filter(bbs: BBs_T, s: State) -> bool:
         if s.pc.next_stmt == len(bbs[s.pc.bb]):
           return True
 
@@ -283,7 +280,7 @@ if __name__ == "__main__":
           return True
 
         v = eval_quick(stmt.expr, s.store)
-        check(v, bool)
+        assert isinstance(v, bool)
         return v
 
       feasible_states = [x for x in states if lookahead_one_filter(bbs, x)]
@@ -292,22 +289,22 @@ if __name__ == "__main__":
   else:
     error("Usage: unknown nond-mode: {}".format(args.nond_mode))
 
-  rand_f = lambda state, Id:  randint(-1000, 1000)
+  rand_f = lambda state, Id:  randint(-1000, 1000) # type: RandF
 
   starting_state = State(PC(bbEntry(bbs), 0), starting_store, RUNNING)
-  (active, inactive) = trace_n(bbs, starting_state, args.steps, rand_f, filt_f)
+  (active_ts, inactive_ts) = trace_n(bbs, starting_state, args.steps, rand_f, filt_f)
 
-  def pp_state(st):
+  def pp_state(st: State) -> str:
     return "[{},{}]: ".format(st.pc.bb, st.pc.next_stmt) + \
            ",".join([k + "={}".format(v) for (k, v) in st.store.items()])
 
-  def pp_trace(t):
+  def pp_trace(t: Trace) -> str:
     return "->\n".join(map(pp_state, t))
 
 
-  print("Active({}):".format(len(active)))
-  for t in active:
+  print("Active({}):".format(len(active_ts)))
+  for t in active_ts:
     print(pp_trace(t))
-  print("Inactive({}):".format(len(inactive)))
-  for t in inactive:
+  print("Inactive({}):".format(len(inactive_ts)))
+  for t in inactive_ts:
     print(pp_trace(t))
