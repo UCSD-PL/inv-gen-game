@@ -14,8 +14,48 @@ from typing import Dict, Optional, Set, Tuple, List
 import z3
 
 # TODO: Can I make these an instance of forward dataflow analysis?
+class Violation:
+  def __init__(s, typ: str, path: NondetSSABBPath_T, lastBBCompletedStmts: List[Tuple[AstStmt, ReplMap_T]], query: z3.ExprRef, ctrex: Env_T) -> None:
+    s._typ = typ
+    s._path = path
+    s._lastBBCompletedStmts = lastBBCompletedStmts
+    s._query = query
+    s._ctrex = ctrex
+
+  def isInductive(s) -> bool:
+      return s._typ == "inductiveness"
+  def isSafety(s) -> bool:
+      return s._typ == "safety"
+  def startBB(s) -> Label_T:
+      return s._path[0][0]
+  def endBB(s) -> Label_T:
+      return s._path[-1][0]
+  def startReplM(s) -> ReplMap_T:
+      return s._path[0][1][0]
+  def endReplM(s) -> ReplMap_T:
+    if (len(s._lastBBCompletedStmts) > 0):
+      return s._lastBBCompletedStmts[-1][1]
+    return s._path[-2][1][-1]
+
+  def startEnv(s) -> Env_T:
+    assert {} == s.startReplM()
+    return unssa_z3_model(s._ctrex, s.startReplM())
+
+  def endEnv(s) -> Env_T:
+    return unssa_z3_model(s._ctrex, s.endReplM())
+
+  def __str__(s) -> str:
+    if (s.isSafety()):
+      return "Safety@" + str(s.endBB()) + ":" + str(s.endEnv())
+    else:
+      return "Inductiveness@" + str([x[0] for x in s._path]) + ":" + \
+              str(s.startEnv()) + "->" + str(s.endEnv())
+
+  def __repr__(s) -> str:
+    return s.__str__()
+
 InvNetwork = Dict[Label_T, Set[AstExpr]]
-ViolationNetwork = Dict[Label_T, Set[Tuple[AstExpr, Violation]]]
+ViolationNetwork = Dict[Label_T, Set[Tuple[AstExpr, "Violation"]]]
 
 def filterCandidateInvariants(bbs: BBs_T, preCond: AstExpr, postCond: AstExpr, cutPoints: InvNetwork, timeout: Optional[int]=None) -> Tuple[ViolationNetwork, ViolationNetwork, InvNetwork, List[Violation]]:
     assert (len(cutPoints) == 1)
@@ -220,43 +260,3 @@ def checkInvNetwork(bbs: BBs_T, preCond: AstExpr, postCond: AstExpr, cutPoints: 
               workQ.append((path + succSSA, nextFinalSSAEnv, sp))
 
     return violations
-
-class Violation:
-  def __init__(s, typ: str, path: NondetSSABBPath_T, lastBBCompletedStmts: List[Tuple[AstStmt, ReplMap_T]], query: z3.ExprRef, ctrex: Env_T) -> None:
-    s._typ = typ
-    s._path = path
-    s._lastBBCompletedStmts = lastBBCompletedStmts
-    s._query = query
-    s._ctrex = ctrex
-
-  def isInductive(s) -> bool:
-      return s._typ == "inductiveness"
-  def isSafety(s) -> bool:
-      return s._typ == "safety"
-  def startBB(s) -> Label_T:
-      return s._path[0][0]
-  def endBB(s) -> Label_T:
-      return s._path[-1][0]
-  def startReplM(s) -> ReplMap_T:
-      return s._path[0][1][0]
-  def endReplM(s) -> ReplMap_T:
-    if (len(s._lastBBCompletedStmts) > 0):
-      return s._lastBBCompletedStmts[-1][1]
-    return s._path[-2][1][-1]
-
-  def startEnv(s) -> Env_T:
-    assert {} == s.startReplM()
-    return unssa_z3_model(s._ctrex, s.startReplM())
-
-  def endEnv(s) -> Env_T:
-    return unssa_z3_model(s._ctrex, s.endReplM())
-
-  def __str__(s) -> str:
-    if (s.isSafety()):
-      return "Safety@" + str(s.endBB()) + ":" + str(s.endEnv())
-    else:
-      return "Inductiveness@" + str([x[0] for x in s._path]) + ":" + \
-              str(s.startEnv()) + "->" + str(s.endEnv())
-
-  def __repr__(s) -> str:
-    return s.__str__()

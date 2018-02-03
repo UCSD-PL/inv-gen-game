@@ -118,7 +118,7 @@ def extract_ssa_path_vars(ssa_p: NondetSSABBPath_T, m: Env_T) -> NondetPathEnvs_
         if (not is_ssa_str(str(x)) and '_split_' not in str(x))])
 
     def _helper(ssa_p: Any) -> List[Any]:
-        concrete_ssa_path : List[Any] = []
+        concrete_ssa_path = [] # type: List[Any] 
         for (_, arg) in enumerate(ssa_p):
             if (arg[0].startswith("_split_")):
                 choice_var, nd_paths = arg

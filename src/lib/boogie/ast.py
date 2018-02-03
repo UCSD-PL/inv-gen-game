@@ -184,7 +184,7 @@ class AstBuilder(BoogieParser[AstNode]):
     assert (len(toks) > 0)
     return [ AstHavoc(toks) ]
   def onProgram(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
-    decls : List[AstDecl_T] = []
+    decls = [] # type: List[AstDecl_T] 
     for d in toks:
         assert isinstance(d, AstDecl_T)
         decls.append(d)
@@ -193,6 +193,7 @@ class AstBuilder(BoogieParser[AstNode]):
     return [ AstBinding(list(map(str, toks[:-1])), toks[-1]) ]
   def onType(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
     # Currently only handle ints
+    print (toks)
     assert len(toks) == 1 and toks[0] == s.INT;
     return [ AstIntType() ];
   def onBody(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
