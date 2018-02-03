@@ -32,6 +32,7 @@ else
   PY="$(which python3)"
 fi
 
+$PY -m pip install wheel
 $PY -m pip install flask
 $PY -m pip install flask-jsonrpc
 $PY -m pip install slimit
@@ -50,6 +51,7 @@ $PY -m pip install mysql-python
 $PY -m pip install infinite
 $PY -m pip install mysql-python
 $PY -m pip install pycparser
+$PY -m pip install mypy
 
 if [ "$2" == "3" ] ; then
   $PY -m pip install mypy
@@ -83,8 +85,8 @@ if [ ! -e $DIR/third_party/invgen ]; then
   pushd $DIR/third_party
   mkdir invgen
   cd invgen
-  wget http://www.tcs.tifr.res.in/~agupta/invgen/invgen
-  wget http://www.tcs.tifr.res.in/~agupta/invgen/frontend
+  wget -4 http://www.tcs.tifr.res.in/~agupta/invgen/invgen
+  wget -4 http://www.tcs.tifr.res.in/~agupta/invgen/frontend
   chmod a+x invgen
   chmod a+x frontend
   popd
@@ -94,7 +96,7 @@ if [ ! -e $DIR/third_party/cpa_checker_1.4 ]; then
   pushd $DIR/third_party
   mkdir cpa_checker_1.4
   cd cpa_checker_1.4
-  wget https://cpachecker.sosy-lab.org/CPAchecker-1.4-svcomp16c-unix.tar.bz2
+  wget -4 https://cpachecker.sosy-lab.org/CPAchecker-1.4-svcomp16c-unix.tar.bz2
   tar jxvf CPAchecker-1.4-svcomp16c-unix.tar.bz2
   popd
 fi
@@ -103,7 +105,7 @@ if [ ! -e $DIR/third_party/boogie ]; then
   pushd $DIR/third_party
   git clone https://github.com/boogie-org/boogie.git
   cd boogie
-  wget https://nuget.org/nuget.exe
+  wget -4 https://nuget.org/nuget.exe
   mono ./nuget.exe restore Source/Boogie.sln
   mozroots --import --sync
   xbuild Source/Boogie.sln
