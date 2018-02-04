@@ -39,7 +39,7 @@ class AstId(AstExpr):
 
 class AstMapIndex(AstExpr):
     def __init__(s, map: AstId, index: AstExpr) -> None:  AstExpr.__init__(s, map, index)
-    def __str__(s) -> str: return str(s.name)
+    def __str__(s) -> str: return "{}[{}]".format(str(s.map), str(s.index))
 
 class AstUnExpr(AstExpr):
     def __init__(s, op: str, expr: AstExpr) -> None:  AstExpr.__init__(s, op, expr)
@@ -300,6 +300,11 @@ def expr_read(ast: AstNode) -> Set[str]:
         return expr_read(ast.lhs).union(expr_read(ast.rhs))
     elif isinstance(ast, AstTrue) or isinstance(ast, AstFalse):
         return set()
+    elif isinstance(ast, AstForallExpr):
+        quantified_ids = set(name for binding in ast.bindings for name in binding.names) # type: Set[str]
+        return expr_read(ast.expr).difference(quantified_ids)
+    elif isinstance(ast, AstMapIndex):
+        return expr_read(ast.map).union(expr_read(ast.index))
     else:
         raise Exception("Unknown expression type " + str(ast))
 

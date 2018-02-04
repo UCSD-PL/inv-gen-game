@@ -266,8 +266,7 @@ class BoogieParser(InfixExprParser[T]):
             O(s.Else)
 
     s.CallLhs = csl(s.Id) + s.ASSGN
-    s.MapSelect = s.LSQBR + csl(s.Expr) + s.RSQBR
-    s.Lhs = s.Id + ZoM(s.MapSelect)
+    s.Lhs =  s.MapIndex | s.Id
     s.Label = s.Id | s.Number
 
     s.AssertStmt = S(s.ASSERT) + s.Expr + S(s.SEMI) # type: ParserElement[T]
