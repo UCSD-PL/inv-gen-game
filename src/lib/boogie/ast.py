@@ -6,9 +6,18 @@ from functools import reduce
 from typing import List, Iterable, Set, TYPE_CHECKING, Any, Union
 
 # Types
-class AstIntType(AstNode):
+class AstType(AstNode): pass
+class AstIntType(AstType):
     def __init__(s) -> None:  AstNode.__init__(s)
     def __str__(s) -> str: return "int"
+
+class AstBoolType(AstType):
+    def __init__(s) -> None:  AstNode.__init__(s)
+    def __str__(s) -> str: return "bool"
+
+class AstMapType(AstType):
+    def __init__(s, domainT: AstType, rangeT: AstType) -> None:  AstNode.__init__(s, domainT, rangeT)
+    def __str__(s) -> str: return "[{}]{}".format(str(s.domainT, s.rangeT))
 
 # Expressions
 class AstExpr(AstNode): pass
@@ -28,6 +37,10 @@ class AstId(AstExpr):
     def __init__(s, name: str) -> None:  AstExpr.__init__(s, name)
     def __str__(s) -> str: return str(s.name)
 
+class AstMapIndex(AstExpr):
+    def __init__(s, map: AstId, index: AstExpr) -> None:  AstExpr.__init__(s, map, index)
+    def __str__(s) -> str: return str(s.name)
+
 class AstUnExpr(AstExpr):
     def __init__(s, op: str, expr: AstExpr) -> None:  AstExpr.__init__(s, op, expr)
     def __str__(s) -> str: return s.op + str(s.expr)
@@ -36,6 +49,17 @@ class AstBinExpr(AstExpr):
     def __init__(s, lhs: AstExpr, op: str, rhs: AstExpr) -> None:  AstExpr.__init__(s, lhs, op, rhs)
     def __str__(s) -> str:
         return "(" + str(s.lhs) + " " + str(s.op) + " " + str(s.rhs) + ")"
+
+class AstBinding(AstNode):
+    def __init__(s, names: Iterable[str], typ: AstType) -> None:  AstNode.__init__(s, names, typ)
+    def __str__(s) -> str: return ",".join(map(str, s.names)) + " : " + str(s.typ)
+
+
+class AstForallExpr(AstExpr):
+    def __init__(s, bindings: List[AstBinding], expr: AstExpr) -> None:  AstExpr.__init__(s, bindings, expr)
+    def __str__(s) -> str:
+        return "(forall " + ",".join([str(x) for x in s.bindings]) + " :: " + \
+               str(s.expr) + ")"
 
 class AstFuncExpr(AstExpr):
     def __init__(s, funcName: AstId, *ops: AstExpr) -> None:  AstExpr.__init__(s, funcName, *ops)
@@ -87,10 +111,6 @@ class AstGoto(AstStmt):
     def __str__(s) -> str: return "goto " + ",".join(map(str, s.labels)) + ";"
 
 # Functions
-class AstBinding(AstNode):
-    def __init__(s, names: Iterable[str], typ: AstNode) -> None:  AstNode.__init__(s, names, typ)
-    def __str__(s) -> str: return ",".join(map(str, s.names)) + " : " + str(s.typ)
-
 class AstBody(AstNode):
     def __init__(s, bindings: Iterable[AstBinding], stmts: Iterable[AstStmt_T]) -> None:   AstNode.__init__(s, bindings, stmts)
     def __str__(s) -> str:
@@ -162,6 +182,10 @@ class AstBuilder(BoogieParser[AstNode]):
     assert (len(toks) == 3);
     return [ _mkBinExp(*toks) ]
 
+  def onBinding(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
+    assert isinstance(toks[-1], AstType)
+    return [ AstBinding(list(map(str, toks[:-1])), toks[-1]) ]
+
   # Statements
   def onAssert(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
     assert (len(toks) == 1 and isinstance(toks[0], AstExpr))
@@ -190,12 +214,27 @@ class AstBuilder(BoogieParser[AstNode]):
         decls.append(d)
     return [ AstProgram(decls) ]
   def onLocalVarDecl(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
-    return [ AstBinding(list(map(str, toks[:-1])), toks[-1]) ]
-  def onType(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
+    assert len(toks) == 1 and isinstance(toks[0], AstBinding)
+    return toks
+  def onTypeAtom(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
     # Currently only handle ints
-    print (toks)
-    assert len(toks) == 1 and toks[0] == s.INT;
-    return [ AstIntType() ];
+    assert len(toks) == 1
+    if toks[0] == 'int':
+      return [ AstIntType() ];
+    elif toks[0] == 'bool':
+      return [ AstIntType() ];
+    else:
+      raise Exception("NYI type: {}".format(toks[0]))
+  def onMapType(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
+    # Currently only handle ints
+    assert len(toks) == 2
+    domainT = toks[0]
+    rangeT = toks[1]
+    assert isinstance(domainT, AstType) and isinstance(rangeT, AstType)
+    return [ AstMapType(domainT, rangeT) ]
+  def onType(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
+    assert len(toks) == 1 and isinstance(toks[0], AstType)
+    return [ toks[0] ];
   def onBody(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
     assert len(toks) == 2;
     return [ AstBody(toks[0], toks[1]) ]
@@ -205,7 +244,8 @@ class AstBuilder(BoogieParser[AstNode]):
     name = str(toks[1])
     sig = toks[2]
     # For now ignore anything other than the argument list
-    assert len(sig) == 3 and len(sig[0]) == 0 and len(sig[2]) == 0
+    assert len(sig) == 3 and len(sig[0]) == 0,\
+      "Unexpected signature: {}".format(sig)
     signature = None; #sig[1]
     body = toks[3][0]
     return [ AstImplementation(name, signature, body) ]
@@ -215,6 +255,19 @@ class AstBuilder(BoogieParser[AstNode]):
     assert isinstance(stmt, AstStmt) or isinstance(stmt, AstLabel), "Unexpected {}".format(stmt)
     # TODO: Mypy can't figure out that stmt is of the right type due to above assert
     return [AstLabel(label, stmt)]  #type: ignore
+  def onMapIndex(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
+    mapE = toks[0]
+    indexE = toks[1]
+    assert isinstance(mapE, AstId) and isinstance(indexE, AstExpr)
+    return [AstMapIndex(mapE, indexE)]
+  def onQuantified(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
+    assert len(toks) == 3, "NYI TypeArgs on quantified expressions"
+    quantifier = str(toks[0])
+    bindigns = toks[1]
+    expr = toks[2]
+    assert quantifier == "forall", "Existential quantification NYI"
+    assert isinstance(expr, AstExpr)
+    return [AstForallExpr(bindigns, expr)]
 
 astBuilder = AstBuilder();
 

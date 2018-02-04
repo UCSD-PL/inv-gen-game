@@ -31,8 +31,13 @@ class BoogieParser(InfixExprParser[T]):
   def onImplementationDecl(s, prod: "ParserElement[T]", st: str, loc: int, toks:"ParseResults[T]") -> "Iterable[T]": raise Exception("NYI")
   def onBody(s, prod: "ParserElement[T]", st: str, loc: int, toks:"ParseResults[T]") -> "Iterable[T]": raise Exception("NYI")
   def onLocalVarDecl(s, prod: "ParserElement[T]", st: str, loc: int, toks:"ParseResults[T]") -> "Iterable[T]": raise Exception("NYI")
+  def onTypeAtom(s, prod: "ParserElement[T]", st: str, loc: int, toks:"ParseResults[T]") -> "Iterable[T]": raise Exception("NYI")
+  def onMapType(s, prod: "ParserElement[T]", st: str, loc: int, toks:"ParseResults[T]") -> "Iterable[T]": raise Exception("NYI")
   def onType(s, prod: "ParserElement[T]", st: str, loc: int, toks:"ParseResults[T]") -> "Iterable[T]": raise Exception("NYI")
   def onLabeledStatement(s, prod: "ParserElement[T]", st: str, loc: int, toks:"ParseResults[T]") -> "Iterable[T]": raise Exception("NYI")
+  def onMapIndex(s, prod: "ParserElement[T]", st: str, loc: int, toks:"ParseResults[T]") -> "Iterable[T]": raise Exception("NYI")
+  def onQuantified(s, prod: "ParserElement[T]", st: str, loc: int, toks:"ParseResults[T]") -> "Iterable[T]": raise Exception("NYI")
+  def onBinding(s, prod: "ParserElement[T]", st: str, loc: int, toks:"ParseResults[T]") -> "Iterable[T]": raise Exception("NYI")
 
   def __init__(s) -> None:
     s.LT = L("<")
@@ -121,6 +126,40 @@ class BoogieParser(InfixExprParser[T]):
 
     s.Expr = F() # type: ParserElement[T]
 
+    ####### Attributes
+    s.AttrArg = s.Expr | s.StringLiteral
+    s.Attribute = s.LBRAC + s.COLN + s.Id + csl(s.AttrArg) + s.RBRAC
+    s.AttrList = ZoM(s.Attribute)
+
+    ####### Types
+    s.Type = F() # type: ParserElement[T]
+    s.BVType = R("bv[0-9][0-9]*")
+    s.TypeAtom = s.INT | s.BOOL | s.BVType
+    s.TypeAtom.setParseAction(lambda st, loc, toks: s.onTypeAtom(s.Type, st, loc, toks))
+    s.TypeArgs = S(s.LT) + csl(s.Type) + S(s.GT)
+    s.MapType = O(s.TypeArgs) + s.LSQBR + csl(s.Type) + s.RSQBR + s.Type
+    s.MapType.setParseAction(lambda st, loc, toks: s.onMapType(s.Type, st, loc, toks))
+
+    s.TypeCtorArgs = F()
+    s.TypeCtorArgs << s.TypeAtom + O(s.TypeCtorArgs) |\
+                   s.Id + O(s.TypeCtorArgs) |\
+                   s.MapType
+
+    s.Type << (s.TypeAtom | s.MapType | s.Id + O(s.TypeCtorArgs)) #pylint: disable=expression-not-assigned
+    s.Type.setParseAction(lambda st, loc, toks: s.onType(s.Type, st, loc, toks))
+    s.IdsType = csl(s.Id) + s.COLN + s.Type
+    s.IdsType.setParseAction(lambda st, loc, toks: s.onBinding(s.Type, st, loc, toks))
+
+    ####### Type Declarations
+    s.TypeConstructor = s.TYPE + s.AttrList + O(s.FINITE) + OoM(s.Id) + s.SEMI
+    s.TypeSynonym = s.TYPE + s.AttrList + OoM(s.Id) + s.EQ + s.Type + s.SEMI
+    s.TypeDecl = s.TypeConstructor | s.TypeSynonym
+
+    ####### Constant Declarations
+    s.ConstantDecl = s.CONST + O(s.Attribute) + O(s.UNIQUE) + \
+            s.IdsType + s.OrderSpec
+
+
     s.Number = W(nums) # type: ParserElement[T]
     s.Number.setParseAction(
             lambda st, loc, toks:  s.onAtom(s.Number, st, loc, toks))
@@ -139,10 +178,16 @@ class BoogieParser(InfixExprParser[T]):
     # TODO: Handle TriggerAttrs in Quantified expressions
     #E9_Quantified = LPARN + QOp + O(TypeArgs) + csl(IdsType) \
     #        + QSep + ZoM(TrigAttr) + Expr  +  RPARN
-    #s.Quantified = s.LPARN + s.QOp + O(s.TypeArgs) + \
-    #        csl(s.IdsType) + s.QSep + s.Expr  +  s.RPARN
+    s.Quantified = S(s.LPARN) + s.QOp + O(s.TypeArgs) + \
+            G(csl(s.IdsType)) + S(s.QSep) + s.Expr + S(s.RPARN)
+    s.Quantified.setParseAction(
+            lambda st, loc, toks:  s.onQuantified(s.Old, st, loc, toks))
 
-    s.Atom = s.Primitive | s.Fun_App | s.Old | s.Id #| s.Quantified # type: ParserElement[T]
+    s.MapIndex = s.Id + S(s.LSQBR) + s.Expr + S(s.RSQBR)
+    s.MapIndex.setParseAction(
+            lambda st, loc, toks:  s.onMapIndex(s.Old, st, loc, toks))
+    s.Atom = s.Primitive | s.Fun_App | s.Old |  s.MapIndex | s.Id  # type: ParserElement[T]
+
     s.ArithExpr = operatorPrecedence(s.Atom, [
       (s.ArithUnOp, 1, opAssoc.RIGHT, \
            lambda st, loc, toks:  s.onUnaryOp(s.ArithUnOp, st, loc, toks[0])),
@@ -162,7 +207,7 @@ class BoogieParser(InfixExprParser[T]):
     s.RelExpr.setParseAction(
             lambda st, loc, toks: s.onNABinOp(s.RelExpr, st, loc, toks))
 
-    s.BoolExpr = operatorPrecedence((s.RelExpr | s.Atom), [
+    s.BoolExpr = operatorPrecedence((s.RelExpr | s.Atom | s.Quantified), [
       (s.BoolUnOp, 1, opAssoc.RIGHT, \
               lambda st, loc, toks:  s.onUnaryOp(s.BoolUnOp, st, loc, toks[0])),
       (s.AndOrOp, 2, opAssoc.LEFT, \
@@ -174,37 +219,6 @@ class BoogieParser(InfixExprParser[T]):
     ]) # type: ParserElement[T]
 
     s.Expr << (s.BoolExpr ^ s.RelExpr ^ s.ArithExpr ) #pylint: disable=pointless-statement
-
-    ####### Attributes
-    s.AttrArg = s.Expr | s.StringLiteral
-    s.Attribute = s.LBRAC + s.COLN + s.Id + csl(s.AttrArg) + s.RBRAC
-    s.AttrList = ZoM(s.Attribute)
-
-    ####### Types
-    s.Type = F() # type: ParserElement[T]
-    s.BVType = R("bv[0-9][0-9]*")
-    s.TypeAtom = s.INT | s.BOOL | s.BVType | s.LPARN + s.Type + s.RPARN
-    s.TypeArgs = S(s.LT) + csl(s.Type) + S(s.GT)
-    s.MapType = O(s.TypeArgs) + s.LSQBR + csl(s.Type) + s.RSQBR + s.Type
-
-    s.TypeCtorArgs = F()
-    s.TypeCtorArgs << s.TypeAtom + O(s.TypeCtorArgs) |\
-                   s.Id + O(s.TypeCtorArgs) |\
-                   s.MapType
-
-    s.Type << (s.TypeAtom | s.MapType | s.Id + O(s.TypeCtorArgs)) #pylint: disable=expression-not-assigned
-    s.Type.setParseAction(lambda st, loc, toks: s.onType(s.Type, st, loc, toks))
-    s.IdsType = csl(s.Id) + s.COLN + s.Type
-
-
-    ####### Type Declarations
-    s.TypeConstructor = s.TYPE + s.AttrList + O(s.FINITE) + OoM(s.Id) + s.SEMI
-    s.TypeSynonym = s.TYPE + s.AttrList + OoM(s.Id) + s.EQ + s.Type + s.SEMI
-    s.TypeDecl = s.TypeConstructor | s.TypeSynonym
-
-    ####### Constant Declarations
-    s.ConstantDecl = s.CONST + O(s.Attribute) + O(s.UNIQUE) + \
-            s.IdsType + s.OrderSpec
 
     ####### Function Declarations
     s.FArgName = s.Id + s.COLN
@@ -316,8 +330,8 @@ class BoogieParser(InfixExprParser[T]):
         s.PROCEDURE + ZoM(s.Attribute) + s.Id + s.PSig + s.SEMI + ZoM(s.Spec) |\
         s.PROCEDURE + ZoM(s.Attribute) + s.Id + s.PSig + ZoM(s.Spec) + s.Body
 
-    s.IOutParameters = s.RETURNS + s.LPARN + csl(s.IdsType) + s.RPARN
-    s.ISig = G(O(s.TypeArgs)) + s.LPARN + G(O(csl(s.IdsType))) + s.RPARN +\
+    s.IOutParameters = S(s.RETURNS) + S(s.LPARN) + csl(s.IdsType) + S(s.RPARN)
+    s.ISig = G(O(s.TypeArgs)) + S(s.LPARN) + G(O(csl(s.IdsType))) + S(s.RPARN) +\
             G(O(s.IOutParameters))
     s.ImplementationDecl = S(s.IMPLEMENTATION) + G(ZoM(s.Attribute)) + s.Id +\
             G(s.ISig) + G(ZoM(s.Body)) # type: ParserElement[T]
