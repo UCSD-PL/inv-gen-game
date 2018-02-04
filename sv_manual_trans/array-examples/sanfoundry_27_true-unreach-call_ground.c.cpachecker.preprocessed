@@ -1,0 +1,33 @@
+# 1 "/home/dimo/work/inv-gen-game3/lvlsets/../sv_manual_trans/array-examples/sanfoundry_27_true-unreach-call_ground.c"
+# 1 "<built-in>"
+# 1 "<command-line>"
+# 1 "/usr/include/stdc-predef.h" 1 3 4
+# 1 "<command-line>" 2
+# 1 "/home/dimo/work/inv-gen-game3/lvlsets/../sv_manual_trans/array-examples/sanfoundry_27_true-unreach-call_ground.c"
+extern void __VERIFIER_error() __attribute__ ((__noreturn__));
+void __tmp_assert(int cond) { if(!(cond)) { ERROR: __VERIFIER_error(); } }
+
+
+
+
+
+
+
+int main()
+{
+    int array[100000];
+    int i;
+    int largest = array[0];
+    for (i = 1; i < 100000; i++)
+    {
+        if (largest < array[i])
+            largest = array[i];
+    }
+
+    int x;
+    for ( x = 0 ; x < 100000 ; x++ ) {
+      __tmp_assert( largest >= array[ x ] );
+    }
+
+    return 0;
+}
