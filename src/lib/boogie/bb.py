@@ -1,69 +1,116 @@
 from lib.boogie.ast import parseAst, AstImplementation, AstLabel, \
         AstAssert, AstAssume, AstHavoc, AstAssignment, AstGoto, \
-        AstReturn, AstNode
+        AstReturn, AstNode, AstStmt, AstType, AstProgram
 from collections import namedtuple
 from ..common.util import unique
-from typing import Dict, List
+from typing import Dict, List, Iterable, Tuple, Iterator
 
-BB = namedtuple("BB", ["predecessors", "stmts", "successors"])
 Label_T = str
-BBs_T = Dict[Label_T, BB]
+Bindings_T = Iterable[Tuple[str, AstType]]
 
-def get_bbs(filename: str) -> BBs_T:
-    ast = parseAst(open(filename).read())
-    fun = ast._children[0][0] #type: AstNode
-    assert (isinstance(fun, AstImplementation))
-    # Step 1: Break statements into basic blocks
-    bbs = {}
-    curLbl = None
-    for stmt in fun.body.stmts:
-        # A BB starts with a labeled statment
-        if (isinstance(stmt, AstLabel)):
-            curLbl = str(stmt.label)
-            bbs[curLbl] = BB([], [], [])
-            stmt = stmt.stmt
+class BB(List[AstStmt]):
+    def __init__(self, label: Label_T, predecessors: Iterable["BB"], stmts: Iterable[AstStmt], successors: Iterable["BB"], internal: bool = False) -> None:
+        super().__init__(stmts)
+        self.label = label
+        self._predecessors = list(predecessors)
+        self._successors = list(successors)
+        self._internal = internal
 
-        if (isinstance(stmt, AstAssert) or
-            isinstance(stmt, AstAssume) or
-            isinstance(stmt, AstHavoc) or
-            isinstance(stmt, AstAssignment)):
-            bbs[curLbl].stmts.append(stmt)
-        elif (isinstance(stmt, AstGoto)):
-            bbs[curLbl].successors.extend(list(map(str, stmt.labels)))
-            curLbl = None
-        elif (isinstance(stmt, AstReturn)):
-            curLbl = None
-        else:
-            raise Exception("Unknown statement : " + str(stmt))
+    def isInternal(self) -> bool:
+        return self._internal
 
-    for bb in bbs:
-        for succ in bbs[bb].successors:
-            bbs[succ].predecessors.append(bb)
+    def predecessors(self) -> List[BB]:
+        return self._predecessors
 
-    return bbs
+    def successors(self) -> List[BB]:
+        return self._successors
 
-def is_internal_bb(bb: Label_T) -> bool:
-    return bb.startswith("_union_") or bb == "_tmp_header_pred_"
+    def stmts(self) -> List[AstStmt]:
+        return list(self)
 
-def bbEntry(bbs: BBs_T) -> Label_T:
-    e = [x for x in bbs
-           if (not is_internal_bb(x) and len(bbs[x].predecessors) == 0)]
-    assert (len(e) == 1)
-    return e[0]
+    def addSuccessor(self, bb: BB) -> None:
+        self._successors.append(bb)
+        bb._predecessors.append(self)
 
-def bbExits(bbs: BBs_T) -> List[Label_T]:
-    return [x for x in bbs
-              if not is_internal_bb(x) and len(bbs[x].successors) == 0]
+    def addPredecessor(self, bb: BB) -> None:
+        bb.addSuccessor(self)
 
-def bbExit(bbs: BBs_T) -> Label_T:
-    return unique(bbExits(bbs))
+    def isEntry(self) -> bool:
+        return len(self._predecessors) == 0
 
-def ensureSingleExit(bbs: BBs_T) -> None:
-    e = bbExits(bbs)
-    if (len(e) == 1):
-      return
+    def isExit(self) -> bool:
+        return len(self._successors) == 0
 
-    bbs["_exit_"] = BB(e, [ ], [])
+class Function(object):
+    @staticmethod
+    def load(filename: str) -> Iterable[Function]:
+        funcs = [] # type: List[Function]
+        f = open(filename)
+        txt = f.read()
+        prog = parseAst(txt) # type: AstProgram
+        for decl in prog.decls:
+            assert isinstance(decl, AstImplementation)
+            funcs.append(Function.build(decl))
+        return funcs
+
+    @staticmethod
+    def build(fun: AstImplementation) -> Function:
+        # Step 1: Break statements into basic blocks
+        bbs = {}
+        curLbl = None
+        successors = {}  # type: Dict[str, List[str]]
+        for stmt in fun.body.stmts:
+            # A BB starts with a labeled statment
+            if (isinstance(stmt, AstLabel)):
+                curLbl = str(stmt.label)
+                bbs[curLbl] = BB(curLbl, [], [], [])
+                stmt = stmt.stmt
+
+            if (isinstance(stmt, AstAssert) or
+                isinstance(stmt, AstAssume) or
+                isinstance(stmt, AstHavoc) or
+                isinstance(stmt, AstAssignment)):
+                bbs[curLbl].append(stmt)
+            elif (isinstance(stmt, AstGoto)):
+                successors[curLbl] = successors.get(curLbl, []) + list(map(str, stmt.labels))
+                curLbl = None
+            elif (isinstance(stmt, AstReturn)):
+                curLbl = None
+            else:
+                raise Exception("Unknown statement : " + str(stmt))
+
+        for (lbl, succs) in successors.items():
+            bbs[lbl]._successors = [bbs[x] for x in succs]
+
+        for bb in bbs.values():
+            for succ in bb.successors():
+                succ._predecessors.append(bb)
+
+        parameters = [(name, binding.type) for binding in fun.signature[0] for name in binding.names ] # type: Bindings_T
+        returns = [(name, binding.type) for binding in fun.signature[1] for name in binding.names ] # type: Bindings_T
+        f = Function(fun.name, bbs.values(), parameters, returns)
+
+        if len(list(f.exits())) != 1:
+            exitBB = BB("__dummy_exit__", [], [], [])
+
+            for bb in f.exits():
+                bb.addSuccessor(exitBB)
+
+            f.bbs.append(exitBB)
+
+        return f
     
-    for bb_lbl in e:
-      bbs[bb_lbl].successors.append("_exit_")
+    def __init__(self, name: str, bbs: Iterable[BB], parameters: Bindings_T, returns: Bindings_T) -> None:
+        self.name = name
+        self.bbs = list(bbs)
+        self.parameters = parameters
+        self.returns = returns
+
+    def entry(self) -> BB:
+        return unique([bb for bb in self.bbs if not bb.isInternal() and bb.isEntry()])
+
+    def exits(self) -> Iterator[BB]:
+        return iter([bb for bb in self.bbs if not bb.isInternal() and bb.isExit()])
+
+    def exit(self) -> BB:
+        return unique(self.exits())

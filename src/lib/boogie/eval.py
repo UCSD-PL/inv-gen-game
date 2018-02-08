@@ -3,11 +3,11 @@ from lib.boogie.z3_embed import And, stmt_to_z3, env_to_expr, satisfiable, Int,\
     _force_expr as _z3_force_expr
 from lib.boogie.ast import expr_read, AstAssume, AstAssert, replace, AstId,\
         AstNumber, AstExpr, _force_expr, AstStmt, ReplMap_T
-from lib.boogie.paths import get_path_vars, nd_bb_path_to_ssa, sp_nd_ssa_path, \
-        extract_ssa_path_vars, BBPath_T, NondetSSABBPath_T, NondetPathEnvs_T
+from lib.boogie.paths import get_path_vars, nd_bb_path_to_ssa, \
+        extract_ssa_path_vars, NondetPath, NondetSSAPath, NondetPathEnvs_T
 from lib.boogie.predicate_transformers import sp_stmts
 from lib.boogie.ssa import SSAEnv
-from lib.boogie.bb import BBs_T, Label_T
+from lib.boogie.bb import Function, Label_T, BB
 from itertools import permutations
 from copy import deepcopy
 from typing import TypeVar, List, Dict, Iterator, Tuple, Any
@@ -15,6 +15,11 @@ import z3
 
 T=TypeVar("T")
 U=TypeVar("U")
+
+#
+# TODO: This whole file should be deprecated in favor of interp.py. Please
+# don't use any of these
+#
 
 def _to_dict(vs: List[T], vals: List[U]) -> Dict[T,U]:
     return { vs[i]: vals[i] for i in range(0, len(vs)) }
@@ -73,16 +78,16 @@ def instantiateAndEval(inv: AstExpr,
 
     return res
 
-def execute(env: Env_T, bb: Label_T, bbs: BBs_T, limit: int) -> Iterator[Tuple[z3.ExprRef, SSAEnv, BBPath_T, NondetSSABBPath_T, NondetPathEnvs_T]]:
+def execute(env: Env_T, bb: BB, fun: Function, limit: int) -> Iterator[Tuple[z3.ExprRef, SSAEnv, NondetPath, NondetSSAPath, NondetPathEnvs_T]]:
     q = [ (expr_to_z3(env_to_expr(env), AllIntTypeEnv()),
            bb ,
            SSAEnv(None, ""),
-           [ ],
-           [ ]) ] # type: List[Tuple[z3.ExprRef, Label_T, SSAEnv, List[str], List[Any]]]
+           NondetPath([ ]),
+           NondetSSAPath([ ])) ] # type: List[Tuple[z3.ExprRef, BB, SSAEnv, NondetPath, NondetSSAPath]]
 
-    def bb_sp(bb: Label_T, initial_ssa_env: SSAEnv, precond: z3.ExprRef) -> Tuple[z3.ExprRef, SSAEnv, NondetSSABBPath_T]:
-      nd_path, final_env = nd_bb_path_to_ssa([bb], bbs, initial_ssa_env)
-      sp = sp_nd_ssa_path(nd_path, bbs, precond, AllIntTypeEnv())
+    def bb_sp(bb: BB, initial_ssa_env: SSAEnv, precond: z3.ExprRef) -> Tuple[z3.ExprRef, SSAEnv, NondetSSAPath]:
+      nd_path, final_env = nd_bb_path_to_ssa(NondetPath([bb]), initial_ssa_env)
+      sp = nd_path.sp(precond, AllIntTypeEnv())
       return _z3_force_expr(simplify(sp)), final_env, nd_path
 
     while len(q) > 0:
@@ -93,13 +98,13 @@ def execute(env: Env_T, bb: Label_T, bbs: BBs_T, limit: int) -> Iterator[Tuple[z
       if (not satisfiable(postcond)):
         continue
 
-      newp = curp + [ bb ]
-      new_ssap = cur_ssap + ssaed_bb
+      newp = NondetPath(curp + [ bb ])
+      new_ssap = NondetSSAPath(cur_ssap + ssaed_bb)
 
-      if (len(bbs[bb].successors) == 0 or len(curp) + 1 >= limit):
+      if (len(bb.successors()) == 0 or len(curp) + 1 >= limit):
         yield postcond, after_env, newp, new_ssap, \
               extract_ssa_path_vars(new_ssap, model(postcond))
         continue
 
-      for s in bbs[bb].successors:
+      for s in bb.successors():
         q.append((postcond, s, deepcopy(after_env), newp, new_ssap))

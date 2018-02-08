@@ -1,19 +1,20 @@
-from .bb import BB, get_bbs, bbEntry, BBs_T
+from .bb import BB, Function
 from copy import copy
 from .ast import AstAssert, AstAssume, AstHavoc, AstAssignment, AstGoto, \
   AstReturn, AstUnExpr, AstBinExpr, AstNumber, AstId, AstTrue, AstFalse, \
   AstExpr
 from typing import Any, Dict, Callable, Union, Iterable, Tuple, Set, List, NamedTuple
+from lib.common.util import unique
 
 BoogieVal = Union[int, bool]
 Store = Dict[str, BoogieVal]
-PC = NamedTuple("PC", [("bb", str), ("next_stmt", int)])
+PC = NamedTuple("PC", [("bb", BB), ("next_stmt", int)])
 State = NamedTuple("State", [("pc", PC), ("store", Store), ("status", str)])
 Trace = List[State]
 States = Set[State]
 
 RandF = Callable[[State, str], BoogieVal]
-ChoiceF = Callable[[BBs_T, Iterable[State]], List[State]]
+ChoiceF = Callable[[Iterable[State]], List[State]]
 
 # Possible statuses:
 STALLED="STALLED"   # reached an assume that is false
@@ -141,7 +142,7 @@ def finished(s):
   return s.status == FINISHED
 
 
-def interp_one(bbs: BBs_T, state: State, rand: RandF) -> Iterable[State]:
+def interp_one(state: State, rand: RandF) -> Iterable[State]:
   """
   Given a program bbs and a current state, return the set of possible next
   states
@@ -152,21 +153,21 @@ def interp_one(bbs: BBs_T, state: State, rand: RandF) -> Iterable[State]:
     return
 
   ((bb, next_stmt), store, status) = state
-  assert bb in bbs and 0 <= next_stmt and next_stmt <= len(bbs[bb].stmts)
+  assert 0 <= next_stmt and next_stmt <= len(bb)
 
-  if next_stmt == len(bbs[bb].stmts):
+  if next_stmt == len(bb):
     # At end of BB - any successor is fair game
-    for s in bbs[bb].successors:
+    for s in bb.successors():
       yield State(PC(s, 0), copy(store), status)
 
     # If no successors we are at the end of the funciton. Yield a finished
     # state
-    if (len(bbs[bb].successors) == 0):
+    if (len(bb._successors) == 0):
       yield State(PC(bb, next_stmt + 1), store, FINISHED)
     return
   else:
     # Inside of a BB - interp the next statment
-    stmt = bbs[bb].stmts[next_stmt]
+    stmt = bb[next_stmt]
 
     if isinstance(stmt, AstAssert):
       v = eval_quick(stmt.expr, store)
@@ -190,7 +191,7 @@ def interp_one(bbs: BBs_T, state: State, rand: RandF) -> Iterable[State]:
 
     yield State(PC(bb, next_stmt + 1), store, status)
 
-def trace_n(bbs: BBs_T, state: State, nsteps: int, rand: RandF, filt: ChoiceF)-> Tuple[List[Trace], List[Trace]]:
+def trace_n(state: State, nsteps: int, rand: RandF, filt: ChoiceF)-> Tuple[List[Trace], List[Trace]]:
   """
   Given a program bbs and a current state state, and number of steps nsteps
   interpret the program for up to nsteps. Return two lists - the active traces
@@ -219,13 +220,13 @@ def trace_n(bbs: BBs_T, state: State, nsteps: int, rand: RandF, filt: ChoiceF)->
     new_traces = [ ] # type: List[Trace]
 
     for t in active_traces:
-      new_states = list(interp_one(bbs, t[-1], rand)) # type: List[State]
+      new_states = list(interp_one(t[-1], rand)) # type: List[State]
       # Don't care about stalled traces
       new_states = [x for x in new_states if not(stalled(x))]
       if (len(new_states) > 1):
         # If execution is non-deterministic here, allow consumer to prune the list
         # of next states
-        new_states = filt(bbs, new_states)
+        new_states = filt(new_states)
 
       for st in new_states:
         new_traces.append(t + [ st ])
@@ -237,9 +238,9 @@ def trace_n(bbs: BBs_T, state: State, nsteps: int, rand: RandF, filt: ChoiceF)->
 
   return (active_traces, inactive_traces)
 
-def trace_n_from_start(bbs: BBs_T, starting_store: Store, nsteps: int, rand: RandF, filt: ChoiceF) -> Tuple[List[Trace], List[Trace]]:
-  starting_state = State(PC(bbEntry(bbs), 0), starting_store, RUNNING)
-  return trace_n(bbs, starting_state, nsteps, rand, filt)
+def trace_n_from_start(fun: Function, starting_store: Store, nsteps: int, rand: RandF, filt: ChoiceF) -> Tuple[List[Trace], List[Trace]]:
+  starting_state = State(PC(fun.entry(), 0), starting_store, RUNNING)
+  return trace_n(starting_state, nsteps, rand, filt)
 
 if __name__ == "__main__":
   from argparse import ArgumentParser
@@ -262,20 +263,20 @@ if __name__ == "__main__":
 
   args = p.parse_args()
 
-  bbs = get_bbs(args.file)
+  fun = unique(Function.load(args.file)) # type: Function
   starting_store = {  k : int(v) for (k, v) in
     [ x.split("=") for x in args.starting_env.split(",") ]
   }
 
   if (args.nond_mode == "all"):
-    filt_f = lambda bbs, states:  list(states) # type: ChoiceF
+    filt_f = lambda states:  list(states) # type: ChoiceF
   elif (args.nond_mode == "random_lookahead_1"):
-    def f(bbs: BBs_T, states: Iterable[State]) -> List[State]:
-      def lookahead_one_filter(bbs: BBs_T, s: State) -> bool:
-        if s.pc.next_stmt == len(bbs[s.pc.bb]):
+    def f(states: Iterable[State]) -> List[State]:
+      def lookahead_one_filter(s: State) -> bool:
+        if s.pc.next_stmt == len(s.pc.bb):
           return True
 
-        stmt = bbs[s.pc.bb][s.pc.next_stmt]
+        stmt = s.pc.bb[s.pc.next_stmt]
         if not isinstance(stmt, AstAssume):
           return True
 
@@ -283,7 +284,7 @@ if __name__ == "__main__":
         assert isinstance(v, bool)
         return v
 
-      feasible_states = [x for x in states if lookahead_one_filter(bbs, x)]
+      feasible_states = [x for x in states if lookahead_one_filter(x)]
       return [choice(feasible_states)]
     filt_f = f
   else:
@@ -291,8 +292,8 @@ if __name__ == "__main__":
 
   rand_f = lambda state, Id:  randint(-1000, 1000) # type: RandF
 
-  starting_state = State(PC(bbEntry(bbs), 0), starting_store, RUNNING)
-  (active_ts, inactive_ts) = trace_n(bbs, starting_state, args.steps, rand_f, filt_f)
+  starting_state = State(PC(fun.entry(), 0), starting_store, RUNNING)
+  (active_ts, inactive_ts) = trace_n(starting_state, args.steps, rand_f, filt_f)
 
   def pp_state(st: State) -> str:
     return "[{},{}]: ".format(st.pc.bb, st.pc.next_stmt) + \

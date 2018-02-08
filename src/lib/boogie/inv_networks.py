@@ -4,18 +4,18 @@ from lib.boogie.ast import ast_and, replace, AstBinExpr, AstAssert, AstAssume, \
 from lib.common.util import split, nonempty, powerset
 from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, Unknown, counterex, \
         Implies, And, tautology, satisfiable, unsatisfiable, to_smt2, Env_T
-from lib.boogie.paths import nd_bb_path_to_ssa, ssa_path_to_z3, _ssa_stmts,\
-        NondetSSABBPath_T
+from lib.boogie.paths import nd_bb_path_to_ssa, _ssa_stmts,\
+        NondetSSAPath, SSABBNode, NondetPath
 from lib.boogie.ssa import SSAEnv, unssa_z3_model
 from lib.boogie.predicate_transformers import wp_stmts, sp_stmt
 from copy import copy
-from lib.boogie.bb import bbEntry, bbExit, BBs_T, Label_T
+from lib.boogie.bb import Function, Label_T, BB
 from typing import Dict, Optional, Set, Tuple, List
 import z3
 
 # TODO: Can I make these an instance of forward dataflow analysis?
 class Violation:
-  def __init__(s, typ: str, path: NondetSSABBPath_T, lastBBCompletedStmts: List[Tuple[AstStmt, ReplMap_T]], query: z3.ExprRef, ctrex: Env_T) -> None:
+  def __init__(s, typ: str, path: NondetSSAPath, lastBBCompletedStmts: List[Tuple[AstStmt, ReplMap_T]], query: z3.ExprRef, ctrex: Env_T) -> None:
     s._typ = typ
     s._path = path
     s._lastBBCompletedStmts = lastBBCompletedStmts
@@ -27,15 +27,20 @@ class Violation:
   def isSafety(s) -> bool:
       return s._typ == "safety"
   def startBB(s) -> Label_T:
-      return s._path[0][0]
+      assert isinstance(s._path[0], SSABBNode)
+      return s._path[0].bb.label
   def endBB(s) -> Label_T:
-      return s._path[-1][0]
+      assert isinstance(s._path[-1], SSABBNode)
+      return s._path[-1].bb.label
   def startReplM(s) -> ReplMap_T:
-      return s._path[0][1][0]
+      assert isinstance(s._path[0], SSABBNode)
+      return s._path[0].repl_maps[0]
   def endReplM(s) -> ReplMap_T:
-    if (len(s._lastBBCompletedStmts) > 0):
-      return s._lastBBCompletedStmts[-1][1]
-    return s._path[-2][1][-1]
+      if (len(s._lastBBCompletedStmts) > 0):
+        assert isinstance(s._path[-1], SSABBNode)
+        return s._path[-1].repl_maps[0]
+      assert isinstance(s._path[-2], SSABBNode)
+      return s._path[-2].repl_maps[-1]
 
   def startEnv(s) -> Env_T:
     assert {} == s.startReplM()
@@ -48,18 +53,18 @@ class Violation:
     if (s.isSafety()):
       return "Safety@" + str(s.endBB()) + ":" + str(s.endEnv())
     else:
-      return "Inductiveness@" + str([x[0] for x in s._path]) + ":" + \
+      return "Inductiveness@" + str([x for x in s._path]) + ":" + \
               str(s.startEnv()) + "->" + str(s.endEnv())
 
   def __repr__(s) -> str:
     return s.__str__()
 
-InvNetwork = Dict[Label_T, Set[AstExpr]]
-ViolationNetwork = Dict[Label_T, Set[Tuple[AstExpr, "Violation"]]]
+InvNetwork = Dict[BB, Set[AstExpr]]
+ViolationNetwork = Dict[BB, Set[Tuple[AstExpr, "Violation"]]]
 
-def filterCandidateInvariants(bbs: BBs_T, preCond: AstExpr, postCond: AstExpr, cutPoints: InvNetwork, timeout: Optional[int]=None) -> Tuple[ViolationNetwork, ViolationNetwork, InvNetwork, List[Violation]]:
+def filterCandidateInvariants(fun: Function, preCond: AstExpr, postCond: AstExpr, cutPoints: InvNetwork, timeout: Optional[int]=None) -> Tuple[ViolationNetwork, ViolationNetwork, InvNetwork, List[Violation]]:
     assert (len(cutPoints) == 1)
-    entryBB = bbEntry(bbs)
+    entryBB = fun.entry()
 
     cps = { bb : set(cutPoints[bb]) for bb in cutPoints } # type: InvNetwork
     cps[entryBB] = set([ preCond ])
@@ -76,16 +81,17 @@ def filterCandidateInvariants(bbs: BBs_T, preCond: AstExpr, postCond: AstExpr, c
       cp = cpWorkQ.pop()
       cp_inv = expr_to_z3(ast_and(cps[cp]), aiTyEnv)
 
-      initial_path, intial_ssa_env = nd_bb_path_to_ssa([cp], bbs, SSAEnv())
+      initial_path, intial_ssa_env = nd_bb_path_to_ssa(NondetPath([cp]), SSAEnv())
       pathWorkQ = [(initial_path, intial_ssa_env, cp_inv)]
 
       # Pass 1: Widdle down candidate invariants at cutpoints iteratively
       while len(pathWorkQ) > 0:
         path, curFinalSSAEnv, sp = pathWorkQ.pop(0)
 
-        nextBB, nextReplMaps = path[-1]
+        assert isinstance(path[-1], SSABBNode)
+        nextBB, nextReplMaps = path[-1].bb, path[-1].repl_maps
         processedStmts = []
-        ssa_stmts = _ssa_stmts(bbs[nextBB].stmts, nextReplMaps)
+        ssa_stmts = _ssa_stmts(nextBB,  nextReplMaps)
 
         for s in ssa_stmts:
           if (isinstance(s, AstAssert)):
@@ -102,18 +108,19 @@ def filterCandidateInvariants(bbs: BBs_T, preCond: AstExpr, postCond: AstExpr, c
           #print "SP: {", sp, "} ", s, " {", new_sp, "}"
           sp = new_sp
 
-        if (len(processedStmts) != len(bbs[nextBB].stmts)):
+        if (len(processedStmts) != len(nextBB)):
           # Didn't make it to the end of the block - path must be unsat
           continue
 
-        if (len(bbs[nextBB].successors) == 0): # This is exit
-          assert nextBB == bbExit(bbs)
+        if (len(nextBB.successors()) == 0): # This is exit
+          assert nextBB == fun.exit()
           # During Pass 1 we don't check the postcondition is implied
         else:
-          for succ in bbs[nextBB].successors:
+          for succ in nextBB.successors():
             if succ in cps:
               # Check implication
-              start = initial_path[0][0]
+              assert isinstance(initial_path[0], SSABBNode)
+              start = initial_path[0].bb
 
               candidate_invs = copy(cps[succ])
               for candidate in candidate_invs:
@@ -128,7 +135,7 @@ def filterCandidateInvariants(bbs: BBs_T, preCond: AstExpr, postCond: AstExpr, c
 
                 if (c != None):
                   v = Violation("inductiveness",
-                                path + [( succ, None )],
+                                NondetSSAPath(path + [SSABBNode( succ, [])]),
                                 [],
                                 Implies(sp, candidateSSA),
                                 c)
@@ -144,13 +151,13 @@ def filterCandidateInvariants(bbs: BBs_T, preCond: AstExpr, postCond: AstExpr, c
             else:
               assert succ not in path; # We should have cutpoints at every loop
               succSSA, nextFinalSSAEnv = \
-                      nd_bb_path_to_ssa([succ], bbs, SSAEnv(curFinalSSAEnv))
-              pathWorkQ.append((path + succSSA, nextFinalSSAEnv, sp))
+                      nd_bb_path_to_ssa(NondetPath([succ]), SSAEnv(curFinalSSAEnv))
+              pathWorkQ.append((NondetSSAPath(path + succSSA), nextFinalSSAEnv, sp))
 
     sound = cps
 
     # Pass 2: Check for safety violations
-    violations = checkInvNetwork(bbs, preCond, postCond, sound, timeout)
+    violations = checkInvNetwork(fun, preCond, postCond, sound, timeout)
     for v in violations:
       if (not v.isSafety()):
         print(v)
@@ -158,25 +165,24 @@ def filterCandidateInvariants(bbs: BBs_T, preCond: AstExpr, postCond: AstExpr, c
 
     return (overfitted, nonind, sound, violations)
 
-def checkInvNetwork(bbs: BBs_T, preCond: AstExpr, postCond: AstExpr, cutPoints: InvNetwork, timeout: Optional[int] = None) -> List[Violation]:
+def checkInvNetwork(fun: Function, preCond: AstExpr, postCond: AstExpr, cutPoints: InvNetwork, timeout: Optional[int] = None) -> List[Violation]:
     cps = copy(cutPoints)
-    entryBB = bbEntry(bbs)
+    entryBB = fun.entry()
     cps[entryBB] = set([ preCond ])
     aiTyEnv = AllIntTypeEnv()
-    violations = [ ]
+    violations = [ ] # type: List[Violation]
 
     for cp in cps:
-      initial_path, intial_ssa_env = nd_bb_path_to_ssa([cp], bbs, SSAEnv())
+      initial_path, intial_ssa_env = nd_bb_path_to_ssa(NondetPath([cp]), SSAEnv())
       workQ = [ (initial_path,
                  intial_ssa_env,
                  expr_to_z3(ast_and(cps[cp]), aiTyEnv)) ]
       while len(workQ) > 0:
         path, curFinalSSAEnv, sp = workQ.pop(0)
-
+        assert isinstance(path[-1], BB)
         nextBB, nextReplMaps = path[-1]
         processedStmts = [] # type: List[Tuple[AstStmt, ReplMap_T]]
-        ssa_stmts = list(zip(_ssa_stmts(bbs[nextBB].stmts, nextReplMaps),
-                        nextReplMaps))
+        ssa_stmts = list(zip(_ssa_stmts(nextBB, nextReplMaps), nextReplMaps))
 
         for (s, replM) in ssa_stmts:
           if (isinstance(s, AstAssert)):
@@ -202,13 +208,13 @@ def checkInvNetwork(bbs: BBs_T, preCond: AstExpr, postCond: AstExpr, cutPoints: 
           #print "SP: {", sp, "} ", s, " {", new_sp, "}"
           sp = new_sp
 
-        if (len(processedStmts) != len(bbs[nextBB].stmts)):
+        if (len(processedStmts) != len(nextBB)):
           # Didn't make it to the end of the block - path must be unsat or
           # violation found
           continue
 
-        if (len(bbs[nextBB].successors) == 0): # This is exit
-          assert nextBB == bbExit(bbs)
+        if (len(nextBB.successors()) == 0): # This is exit
+          assert nextBB == fun.exit()
           ssaed_postcond = _force_expr(replace(postCond, curFinalSSAEnv.replm()))
           postSSAZ3 = expr_to_z3(ssaed_postcond, aiTyEnv)
           try:
@@ -223,7 +229,7 @@ def checkInvNetwork(bbs: BBs_T, preCond: AstExpr, postCond: AstExpr, cutPoints: 
                           c)
             violations.append(v)
         else:
-          for succ in bbs[nextBB].successors:
+          for succ in nextBB.successors():
             if succ in cps:
               # Check implication
               post = ast_and(cps[succ])
@@ -248,15 +254,14 @@ def checkInvNetwork(bbs: BBs_T, preCond: AstExpr, postCond: AstExpr, cutPoints: 
                   c = { } # On timeout conservatively assume fail
               if (c != None):
                 v = Violation("inductiveness",
-                  path + [ (succ, None) ],
+                  NondetSSAPath(path + [SSABBNode(succ, [])]),
                   [],
-                  Implies(sp, postSSAZ3),
-                  c)
+                  Implies(sp, postSSAZ3), c)
                 violations.append(v)
             else:
               assert succ not in path; # We should have cutpoints at every loop
               succSSA, nextFinalSSAEnv = \
-                      nd_bb_path_to_ssa([succ], bbs, SSAEnv(curFinalSSAEnv))
-              workQ.append((path + succSSA, nextFinalSSAEnv, sp))
+                      nd_bb_path_to_ssa(NondetPath([succ]), SSAEnv(curFinalSSAEnv))
+              workQ.append((NondetSSAPath(path + succSSA), nextFinalSSAEnv, sp))
 
     return violations

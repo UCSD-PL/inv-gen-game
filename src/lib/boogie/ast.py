@@ -242,13 +242,13 @@ class AstBuilder(BoogieParser[AstNode]):
     attrs = toks[0]
     assert(len(attrs) == 0)
     name = str(toks[1])
-    sig = toks[2]
+    signature = toks[2]
+    assert len(signature) == 3
+    type_args, parameters, returns = signature
     # For now ignore anything other than the argument list
-    assert len(sig) == 3 and len(sig[0]) == 0,\
-      "Unexpected signature: {}".format(sig)
-    signature = None; #sig[1]
+    assert len(type_args) == 0, "NYI: Imeplementation type args: {}".format(type_args)
     body = toks[3][0]
-    return [ AstImplementation(name, signature, body) ]
+    return [ AstImplementation(name, (parameters, returns), body) ]
   def onLabeledStatement(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
     label = str(toks[0])
     stmt = toks[1]
@@ -263,11 +263,12 @@ class AstBuilder(BoogieParser[AstNode]):
   def onQuantified(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
     assert len(toks) == 3, "NYI TypeArgs on quantified expressions"
     quantifier = str(toks[0])
-    bindigns = toks[1]
+    assert isinstance(toks[1], list)
+    bindings = toks[1]  # type: List[AstBinding]
     expr = toks[2]
     assert quantifier == "forall", "Existential quantification NYI"
     assert isinstance(expr, AstExpr)
-    return [AstForallExpr(bindigns, expr)]
+    return [AstForallExpr(bindings, expr)]
 
 astBuilder = AstBuilder();
 

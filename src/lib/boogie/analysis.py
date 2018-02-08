@@ -1,5 +1,5 @@
 from copy import copy
-from lib.boogie.bb import bbEntry, get_bbs, bbExit, BBs_T, Label_T
+from lib.boogie.bb import Function, BB, Label_T
 from lib.boogie.ast import AstAssert, AstAssume, AstHavoc, \
         AstAssignment, stmt_read, stmt_changed, AstBinExpr, expr_read,\
         AstStmt, AstExpr
@@ -12,44 +12,44 @@ Union_T = Callable[[Iterable[Set[T]]], Set[T]]
 DFlowState_T = Dict[Label_T, Set[T]]
 
 #TODO: Need to introduce a separation between top and bottom
-def forwarddflow(bbs: BBs_T, transformer_m: Transformer_T, union_f: Union_T, initial_vals: Set[T], start_val: Set[T]) -> DFlowState_T:
-    state = { bb: copy(initial_vals) for bb in bbs.keys() } # type: DFlowState_T
-    state[bbEntry(bbs)] = start_val
-    wlist = [ bbEntry(bbs) ]
+def forwarddflow(fun: Function, transformer_m: Transformer_T, union_f: Union_T, initial_vals: Set[T], start_val: Set[T]) -> DFlowState_T:
+    state = { bb.label: copy(initial_vals) for bb in fun.bbs } # type: DFlowState_T
+    state[fun.entry().label] = start_val
+    wlist = [ fun.entry() ]
     while len(wlist) > 0:
         curBB = wlist.pop()
 
-        if (len(bbs[curBB].predecessors) > 0):
-          inS = union_f([state[bb] for bb in bbs[curBB].predecessors])
+        if (len(curBB._predecessors) > 0):
+          inS = union_f([state[bb.label] for bb in curBB.predecessors()])
         else:
           inS = start_val
 
-        for stmt in bbs[curBB].stmts:
+        for stmt in curBB.stmts():
             ninS = transformer_m[stmt.__class__](stmt, inS)
             inS = ninS
         outS = inS
-        if state[curBB] != outS:
-            wlist.extend(bbs[curBB].successors)
-            state[curBB] = outS
+        if state[curBB.label] != outS:
+            wlist.extend(curBB.successors())
+            state[curBB.label] = outS
     return state
 
 # TODO: How does this work without one node starting with less than maximal?
 # What is Top and Bottom in my current use caes (livevars)?
-def backdflow(bbs: BBs_T, transformer_m: Transformer_T, union_f: Union_T, initial_vals: Set[T]) -> DFlowState_T:
-    state = { bb: copy(initial_vals) for bb in bbs.keys() } # type: DFlowState_T
-    wlist = [ bbExit(bbs) ]
+def backdflow(fun: Function, transformer_m: Transformer_T, union_f: Union_T, initial_vals: Set[T]) -> DFlowState_T:
+    state = { bb.label: copy(initial_vals) for bb in fun.bbs } # type: DFlowState_T
+    wlist = [ fun.entry() ]
     while len(wlist) > 0:
         curBB = wlist.pop()
-        inS = union_f([state[bb] for bb in bbs[curBB].successors])
-        for stmt in reversed(bbs[curBB].stmts):
+        inS = union_f([state[bb.label] for bb in curBB.successors()])
+        for stmt in reversed(curBB):
             inS = transformer_m[stmt.__class__](stmt, inS)
         outS = inS
-        if state[curBB] != outS:
-            wlist.extend(bbs[curBB].predecessors)
-            state[curBB] = outS
+        if state[curBB.label] != outS:
+            wlist.extend(curBB.predecessors())
+            state[curBB.label] = outS
     return state
 
-def livevars(bbs: BBs_T) -> DFlowState_T[str]:
+def livevars(fun: Function) -> DFlowState_T[str]:
     transformer_m = {
         AstAssert:  lambda stmt, inS: inS.union(stmt_read(stmt)),
         AstAssume:  lambda stmt, inS: inS.union(stmt_read(stmt)),
@@ -60,9 +60,9 @@ def livevars(bbs: BBs_T) -> DFlowState_T[str]:
     def union_f(sets: Iterable[Set[str]]) -> Set[str]:
         sets = [x for x in sets if x != None]
         return reduce(lambda x,y:   x.union(y), sets, set([]))
-    return backdflow(bbs, transformer_m, union_f, None)
+    return backdflow(fun, transformer_m, union_f, None)
 
-def propagate_sp(bbs: BBs_T) -> DFlowState_T[AstExpr]:
+def propagate_sp(fun: Function) -> DFlowState_T[AstExpr]:
     # Propagate sps involving variable not changed through the loop
     def untouched(preds: Set[AstExpr], clobbered_vars: Set[str]) -> Set[AstExpr]:
       return set([x for x in preds \
@@ -89,10 +89,11 @@ def propagate_sp(bbs: BBs_T) -> DFlowState_T[AstExpr]:
         rest = something_sets[1:]
         return reduce(lambda x,y:   x.intersection(y), rest, base)
 
-    return forwarddflow(bbs, transformer_m, union_f, None, set([]))
+    return forwarddflow(fun, transformer_m, union_f, None, set([]))
 
 if __name__ == "__main__":
-    bbm = get_bbs("desugared3_no_inv.bpl")
+    from lib.common.util import unique
+    bbm = unique(Function.load("desugared3_no_inv.bpl"))
     print(livevars(bbm))
-    bbm = get_bbs("desugared-boogie-benchmarks/02.bpl")
+    bbm = unique(Function.load("desugared-boogie-benchmarks/02.bpl"))
     print(livevars(bbm))
