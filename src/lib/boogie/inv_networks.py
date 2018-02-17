@@ -2,12 +2,14 @@
 from lib.boogie.ast import ast_and, replace, AstBinExpr, AstAssert, AstAssume, \
         AstTrue, AstExpr, AstStmt, _force_expr, ReplMap_T
 from lib.common.util import split, nonempty, powerset
-from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, Unknown, counterex, \
-        Implies, And, tautology, satisfiable, unsatisfiable, to_smt2, Env_T
+from lib.boogie.z3_embed import expr_to_z3, Unknown, counterex, \
+        Implies, And, tautology, satisfiable, unsatisfiable, to_smt2,\
+        get_typeenv
 from lib.boogie.paths import nd_bb_path_to_ssa, _ssa_stmts,\
         NondetSSAPath, SSABBNode, NondetPath
-from lib.boogie.ssa import SSAEnv, unssa_z3_model
+from lib.boogie.ssa import SSAEnv, unssa_z3_model, get_ssa_tenv
 from lib.boogie.predicate_transformers import wp_stmts, sp_stmt
+from lib.boogie.interp import Store
 from copy import copy
 from lib.boogie.bb import Function, Label_T, BB
 from typing import Dict, Optional, Set, Tuple, List
@@ -15,7 +17,7 @@ import z3
 
 # TODO: Can I make these an instance of forward dataflow analysis?
 class Violation:
-  def __init__(s, typ: str, path: NondetSSAPath, lastBBCompletedStmts: List[Tuple[AstStmt, ReplMap_T]], query: z3.ExprRef, ctrex: Env_T) -> None:
+  def __init__(s, typ: str, path: NondetSSAPath, lastBBCompletedStmts: List[Tuple[AstStmt, ReplMap_T]], query: z3.ExprRef, ctrex: Store) -> None:
     s._typ = typ
     s._path = path
     s._lastBBCompletedStmts = lastBBCompletedStmts
@@ -42,11 +44,11 @@ class Violation:
       assert isinstance(s._path[-2], SSABBNode)
       return s._path[-2].repl_maps[-1]
 
-  def startEnv(s) -> Env_T:
+  def startEnv(s) -> Store:
     assert {} == s.startReplM()
     return unssa_z3_model(s._ctrex, s.startReplM())
 
-  def endEnv(s) -> Env_T:
+  def endEnv(s) -> Store:
     return unssa_z3_model(s._ctrex, s.endReplM())
 
   def __str__(s) -> str:
@@ -74,12 +76,12 @@ def filterCandidateInvariants(fun: Function, preCond: AstExpr, postCond: AstExpr
     # The separation in overfitted and nonind is well defined only in the
     # Single loop case. So for now only handle these. Can probably extend later
 
-    aiTyEnv = AllIntTypeEnv()
+    tenv = get_ssa_tenv(get_typeenv(fun))
     cpWorkQ = set([ entryBB ] + list(cps.keys()))
 
     while (len(cpWorkQ) > 0):
       cp = cpWorkQ.pop()
-      cp_inv = expr_to_z3(ast_and(cps[cp]), aiTyEnv)
+      cp_inv = expr_to_z3(ast_and(cps[cp]), tenv)
 
       initial_path, intial_ssa_env = nd_bb_path_to_ssa(NondetPath([cp]), SSAEnv())
       pathWorkQ = [(initial_path, intial_ssa_env, cp_inv)]
@@ -99,12 +101,12 @@ def filterCandidateInvariants(fun: Function, preCond: AstExpr, postCond: AstExpr
                   # want to get an inductive invariant network
           elif (isinstance(s, AstAssume)):
             try:
-              if (unsatisfiable(And(sp, expr_to_z3(s.expr, aiTyEnv)), timeout)):
+              if (unsatisfiable(And(sp, expr_to_z3(s.expr, tenv)), timeout)):
                 break
             except Unknown:
               pass; # Conservatively assume path is possible on timeout
           processedStmts.append(s)
-          new_sp = sp_stmt(s, sp, aiTyEnv)
+          new_sp = sp_stmt(s, sp, tenv)
           #print "SP: {", sp, "} ", s, " {", new_sp, "}"
           sp = new_sp
 
@@ -126,7 +128,7 @@ def filterCandidateInvariants(fun: Function, preCond: AstExpr, postCond: AstExpr
               for candidate in candidate_invs:
                 ssaed_inv = _force_expr(replace(candidate,
                                                 curFinalSSAEnv.replm()))
-                candidateSSA = expr_to_z3(ssaed_inv, aiTyEnv)
+                candidateSSA = expr_to_z3(ssaed_inv, tenv)
                 try:
                   c = counterex(Implies(sp, candidateSSA), timeout,
                                 "Candidate: " + str(candidate))
@@ -169,42 +171,42 @@ def checkInvNetwork(fun: Function, preCond: AstExpr, postCond: AstExpr, cutPoint
     cps = copy(cutPoints)
     entryBB = fun.entry()
     cps[entryBB] = set([ preCond ])
-    aiTyEnv = AllIntTypeEnv()
+    tenv = get_ssa_tenv(get_typeenv(fun))
     violations = [ ] # type: List[Violation]
 
     for cp in cps:
       initial_path, intial_ssa_env = nd_bb_path_to_ssa(NondetPath([cp]), SSAEnv())
       workQ = [ (initial_path,
                  intial_ssa_env,
-                 expr_to_z3(ast_and(cps[cp]), aiTyEnv)) ]
+                 expr_to_z3(ast_and(cps[cp]), tenv)) ]
       while len(workQ) > 0:
         path, curFinalSSAEnv, sp = workQ.pop(0)
-        assert isinstance(path[-1], BB)
-        nextBB, nextReplMaps = path[-1]
+        assert isinstance(path[-1], SSABBNode)
+        nextBB, nextReplMaps = path[-1].bb, path[-1].repl_maps
         processedStmts = [] # type: List[Tuple[AstStmt, ReplMap_T]]
         ssa_stmts = list(zip(_ssa_stmts(nextBB, nextReplMaps), nextReplMaps))
 
         for (s, replM) in ssa_stmts:
           if (isinstance(s, AstAssert)):
             try:
-              c = counterex(Implies(sp, expr_to_z3(s.expr, aiTyEnv)), timeout)
+              c = counterex(Implies(sp, expr_to_z3(s.expr, tenv)), timeout)
             except Unknown:
               c = { } # On timeout conservatively assume fail
             if (c != None):
               # Current path can violate assertion
               v = Violation("safety", path, processedStmts + [(s, replM)],
-                            Implies(sp, expr_to_z3(s.expr, aiTyEnv)),
+                            Implies(sp, expr_to_z3(s.expr, tenv)),
                             c)
               violations.append(v)
               break
           elif (isinstance(s, AstAssume)):
             try:
-              if (unsatisfiable(And(sp, expr_to_z3(s.expr, aiTyEnv)), timeout)):
+              if (unsatisfiable(And(sp, expr_to_z3(s.expr, tenv)), timeout)):
                 break
             except Unknown:
               pass; # Conservatively assume path is possible on timeout
           processedStmts.append((s, replM))
-          new_sp = sp_stmt(s, sp, aiTyEnv)
+          new_sp = sp_stmt(s, sp, tenv)
           #print "SP: {", sp, "} ", s, " {", new_sp, "}"
           sp = new_sp
 
@@ -216,7 +218,7 @@ def checkInvNetwork(fun: Function, preCond: AstExpr, postCond: AstExpr, cutPoint
         if (len(nextBB.successors()) == 0): # This is exit
           assert nextBB == fun.exit()
           ssaed_postcond = _force_expr(replace(postCond, curFinalSSAEnv.replm()))
-          postSSAZ3 = expr_to_z3(ssaed_postcond, aiTyEnv)
+          postSSAZ3 = expr_to_z3(ssaed_postcond, tenv)
           try:
             c = counterex(Implies(sp, postSSAZ3), timeout)
           except Unknown:
@@ -234,7 +236,7 @@ def checkInvNetwork(fun: Function, preCond: AstExpr, postCond: AstExpr, cutPoint
               # Check implication
               post = ast_and(cps[succ])
               postSSA = _force_expr(replace(post, curFinalSSAEnv.replm()))
-              postSSAZ3 = expr_to_z3(postSSA, aiTyEnv)
+              postSSAZ3 = expr_to_z3(postSSA, tenv)
               try:
                 c = counterex(Implies(sp, postSSAZ3), timeout)
               except Unknown:
@@ -245,7 +247,7 @@ def checkInvNetwork(fun: Function, preCond: AstExpr, postCond: AstExpr, cutPoint
                   # conjunction of all of them fails
                   for p in cps[succ]:
                     postSSA = _force_expr(replace(p, curFinalSSAEnv.replm()))
-                    postSSAZ3 = expr_to_z3(postSSA, aiTyEnv)
+                    postSSAZ3 = expr_to_z3(postSSA, tenv)
                     c = counterex(Implies(sp, postSSAZ3), timeout)
                     # If any of them doesn't hold, neither does their conj
                     if (c != None):

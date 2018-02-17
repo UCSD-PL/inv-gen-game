@@ -2,11 +2,27 @@ from .bb import BB, Function
 from copy import copy
 from .ast import AstAssert, AstAssume, AstHavoc, AstAssignment, AstGoto, \
   AstReturn, AstUnExpr, AstBinExpr, AstNumber, AstId, AstTrue, AstFalse, \
-  AstExpr
+  AstExpr, AstMapIndex, ast_and, AstForallExpr, AstBinding, AstIntType
 from typing import Any, Dict, Callable, Union, Iterable, Tuple, Set, List, NamedTuple
 from lib.common.util import unique
 
-BoogieVal = Union[int, bool]
+class FuncInterp:
+    def __init__(self, explicit_cases: Dict["BoogieVal", "BoogieVal"], default: "BoogieVal") -> None:
+      self._explicit_cases = explicit_cases
+      self._default_case = default
+
+    def __hash__(self) -> int:
+      return hash((tuple(sorted(self._explicit_cases.items())), self._default_case))
+
+    @staticmethod
+    def to_dict(f: "FuncInterp") -> Dict[Any, Any]:
+      return { "default": f._default_case, "explicit": f._explicit_cases }
+
+    @staticmethod
+    def from_dict(d: Dict[Any, Any]) -> "FuncInterp":
+      return FuncInterp(d["explicit"], d["default"])
+
+BoogieVal = Union[int, bool, FuncInterp]
 Store = Dict[str, BoogieVal]
 PC = NamedTuple("PC", [("bb", BB), ("next_stmt", int)])
 State = NamedTuple("State", [("pc", PC), ("store", Store), ("status", str)])
@@ -15,6 +31,37 @@ States = Set[State]
 
 RandF = Callable[[State, str], BoogieVal]
 ChoiceF = Callable[[Iterable[State]], List[State]]
+
+def val_to_ast(v: BoogieVal) -> AstExpr:
+  if isinstance(v, int):
+    return AstNumber(v)
+  elif isinstance(v, bool):
+    return AstTrue() if v else AstFalse()
+  else:
+    assert False, "Can't convert {} to ast node".format(v)
+
+def store_to_expr(s: Store, suff:str ="") -> AstExpr:
+    """ Create a boolean expression that is equivalent to the store s
+    """
+    exprs = [] # type: List[AstExpr]
+    for (var, val) in s.items():
+        if isinstance(val, FuncInterp):
+            explicit_vals = [] # type: List[AstExpr]
+            for (fromV, toV) in val._explicit_cases.items():
+                exprs.append(AstBinExpr(AstMapIndex(AstId(var + suff), val_to_ast(fromV)), "==", val_to_ast(toV)))
+                explicit_vals.append(val_to_ast(fromV))
+            # TODO: Generalize to multidimensional arrays
+            # TODO: Assert that the domain of var is indeed int!
+            if val._default_case is not None:
+              key = AstId("_key_")
+              not_explicit = ast_and([AstBinExpr(key, "!=", x) for x in explicit_vals])
+              exprs.append(AstForallExpr([AstBinding(key, AstIntType())],
+                                     AstBinExpr(not_explicit, "==>",
+                                                AstBinExpr(AstMapIndex(AstId(var + suff), key), "==", val._default_case))))
+        else:
+            exprs.append(AstBinExpr(AstId(var + suff), "==", val_to_ast(val)))
+
+    return ast_and(exprs)
 
 # Possible statuses:
 STALLED="STALLED"   # reached an assume that is false
@@ -266,7 +313,7 @@ if __name__ == "__main__":
   fun = unique(Function.load(args.file)) # type: Function
   starting_store = {  k : int(v) for (k, v) in
     [ x.split("=") for x in args.starting_env.split(",") ]
-  }
+  } # type: Store
 
   if (args.nond_mode == "all"):
     filt_f = lambda states:  list(states) # type: ChoiceF

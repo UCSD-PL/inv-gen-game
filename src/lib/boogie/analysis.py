@@ -13,7 +13,7 @@ DFlowState_T = Dict[Label_T, Set[T]]
 
 #TODO: Need to introduce a separation between top and bottom
 def forwarddflow(fun: Function, transformer_m: Transformer_T, union_f: Union_T, initial_vals: Set[T], start_val: Set[T]) -> DFlowState_T:
-    state = { bb.label: copy(initial_vals) for bb in fun.bbs } # type: DFlowState_T
+    state = { bb.label: copy(initial_vals) for bb in fun.bbs() } # type: DFlowState_T
     state[fun.entry().label] = start_val
     wlist = [ fun.entry() ]
     while len(wlist) > 0:
@@ -36,7 +36,7 @@ def forwarddflow(fun: Function, transformer_m: Transformer_T, union_f: Union_T, 
 # TODO: How does this work without one node starting with less than maximal?
 # What is Top and Bottom in my current use caes (livevars)?
 def backdflow(fun: Function, transformer_m: Transformer_T, union_f: Union_T, initial_vals: Set[T]) -> DFlowState_T:
-    state = { bb.label: copy(initial_vals) for bb in fun.bbs } # type: DFlowState_T
+    state = { bb.label: copy(initial_vals) for bb in fun.bbs() } # type: DFlowState_T
     wlist = [ fun.entry() ]
     while len(wlist) > 0:
         curBB = wlist.pop()

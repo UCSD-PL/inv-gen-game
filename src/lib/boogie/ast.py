@@ -38,7 +38,7 @@ class AstId(AstExpr):
     def __str__(s) -> str: return str(s.name)
 
 class AstMapIndex(AstExpr):
-    def __init__(s, map: AstId, index: AstExpr) -> None:  AstExpr.__init__(s, map, index)
+    def __init__(s, map: AstExpr, index: AstExpr) -> None:  AstExpr.__init__(s, map, index)
     def __str__(s) -> str: return "{}[{}]".format(str(s.map), str(s.index))
 
 class AstUnExpr(AstExpr):
@@ -51,12 +51,12 @@ class AstBinExpr(AstExpr):
         return "(" + str(s.lhs) + " " + str(s.op) + " " + str(s.rhs) + ")"
 
 class AstBinding(AstNode):
-    def __init__(s, names: Iterable[str], typ: AstType) -> None:  AstNode.__init__(s, names, typ)
+    def __init__(s, names: Iterable[str], typ: AstType) -> None:  AstNode.__init__(s, tuple(names), typ)
     def __str__(s) -> str: return ",".join(map(str, s.names)) + " : " + str(s.typ)
 
 
 class AstForallExpr(AstExpr):
-    def __init__(s, bindings: List[AstBinding], expr: AstExpr) -> None:  AstExpr.__init__(s, bindings, expr)
+    def __init__(s, bindings: List[AstBinding], expr: AstExpr) -> None:  AstExpr.__init__(s, tuple(bindings), expr)
     def __str__(s) -> str:
         return "(forall " + ",".join([str(x) for x in s.bindings]) + " :: " + \
                str(s.expr) + ")"
@@ -258,13 +258,15 @@ class AstBuilder(BoogieParser[AstNode]):
   def onMapIndex(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
     mapE = toks[0]
     indexE = toks[1]
-    assert isinstance(mapE, AstId) and isinstance(indexE, AstExpr)
+    assert isinstance(mapE, AstExpr) and isinstance(indexE, AstExpr)
     return [AstMapIndex(mapE, indexE)]
   def onQuantified(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
     assert len(toks) == 3, "NYI TypeArgs on quantified expressions"
     quantifier = str(toks[0])
-    assert isinstance(toks[1], list)
-    bindings = toks[1]  # type: List[AstBinding]
+    bindings = []  # type: List[AstBinding]
+    for node in toks[1]:
+        assert isinstance(node, AstBinding)
+        bindings.append(node)
     expr = toks[2]
     assert quantifier == "forall", "Existential quantification NYI"
     assert isinstance(expr, AstExpr)

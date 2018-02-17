@@ -19,20 +19,20 @@ class BB(List[AstStmt]):
     def isInternal(self) -> bool:
         return self._internal
 
-    def predecessors(self) -> List[BB]:
+    def predecessors(self) -> List["BB"]:
         return self._predecessors
 
-    def successors(self) -> List[BB]:
+    def successors(self) -> List["BB"]:
         return self._successors
 
     def stmts(self) -> List[AstStmt]:
         return list(self)
 
-    def addSuccessor(self, bb: BB) -> None:
+    def addSuccessor(self, bb: "BB") -> None:
         self._successors.append(bb)
         bb._predecessors.append(self)
 
-    def addPredecessor(self, bb: BB) -> None:
+    def addPredecessor(self, bb: "BB") -> None:
         bb.addSuccessor(self)
 
     def isEntry(self) -> bool:
@@ -41,9 +41,12 @@ class BB(List[AstStmt]):
     def isExit(self) -> bool:
         return len(self._successors) == 0
 
+    def __hash__(self) -> int:
+        return object.__hash__(self)
+
 class Function(object):
     @staticmethod
-    def load(filename: str) -> Iterable[Function]:
+    def load(filename: str) -> Iterable["Function"]:
         funcs = [] # type: List[Function]
         f = open(filename)
         txt = f.read()
@@ -54,7 +57,7 @@ class Function(object):
         return funcs
 
     @staticmethod
-    def build(fun: AstImplementation) -> Function:
+    def build(fun: AstImplementation) -> "Function":
         # Step 1: Break statements into basic blocks
         bbs = {}
         curLbl = None
@@ -86,9 +89,10 @@ class Function(object):
             for succ in bb.successors():
                 succ._predecessors.append(bb)
 
-        parameters = [(name, binding.type) for binding in fun.signature[0] for name in binding.names ] # type: Bindings_T
-        returns = [(name, binding.type) for binding in fun.signature[1] for name in binding.names ] # type: Bindings_T
-        f = Function(fun.name, bbs.values(), parameters, returns)
+        parameters = [(name, binding.typ) for binding in fun.signature[0] for name in binding.names ] # type: Bindings_T
+        local_vars = [(name, binding.typ) for binding in fun.body.bindings for name in binding.names ] # type: Bindings_T
+        returns = [(name, binding.typ) for binding in fun.signature[1] for name in binding.names ] # type: Bindings_T
+        f = Function(fun.name, bbs.values(), parameters, local_vars, returns)
 
         if len(list(f.exits())) != 1:
             exitBB = BB("__dummy_exit__", [], [], [])
@@ -96,21 +100,28 @@ class Function(object):
             for bb in f.exits():
                 bb.addSuccessor(exitBB)
 
-            f.bbs.append(exitBB)
+            f._bbs[exitBB.label] = exitBB
 
         return f
     
-    def __init__(self, name: str, bbs: Iterable[BB], parameters: Bindings_T, returns: Bindings_T) -> None:
+    def __init__(self, name: str, bbs: Iterable[BB], parameters: Bindings_T, local_vars: Bindings_T, returns: Bindings_T) -> None:
         self.name = name
-        self.bbs = list(bbs)
+        self._bbs = {bb.label: bb for bb in bbs}
         self.parameters = parameters
+        self.locals = local_vars 
         self.returns = returns
 
     def entry(self) -> BB:
-        return unique([bb for bb in self.bbs if not bb.isInternal() and bb.isEntry()])
+        return unique([bb for bb in self._bbs.values() if not bb.isInternal() and bb.isEntry()])
 
     def exits(self) -> Iterator[BB]:
-        return iter([bb for bb in self.bbs if not bb.isInternal() and bb.isExit()])
+        return iter([bb for bb in self._bbs.values() if not bb.isInternal() and bb.isExit()])
 
     def exit(self) -> BB:
         return unique(self.exits())
+
+    def bbs(self) -> Iterable[BB]:
+        return self._bbs.values()
+
+    def get_bb(self, label: Label_T) -> BB:
+        return self._bbs[label]

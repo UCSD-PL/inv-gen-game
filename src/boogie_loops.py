@@ -4,7 +4,7 @@ from lib.boogie.ast import AstAssume, ast_or, AstTrue, parseExprAst, AstAssume
 from lib.boogie.bb import BB, get_bbs, bbEntry
 from lib.boogie.paths import get_path_vars
 #from lib.boogie.ssa import *
-from lib.boogie.eval import env_to_expr
+from lib.boogie.interp import env_to_expr
 from collections import namedtuple
 from lib.common.util import unique
 

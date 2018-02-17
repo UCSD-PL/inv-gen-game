@@ -178,8 +178,7 @@ def writeTrace(fname, header_vals):
 
     f.close();
 
-#TODO: Remove multiround. Its crud.
-def loadBoogieFile(fname, multiround):
+def loadBoogieFile(fname):
     bbs = get_bbs(fname)
     ensureSingleExit(bbs);
     loop = unique(loops(bbs),
@@ -229,54 +228,9 @@ def loadBoogieFile(fname, multiround):
              'support_pos_ex' : True,
              'support_neg_ex' : True,
              'support_ind_ex' : True,
-             'multiround'     : multiround,
              'program' : bbs,
              'loop' : loop
     }
-
-def loadBoogies(dirN, multiround = False):
-    return { name[:-4] : loadBoogieFile(dirN + '/' + name, multiround)
-             for name in listdir(dirN) if name.endswith('.bpl') }
-
-def readTraceOnlyLvl(fname):
-    rows = []
-    first = True
-    for l in open(fname):
-        l = l.strip();
-        if (l == ''):
-            continue
-        row = {}
-        for (n,v) in [x.split('=') for x in l.split(' ')]:
-            row[n] = v
-
-        if (first):
-          vs = [x.split('=')[0] for x in l.split(' ')]
-          first = False;
-        rows.append(row)
-
-    hint = None
-    goal = None
-    try:
-        goal = load(open(fname[:-4] + '.goal'))
-        hint = open(fname[:-4] + '.hint').read()
-    except Exception:
-        pass
-
-    return { 'variables': vs,
-             'data': [[[ row.get(n, None) for n in vs  ]  for row in rows ],
-                      [],
-                      []],
-             'hint': hint,
-             'goal' : goal,
-             'support_pos_ex' : False,
-             'support_neg_ex' : False,
-             'support_ind_ex' : False,
-             'multiround'     : False,
-    }
-
-def loadTraces(dirN):
-    return { name[:-4] : readTraceOnlyLvl(dirN + '/' + name)
-             for name in listdir(dirN) if name.endswith('.out') }
 
 def loadBoogieLvlSet(lvlSetFile):
     # Small helper funct to make sure we didn't

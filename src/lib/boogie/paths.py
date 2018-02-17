@@ -1,11 +1,12 @@
 from lib.boogie.ast import stmt_changed, AstAssignment, AstId, AstHavoc, \
         AstAssert, AstTrue, replace, AstNode, AstExpr, AstStmt_T, AstStmt, _force_stmt
-from lib.boogie.z3_embed import Or, And, Int, And, stmt_to_z3, \
-        AllIntTypeEnv, satisfiable, model, Env_T, TypeEnv_T
+from lib.boogie.z3_embed import Or, And, Int, And, stmt_to_z3, satisfiable,\
+    model, TypeEnv_T, get_typeenv
 from lib.boogie.bb import BB, Label_T, Function
-from lib.boogie.ssa import SSAEnv, is_ssa_str, ReplMap_T
+from lib.boogie.ssa import SSAEnv, is_ssa_str, ReplMap_T, get_ssa_tenv
 from lib.boogie.predicate_transformers import wp_stmts, sp_stmts
 from lib.common.util import flattenList
+from lib.boogie.interp import Store
 
 from typing import TYPE_CHECKING, List, Union, Any, Set, Tuple, Iterator,\
         Iterable, overload
@@ -30,7 +31,7 @@ class NondetNode(object):
 
 NondetPathNode_T = Union[BB, NondetNode]
 class NondetPath(List[NondetPathNode_T]):
-    def ssa(self, ssa_env: SSAEnv, cur_p: str = "") -> Tuple[NondetSSAPath, SSAEnv]:
+    def ssa(self, ssa_env: SSAEnv, cur_p: str = "") -> Tuple["NondetSSAPath", SSAEnv]:
         pass
 
 # TODO: Abstract the definition of NondetPath and NondetSSAPath to a single
@@ -47,7 +48,7 @@ class NondetPath(List[NondetPathNode_T]):
 #   as a Z3 query.
 class NondetSSAPathNode:
     """ Base NondetSSAPathNode class """
-    def to_z3(self) -> z3.ExprRef:
+    def to_z3(self, tenv: TypeEnv_T) -> z3.ExprRef:
         raise Exception("NYI")
 
     def wp(self, pred: z3.ExprRef, tenv: TypeEnv_T) -> z3.ExprRef:
@@ -65,8 +66,8 @@ class SSABBNode(NondetSSAPathNode):
         self.repl_maps = list(repl_m)
         assert len(repl_m) == len(self.bb) + 1
 
-    def to_z3(self) -> z3.ExprRef:
-        return And([stmt_to_z3(stmt, AllIntTypeEnv())
+    def to_z3(self, tenv: TypeEnv_T) -> z3.ExprRef:
+        return And([stmt_to_z3(stmt, tenv) 
             for stmt in _ssa_stmts(list(self.bb.stmts()), self.repl_maps)])
 
     def wp(self, pred: z3.ExprRef, tenv: TypeEnv_T) -> z3.ExprRef:
@@ -88,8 +89,8 @@ class SSANondetNode(NondetSSAPathNode):
     def __iter__(self) -> Iterator["NondetSSAPath"]:
         return iter(self.paths)
 
-    def to_z3(self) -> z3.ExprRef:
-        return Or([And((Int(self.choice_var) == ind), path.to_z3())
+    def to_z3(self, tenv: TypeEnv_T) -> z3.ExprRef:
+        return Or([And((Int(self.choice_var) == ind), path.to_z3(tenv))
             for ind, path in enumerate(self.paths)])
 
     def wp(self, pred: z3.ExprRef, tenv: TypeEnv_T) -> z3.ExprRef:
@@ -107,8 +108,8 @@ class NondetSSAPath(List[NondetSSAPathNode]):
             assert isinstance(last, SSANondetNode)
             return flattenList([list(subp.exits()) for subp in last.paths])
 
-    def to_z3(self) -> z3.ExprRef:
-        return And([node.to_z3() for node in self])
+    def to_z3(self, tenv: TypeEnv_T) -> z3.ExprRef:
+        return And([node.to_z3(tenv) for node in self])
 
     def wp(self, pred: z3.ExprRef, tenv: TypeEnv_T) -> z3.ExprRef:
         for node in reversed(self):
@@ -201,11 +202,12 @@ def _ssa_stmts(stmts: List[AstStmt], envs: List[ReplMap_T]) -> List[AstStmt]:
     return [ssa_stmt(stmts[i], envs[i], envs[i+1])
                 for i in range(0, len(stmts))]
 
-def is_nd_bb_path_possible(bbpath: NondetPath) -> bool:
+def is_nd_bb_path_possible(bbpath: NondetPath, f: Function) -> bool:
     nd_ssa_p, _ = nd_bb_path_to_ssa(bbpath, SSAEnv(None, ""))
-    return satisfiable(nd_ssa_p.to_z3())
+    tenv = get_ssa_tenv(get_typeenv(f))
+    return satisfiable(nd_ssa_p.to_z3(tenv))
 
-def extract_ssa_path_vars(ssa_p: NondetSSAPath, m: Env_T) -> NondetPathEnvs_T:
+def extract_ssa_path_vars(ssa_p: NondetSSAPath, m: Store) -> NondetPathEnvs_T:
     argsS = set([str(x) for x in m
         if (not is_ssa_str(str(x)) and '_split_' not in str(x))])
 
@@ -234,7 +236,8 @@ def extract_ssa_path_vars(ssa_p: NondetSSAPath, m: Env_T) -> NondetPathEnvs_T:
 
     return [x for x in _helper(ssa_p) if '_union_' not in x[0]]
 
-def get_path_vars(bbpath: NondetPath) -> NondetPathEnvs_T:
+def get_path_vars(bbpath: NondetPath, f: Function) -> NondetPathEnvs_T:
     ssa_p, _ = nd_bb_path_to_ssa(bbpath, SSAEnv(None, ""))
-    m = model(ssa_p.to_z3())
+    tenv = get_ssa_tenv(get_typeenv(f))
+    m = model(ssa_p.to_z3(tenv))
     return extract_ssa_path_vars(ssa_p, m)
