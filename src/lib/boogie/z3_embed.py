@@ -23,9 +23,10 @@ ctxHolder = local()
 Z3ValFactory_T = Callable[[str], z3.ExprRef]
 TypeEnv_T = Dict[str, Z3ValFactory_T]
 
-def fi_deserialize(classname: str, d: Dict[Any, Any]):
+def fi_deserialize(classname: str, d: Dict[Any, Any]) -> FuncInterp:
     return FuncInterp.from_dict(d)
-def fi_serialize(obj: FuncInterp):
+
+def fi_serialize(obj: FuncInterp) -> Dict[Any, Any]:
     d=FuncInterp.to_dict(obj)
     assert "__class__" not in d
     d["__class__"] = "FuncInterp"
