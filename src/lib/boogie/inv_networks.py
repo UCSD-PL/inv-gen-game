@@ -60,11 +60,8 @@ class Violation:
     return s._filterStore(unssa_z3_model(s._ctrex, rm), rm)
 
   def __str__(s) -> str:
-    if (s.isSafety()):
-      return "Safety@" + str(s._path) + ":" + str(s.startEnv()) + "->" + str(s.endEnv())
-    else:
-      return "Inductiveness@" + str(s._path) + ":" + \
-              str(s.startEnv()) + "->" + str(s.endEnv())
+    typeStr = "Safety" if s.isSafety() else "Inductiveness@"
+    return "{}@{}:".format(typeStr, str(s._path) + " : " + str(s.startEnv()) + " -> " + str(s.endEnv()))
 
   def __repr__(s) -> str:
     return s.__str__()
