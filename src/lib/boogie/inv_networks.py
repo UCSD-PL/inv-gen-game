@@ -38,24 +38,32 @@ class Violation:
       assert isinstance(s._path[0], SSABBNode)
       return s._path[0].repl_maps[0]
   def endReplM(s) -> ReplMap_T:
+      # TODO: Fix
       if (len(s._lastBBCompletedStmts) > 0):
+        stmt_idx = len(s._lastBBCompletedStmts) - 1
         assert isinstance(s._path[-1], SSABBNode)
-        return s._path[-1].repl_maps[0]
+        return s._path[-1].repl_maps[stmt_idx]
       assert isinstance(s._path[-2], SSABBNode)
-      return s._path[-2].repl_maps[-1]
+      return s._path[-2].repl_maps[0]
+
+  @staticmethod
+  def _filterStore(s: Store, repl_m: ReplMap_T) -> Store:
+    return {k: v for (k,v) in s.items() if not k.startswith("k!")}
 
   def startEnv(s) -> Store:
     assert {} == s.startReplM()
-    return unssa_z3_model(s._ctrex, s.startReplM())
+    rm = s.startReplM()
+    return s._filterStore(unssa_z3_model(s._ctrex, rm), rm)
 
   def endEnv(s) -> Store:
-    return unssa_z3_model(s._ctrex, s.endReplM())
+    rm = s.endReplM()
+    return s._filterStore(unssa_z3_model(s._ctrex, rm), rm)
 
   def __str__(s) -> str:
     if (s.isSafety()):
-      return "Safety@" + str(s.endBB()) + ":" + str(s.endEnv())
+      return "Safety@" + str(s._path) + ":" + str(s.startEnv()) + "->" + str(s.endEnv())
     else:
-      return "Inductiveness@" + str([x for x in s._path]) + ":" + \
+      return "Inductiveness@" + str(s._path) + ":" + \
               str(s.startEnv()) + "->" + str(s.endEnv())
 
   def __repr__(s) -> str:
@@ -189,7 +197,9 @@ def checkInvNetwork(fun: Function, preCond: AstExpr, postCond: AstExpr, cutPoint
         for (s, replM) in ssa_stmts:
           if (isinstance(s, AstAssert)):
             try:
+              #print ("Checking path to assert {}\n {}\n {}\n {}\n".format(path, curFinalSSAEnv, sp, Implies(sp, expr_to_z3(s.expr, tenv))))
               c = counterex(Implies(sp, expr_to_z3(s.expr, tenv)), timeout)
+              #print ("Done")
             except Unknown:
               c = { } # On timeout conservatively assume fail
             if (c != None):
@@ -220,7 +230,9 @@ def checkInvNetwork(fun: Function, preCond: AstExpr, postCond: AstExpr, cutPoint
           ssaed_postcond = _force_expr(replace(postCond, curFinalSSAEnv.replm()))
           postSSAZ3 = expr_to_z3(ssaed_postcond, tenv)
           try:
+            #print ("Checking path to exit {}\n {}\n {}\n {}\n".format(path, postCond, postSSAZ3, Implies(sp, postSSAZ3)))
             c = counterex(Implies(sp, postSSAZ3), timeout)
+            #print ("Done")
           except Unknown:
             c = { } # On timeout conservatively assume fail
           if (c != None):
@@ -237,6 +249,7 @@ def checkInvNetwork(fun: Function, preCond: AstExpr, postCond: AstExpr, cutPoint
               post = ast_and(cps[succ])
               postSSA = _force_expr(replace(post, curFinalSSAEnv.replm()))
               postSSAZ3 = expr_to_z3(postSSA, tenv)
+              #print ("Checking path from cp {} to cp {}: {}\n {}\n {}\n".format(cp, succ, path, postSSA, Implies(sp, postSSAZ3)))
               try:
                 c = counterex(Implies(sp, postSSAZ3), timeout)
               except Unknown:
@@ -254,6 +267,7 @@ def checkInvNetwork(fun: Function, preCond: AstExpr, postCond: AstExpr, cutPoint
                         break
                 except Unknown:
                   c = { } # On timeout conservatively assume fail
+              #print ("Done")
               if (c != None):
                 v = Violation("inductiveness",
                   NondetSSAPath(path + [SSABBNode(succ, [])]),

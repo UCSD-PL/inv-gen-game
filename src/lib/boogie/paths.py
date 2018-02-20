@@ -64,7 +64,7 @@ class SSABBNode(NondetSSAPathNode):
     def __init__(self, bb: BB, repl_m: List[ReplMap_T]) -> None:
         self.bb = bb
         self.repl_maps = list(repl_m)
-        assert len(repl_m) == len(self.bb) + 1
+        assert len(repl_m) <= len(self.bb) + 1
 
     def to_z3(self, tenv: TypeEnv_T) -> z3.ExprRef:
         return And([stmt_to_z3(stmt, tenv) 
@@ -75,6 +75,12 @@ class SSABBNode(NondetSSAPathNode):
 
     def sp(self, pred: z3.ExprRef, tenv: TypeEnv_T) -> z3.ExprRef:
         return sp_stmts(_ssa_stmts(self.bb, self.repl_maps), pred, tenv)
+
+    def __str__(self) -> str:
+        return str(self.bb)
+
+    def __repr__(self) -> str:
+        return str(self)
 
 class SSANondetNode(NondetSSAPathNode):
     """ A NondetSSAPathNode representing a non-deterministic choice between 
@@ -99,6 +105,9 @@ class SSANondetNode(NondetSSAPathNode):
     def sp(self, pred: z3.ExprRef, tenv: TypeEnv_T) -> z3.ExprRef:
         return Or([subpath.sp(pred, tenv) for subpath in self.paths])
 
+    def __str__(self) -> str:
+        return "{[" + ";".join(str(x) for x in self.paths) + "]}"
+
 class NondetSSAPath(List[NondetSSAPathNode]):
     def exits(self) -> Iterable[SSABBNode]:
         last = self[-1]
@@ -120,6 +129,9 @@ class NondetSSAPath(List[NondetSSAPathNode]):
         for node in self:
             pred = node.sp(pred, tenv)
         return pred
+
+    def __str__(self) -> str:
+        return "P(" + super().__str__() + ")"
 
 # TODO: Make this type more accurate similarly to the way  NondetSSAPath is implemented
 NondetPathEnvs_T = List[Any]

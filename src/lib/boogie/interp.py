@@ -22,7 +22,16 @@ class FuncInterp:
     def from_dict(d: Dict[Any, Any]) -> "FuncInterp":
       return FuncInterp(d["explicit"], d["default"])
 
-BoogieVal = Union[int, bool, FuncInterp]
+class OpaqueVal(object):
+    @staticmethod
+    def to_dict(f: "OpaqueVal") -> Dict[Any, Any]:
+      return {  }
+
+    @staticmethod
+    def from_dict(d: Dict[Any, Any]) -> "OpaqueVal":
+      return OpaqueVal()
+
+BoogieVal = Union[int, bool, FuncInterp, OpaqueVal]
 Store = Dict[str, BoogieVal]
 PC = NamedTuple("PC", [("bb", BB), ("next_stmt", int)])
 State = NamedTuple("State", [("pc", PC), ("store", Store), ("status", str)])

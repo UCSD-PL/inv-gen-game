@@ -2,7 +2,7 @@
 from typing import Union, Tuple, Dict, Callable, Optional, Any, List, cast, Type
 import lib.boogie.ast as ast
 import lib.boogie.bb as bb
-from lib.boogie.interp import BoogieVal, FuncInterp, Store
+from lib.boogie.interp import BoogieVal, OpaqueVal, Store
 import z3
 
 from threading import Condition, local
@@ -23,17 +23,17 @@ ctxHolder = local()
 Z3ValFactory_T = Callable[[str], z3.ExprRef]
 TypeEnv_T = Dict[str, Z3ValFactory_T]
 
-def fi_deserialize(classname: str, d: Dict[Any, Any]) -> FuncInterp:
-    return FuncInterp.from_dict(d)
+def fi_deserialize(classname: str, d: Dict[Any, Any]) -> OpaqueVal:
+    return OpaqueVal.from_dict(d)
 
-def fi_serialize(obj: FuncInterp) -> Dict[Any, Any]:
-    d=FuncInterp.to_dict(obj)
+def fi_serialize(obj: OpaqueVal) -> Dict[Any, Any]:
+    d=OpaqueVal.to_dict(obj)
     assert "__class__" not in d
-    d["__class__"] = "FuncInterp"
+    d["__class__"] = "OpaqueVal"
     return d
 
-SerializerBase.register_dict_to_class("FuncInterp", fi_deserialize)
-SerializerBase.register_class_to_dict(FuncInterp, fi_serialize)
+SerializerBase.register_dict_to_class("OpaqueVal", fi_deserialize)
+SerializerBase.register_class_to_dict(OpaqueVal, fi_serialize)
 
 def type_to_z3sort(ast_typ: ast.AstType) -> z3.SortRef:
     if isinstance(ast_typ, ast.AstIntType):
@@ -54,9 +54,8 @@ def type_to_z3(ast_typ: ast.AstType) -> Z3ValFactory_T:
         def array_fac(name: str) -> z3.ArrayRef:
             return z3.Array(name, type_to_z3sort(ast_typ.domainT), type_to_z3sort(ast_typ.rangeT))
         return array_fac
-
 def get_typeenv(f: bb.Function) -> TypeEnv_T:
-    return dict((name, type_to_z3(ast_typ)) for (name, ast_typ) in list(f.parameters) + list(f.locals))
+    return dict((name, type_to_z3(ast_typ)) for (name, ast_typ) in list(f.parameters) + list(f.locals) + list(f.returns))
 
 def z3val_to_boogie(v: Union[z3.ExprRef, z3.FuncInterp]) -> BoogieVal:
     if isinstance(v, z3.IntNumRef):
@@ -64,11 +63,8 @@ def z3val_to_boogie(v: Union[z3.ExprRef, z3.FuncInterp]) -> BoogieVal:
     elif isinstance(v, z3.BoolRef):
         return bool(v)
     else:
-        assert isinstance(v, z3.FuncInterp) and v.arity() == 1
-        explicit_cases = [(z3val_to_boogie(e.arg_value(0)), z3val_to_boogie(e.value())) for e in
-            [v.entry(i) for i in range(v.num_entries())]]  # type: List[Tuple[BoogieVal, BoogieVal]]
-        default_case = z3val_to_boogie(v.else_value()) # type: BoogieVal
-        return FuncInterp(dict(explicit_cases), default_case)
+        print ("Func {} -> OpaqueVal".format(v))
+        return OpaqueVal()
 
 def model_to_store(m: z3.ModelRef) -> Store:
     return { str(x): z3val_to_boogie(m[x]) for x in m}
@@ -119,7 +115,7 @@ class Z3ServerInstance(object):
     @wrapZ3Exc
     def model(s) -> Store:
         m = s._solver.model()
-        print (m, type(m))
+        print (m)
         return model_to_store(m)
 
     @Pyro4.expose
@@ -263,6 +259,7 @@ z3ProcessPool = {} # type: Dict[Z3ProxySolver, bool]
 
 def _cleanupChildProcesses() -> None:
     for proxy in z3ProcessPool:
+        print ("Kill child {}".format(proxy._proc))
         proxy._proc.terminate()
 
 

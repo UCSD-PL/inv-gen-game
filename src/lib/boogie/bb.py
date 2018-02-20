@@ -44,6 +44,9 @@ class BB(List[AstStmt]):
     def __hash__(self) -> int:
         return object.__hash__(self)
 
+    def __str__(self) -> str:
+        return self.label + "<[" + ";".join(str(x) for x in self.stmts()) + "]>"
+
 class Function(object):
     @staticmethod
     def load(filename: str) -> Iterable["Function"]:
