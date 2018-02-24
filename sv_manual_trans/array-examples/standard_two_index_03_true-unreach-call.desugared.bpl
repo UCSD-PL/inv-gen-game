@@ -12,7 +12,6 @@ implementation main() returns (__RET: int)
     goto anon5_LoopHead;
 
   anon5_LoopHead:
-    assert (forall k: int :: 0 <= k && k < j ==> a[k] == b[3 * k + 1]) && i == 3 * j + 1;
     goto anon5_LoopDone, anon5_LoopBody;
 
   anon5_LoopBody:
@@ -29,7 +28,6 @@ implementation main() returns (__RET: int)
     goto anon6_LoopHead;
 
   anon6_LoopHead:
-    assert (forall k: int :: 0 <= k && 3 * k + 1 < 10000 ==> a[k] == b[3 * k + 1]) && i == 3 * j + 1;
     goto anon6_LoopDone, anon6_LoopBody;
 
   anon6_LoopBody:

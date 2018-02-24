@@ -13,7 +13,6 @@ implementation main() returns (__RET: int)
     goto anon8_LoopHead;
 
   anon8_LoopHead:
-    assert rv ==> (forall k: int :: 0 <= k && k < i ==> a[k] == b[k]);
     goto anon8_LoopDone, anon8_LoopBody;
 
   anon8_LoopBody:
@@ -51,7 +50,6 @@ implementation main() returns (__RET: int)
     goto anon11_LoopHead;
 
   anon11_LoopHead:
-    assert rv ==> (forall k: int :: 0 <= k && k < 100000 ==> a[k] == b[k]);
     goto anon11_LoopDone, anon11_LoopBody;
 
   anon11_LoopBody:

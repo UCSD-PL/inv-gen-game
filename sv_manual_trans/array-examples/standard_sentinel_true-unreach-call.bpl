@@ -9,7 +9,7 @@ procedure main() returns (__RET: int)
     a[pos] := marker;
     i := 0;
     while ((a[i]!=marker))
-    invariant (forall k : int :: (0 <= k && k < i) ==> a[k] != marker) && a[pos] == marker && i <= pos;
+    //invariant (forall k : int :: (0 <= k && k < i) ==> a[k] != marker) && a[pos] == marker && i <= pos;
     {
       i := (i+1);
     }

@@ -11,8 +11,8 @@ procedure main() returns (__RET: int)
   found := false;
   i := 0;
   while (((i<n)&&!(found)))
-  invariant (!(found) ==> (forall k: int :: (0<= k && k < i) ==> vectorx[k] != element));
-  invariant found ==> ((forall k: int :: (0<= k && k < i-1) ==> vectorx[k] != element) && vectorx[i-1] == element && pos == i-1);
+  //invariant (!(found) ==> (forall k: int :: (0<= k && k < i) ==> vectorx[k] != element));
+  //invariant found ==> ((forall k: int :: (0<= k && k < i-1) ==> vectorx[k] != element) && vectorx[i-1] == element && pos == i-1);
   {
     if ((vectorx[i]==element))
     {
@@ -26,7 +26,7 @@ procedure main() returns (__RET: int)
   {
     i := pos;
     while ((i<(n-1)))
-    invariant found ==> ((forall k: int :: (0<= k && k < pos) ==> vectorx[k] != element) && i >= pos);    
+    //invariant found ==> ((forall k: int :: (0<= k && k < pos) ==> vectorx[k] != element) && i >= pos);    
     {
       vectorx[i] := vectorx[(i+1)];
       i := i + 1;
@@ -37,7 +37,7 @@ procedure main() returns (__RET: int)
   {
     x := 0;
     while ((x<pos))
-    invariant (forall k: int :: (0<= k && k < pos) ==> vectorx[k] != element);
+    //invariant (forall k: int :: (0<= k && k < pos) ==> vectorx[k] != element);
     {
       assert((vectorx[x]!=element));
       x := x + 1;

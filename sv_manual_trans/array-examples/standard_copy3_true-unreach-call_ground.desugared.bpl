@@ -13,7 +13,6 @@ implementation main() returns (__RET: int)
     goto anon9_LoopHead;
 
   anon9_LoopHead:
-    assert (forall k: int :: 0 <= k && k < i ==> a2[k] == a1[k]) && i <= 100000;
     goto anon9_LoopDone, anon9_LoopBody;
 
   anon9_LoopBody:
@@ -28,8 +27,6 @@ implementation main() returns (__RET: int)
     goto anon10_LoopHead;
 
   anon10_LoopHead:
-    assert (forall k: int :: 0 <= k && k < 100000 ==> a1[k] == a2[k]);
-    assert (forall k: int :: 0 <= k && k < i ==> a2[k] == a3[k]) && i <= 100000;
     goto anon10_LoopDone, anon10_LoopBody;
 
   anon10_LoopBody:
@@ -44,9 +41,6 @@ implementation main() returns (__RET: int)
     goto anon11_LoopHead;
 
   anon11_LoopHead:
-    assert (forall k: int :: 0 <= k && k < 100000 ==> a1[k] == a2[k]);
-    assert (forall k: int :: 0 <= k && k < 100000 ==> a2[k] == a3[k]);
-    assert (forall k: int :: 0 <= k && k < i ==> a3[k] == a4[k]) && i <= 100000;
     goto anon11_LoopDone, anon11_LoopBody;
 
   anon11_LoopBody:
@@ -61,7 +55,6 @@ implementation main() returns (__RET: int)
     goto anon12_LoopHead;
 
   anon12_LoopHead:
-    assert (forall k: int :: 0 <= k && k < 100000 ==> a1[k] == a4[k]);
     goto anon12_LoopDone, anon12_LoopBody;
 
   anon12_LoopBody:

@@ -7,22 +7,22 @@ procedure main() returns (__RET: int)
   var x: int;
   i := 0;
   while ((i<100000))
-  invariant (forall k : int :: (0 <= k && k < i) ==> a1[k] == a2[k]) && i <= 100000;
+  //invariant (forall k : int :: (0 <= k && k < i) ==> a1[k] == a2[k]) && i <= 100000;
   {
     a2[i] := a1[i];
     i := i + 1;
   }
   i := 0;
   while ((i<100000))
-  invariant (forall k : int :: (0 <= k && k < 100000) ==> a1[k] == a2[k]);
-  invariant (forall k : int :: (0 <= k && k < i) ==> a2[k] == a3[k]) && i <= 100000;
+  //invariant (forall k : int :: (0 <= k && k < 100000) ==> a1[k] == a2[k]);
+  //invariant (forall k : int :: (0 <= k && k < i) ==> a2[k] == a3[k]) && i <= 100000;
   {
     a3[i] := a2[i];
     i := i + 1;
   }
   x := 0;
   while ((x<100000))
-  invariant (forall k : int :: (0 <= k && k < 100000) ==> a1[k] == a3[k]);
+  //invariant (forall k : int :: (0 <= k && k < 100000) ==> a1[k] == a3[k]);
   {
     assert((a1[x]==a3[x]));
     x := x + 1;

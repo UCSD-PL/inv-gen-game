@@ -7,7 +7,7 @@ procedure main() returns (__RET: int)
   i := 0;
   j := 0;
   while ((i<10000))
-  invariant (forall k:int :: (0<=k && k< i)==> a[k] == b[k]) && i==j;
+  //invariant (forall k:int :: (0<=k && k< i)==> a[k] == b[k]) && i==j;
   {
   a[j] := b[i];
   i := (i+1);
@@ -16,7 +16,7 @@ procedure main() returns (__RET: int)
   i := 0;
   j := 0;
   while ((i<10000))
-  invariant (forall k:int :: (0<=k && k< 10000)==> a[k] == b[k]) && i==j;
+  //invariant (forall k:int :: (0<=k && k< 10000)==> a[k] == b[k]) && i==j;
   {
   assert((a[j]==b[j]));
   i := (i+1);

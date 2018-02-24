@@ -7,7 +7,7 @@ procedure main() returns (__RET: int)
   max := 0;
   i := 0;
   while ((i<100000))
-  invariant (forall k : int :: (0 <= k && k < i) ==> max >= a[k]);
+  //invariant (forall k : int :: (0 <= k && k < i) ==> max >= a[k]);
   {
     if ((a[i]>max))
     {
@@ -19,7 +19,7 @@ procedure main() returns (__RET: int)
 
   x := 0;
   while ((x<100000))
-  invariant true;
+  //invariant true;
   {
     assert((a[x]<=max));
     x := x + 1;

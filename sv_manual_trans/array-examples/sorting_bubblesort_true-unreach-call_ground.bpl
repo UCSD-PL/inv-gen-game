@@ -7,13 +7,13 @@ procedure main() returns (__RET: int)
   var i, t: int;
   swapped := true;
   while (swapped)
-  invariant (!swapped ==> (forall k,l : int :: (0 <= k && k < l && l < 100000) ==> a[k] <= a[l]));
+  //invariant (!swapped ==> (forall k,l : int :: (0 <= k && k < l && l < 100000) ==> a[k] <= a[l]));
   {
     swapped := false;
     i := 1;
     while ((i<100000))
-    invariant (forall k : int :: (0 <= k && k < i) ==> a[k] <= a[i-1]);
-    invariant (!swapped ==> (forall k,l : int :: (0 <= k && k < l && l < i) ==> a[k] <= a[l]));
+    //invariant (forall k : int :: (0 <= k && k < i) ==> a[k] <= a[i-1]);
+    //invariant (!swapped ==> (forall k,l : int :: (0 <= k && k < l && l < i) ==> a[k] <= a[l]));
     {
       if ((a[(i-1)]>a[i]))
       {
@@ -29,11 +29,11 @@ procedure main() returns (__RET: int)
 
   x := 0;
   while ((x<100000))
-  invariant true;
+  //invariant true;
   {
     y := (x+1);
     while ((y<100000))
-    invariant x<y;
+    //invariant x<y;
     {
       assert((a[x]<=a[y]));
       y := y + 1;

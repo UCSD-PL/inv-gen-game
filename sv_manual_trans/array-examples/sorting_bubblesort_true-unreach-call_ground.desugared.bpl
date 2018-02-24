@@ -13,7 +13,6 @@ implementation main() returns (__RET: int)
     goto anon10_LoopHead;
 
   anon10_LoopHead:
-    assert !swapped ==> (forall k: int, l: int :: 0 <= k && k < l && l < 100000 ==> a[k] <= a[l]);
     goto anon10_LoopDone, anon10_LoopBody;
 
   anon10_LoopBody:
@@ -23,8 +22,6 @@ implementation main() returns (__RET: int)
     goto anon11_LoopHead;
 
   anon11_LoopHead:
-    assert (forall k: int :: 0 <= k && k < i ==> a[k] <= a[i - 1]);
-    assert !swapped ==> (forall k: int, l: int :: 0 <= k && k < l && l < i ==> a[k] <= a[l]);
     goto anon11_LoopDone, anon11_LoopBody;
 
   anon11_LoopBody:
@@ -57,7 +54,6 @@ implementation main() returns (__RET: int)
     goto anon13_LoopHead;
 
   anon13_LoopHead:
-    assert true;
     goto anon13_LoopDone, anon13_LoopBody;
 
   anon13_LoopBody:
@@ -66,7 +62,6 @@ implementation main() returns (__RET: int)
     goto anon14_LoopHead;
 
   anon14_LoopHead:
-    assert x < y;
     goto anon14_LoopDone, anon14_LoopBody;
 
   anon14_LoopBody:

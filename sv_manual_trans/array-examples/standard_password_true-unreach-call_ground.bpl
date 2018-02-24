@@ -8,7 +8,7 @@ procedure main() returns (__RET: int)
   result := true;
   i := 0;
   while ((i<100000))
-  invariant result ==> (forall k : int :: (0 <= k && k < i) ==> password[k] == guess[k]);
+  //invariant result ==> (forall k : int :: (0 <= k && k < i) ==> password[k] == guess[k]);
   {
     if ((password[i]!=guess[i]))
     {
@@ -22,7 +22,7 @@ procedure main() returns (__RET: int)
   {
     x := 0;
     while ((x<100000))
-    invariant true;
+    //invariant true;
     {
       assert((password[x]==guess[x]));
       x := x + 1;
