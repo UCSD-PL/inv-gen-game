@@ -197,7 +197,7 @@ def checkInvNetwork(fun: Function, preCond: AstExpr, postCond: AstExpr, cutPoint
           if (isinstance(s, AstAssert)):
             try:
               #print ("Checking path to assert {}\n {}\n {}\n {}\n".format(path, curFinalSSAEnv, sp, Implies(sp, expr_to_z3(s.expr, tenv))))
-              c = counterex(Implies(sp, expr_to_z3(s.expr, tenv)), timeout)
+              c = counterex(Implies(sp, expr_to_z3(s.expr, tenv)), timeout, "Safety bunch: {}".format(Implies(sp, expr_to_z3(s.expr, tenv))))
               #print ("Done")
             except Unknown:
               c = { } # On timeout conservatively assume fail
@@ -210,9 +210,10 @@ def checkInvNetwork(fun: Function, preCond: AstExpr, postCond: AstExpr, cutPoint
               break
           elif (isinstance(s, AstAssume)):
             try:
-              if (unsatisfiable(And(sp, expr_to_z3(s.expr, tenv)), timeout)):
+              if (unsatisfiable(And(sp, expr_to_z3(s.expr, tenv)), timeout, "Unsat? :{}".format(And(sp, expr_to_z3(s.expr, tenv))))):
                 break
             except Unknown:
+              print ("Timeout: Assuming path feasible: {}".format(path))
               pass; # Conservatively assume path is possible on timeout
           processedStmts.append((s, replM))
           new_sp = sp_stmt(s, sp, tenv)
@@ -230,7 +231,7 @@ def checkInvNetwork(fun: Function, preCond: AstExpr, postCond: AstExpr, cutPoint
           postSSAZ3 = expr_to_z3(ssaed_postcond, tenv)
           try:
             #print ("Checking path to exit {}\n {}\n {}\n {}\n".format(path, postCond, postSSAZ3, Implies(sp, postSSAZ3)))
-            c = counterex(Implies(sp, postSSAZ3), timeout)
+            c = counterex(Implies(sp, postSSAZ3), timeout, "Exit: {}".format(Implies(sp, postSSAZ3)))
             #print ("Done")
           except Unknown:
             c = { } # On timeout conservatively assume fail
@@ -251,7 +252,7 @@ def checkInvNetwork(fun: Function, preCond: AstExpr, postCond: AstExpr, cutPoint
               #print ("Checking path from cp {} to cp {}: {}\n {}\n {}\n".format(cp, succ, path, postSSA, Implies(sp, postSSAZ3)))
               try:
                 #print ("Inductiveness query: {}->{}: {}".format(nextBB.label, succ.label, Implies(sp, postSSAZ3)))
-                c = counterex(Implies(sp, postSSAZ3), timeout)
+                c = counterex(Implies(sp, postSSAZ3), timeout, "Induction: {}".format(Implies(sp, postSSAZ3)))
               except Unknown:
                 try:
                   # Sometimes its easier to check each post-invariant
@@ -261,7 +262,7 @@ def checkInvNetwork(fun: Function, preCond: AstExpr, postCond: AstExpr, cutPoint
                   for p in cps[succ.label]:
                     postSSA = _force_expr(replace(p, curFinalSSAEnv.replm()))
                     postSSAZ3 = expr_to_z3(postSSA, tenv)
-                    c = counterex(Implies(sp, postSSAZ3), timeout)
+                    c = counterex(Implies(sp, postSSAZ3), timeout, "Induction(small): {}".format(Implies(sp, postSSAZ3)))
                     # If any of them doesn't hold, neither does their conj
                     if (c != None):
                         break

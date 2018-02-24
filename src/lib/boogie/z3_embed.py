@@ -224,6 +224,7 @@ class Z3ProxySolver:
         elif (r == "unsat"):
             return z3.unsat
         elif (r == "unknown"):
+            #print ("Unknown on query: {}".format(comm))
             raise Unknown("storing query NYI in proxy solver")
         elif (r == "crashed"):
             raise Crashed()
@@ -420,12 +421,15 @@ def satisfiable(pred: z3.ExprRef, timeout: Optional[int] = None) -> bool:
         releaseSolver(s)
 
 
-def unsatisfiable(pred: z3.ExprRef, timeout: Optional[int] =None) -> bool:
+def unsatisfiable(pred: z3.ExprRef, timeout: Optional[int] =None, comm: Optional[str] = None) -> bool:
     s = None
+    if comm is None:
+        comm = ""
+
     try:
         s = getSolver()
         s.add(pred)
-        res = s.check(timeout)
+        res = s.check(timeout, comm)
         return res == z3.unsat
     finally:
         releaseSolver(s)
