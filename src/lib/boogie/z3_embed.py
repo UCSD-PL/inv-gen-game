@@ -533,6 +533,11 @@ def expr_to_z3(expr: ast.AstExpr, typeEnv: TypeEnv_T) -> z3.ExprRef:
         arr = expr_to_z3(expr.map, typeEnv)
         ind = expr_to_z3(expr.index, typeEnv)
         return z3.Select(arr, ind)
+    elif isinstance(expr, ast.AstMapUpdate):
+        arr = expr_to_z3(expr.map, typeEnv)
+        ind = expr_to_z3(expr.index, typeEnv)
+        new_val = expr_to_z3(expr.newVal, typeEnv)
+        return z3.Update(arr, ind, new_val)
     else:
         raise Exception("Unknown expression " + str(expr))
 

@@ -41,6 +41,10 @@ class AstMapIndex(AstExpr):
     def __init__(s, map: AstExpr, index: AstExpr) -> None:  AstExpr.__init__(s, map, index)
     def __str__(s) -> str: return "{}[{}]".format(str(s.map), str(s.index))
 
+class AstMapUpdate(AstExpr):
+    def __init__(s, map: AstExpr, index: AstExpr, newVal: AstExpr) -> None:  AstExpr.__init__(s, map, index, newVal)
+    def __str__(s) -> str: return "{}[{}:={}]".format(str(s.map), str(s.index), str(s.newVal))
+
 class AstUnExpr(AstExpr):
     def __init__(s, op: str, expr: AstExpr) -> None:  AstExpr.__init__(s, op, expr)
     def __str__(s) -> str: return s.op + str(s.expr)
@@ -222,7 +226,7 @@ class AstBuilder(BoogieParser[AstNode]):
     if toks[0] == 'int':
       return [ AstIntType() ];
     elif toks[0] == 'bool':
-      return [ AstIntType() ];
+      return [ AstBoolType() ];
     else:
       raise Exception("NYI type: {}".format(toks[0]))
   def onMapType(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
@@ -260,6 +264,12 @@ class AstBuilder(BoogieParser[AstNode]):
     indexE = toks[1]
     assert isinstance(mapE, AstExpr) and isinstance(indexE, AstExpr)
     return [AstMapIndex(mapE, indexE)]
+  def onMapUpdate(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
+    mapE = toks[0]
+    indexE = toks[1]
+    newValE = toks[2]
+    assert isinstance(mapE, AstExpr) and isinstance(indexE, AstExpr) and isinstance(newValE, AstExpr)
+    return [AstMapUpdate(mapE, indexE, newValE)]
   def onQuantified(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
     assert len(toks) == 3, "NYI TypeArgs on quantified expressions"
     quantifier = str(toks[0])
@@ -308,6 +318,8 @@ def expr_read(ast: AstNode) -> Set[str]:
         return expr_read(ast.expr).difference(quantified_ids)
     elif isinstance(ast, AstMapIndex):
         return expr_read(ast.map).union(expr_read(ast.index))
+    elif isinstance(ast, AstMapUpdate):
+        return expr_read(ast.map).union(expr_read(ast.index)).union(expr_read(ast.newVal))
     else:
         raise Exception("Unknown expression type " + str(ast))
 
@@ -318,6 +330,8 @@ def stmt_read(ast: AstStmt_T) -> Set[str]:
     if isinstance(ast, AstAssume) or isinstance(ast, AstAssert):
         return expr_read(ast.expr)
     elif isinstance(ast, AstAssignment):
+        # Map assignments should be re-written using MapUpdate syntax
+        assert isinstance(ast.lhs, AstId)
         return expr_read(ast.rhs)
     elif isinstance(ast, AstHavoc):
         return set()
@@ -329,7 +343,9 @@ def stmt_changed(ast: AstStmt_T) -> Set[str]:
         ast = ast.stmt
 
     if isinstance(ast, AstAssignment):
-        return expr_read(ast.lhs)
+        # Map assignments should be re-written using MapUpdate syntax
+        assert isinstance(ast.lhs, AstId), "Bad lhs: {}".format(ast.lhs)
+        return set([ast.lhs.name])
     elif isinstance(ast, AstHavoc):
         return set([x.name for x in ast.ids])
     elif isinstance(ast, AstAssume) or isinstance(ast, AstAssert):

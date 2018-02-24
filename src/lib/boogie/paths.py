@@ -8,9 +8,18 @@ from lib.boogie.predicate_transformers import wp_stmts, sp_stmts
 from lib.common.util import flattenList
 from lib.boogie.interp import Store
 
+from lib.boogie.ast import AstMapIndex
+from lib.common.util import first
 from typing import TYPE_CHECKING, List, Union, Any, Set, Tuple, Iterator,\
-        Iterable, overload
+        Iterable, overload, Optional
 import z3
+
+# A concrete path through the program is just a sequence of BBs
+# TODO: Extend this to support limited number of statements at begining/end.
+#       This would simplify some of the inv_networks code.
+class Path(List[BB]):
+    def __hash__(self):
+        return hash(tuple(self))
 
 #A (potentially) non-deterministic path is a sequnce of basic blocks or other non-deterministic paths.
 #For example if we have the BB graph:
@@ -29,10 +38,16 @@ class NondetNode(object):
     def __iter__(self) -> Iterator["NondetPath"]:
         return iter(self.paths)
 
+    def __str__(self) -> str:
+        return "<{}>".format(str(self.paths))
+
+    def __repr__(self) -> str:
+        return str(self)
+
 NondetPathNode_T = Union[BB, NondetNode]
 class NondetPath(List[NondetPathNode_T]):
-    def ssa(self, ssa_env: SSAEnv, cur_p: str = "") -> Tuple["NondetSSAPath", SSAEnv]:
-        pass
+    def __hash__(self):
+        return hash(tuple(self))
 
 # TODO: Abstract the definition of NondetPath and NondetSSAPath to a single
 # ListLike[BaseT], that acts as a list containing either BaseT or ListLike[BaseT]'s
@@ -204,7 +219,7 @@ def ssa_stmt(stmt: AstStmt, prev_replm: ReplMap_T, cur_replm: ReplMap_T) -> AstS
     if isinstance(stmt, AstAssignment):
         lhs = replace(stmt.lhs, cur_replm)
         rhs = replace(stmt.rhs, prev_replm)
-        assert isinstance(lhs, AstId)
+        assert isinstance(lhs, AstId) or isinstance(lhs, AstMapIndex)
         assert isinstance(rhs, AstExpr)
         return AstAssignment(lhs,rhs)
     else:

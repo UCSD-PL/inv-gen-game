@@ -67,3 +67,11 @@ def randomToken(l:int) -> str:
   alphanum = "".join([chr(ord('a') + i) for i in range(26) ] +\
           [ str(i) for i in range(0,10)])
   return "".join([ choice(alphanum) for _ in range(l) ]);
+
+def first(it: Iterable[T], pred: Callable[[T], bool]) -> int:
+    ctr = 0
+    for v in it:
+        if pred(v):
+            return ctr
+        ctr += 1
+    return -1

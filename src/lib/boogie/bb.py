@@ -1,9 +1,10 @@
 from lib.boogie.ast import parseAst, AstImplementation, AstLabel, \
         AstAssert, AstAssume, AstHavoc, AstAssignment, AstGoto, \
-        AstReturn, AstNode, AstStmt, AstType, AstProgram
+        AstReturn, AstNode, AstStmt, AstType, AstProgram, AstMapIndex,\
+        AstMapUpdate
 from collections import namedtuple
 from ..common.util import unique
-from typing import Dict, List, Iterable, Tuple, Iterator
+from typing import Dict, List, Iterable, Tuple, Iterator, Any
 
 Label_T = str
 Bindings_T = Iterable[Tuple[str, AstType]]
@@ -46,6 +47,12 @@ class BB(List[AstStmt]):
 
     def __str__(self) -> str:
         return self.label + "<[" + ";".join(str(x) for x in self.stmts()) + "]>"
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, BB):
+            return False
+
+        return object.__eq__(self, other)
 
 class Function(object):
     @staticmethod
@@ -113,6 +120,7 @@ class Function(object):
         self.parameters = parameters
         self.locals = local_vars 
         self.returns = returns
+        self._rewrite_assingments()
 
     def entry(self) -> BB:
         return unique([bb for bb in self._bbs.values() if not bb.isInternal() and bb.isEntry()])
@@ -128,3 +136,18 @@ class Function(object):
 
     def get_bb(self, label: Label_T) -> BB:
         return self._bbs[label]
+
+    def _rewrite_assingments(self) -> None:
+        """ Rewrite all assignments of the form:
+            a[i] := v;
+            to:
+            a = a[i:=v];
+        """
+        for bb in self.bbs():
+            for stmt_idx in range(len(bb)):
+                stmt = bb[stmt_idx]
+                if not (isinstance(stmt, AstAssignment) and
+                    isinstance(stmt.lhs, AstMapIndex)):
+                    continue
+
+                bb[stmt_idx] = AstAssignment(stmt.lhs.map, AstMapUpdate(stmt.lhs.map, stmt.lhs.index, stmt.rhs))

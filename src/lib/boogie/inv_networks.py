@@ -66,15 +66,15 @@ class Violation:
   def __repr__(s) -> str:
     return s.__str__()
 
-InvNetwork = Dict[BB, Set[AstExpr]]
-ViolationNetwork = Dict[BB, Set[Tuple[AstExpr, "Violation"]]]
+InvNetwork = Dict[Label_T, Set[AstExpr]]
+ViolationNetwork = Dict[Label_T, Set[Tuple[AstExpr, "Violation"]]]
 
 def filterCandidateInvariants(fun: Function, preCond: AstExpr, postCond: AstExpr, cutPoints: InvNetwork, timeout: Optional[int]=None) -> Tuple[ViolationNetwork, ViolationNetwork, InvNetwork, List[Violation]]:
     assert (len(cutPoints) == 1)
     entryBB = fun.entry()
 
     cps = { bb : set(cutPoints[bb]) for bb in cutPoints } # type: InvNetwork
-    cps[entryBB] = set([ preCond ])
+    cps[entryBB.label] = set([ preCond ])
     overfitted = { bb : set([]) for bb in cps } # type: ViolationNetwork
     nonind = { bb : set([]) for bb in cps } # type: ViolationNetwork
 
@@ -82,13 +82,14 @@ def filterCandidateInvariants(fun: Function, preCond: AstExpr, postCond: AstExpr
     # Single loop case. So for now only handle these. Can probably extend later
 
     tenv = get_ssa_tenv(get_typeenv(fun))
-    cpWorkQ = set([ entryBB ] + list(cps.keys()))
+    cpWorkQ = set([ entryBB.label ] + list(cps.keys()))
 
     while (len(cpWorkQ) > 0):
       cp = cpWorkQ.pop()
+      cur_bb = fun.get_bb(cp)
       cp_inv = expr_to_z3(ast_and(cps[cp]), tenv)
 
-      initial_path, intial_ssa_env = nd_bb_path_to_ssa(NondetPath([cp]), SSAEnv())
+      initial_path, intial_ssa_env = nd_bb_path_to_ssa(NondetPath([cur_bb]), SSAEnv())
       pathWorkQ = [(initial_path, intial_ssa_env, cp_inv)]
 
       # Pass 1: Widdle down candidate invariants at cutpoints iteratively
@@ -129,7 +130,7 @@ def filterCandidateInvariants(fun: Function, preCond: AstExpr, postCond: AstExpr
               assert isinstance(initial_path[0], SSABBNode)
               start = initial_path[0].bb
 
-              candidate_invs = copy(cps[succ])
+              candidate_invs = copy(cps[succ.label])
               for candidate in candidate_invs:
                 ssaed_inv = _force_expr(replace(candidate,
                                                 curFinalSSAEnv.replm()))
@@ -148,13 +149,13 @@ def filterCandidateInvariants(fun: Function, preCond: AstExpr, postCond: AstExpr
                                 c)
 
                   if (start == entryBB):
-                    overfitted[succ].add((candidate, v))
+                    overfitted[succ.label].add((candidate, v))
                   else:
-                    nonind[succ].add((candidate, v))
+                    nonind[succ.label].add((candidate, v))
 
-                  cps[succ].remove(candidate)
-              if (len(candidate_invs) != len(cps[succ])):
-                cpWorkQ.add(succ)
+                  cps[succ.label].remove(candidate)
+              if (len(candidate_invs) != len(cps[succ.label])):
+                cpWorkQ.add(succ.label)
             else:
               assert succ not in path; # We should have cutpoints at every loop
               succSSA, nextFinalSSAEnv = \
@@ -175,12 +176,13 @@ def filterCandidateInvariants(fun: Function, preCond: AstExpr, postCond: AstExpr
 def checkInvNetwork(fun: Function, preCond: AstExpr, postCond: AstExpr, cutPoints: InvNetwork, timeout: Optional[int] = None) -> List[Violation]:
     cps = copy(cutPoints)
     entryBB = fun.entry()
-    cps[entryBB] = set([ preCond ])
+    cps[entryBB.label] = set([ preCond ])
     tenv = get_ssa_tenv(get_typeenv(fun))
     violations = [ ] # type: List[Violation]
 
     for cp in cps:
-      initial_path, intial_ssa_env = nd_bb_path_to_ssa(NondetPath([cp]), SSAEnv())
+      cp_bb = fun.get_bb(cp)
+      initial_path, intial_ssa_env = nd_bb_path_to_ssa(NondetPath([cp_bb]), SSAEnv())
       workQ = [ (initial_path,
                  intial_ssa_env,
                  expr_to_z3(ast_and(cps[cp]), tenv)) ]
@@ -241,13 +243,14 @@ def checkInvNetwork(fun: Function, preCond: AstExpr, postCond: AstExpr, cutPoint
             violations.append(v)
         else:
           for succ in nextBB.successors():
-            if succ in cps:
+            if succ.label in cps:
               # Check implication
-              post = ast_and(cps[succ])
+              post = ast_and(cps[succ.label])
               postSSA = _force_expr(replace(post, curFinalSSAEnv.replm()))
               postSSAZ3 = expr_to_z3(postSSA, tenv)
               #print ("Checking path from cp {} to cp {}: {}\n {}\n {}\n".format(cp, succ, path, postSSA, Implies(sp, postSSAZ3)))
               try:
+                #print ("Inductiveness query: {}->{}: {}".format(nextBB.label, succ.label, Implies(sp, postSSAZ3)))
                 c = counterex(Implies(sp, postSSAZ3), timeout)
               except Unknown:
                 try:
@@ -255,7 +258,7 @@ def checkInvNetwork(fun: Function, preCond: AstExpr, postCond: AstExpr, cutPoint
                   # individually rather than all of them at once (similarly
                   # to the filter case). Try this if the implication of the
                   # conjunction of all of them fails
-                  for p in cps[succ]:
+                  for p in cps[succ.label]:
                     postSSA = _force_expr(replace(p, curFinalSSAEnv.replm()))
                     postSSAZ3 = expr_to_z3(postSSA, tenv)
                     c = counterex(Implies(sp, postSSAZ3), timeout)

@@ -36,6 +36,7 @@ class BoogieParser(InfixExprParser[T]):
   def onType(s, prod: "ParserElement[T]", st: str, loc: int, toks:"ParseResults[T]") -> "Iterable[T]": raise Exception("NYI")
   def onLabeledStatement(s, prod: "ParserElement[T]", st: str, loc: int, toks:"ParseResults[T]") -> "Iterable[T]": raise Exception("NYI")
   def onMapIndex(s, prod: "ParserElement[T]", st: str, loc: int, toks:"ParseResults[T]") -> "Iterable[T]": raise Exception("NYI")
+  def onMapUpdate(s, prod: "ParserElement[T]", st: str, loc: int, toks:"ParseResults[T]") -> "Iterable[T]": raise Exception("NYI")
   def onQuantified(s, prod: "ParserElement[T]", st: str, loc: int, toks:"ParseResults[T]") -> "Iterable[T]": raise Exception("NYI")
   def onBinding(s, prod: "ParserElement[T]", st: str, loc: int, toks:"ParseResults[T]") -> "Iterable[T]": raise Exception("NYI")
 
@@ -182,6 +183,10 @@ class BoogieParser(InfixExprParser[T]):
             G(csl(s.IdsType)) + S(s.QSep) + s.Expr + S(s.RPARN)
     s.Quantified.setParseAction(
             lambda st, loc, toks:  s.onQuantified(s.Old, st, loc, toks))
+
+    s.MapUpdate = s.Id + S(s.LSQBR) + s.Expr + s.ASSGN + s.Expr + S(s.RSQBR)
+    s.MapUpdate.setParseAction(
+            lambda st, loc, toks:  s.onMapUpdate(s.Old, st, loc, toks))
 
     s.MapIndex = s.Id + S(s.LSQBR) + s.Expr + S(s.RSQBR)
     s.MapIndex.setParseAction(
