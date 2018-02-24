@@ -17,6 +17,8 @@ import atexit
 from signal import signal, SIGTERM, SIGINT
 from functools import reduce
 from copy import copy
+from os import kill
+from signal import SIGINT, SIGKILL
 
 ctxHolder = local()
 
@@ -243,12 +245,33 @@ class Z3ProxySolver:
 
     def _restartRemote(s) -> None:
         # Kill Old Process
-        s._proc.terminate()
-        s._proc.join()
+        s._shutdownRemote()
         # Restart
         s._proc, s._uri = startAndWaitForZ3Instance()
         s._remote = Pyro4.Proxy(s._uri)
         s.push()
+
+    def _shutdownRemote(s) -> None:
+        if s._proc.exitcode is not None:
+            return
+
+        # First interrupt politely
+        kill(s._proc.pid, SIGINT)
+        s._proc.join(1)
+
+        if s._proc.exitcode is not None:
+            return
+
+        # Next a bit more insistantly
+        s._proc.terminate()
+        s._proc.join(1)
+
+        if s._proc.exitcode is not None:
+            return
+
+        # And now we ran out of patience
+        kill(s._proc.pid, SIGKILL)
+        s._proc.join()
 
 
 z3ProcessPoolCond = Condition()
@@ -258,9 +281,10 @@ z3ProcessPool = {} # type: Dict[Z3ProxySolver, bool]
 
 
 def _cleanupChildProcesses() -> None:
+    global z3ProcessPool
     for proxy in z3ProcessPool:
-        print ("Kill child {}".format(proxy._proc))
-        proxy._proc.terminate()
+        proxy._shutdownRemote()
+    z3ProcessPool = {}
 
 
 atexit.register(_cleanupChildProcesses)
