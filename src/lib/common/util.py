@@ -29,17 +29,6 @@ def unique(iterable: Iterable[T], msg: str ="") -> T:
   assert len(l) == 1, msg
   return l[0]
 
-def pp_exc(f: Callable) -> Callable:
-    """ Wrap a function to catch, pretty print the exception and re-raise it.
-    """
-    def decorated(*args: Any, **kwargs: Any) -> Any:
-        try:
-            return f(*args, **kwargs)
-        except Exception:
-            traceback.print_exception(*exc_info())
-            raise
-    return decorated
-
 def powerset(s: SizedIterable) -> Iterable[Set[T]]:
   """ Return the powerset of a set s """
   it = chain.from_iterable(combinations(s, l) for l in range(len(s) + 1))

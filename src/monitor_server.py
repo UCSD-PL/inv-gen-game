@@ -13,10 +13,10 @@ from sqlalchemy import case, func
 import mturk_util
 from experiments import Experiment
 from levels import loadBoogieLvlSet
-from lib.common.util import pp_exc, randomToken
+from lib.common.util import randomToken
 from models import open_sqlite_db, open_mysql_db, Event, LvlData
 from publish_hits import publish_hit
-from server_common import openLog, log_d
+from server_common import openLog, log_d, pp_exc
 from survey import getSurveyData
 
 class Server(Flask):

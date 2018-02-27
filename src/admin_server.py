@@ -2,13 +2,13 @@
 import argparse
 from datetime import datetime
 from models import open_sqlite_db, Event
-from server_common import log, log_d
+from server_common import log, log_d, pp_exc 
 from flask import Flask
 from flask_jsonrpc import JSONRPC as rpc
 from os.path import join, dirname, abspath, realpath
 from js import boogieToEsprimaExpr
 from lib.boogie.ast import parseExprAst
-from lib.common.util import pp_exc, randomToken
+from lib.common.util import randomToken
 from levels import loadBoogieLvlSet
 
 class Server(Flask):

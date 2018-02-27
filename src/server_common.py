@@ -63,17 +63,28 @@ def log(action, *pps):
           print(prompt + call);
         stdout.flush();
 
+def pp_exc(f):
+    """ Wrap a function to catch, pretty print the exception and re-raise it.
+    """
+    def decorated(*args):
+        try:
+            return f(*args)
+        except Exception:
+            traceback.print_exception(*exc_info())
+            raise
+    return decorated
+
 def log_d(*pps):
     def decorator(f):
-        def decorated(*pargs, **kwargs):
+        def decorated(*pargs):
             try:
-                res = f(*pargs, **kwargs)
-                log({ "method": f.__name__, "args": pargs, "kwargs": kwargs,
+                res = f(*pargs)
+                log({ "method": f.__name__, "args": pargs,
                       "res": res }, *pps)
                 return res;
             except Exception:
                 strTrace = ''.join(traceback.format_exception(*exc_info()))
-                log({ "method": f.__name__, "args": pargs, "kwargs": kwargs,
+                log({ "method": f.__name__, "args": pargs,
                       "exception": strTrace})
                 raise
         return decorated

@@ -7,7 +7,7 @@ from js import esprimaToZ3, esprimaToBoogie, boogieToEsprima, \
         boogieToEsprimaExpr
 from lib.boogie.ast import AstBinExpr, AstTrue, ast_and, AstId, AstNumber, \
         parseExprAst
-from lib.common.util import pp_exc, powerset, split, nonempty, nodups, \
+from lib.common.util import powerset, split, nonempty, nodups, \
         randomToken
 from lib.boogie.eval import instantiateAndEval, _to_dict
 from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, z3_expr_to_boogie,\
@@ -29,7 +29,7 @@ from db_util import addEvent, allInvs, levelSolved, levelFinishedBy,\
         levelSkipCount, levelsPlayedInSession
 from mturk_util import send_notification
 from atexit import register
-from server_common import openLog, log, log_d
+from server_common import openLog, log, log_d, pp_exc
 
 class Server(Flask):
     def get_send_file_max_age(self, name):
