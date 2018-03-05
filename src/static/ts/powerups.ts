@@ -1,5 +1,5 @@
 import {assert, Args, label, removeLabel, min, setlen, isMember, Label} from "./util";
-import {invariantT} from "./gameLogic";
+import {invariantT} from "./types";
 import {Level} from "./level";
 import {identifiers, literals, operators} from "./eval";
 

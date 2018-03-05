@@ -1,17 +1,17 @@
 import {assert, logEvent, difference, toStrset, isEmpty, any_mem} from "./util";
-import {dataT, ITracesWindow} from "./traceWindow";
+import {ITracesWindow} from "./traceWindow";
 import {StickyWindow} from "./stickyWindow";
 import {PowerupSuggestionAll, IPowerup, MultiplierPowerup} from "./powerups";
 import {tryAndVerify, simplify, isTautology, impliedBy} from "./logic";
 import {DynamicLevel} from "./level";
-import {invariantT, BaseGameLogic, UserInvariant} from "./gameLogic";
+import {dataT, invariantT} from "./types";
+import {BaseGameLogic, UserInvariant, curLvlSet} from "./gameLogic";
 import {IProgressWindow} from "./progressWindow";
 import {invPP} from "./pp"
 import {invToJS, fixVariableCase, identifiers, esprimaToStr, ImmediateErrorException, invEval, evalResultBool, interpretError} from "./eval";
 import {parse} from "esprima";
 import {Node as ESNode} from "estree";
 import {ScoreWindow} from "scoreWindow";
-import {curLvlSet} from "main";
 
 export class RoundsGameLogic extends BaseGameLogic {
   foundJSInv: UserInvariant[] = [];
@@ -63,7 +63,7 @@ export class RoundsGameLogic extends BaseGameLogic {
       }
     }
 
-    logEvent("PowerupsActivated", [curLvlSet, this.curLvl.id, inv, pwupsActivated]);
+    logEvent("PowerupsActivated", [curLvlSet(), this.curLvl.id, inv, pwupsActivated]);
 
     if (hold.length == 0) {
       this.pwupSuggestion.invariantTried(inv);
@@ -81,7 +81,7 @@ export class RoundsGameLogic extends BaseGameLogic {
     };
     if (this.foundJSInv.length > 0) {
       var invToTry = this.foundJSInv.filter((ui)=>!contains(ui.id, this.overfittedInvs));
-      tryAndVerify(curLvlSet, this.curLvl.id, invToTry.map((x)=>x.canonForm),
+      tryAndVerify(curLvlSet(), this.curLvl.id, invToTry.map((x)=>x.canonForm),
         ([overfitted, nonind, sound, post_ctrex, direct_ctrex]) => {
           if (sound.length > 0) {
             cb(post_ctrex.length == 0, [overfitted, nonind, sound, post_ctrex, direct_ctrex]);
@@ -144,7 +144,7 @@ export class RoundsGameLogic extends BaseGameLogic {
       simplify(jsInv, (simplInv: ESNode) => {
         let ui: UserInvariant = new UserInvariant(inv, jsInv, simplInv)
         logEvent("TriedInvariant",
-                 [curLvlSet,
+                 [curLvlSet(),
                   gl.curLvl.id,
                   ui.rawUserInp,
                   ui.canonForm,
@@ -203,7 +203,7 @@ export class RoundsGameLogic extends BaseGameLogic {
                 //(<CounterexTracesWindow>gl.tracesW).clearNegRows();
 
                 logEvent("FoundInvariant",
-                         [curLvlSet,
+                         [curLvlSet(),
                           gl.curLvl.id,
                           ui.rawUserInp,
                           ui.canonForm,
@@ -217,7 +217,7 @@ export class RoundsGameLogic extends BaseGameLogic {
                       gl.lvlPassedF = true;
                       gl.lvlPassedCb();
                       logEvent("FinishLevel",
-                               [curLvlSet,
+                               [curLvlSet(),
                                 gl.curLvl.id,
                                 false,
                                 gl.foundJSInv.map((x)=>x.rawUserInp),
@@ -258,7 +258,7 @@ export class RoundsGameLogic extends BaseGameLogic {
                         return;
 
                       logEvent("FinishLevel",
-                               [curLvlSet,
+                               [curLvlSet(),
                                 gl.curLvl.id,
                                 sat,
                                 gl.foundJSInv.map((x)=>x.rawUserInp),
@@ -326,7 +326,7 @@ export class RoundsGameLogic extends BaseGameLogic {
     if (this.lvlLoadedCb)
       this.lvlLoadedCb();
     logEvent("StartLevel",
-             [curLvlSet,
+             [curLvlSet(),
               this.curLvl.id,
               this.curLvl.colSwap,
               this.curLvl.isReplay()]);
@@ -334,12 +334,12 @@ export class RoundsGameLogic extends BaseGameLogic {
 
   skipToNextLvl() : void {
     logEvent("SkipToNextLevel",
-             [curLvlSet,
+             [curLvlSet(),
               this.curLvl.id,
               this.curLvl.colSwap,
               this.curLvl.isReplay()]);
     logEvent("FinishLevel",
-             [curLvlSet,
+             [curLvlSet(),
               this.curLvl.id,
               false,
               this.foundJSInv.map((x)=>x.rawUserInp),

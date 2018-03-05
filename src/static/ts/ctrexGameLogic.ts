@@ -1,9 +1,10 @@
-import {BaseGameLogic,  UserInvariant, invariantT} from "./gameLogic";
+import {dataT, invariantT} from "./types"
+import {BaseGameLogic,  UserInvariant, curLvlSet} from "./gameLogic";
 import {error, logEvent, toStrset, isEmpty, difference, any_mem, assert} from "./util"
 import {Level, DynamicLevel} from "./level";
 import {esprimaToStr, invToJS, invEval, evalResultBool, interpretError, fixVariableCase, identifiers, ImmediateErrorException, generalizeInv} from "./eval";
 import {CounterexTracesWindow} from "./ctrexTracesWindow";
-import {dataT, ITracesWindow} from "./traceWindow";
+import {ITracesWindow} from "./traceWindow";
 import {IPowerupSuggestion, IPowerup, PowerupSuggestionAll, MultiplierPowerup, PowerupSuggestionFullHistory} from "./powerups"
 import {equivalentPairs, impliedBy, isTautology, simplify, tryAndVerify} from "./logic";
 import {IProgressWindow} from "./progressWindow";
@@ -12,7 +13,6 @@ import {invPP} from "./pp";
 import {parse} from "esprima";
 import {Node as ESNode} from "estree"
 import {ScoreWindow} from "scoreWindow"
-import {curLvlSet} from "main";
 
 export class CounterexGameLogic extends BaseGameLogic {
   foundJSInv: UserInvariant[] = [];
@@ -64,7 +64,7 @@ export class CounterexGameLogic extends BaseGameLogic {
       }
     }
 
-    logEvent("PowerupsActivated", [curLvlSet, this.curLvl.id, inv, pwupsActivated]);
+    logEvent("PowerupsActivated", [curLvlSet(), this.curLvl.id, inv, pwupsActivated]);
 
     if (hold.length == 0) {
       this.pwupSuggestion.invariantTried(inv);
@@ -82,7 +82,7 @@ export class CounterexGameLogic extends BaseGameLogic {
     };
     if (this.foundJSInv.length > 0) {
       var invToTry = this.foundJSInv.filter((ui)=>!contains(ui.id, this.overfittedInvs));
-      tryAndVerify(curLvlSet, this.curLvl.id, invToTry.map((x)=>x.canonForm),
+      tryAndVerify(curLvlSet(), this.curLvl.id, invToTry.map((x)=>x.canonForm),
         ([overfitted, nonind, sound, post_ctrex, direct_ctrex]) => {
           if (sound.length > 0) {
             cb(post_ctrex.length == 0, [overfitted, nonind, sound, post_ctrex, direct_ctrex]);
@@ -145,7 +145,7 @@ export class CounterexGameLogic extends BaseGameLogic {
       simplify(jsInv, (simplInv: ESNode) => {
         let ui: UserInvariant = new UserInvariant(inv, jsInv, simplInv)
         logEvent("TriedInvariant",
-                 [curLvlSet,
+                 [curLvlSet(),
                   gl.curLvl.id,
                   ui.rawUserInp,
                   ui.canonForm,
@@ -204,7 +204,7 @@ export class CounterexGameLogic extends BaseGameLogic {
                 (<CounterexTracesWindow>gl.tracesW).clearNegRows();
 
                 logEvent("FoundInvariant",
-                         [curLvlSet,
+                         [curLvlSet(),
                           gl.curLvl.id,
                           ui.rawUserInp,
                           ui.canonForm,
@@ -218,7 +218,7 @@ export class CounterexGameLogic extends BaseGameLogic {
                       gl.lvlPassedF = true;
                       gl.lvlPassedCb();
                       logEvent("FinishLevel",
-                               [curLvlSet,
+                               [curLvlSet(),
                                 gl.curLvl.id,
                                 false,
                                 gl.foundJSInv.map((x)=>x.rawUserInp),
@@ -257,7 +257,7 @@ export class CounterexGameLogic extends BaseGameLogic {
                         return;
 
                       logEvent("FinishLevel",
-                               [curLvlSet,
+                               [curLvlSet(),
                                 gl.curLvl.id,
                                 sat,
                                 gl.foundJSInv.map((x)=>x.rawUserInp),
@@ -308,7 +308,7 @@ export class CounterexGameLogic extends BaseGameLogic {
     if (this.lvlLoadedCb)
       this.lvlLoadedCb();
     logEvent("StartLevel",
-             [curLvlSet,
+             [curLvlSet(),
               this.curLvl.id,
               this.curLvl.colSwap,
               this.curLvl.isReplay()]);
@@ -316,12 +316,12 @@ export class CounterexGameLogic extends BaseGameLogic {
 
   skipToNextLvl() : void {
     logEvent("SkipToNextLevel",
-             [curLvlSet,
+             [curLvlSet(),
               this.curLvl.id,
               this.curLvl.colSwap,
               this.curLvl.isReplay()]);
     logEvent("FinishLevel",
-             [curLvlSet,
+             [curLvlSet(),
               this.curLvl.id,
               false,
               this.foundJSInv.map((x)=>x.rawUserInp),

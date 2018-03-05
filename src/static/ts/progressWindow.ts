@@ -1,4 +1,4 @@
-import {invariantT} from "./gameLogic";
+import {invariantT} from "./types";
 import {invToHTML} from "./pp";
 
 export interface IProgressWindow {

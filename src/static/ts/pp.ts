@@ -1,4 +1,4 @@
-import {invariantT} from "./gameLogic";
+import {invariantT} from "./types";
 import {esprimaToStr} from "./eval";
 
 export function invPP(inv: string): string {

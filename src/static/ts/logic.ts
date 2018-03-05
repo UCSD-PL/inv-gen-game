@@ -1,6 +1,5 @@
-import {dataT} from "./traceWindow";
 import {rpc_loadLvlBasic, rpc_loadLvlDynamic, rpc_loadNextLvlDynamic, rpc_equivalentPairs, rpc_impliedPairs, rpc_isTautology, rpc_simplify, rpc_tryAndVerify, rpc_instantiate} from "./rpc";
-import {invariantT, templateT} from "./gameLogic";
+import {dataT, invariantT, templateT} from "./types";
 import {Node as ESNode} from "estree";
 
 /* Requires Epsrima.js */

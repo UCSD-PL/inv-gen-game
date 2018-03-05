@@ -1,5 +1,5 @@
 /* Requires curvedarrow.ts */
-import {invariantT} from "./gameLogic"
+import {invariantT} from "./types"
 import {impliedPairs} from "./logic";
 import {htmlToInv} from "./pp";
 import {esprimaToStr} from "./eval";

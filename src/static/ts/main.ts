@@ -2,7 +2,7 @@ import {Args, disableBackspaceNav, Script, assert, logEvent, queryAppend, label,
 import {StickyWindow} from 'stickyWindow';
 import {CounterexGameLogic} from 'ctrexGameLogic';
 import {RoundsGameLogic} from 'roundsGameLogic'
-import {PatternGameLogic} from 'gameLogic'
+import {PatternGameLogic, curLvlSet, setCurLvlSet} from 'gameLogic'
 import {invEval, evalResultBool} from 'eval'
 import {BaseTracesWindow, PositiveTracesWindow} from "traceWindow";
 import {ScoreWindow} from 'scoreWindow';
@@ -19,7 +19,6 @@ let progW: ProgressWindow = null;
 var mode = Args.get_mode();
 var curLvl = null;
 var curLvlId;
-export var curLvlSet;
 var curL = null;
 var lvls = null;
 var gameLogic = null;
@@ -33,10 +32,10 @@ function loadTrace(res) {
 if (res === null)
 doneScreen(true)
 else {
-curLvlSet = res[0];
+setCurLvlSet(res[0]);
 let lvl = res[1];
 curLvlId = lvl.id;
-console.log("Just loaded " + curLvlSet + "." + curLvlId);
+console.log("Just loaded " + curLvlSet() + "." + curLvlId);
 gameLogic.loadLvl(lvl);
 if (lvl.hint === null) {
   $("#hint-row").html("");
@@ -72,7 +71,7 @@ if (lvl.hint === null) {
 
 function loadNextTrace() {
 if (mode == "rounds" && gameLogic.curLvl && !gameLogic.lvlSolvedF) {
-gameLogic.curLvl.genNext(curLvlSet,
+gameLogic.curLvl.genNext(curLvlSet(),
     gameLogic.foundJSInv.map(function(x){ return x.canonForm}),
     loadTrace)
 } else {
@@ -85,7 +84,7 @@ function nextLvl() {
 }
 
 function loadLvlSet(lvlset) {
-  curLvlSet = lvlset;
+  setCurLvlSet(lvlset);
   rpc.call('App.listData', [lvlset], function(res) {
     lvls = res;
     curLvl = -1;

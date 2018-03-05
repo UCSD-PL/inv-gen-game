@@ -1,7 +1,6 @@
-import {dataT} from "./traceWindow";
 import {rpc_loadLvlBasic, rpc_loadLvlDynamic, rpc_loadNextLvlDynamic} from "./rpc";
 import {Args} from "./util";
-import {invariantT} from "./gameLogic";
+import {dataT, invariantT} from "./types";
 
 export class Level {
   constructor(public id: string,

@@ -1,7 +1,6 @@
 /* This file defines the RPC interface between server and client */
 import {Args, log, unique} from "./util";
-import {dataT} from "./traceWindow";
-import {invariantT, templateT} from "./gameLogic";
+import {invariantT, templateT, dataT} from "./types";
 import {esprimaToStr} from "./eval";
 import {parse} from "esprima";
 import {Node as ESNode} from "estree";

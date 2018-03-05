@@ -1,4 +1,4 @@
-import {invariantT} from "./gameLogic";
+import {invariantT} from "./types";
 import {strset, union, emptyStrset, assert} from "./util";
 import {parse} from "esprima";
 import {Node as ESNode, Program, ExpressionStatement, BinaryExpression, LogicalExpression, UnaryExpression,Identifier, Literal, LogicalOperator} from 'estree';

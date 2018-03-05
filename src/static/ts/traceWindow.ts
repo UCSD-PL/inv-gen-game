@@ -1,11 +1,8 @@
 import {das, assert} from "./util";
 import {Level} from "./level";
 import {invPP} from "./pp"
+import {dataT, resDataT, resClearT, resT} from "./types"
 
-export type dataT = [any[][], [ any[], any[] ][], any[][] ]
-export type resDataT = { data: [ any[], [any, any][], any[] ]}
-type resClearT = { clear: any }
-export type resT = resDataT | resClearT
 
 export interface ITracesWindow {
   immediateError(msg: string): void;

@@ -3,7 +3,7 @@ import {error, logEvent, toStrset, isEmpty, difference, any_mem, assert} from ".
 import {TwoPlayerPowerupSuggestionFullHistory, IPowerupSuggestion, IPowerup, PowerupSuggestionAll, MultiplierPowerup, PowerupSuggestionFullHistory} from "./powerups"
 import {invPP} from "./pp";
 import {Level, DynamicLevel} from "./level";
-import {dataT, ITracesWindow} from "./traceWindow";
+import {ITracesWindow} from "./traceWindow";
 import {IProgressWindow} from "./progressWindow";
 import {StickyWindow, TwoPlayerStickyWindow} from "./stickyWindow";
 import {esprimaToStr, invToJS, invEval, evalResultBool, interpretError, fixVariableCase, identifiers, ImmediateErrorException, generalizeInv} from "./eval";
@@ -11,19 +11,25 @@ import {getAllPlayer1Inv, getAllPlayer2Inv, getBonus} from "./bonus";
 import {parse} from "esprima";
 import {Node as ESNode} from "estree"
 import {ScoreWindow, TwoPlayerScoreWindow} from "scoreWindow"
-import {curLvlSet} from "main"
+import {dataT, voidCb, boolCb, invSoundnessResT, invariantT, templateT} from "types"
 
-export type voidCb = ()=>void
-export type boolCb = (res: boolean)=>void
-export type invSoundnessResT = { ctrex: [ any[], any[], any[] ]}
-export type invariantT = ESNode;
-export type templateT = [ invariantT, string[], string[] ]
 
+let _curLvlSet: string = null;
+// TODO: These declare var need to be fixed (import/get from main) before
+// we can use two player gameplay
 declare var progW: any;
 declare var progW2: any;
 declare var traceW: any;
 declare var traceW2: any;
-declare var allowBonus: boolean;
+let allowBonus: boolean = false;
+
+export function curLvlSet(): string {
+  return _curLvlSet;
+}
+
+export function setCurLvlSet(newLvlSet: string): void {
+  _curLvlSet = newLvlSet
+}
 
 let parseF = (s: string) => parse(s);
 
@@ -350,7 +356,7 @@ export class PatternGameLogic extends BaseGameLogic {
       }
     }
 
-    logEvent("PowerupsActivated", [curLvlSet, this.curLvl.id, inv, pwupsActivated]);
+    logEvent("PowerupsActivated", [curLvlSet(), this.curLvl.id, inv, pwupsActivated]);
 
     if (hold.length == 0) {
       this.pwupSuggestion.invariantTried(inv);
@@ -360,7 +366,7 @@ export class PatternGameLogic extends BaseGameLogic {
 
   goalSatisfied(cb:(sat: boolean, feedback: any)=>void):void {
     if (this.foundJSInv.length > 0) {
-      tryAndVerify(curLvlSet, this.curLvl.id, this.foundJSInv.map((x)=>x.canonForm),
+      tryAndVerify(curLvlSet(), this.curLvl.id, this.foundJSInv.map((x)=>x.canonForm),
         ([overfitted, nonind, sound, post_ctrex]) => {
           if (sound.length > 0) {
             cb(post_ctrex.length == 0, [overfitted, nonind, sound, post_ctrex]);
@@ -422,7 +428,7 @@ export class PatternGameLogic extends BaseGameLogic {
       simplify(jsInv, (simplInv: ESNode) => { 
         let ui: UserInvariant = new UserInvariant(inv, jsInv, simplInv)
         logEvent("TriedInvariant",
-                 [curLvlSet,
+                 [curLvlSet(),
                   gl.curLvl.id,
                   ui.rawUserInp,
                   ui.canonForm,
@@ -473,7 +479,7 @@ export class PatternGameLogic extends BaseGameLogic {
                   gl.tracesW.setExp("");
                 }
                 logEvent("FoundInvariant",
-                         [curLvlSet,
+                         [curLvlSet(),
                           gl.curLvl.id,
                           ui.rawUserInp,
                           ui.canonForm,
@@ -488,7 +494,7 @@ export class PatternGameLogic extends BaseGameLogic {
                       gl.lvlSolvedF = false;
                       gl.lvlPassedCb();
                       logEvent("FinishLevel",
-                               [curLvlSet,
+                               [curLvlSet(),
                                 gl.curLvl.id,
                                 false,
                                 gl.foundJSInv.map((x)=>x.rawUserInp),
@@ -517,7 +523,7 @@ export class PatternGameLogic extends BaseGameLogic {
                         return;
 
                       logEvent("FinishLevel",
-                               [curLvlSet,
+                               [curLvlSet(),
                                 gl.curLvl.id,
                                 sat,
                                 gl.foundJSInv.map((x)=>x.rawUserInp),
@@ -568,7 +574,7 @@ export class PatternGameLogic extends BaseGameLogic {
     if (this.lvlLoadedCb)
       this.lvlLoadedCb();
     logEvent("StartLevel",
-             [curLvlSet,
+             [curLvlSet(),
               this.curLvl.id,
               this.curLvl.colSwap,
               this.curLvl.isReplay()]);
@@ -576,12 +582,12 @@ export class PatternGameLogic extends BaseGameLogic {
 
   skipToNextLvl() : void {
     logEvent("SkipToNextLevel",
-             [curLvlSet,
+             [curLvlSet(),
               this.curLvl.id,
               this.curLvl.colSwap,
               this.curLvl.isReplay()]);
     logEvent("FinishLevel",
-             [curLvlSet,
+             [curLvlSet(),
               this.curLvl.id,
               false,
               this.foundJSInv.map((x)=>x.rawUserInp),

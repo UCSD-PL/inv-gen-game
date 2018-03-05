@@ -19,6 +19,7 @@ requirejs.config({
     "stickyWindow": "build/ts/stickyWindow",
     "traceWindow": "build/ts/traceWindow",
     "tutorial": "build/ts/tutorial",
+    "main": "build/ts/main",
     "util": "build/ts/util"
   },
   shim: {
