@@ -1,6 +1,6 @@
 import {dataT, invariantT} from "./types"
 import {BaseGameLogic,  UserInvariant, curLvlSet} from "./gameLogic";
-import {error, logEvent, toStrset, isEmpty, difference, any_mem, assert} from "./util"
+import {error, toStrset, isEmpty, difference, any_mem, assert} from "./util"
 import {Level, DynamicLevel} from "./level";
 import {esprimaToStr, invToJS, invEval, evalResultBool, interpretError, fixVariableCase, identifiers, ImmediateErrorException, generalizeInv} from "./eval";
 import {CounterexTracesWindow} from "./ctrexTracesWindow";
@@ -12,6 +12,7 @@ import {StickyWindow} from "./stickyWindow";
 import {invPP} from "./pp";
 import {parse} from "esprima";
 import {Node as ESNode} from "estree"
+import {logEvent} from "./rpc" 
 import {ScoreWindow} from "scoreWindow"
 
 export class CounterexGameLogic extends BaseGameLogic {

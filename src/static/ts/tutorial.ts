@@ -1,6 +1,7 @@
-import {Args, disableBackspaceNav, Script, assert, logEvent, queryAppend, label, removeLabel, log, zip} from 'util';
-import {StickyWindow} from 'stickyWindow';
-import {CounterexGameLogic} from 'ctrexGameLogic';
+import {Args, disableBackspaceNav, Script, assert, queryAppend, label, removeLabel, log, zip} from 'util';
+import {logEvent} from "./rpc"
+import {StickyWindow} from './stickyWindow';
+import {CounterexGameLogic} from './ctrexGameLogic';
 import {RoundsGameLogic} from 'roundsGameLogic'
 import {PatternGameLogic, StaticGameLogic} from 'gameLogic'
 import {invEval, evalResultBool, invToJS, interpretError} from 'eval'

@@ -90,3 +90,7 @@ export function rpc_instantiate(templates: templateT[],
 export function rpc_logEvent(workerId: string, name: string, data: any): any {
   return rpc.call("App.logEvent", [workerId, name, data, mturkId()], (res) => { }, log);
 }
+
+export function logEvent(name: string, data: any): any {
+  return rpc_logEvent(Args.get_worker_id(), name, data);
+}

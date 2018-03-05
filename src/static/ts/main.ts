@@ -1,4 +1,4 @@
-import {Args, disableBackspaceNav, Script, assert, logEvent, queryAppend, label, removeLabel, log} from 'util';
+import {Args, disableBackspaceNav, Script, assert, queryAppend, label, removeLabel, log} from 'util';
 import {StickyWindow} from 'stickyWindow';
 import {CounterexGameLogic} from 'ctrexGameLogic';
 import {RoundsGameLogic} from 'roundsGameLogic'
@@ -7,7 +7,7 @@ import {invEval, evalResultBool} from 'eval'
 import {BaseTracesWindow, PositiveTracesWindow} from "traceWindow";
 import {ScoreWindow} from 'scoreWindow';
 import {ProgressWindow} from 'progressWindow';
-import {mturkId, rpc} from 'rpc';
+import {mturkId, rpc, logEvent} from 'rpc';
 import {CounterexTracesWindow} from 'ctrexTracesWindow'
 import {DynamicLevel} from 'level';
 
@@ -93,57 +93,59 @@ function loadLvlSet(lvlset) {
 }
 
 function doneScreen(alldone) {
-let assignment_id = Args.get_assignment_id();
-if (assignment_id == "ASSIGNMENT_ID_NOT_AVAILABLE") {
-  $("#done-screen").html("<h2 class='text-center'><b>You are previewing the HIT. To perform this HIT, please accept it.</b></h2>");
-  $("#done-screen").fadeIn(1000);
-  return;
-}
-if (assignment_id !== undefined) {
-  let form_elem = document.getElementById("assignment-id-in-form");
-  (form_elem as HTMLInputElement).value = assignment_id;
-}
-let turk_submit_to = Args.get_turk_submit_to();
-if (turk_submit_to !== undefined) {
-  let form = document.getElementById("turk-form");
-  (form as HTMLFormElement).action = turk_submit_to + "/mturk/externalSubmit";
-}
-
-function getSelected(category) {
-return $('#turk-form input[name=' + category + ']:checked')
-}
-
-$("#final-submit").click(function(evt) {
-$("label").removeClass("highlight")
-$('#turk-form-error').html("");
-var categories = ["fun", "challenging", "prog_experience", "math_experience"];
-var selected = $.map(categories, getSelected);
-var answered = $.map(selected, (s)=> s.length > 0);
-
-var missing = false;
-for (var i in answered) {
-  if (!answered[i]) {
-    $("label." + categories[i]).addClass("highlight")
-    missing = true;
+  let assignment_id = Args.get_assignment_id();
+  if (assignment_id == "ASSIGNMENT_ID_NOT_AVAILABLE") {
+    $("#done-screen").html("<h2 class='text-center'><b>You are previewing the HIT. To perform this HIT, please accept it.</b></h2>");
+    $("#done-screen").fadeIn(1000);
+    return;
   }
-}
-
-if (missing) {
-  $('#turk-form-error').html("Please answer the required questions (highlighted in red)");
-  evt.preventDefault()
-}
-})
-let msg = "Good job! You finished " + numLvlPassed + " level(s)! Your score is: " + gameLogic.score  + "!";
-if (alldone) {
- msg = "There are no more levels to play at this moment.<br>" + msg
-}
-$("#done-screen").prepend("<h2 class='good text-center'>" + msg + "</h2>");
-logEvent("GameDone", [numLvlPassed]);
-
-$("#done-screen").fadeIn(1000);
-//$("#done-screen").click(function() {
-//  window.location.replace('survey.html' + window.location.search);
-//});
+  if (assignment_id !== undefined) {
+    let form_elem = document.getElementById("assignment-id-in-form");
+    (form_elem as HTMLInputElement).value = assignment_id;
+  }
+  let turk_submit_to = Args.get_turk_submit_to();
+  let form = document.getElementById("turk-form");
+  if (turk_submit_to !== undefined) {
+    (form as HTMLFormElement).action = turk_submit_to + "/mturk/externalSubmit";
+  } else {
+    (form as HTMLFormElement).action = "end.html";
+  }
+  
+  function getSelected(category) {
+    return $('#turk-form input[name=' + category + ']:checked')
+  }
+  
+  $("#final-submit").click(function(evt) {
+    $("label").removeClass("highlight")
+    $('#turk-form-error').html("");
+    var categories = ["fun", "challenging", "prog_experience", "math_experience"];
+    var selected = $.map(categories, getSelected);
+    var answered = $.map(selected, (s)=> s.length > 0);
+    
+    var missing = false;
+    for (var i in answered) {
+      if (!answered[i]) {
+        $("label." + categories[i]).addClass("highlight")
+        missing = true;
+      }
+    }
+    
+    if (missing) {
+      $('#turk-form-error').html("Please answer the required questions (highlighted in red)");
+      evt.preventDefault()
+    }
+  })
+  let msg = "Good job! You finished " + numLvlPassed + " level(s)! Your score is: " + gameLogic.score  + "!";
+  if (alldone) {
+   msg = "There are no more levels to play at this moment.<br>" + msg
+  }
+  $("#done-screen").prepend("<h2 class='good text-center'>" + msg + "</h2>");
+  logEvent("GameDone", [numLvlPassed]);
+  
+  $("#done-screen").fadeIn(1000);
+  //$("#done-screen").click(function() {
+  //  window.location.replace('survey.html' + window.location.search);
+  //});
 }
 
 function labelRemover(lbl) {

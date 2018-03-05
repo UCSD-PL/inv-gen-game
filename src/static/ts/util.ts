@@ -1,5 +1,3 @@
-import {rpc_logEvent} from "./rpc";
-
 export type directionT = "up" | "down" | "left" | "right"
 
 export type strset = Set<string>
@@ -54,9 +52,6 @@ export function assert(c: boolean, msg?: any): void {
 
   if (!c)
     throw msg || "Assertion failed.";
-}
-export function logEvent(name: string, data: any): any {
-  return rpc_logEvent(Args.get_worker_id(), name, data);
 }
 
 function fst<T1, T2>(x: [T1, T2]): T1 { return x[0]; }

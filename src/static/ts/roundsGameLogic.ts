@@ -1,4 +1,5 @@
-import {assert, logEvent, difference, toStrset, isEmpty, any_mem} from "./util";
+import {assert, difference, toStrset, isEmpty, any_mem} from "./util";
+import {logEvent} from "./rpc"
 import {ITracesWindow} from "./traceWindow";
 import {StickyWindow} from "./stickyWindow";
 import {PowerupSuggestionAll, IPowerup, MultiplierPowerup} from "./powerups";

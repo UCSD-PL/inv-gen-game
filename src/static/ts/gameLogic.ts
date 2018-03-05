@@ -1,5 +1,5 @@
 import {equivalentPairs, impliedBy, isTautology, simplify, tryAndVerify} from "./logic";
-import {error, logEvent, toStrset, isEmpty, difference, any_mem, assert} from "./util"
+import {error, toStrset, isEmpty, difference, any_mem, assert} from "./util"
 import {TwoPlayerPowerupSuggestionFullHistory, IPowerupSuggestion, IPowerup, PowerupSuggestionAll, MultiplierPowerup, PowerupSuggestionFullHistory} from "./powerups"
 import {invPP} from "./pp";
 import {Level, DynamicLevel} from "./level";
@@ -8,10 +8,11 @@ import {IProgressWindow} from "./progressWindow";
 import {StickyWindow, TwoPlayerStickyWindow} from "./stickyWindow";
 import {esprimaToStr, invToJS, invEval, evalResultBool, interpretError, fixVariableCase, identifiers, ImmediateErrorException, generalizeInv} from "./eval";
 import {getAllPlayer1Inv, getAllPlayer2Inv, getBonus} from "./bonus";
+import {ScoreWindow, TwoPlayerScoreWindow} from "./scoreWindow"
+import {dataT, voidCb, boolCb, invSoundnessResT, invariantT, templateT} from "./types"
+import {logEvent} from "./rpc"
 import {parse} from "esprima";
 import {Node as ESNode} from "estree"
-import {ScoreWindow, TwoPlayerScoreWindow} from "scoreWindow"
-import {dataT, voidCb, boolCb, invSoundnessResT, invariantT, templateT} from "types"
 
 
 let _curLvlSet: string = null;
