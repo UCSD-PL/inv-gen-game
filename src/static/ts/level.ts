@@ -1,4 +1,9 @@
-class Level {
+import {dataT} from "./traceWindow";
+import {rpc_loadLvlBasic, rpc_loadLvlDynamic, rpc_loadNextLvlDynamic} from "./rpc";
+import {Args} from "./util";
+import {invariantT} from "./gameLogic";
+
+export class Level {
   constructor(public id: string,
     public variables: string[],
     public data: dataT,
@@ -18,7 +23,7 @@ class Level {
   }
 }
 
-class DynamicLevel extends Level{
+export class DynamicLevel extends Level{
   constructor(public id: string,
     public variables: string[],
     public data:  dataT,

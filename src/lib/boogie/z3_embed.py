@@ -434,8 +434,8 @@ class AllIntTypeEnv(TypeEnv_T):
     def __getitem__(s, i: str) -> Z3ValFactory_T:
         return Int
 
-def _force_arith(a: Any) -> z3.ArithRef:
-    assert isinstance(a, z3.ArithRef)
+def _force_bool(a: Any) -> z3.BoolRef:
+    assert isinstance(a, z3.BoolRef)
     return a
 
 def _force_expr(a: Any) -> z3.ExprRef:
@@ -477,9 +477,9 @@ def expr_to_z3(expr: ast.AstExpr, typeEnv: TypeEnv_T) -> z3.ExprRef:
         elif expr.op == "&&":
             return And(e1, e2)
         elif expr.op == "==":
-            return _force_arith(e1 == e2)
+            return _force_bool(e1 == e2)
         elif expr.op == "!=":
-            return _force_arith(e1 != e2)
+            return _force_bool(e1 != e2)
         elif expr.op == "<":
             assert isinstance(e1, z3.ArithRef) and isinstance(e2, z3.ArithRef)
             return e1 < e2
@@ -520,7 +520,7 @@ def stmt_to_z3(stmt: ast.AstNode, typeEnv: TypeEnv_T) -> z3.ExprRef:
     if (isinstance(stmt, ast.AstAssignment)):
         lvalue = typeEnv[stmt.lhs](str(stmt.lhs))
         rhs = expr_to_z3(stmt.rhs, typeEnv)
-        return _force_arith(lvalue == rhs)
+        return _force_bool(lvalue == rhs)
     elif (isinstance(stmt, ast.AstAssert)):
         return (expr_to_z3(stmt.expr, typeEnv))
     elif (isinstance(stmt, ast.AstAssume)):

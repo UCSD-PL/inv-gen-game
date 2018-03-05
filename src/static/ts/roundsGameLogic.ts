@@ -1,4 +1,19 @@
-class RoundsGameLogic extends BaseGameLogic {
+import {assert, logEvent, difference, toStrset, isEmpty, any_mem} from "./util";
+import {dataT, ITracesWindow} from "./traceWindow";
+import {StickyWindow} from "./stickyWindow";
+import {PowerupSuggestionAll, IPowerup, MultiplierPowerup} from "./powerups";
+import {tryAndVerify, simplify, isTautology, impliedBy} from "./logic";
+import {DynamicLevel} from "./level";
+import {invariantT, BaseGameLogic, UserInvariant} from "./gameLogic";
+import {IProgressWindow} from "./progressWindow";
+import {invPP} from "./pp"
+import {invToJS, fixVariableCase, identifiers, esprimaToStr, ImmediateErrorException, invEval, evalResultBool, interpretError} from "./eval";
+import {parse} from "esprima";
+import {Node as ESNode} from "estree";
+import {ScoreWindow} from "scoreWindow";
+import {curLvlSet} from "main";
+
+export class RoundsGameLogic extends BaseGameLogic {
   foundJSInv: UserInvariant[] = [];
   invMap: { [ id: string ] : UserInvariant } = {};
   lvlPassedF: boolean = false;
@@ -87,7 +102,7 @@ class RoundsGameLogic extends BaseGameLogic {
     let gl = this;
     let inv = invPP(this.tracesW.curExp().trim());
     let desugaredInv = invToJS(inv)
-    var parsedInv: ESTree.Node = null;
+    var parsedInv: ESNode = null;
 
     this.userInputCb(inv);
 
@@ -97,7 +112,7 @@ class RoundsGameLogic extends BaseGameLogic {
     }
 
     try {
-      parsedInv = esprima.parse(desugaredInv);
+      parsedInv = parse(desugaredInv);
     } catch (err) {
       //this.tracesW.delayedError(inv + " is not a valid expression.");
       return;
@@ -126,7 +141,7 @@ class RoundsGameLogic extends BaseGameLogic {
       if (!evalResultBool(res))
         return;
 
-      simplify(jsInv, (simplInv: ESTree.Node) => {
+      simplify(jsInv, (simplInv: ESNode) => {
         let ui: UserInvariant = new UserInvariant(inv, jsInv, simplInv)
         logEvent("TriedInvariant",
                  [curLvlSet,
@@ -164,7 +179,7 @@ class RoundsGameLogic extends BaseGameLogic {
 
             let allCandidates = gl.foundJSInv.map((x)=>x.canonForm);
 
-            impliedBy(allCandidates, ui.canonForm, function (x: ESTree.Node[]) {
+            impliedBy(allCandidates, ui.canonForm, function (x: ESNode[]) {
               if (x.length > 0) {
                 gl.progressW.markInvariant(esprimaToStr(x[0]), "implies")
                 gl.tracesW.immediateError("This is weaker than a found expression!")
@@ -300,7 +315,7 @@ class RoundsGameLogic extends BaseGameLogic {
     */
 
     for (let [rawInv, canonInv] of lvl.startingInvs) {
-      let jsInv = esprimaToStr(esprima.parse(invToJS(rawInv)));
+      let jsInv = esprimaToStr(parse(invToJS(rawInv)));
       let ui = new UserInvariant(rawInv, jsInv, canonInv);
       this.foundJSInv.push(ui);
       this.invMap[ui.id] = ui;

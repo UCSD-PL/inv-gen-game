@@ -1,9 +1,13 @@
-type dataT = [any[][], [ any[], any[] ][], any[][] ]
-type resDataT = { data: [ any[], [any, any][], any[] ]}
-type resClearT = { clear: any }
-type resT = resDataT | resClearT
+import {das, assert} from "./util";
+import {Level} from "./level";
+import {invPP} from "./pp"
 
-interface ITracesWindow {
+export type dataT = [any[][], [ any[], any[] ][], any[][] ]
+export type resDataT = { data: [ any[], [any, any][], any[] ]}
+type resClearT = { clear: any }
+export type resT = resDataT | resClearT
+
+export interface ITracesWindow {
   immediateError(msg: string): void;
   delayedError(msg: string): void;
   immediateMsg(msg: string): void;
@@ -28,7 +32,7 @@ interface ITracesWindow {
   disableSubmit():  void;
 }
 
-abstract class BaseTracesWindow implements ITracesWindow {
+export abstract class BaseTracesWindow implements ITracesWindow {
   ppInv: string = "";
   okToSubmit: boolean = false;
   data: dataT = [ [], [], [] ];
@@ -176,7 +180,7 @@ abstract class BaseTracesWindow implements ITracesWindow {
   }
 }
 
-class PositiveTracesWindow extends BaseTracesWindow {
+export class PositiveTracesWindow extends BaseTracesWindow {
   addData(data: dataT): void {
     // For now support a single inductive counterexample
     assert (data[1].length === 0 && data[2].length === 0);

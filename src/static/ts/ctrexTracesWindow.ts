@@ -1,4 +1,9 @@
-class CounterexTracesWindow extends BaseTracesWindow {
+import {das, assert} from "./util";
+import {Level} from "./level";
+import {invPP} from "./pp";
+import {BaseTracesWindow, dataT, resT, resDataT} from "./traceWindow";
+
+export class CounterexTracesWindow extends BaseTracesWindow {
   firstNegRow: any = null;
 
   addData(data: dataT): void {

@@ -1,12 +1,14 @@
-type directionT = "up" | "down" | "left" | "right"
+import {rpc_logEvent} from "./rpc";
 
-type strset = Set<string>
+export type directionT = "up" | "down" | "left" | "right"
 
-function emptyStrset(): strset {
+export type strset = Set<string>
+
+export function emptyStrset(): strset {
   return new Set();
 }
 
-function toStrset(strs: string[]): strset {
+export function toStrset(strs: string[]): strset {
   let res = emptyStrset();
   for (let x of strs) {
     res.add(x);
@@ -14,7 +16,7 @@ function toStrset(strs: string[]): strset {
   return res;
 }
 
-function isMember(s: strset, x: string): boolean {
+export function isMember(s: strset, x: string): boolean {
   return s.has(x);
 }
 
@@ -25,7 +27,7 @@ function isSubset(s1: strset, s2: strset): boolean {
   return true;
 }
 
-function difference(s1: strset, s2: strset): strset {
+export function difference(s1: strset, s2: strset): strset {
   let res  = emptyStrset();
   for (let k of s1) {
     if (isMember(s2, k)) continue;
@@ -34,33 +36,33 @@ function difference(s1: strset, s2: strset): strset {
   return res;
 }
 
-function isEmpty(s: strset): boolean {
+export function isEmpty(s: strset): boolean {
   return s.size === 0;
 }
 
-function any_mem(s: strset): string {
+export function any_mem(s: strset): string {
   for (let k of s) {
     return k;
   }
 }
 
-function log(arg: any): void { console.log(arg); }
-function error(arg: any): void { log(arg); }
-function assert(c: boolean, msg?: any): void {
+export function log(arg: any): void { console.log(arg); }
+export function error(arg: any): void { log(arg); }
+export function assert(c: boolean, msg?: any): void {
   if (msg === undefined)
     msg = "Oh-oh";
 
   if (!c)
     throw msg || "Assertion failed.";
 }
-function logEvent(name: string, data: any): any {
+export function logEvent(name: string, data: any): any {
   return rpc_logEvent(Args.get_worker_id(), name, data);
 }
 
 function fst<T1, T2>(x: [T1, T2]): T1 { return x[0]; }
 function snd<T1, T2>(x: [T1, T2]): T2 { return x[1]; }
 
-class Args {
+export class Args {
   static parsed: boolean = false;
   static args: { [key:string] : string; } = {};
   static hit_id: string = null;
@@ -154,7 +156,7 @@ function shuffle<T>(arr: T[]): void {
   }
 };
 
-class Label {
+export class Label {
   public pos: JQueryUI.JQueryPositionOptions;
   public elem: JQuery;
   public timer: any;
@@ -253,23 +255,27 @@ class Label {
   }
 }
 
-function removeLabel(l: Label) {
+export function removeLabel(l: Label) {
   l.remove();
 }
 
-function label(arg: (JQueryUI.JQueryPositionOptions | HTMLElement),
+export function label(arg: (JQueryUI.JQueryPositionOptions | HTMLElement | JQuery),
   txt: string,
   direction: directionT,
   pulseWidth = 5,
   pulse = 500) {
-  return new Label(arg, txt, direction, pulseWidth, pulse);
+  if (arg.hasOwnProperty("get")) {
+    return new Label((arg as JQuery).get()[0], txt, direction, pulseWidth, pulse);
+  } else {
+    return new Label((arg as (JQueryUI.JQueryPositionOptions | HTMLElement)), txt, direction, pulseWidth, pulse);
+  }
 }
 
 interface IStep {
   setup(cs: any): any;
 }
 
-class Script {
+export class Script {
   step: number = -1;
   cancelCb: () => void = null;
   timeoutId: any;
@@ -345,14 +351,14 @@ class Script {
 }
 
 /* In-place union - modifies s1 */
-function union(s1: strset, s2: strset): strset {
+export function union(s1: strset, s2: strset): strset {
   for (let e of s2) {
     s1.add(e);
   }
   return s1;
 }
 
-function setlen(s: strset): number {
+export function setlen(s: strset): number {
   return s.size;
 }
 
@@ -360,7 +366,7 @@ function forAll(boolL: boolean[]): boolean {
   return boolL.map(x => x ? 1 : 0).reduce((x, y) => x + y, 0) === boolL.length;
 }
 
-function zip<T1, T2>(a1: T1[], a2: T2[]): [T1, T2][] {
+export function zip<T1, T2>(a1: T1[], a2: T2[]): [T1, T2][] {
   return a1.map((_, i: number) => <[T1, T2]>[a1[i], a2[i]]);
 }
 
@@ -440,9 +446,9 @@ class DynamicAttachments {
   }
 }
 
-let das = new DynamicAttachments();
+export let das = new DynamicAttachments();
 
-function disableBackspaceNav() {
+export function disableBackspaceNav() {
   $(document).unbind("keydown").bind("keydown", function(event) {
     let doPrevent = false;
     if (event.keyCode === 8) {
@@ -498,7 +504,7 @@ function shape_eq(o1: any, o2: any) {
   assert(false, "Unexpected objects being compared: " + o1 + " and " + o2);
 }
 
-function unique<T>(l:T[], id:(x:T)=>string): T[] {
+export function unique<T>(l:T[], id:(x:T)=>string): T[] {
   let dict: { [ key: string ] : T } = { }
   for (var x in l) {
     dict[id(l[x])] = l[x];
@@ -524,7 +530,7 @@ function isin<T>(needle:T, hay:T[], id:(x:T)=>string): boolean {
   return false;
 }
 
-function min(...args: number[]): number {
+export function min(...args: number[]): number {
   let min = args[0];
   for (var i in args)
     if (args[i] < min) {
@@ -533,7 +539,7 @@ function min(...args: number[]): number {
   return min
 }
 
-function queryAppend(qStr: string, append: string): string {
+export function queryAppend(qStr: string, append: string): string {
   if (qStr == "") {
     qStr += "?";
   } else {

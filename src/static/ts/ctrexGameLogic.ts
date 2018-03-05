@@ -1,4 +1,20 @@
-class CounterexGameLogic extends BaseGameLogic {
+import {BaseGameLogic,  UserInvariant, invariantT} from "./gameLogic";
+import {error, logEvent, toStrset, isEmpty, difference, any_mem, assert} from "./util"
+import {Level, DynamicLevel} from "./level";
+import {esprimaToStr, invToJS, invEval, evalResultBool, interpretError, fixVariableCase, identifiers, ImmediateErrorException, generalizeInv} from "./eval";
+import {CounterexTracesWindow} from "./ctrexTracesWindow";
+import {dataT, ITracesWindow} from "./traceWindow";
+import {IPowerupSuggestion, IPowerup, PowerupSuggestionAll, MultiplierPowerup, PowerupSuggestionFullHistory} from "./powerups"
+import {equivalentPairs, impliedBy, isTautology, simplify, tryAndVerify} from "./logic";
+import {IProgressWindow} from "./progressWindow";
+import {StickyWindow} from "./stickyWindow";
+import {invPP} from "./pp";
+import {parse} from "esprima";
+import {Node as ESNode} from "estree"
+import {ScoreWindow} from "scoreWindow"
+import {curLvlSet} from "main";
+
+export class CounterexGameLogic extends BaseGameLogic {
   foundJSInv: UserInvariant[] = [];
   invMap: { [ id: string ] : UserInvariant } = {};
   lvlPassedF: boolean = false;
@@ -87,7 +103,7 @@ class CounterexGameLogic extends BaseGameLogic {
     let gl = this;
     let inv = invPP(this.tracesW.curExp().trim());
     let desugaredInv = invToJS(inv)
-    var parsedInv: ESTree.Node = null;
+    var parsedInv: ESNode = null;
 
     this.userInputCb(inv);
 
@@ -97,7 +113,7 @@ class CounterexGameLogic extends BaseGameLogic {
     }
 
     try {
-      parsedInv = esprima.parse(desugaredInv);
+      parsedInv = parse(desugaredInv);
     } catch (err) {
       //this.tracesW.delayedError(inv + " is not a valid expression.");
       return;
@@ -126,7 +142,7 @@ class CounterexGameLogic extends BaseGameLogic {
       if (!evalResultBool(res))
         return;
 
-      simplify(jsInv, (simplInv: ESTree.Node) => {
+      simplify(jsInv, (simplInv: ESNode) => {
         let ui: UserInvariant = new UserInvariant(inv, jsInv, simplInv)
         logEvent("TriedInvariant",
                  [curLvlSet,
@@ -164,7 +180,7 @@ class CounterexGameLogic extends BaseGameLogic {
 
             let allCandidates = gl.foundJSInv.map((x)=>x.canonForm);
 
-            impliedBy(allCandidates, ui.canonForm, function (x: ESTree.Node[]) {
+            impliedBy(allCandidates, ui.canonForm, function (x: ESNode[]) {
               if (x.length > 0) {
                 gl.progressW.markInvariant(esprimaToStr(x[0]), "implies")
                 gl.tracesW.immediateError("This is weaker than a found expression!")
@@ -281,7 +297,7 @@ class CounterexGameLogic extends BaseGameLogic {
     this.allData[lvl.id][2]  = this.allData[lvl.id][2].concat(lvl.data[2])
 
     for (let [rawInv, canonInv] of lvl.startingInvs) {
-      let jsInv = esprimaToStr(esprima.parse(invToJS(rawInv)));
+      let jsInv = esprimaToStr(parse(invToJS(rawInv)));
       let ui = new UserInvariant(rawInv, jsInv, canonInv);
       this.foundJSInv.push(ui);
       this.invMap[ui.id] = ui;
