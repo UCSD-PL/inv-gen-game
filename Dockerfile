@@ -26,6 +26,15 @@ RUN apt-get update && apt-get install -y \
   libmysqlclient-dev\
   openjdk-8-jdk\
  && rm -rf /var/lib/apt/lists/*
+ && npm install -g gulp-cli
+ && npm install --save-dev typescript gulp gulp-typescript
+ && npm install --save-dev browserify tsify vinyl-source-stream
+ && npm install --save-dev watchify gulp-util
+ && npm install --save-dev gulp-uglify vinyl-buffer gulp-sourcemaps
+ && npm install jquery --save
+ && npm install @types/jquery --save
+ && npm install --save @types/jquery-jsonrpcclient
+
 
 # Downloading the latest version of the app
 RUN  git clone https://8c27f4108ac53546e205d396e86dd25cce7016a8:x-oauth-basic@github.com/UCSD-PL/inv-gen-game.git /app

@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.27130.2027
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "inv-gen-game", "inv-gen-game.pyproj", "{EAA40A43-8B3B-4ABF-ACB1-522D40EAB799}"
 EndProject
+Project("{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}") = "GameStaticWebsite", "GameStaticWebsite\GameStaticWebsite.njsproj", "{9B3BA03A-FAB6-45EB-B4BC-086FD5A159D7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{EAA40A43-8B3B-4ABF-ACB1-522D40EAB799}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EAA40A43-8B3B-4ABF-ACB1-522D40EAB799}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EAA40A43-8B3B-4ABF-ACB1-522D40EAB799}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9B3BA03A-FAB6-45EB-B4BC-086FD5A159D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B3BA03A-FAB6-45EB-B4BC-086FD5A159D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B3BA03A-FAB6-45EB-B4BC-086FD5A159D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B3BA03A-FAB6-45EB-B4BC-086FD5A159D7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

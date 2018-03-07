@@ -1117,11 +1117,13 @@
     <Content Include="src\static\esprima.js" />
     <Content Include="src\static\game.html" />
     <Content Include="src\static\game_twop.html" />
+    <Content Include="src\static\gulpfile.js" />
     <Content Include="src\static\inv.css" />
     <Content Include="src\static\knife-down.gif" />
     <Content Include="src\static\knife-up.gif" />
     <Content Include="src\static\Makefile" />
     <Content Include="src\static\mturk_landing.html" />
+    <Content Include="src\static\package.json" />
     <Content Include="src\static\qualification_tutorial.html" />
     <Content Include="src\static\survey.html" />
     <Content Include="src\static\tsconfig.json" />
@@ -2726,7 +2728,8 @@
     <Folder Include="src\lib\ice" />
     <Folder Include="src\lib\invgen" />
     <Folder Include="src\static" />
-    <Folder Include="src\static\ts" />
+    <Folder Include="F:\Workspace\Gamification\phaser-inv-gen-game\inv-gen-game\src\static\ts\" />
+    <Folder Include="src\static\ts\" />
     <Folder Include="src\stubs" />
     <Folder Include="src\stubs\Pyro4" />
     <Folder Include="src\stubs\z3" />

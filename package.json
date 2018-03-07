@@ -9,5 +9,8 @@
   "devDependencies": {
     "typescript": "1.8",
     "typings": "0.8"
+  },
+  "dependencies": {
+    "@types/jquery-jsonrpcclient": "^0.7.29"
   }
 }

@@ -1,0 +1,24 @@
+{
+  "name": "game-static-website",
+  "version": "0.0.0",
+  "description": "GameStaticWebsite",
+  "main": "app.js",
+  "author": {
+    "name": "Massimiliano Menarini"
+  },
+  "devDependencies": {
+    "@types/node": "^6.0.87",
+    "@types/jquery": "3.3.0",
+    "@types/esprima": "4.0.1",
+    "@types/estree": "0.0.38",
+    "@types/jqueryui": "1.12.2",
+    "@types/jquery-jsonrpcclient": "0.7.29"
+  },
+  "dependencies": {
+    "jquery": "3.3.0",
+    "estree": 
+  },
+  "bundleDependencies": [
+    "jquery"
+  ]
+}
