@@ -5,15 +5,16 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{eaa40a43-8b3b-4abf-acb1-522d40eab799}</ProjectGuid>
     <ProjectHome />
-    <StartupFile />
+    <StartupFile>src\server.py</StartupFile>
     <SearchPath>src\</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <ProjectTypeGuids>{789894c7-04a9-4a11-a6b5-3f4435165112};{1b580a1a-fdb3-4b32-83e1-6407eb2722e6};{349c5851-65df-11da-9384-00065b846f21};{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <LaunchProvider>Web launcher</LaunchProvider>
-    <InterpreterId />
+    <InterpreterId>MSBuild|env|$(MSBuildProjectFullPath)</InterpreterId>
     <WebBrowserUrl>http://localhost</WebBrowserUrl>
     <PythonWsgiHandler>{StartupModule}.wsgi_app</PythonWsgiHandler>
+    <UseIISExpress>true</UseIISExpress>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
@@ -429,6 +430,7 @@
     <Content Include="dilig-benchmarks\single\46.desugared.sol" />
     <Content Include="dilig-benchmarks\single\46.desugared.trace" />
     <Content Include="dilig-benchmarks\single\46.ice-dt.bpl" />
+    <Content Include="Dockerfile" />
     <Content Include="ice-benchmarks\add-run.c" />
     <Content Include="ice-benchmarks\add.bpl" />
     <Content Include="ice-benchmarks\add.c" />
@@ -1089,8 +1091,10 @@
     <Content Include="new_summer_benchmarks\w2.boogie.desugared.bpl" />
     <Content Include="package.json" />
     <Content Include="README.md" />
+    <Content Include="requirements.txt" />
     <Content Include="run.sh" />
     <Content Include="setup.sh" />
+    <Content Include="setupServer.sh" />
     <Content Include="src\c2boogie.sh" />
     <Content Include="src\db\backfill.sql" />
     <Content Include="src\db\merge-events.sh" />
@@ -2700,6 +2704,7 @@
     <Folder Include="ice-benchmarks\multi" />
     <Folder Include="ice-benchmarks\multiply.desugared.new_fuzz_traces" />
     <Folder Include="ice-benchmarks\nested" />
+    <Folder Include="ice-benchmarks\other\" />
     <Folder Include="ice-benchmarks\other\Model for distributed key-value store protocol" />
     <Folder Include="ice-benchmarks\other\Robustness to small changes" />
     <Folder Include="ice-benchmarks\single" />
@@ -2711,6 +2716,7 @@
     <Folder Include="new_summer_benchmarks" />
     <Folder Include="src" />
     <Folder Include="src\db" />
+    <Folder Include="src\harness\" />
     <Folder Include="src\harness\dilig" />
     <Folder Include="src\lib" />
     <Folder Include="src\lib\boogie" />
@@ -2724,7 +2730,9 @@
     <Folder Include="src\stubs" />
     <Folder Include="src\stubs\Pyro4" />
     <Folder Include="src\stubs\z3" />
+    <Folder Include="sv_auto_trans\" />
     <Folder Include="sv_auto_trans\array-examples" />
+    <Folder Include="sv_manual_trans\" />
     <Folder Include="sv_manual_trans\array-examples" />
     <Folder Include="sv_manual_trans\loop-acceleration" />
     <Folder Include="sv_manual_trans\loop-acceleration\diamond_true-unreach-call1.desugared.new_fuzz_traces" />
@@ -2741,5 +2749,55 @@
     <Folder Include="test-benchmarks" />
     <Folder Include="test-conditional" />
   </ItemGroup>
+  <ItemGroup>
+    <Interpreter Include="env\">
+      <Id>env</Id>
+      <Version>3.6</Version>
+      <Description>env (Python 3.6 (64-bit))</Description>
+      <InterpreterPath>Scripts\python.exe</InterpreterPath>
+      <WindowsInterpreterPath>Scripts\pythonw.exe</WindowsInterpreterPath>
+      <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
+      <Architecture>X64</Architecture>
+    </Interpreter>
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Web.targets" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <UseIIS>True</UseIIS>
+          <AutoAssignPort>True</AutoAssignPort>
+          <DevelopmentServerPort>0</DevelopmentServerPort>
+          <DevelopmentServerVPath>/</DevelopmentServerVPath>
+          <IISUrl>http://localhost:57301/</IISUrl>
+          <NTLMAuthentication>False</NTLMAuthentication>
+          <UseCustomServer>False</UseCustomServer>
+          <CustomServerUrl>
+          </CustomServerUrl>
+          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}" User="">
+        <WebProjectProperties>
+          <StartPageUrl>
+          </StartPageUrl>
+          <StartAction>CurrentPage</StartAction>
+          <AspNetDebugging>True</AspNetDebugging>
+          <SilverlightDebugging>False</SilverlightDebugging>
+          <NativeDebugging>False</NativeDebugging>
+          <SQLDebugging>False</SQLDebugging>
+          <ExternalProgram>
+          </ExternalProgram>
+          <StartExternalURL>
+          </StartExternalURL>
+          <StartCmdLineArguments>
+          </StartCmdLineArguments>
+          <StartWorkingDirectory>
+          </StartWorkingDirectory>
+          <EnableENC>True</EnableENC>
+          <AlwaysStartWebServerOnDebug>False</AlwaysStartWebServerOnDebug>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
 </Project>

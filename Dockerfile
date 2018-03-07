@@ -12,9 +12,10 @@ RUN apt-get update && apt-get install -y \
   software-properties-common \
   wget \
   zip \
-  python2.7 \
-  python2.7-dev \
+  python3 \
+  python3-dev \
   python-pip \
+  python3-venv \
   build-essential \
   mono-devel \
   mono-xbuild \
