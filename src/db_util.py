@@ -147,6 +147,8 @@ def addEvent(sourceName, typ, time, ename,  addr, data, session, mturkId):
       payl[k] = data[k];
   elif (typ == "GenNext.Solved" or typ == "GenNext.NoNewRows"):
     payl = data
+  elif (typ == "QuestionaireSubmit"):
+    payl = data
   else:
     print("Unknown event type: ", typ)
 
