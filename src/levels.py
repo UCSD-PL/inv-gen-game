@@ -16,7 +16,7 @@ from lib.boogie.ast import parseExprAst, AstExpr
 from lib.boogie.bb import Function, Label_T, BB
 from lib.boogie.paths import NondetPath, Path
 from lib.boogie.inv_networks import InvNetwork
-from typing import Dict, List, Tuple, Iterable, Set
+from typing import Dict, List, Tuple, Iterable, Set, Any
 
 def _tryUnroll(loop, bbs, min_un, max_un, bad_envs, good_env):
     # Lets first try to find a terminating loop between min and max iterations
@@ -249,6 +249,39 @@ class BoogieLevel(object):
 
         _dfs(f.entry(), [])
         return loops
+
+    def to_json(self) -> Any:
+        return [
+            self._fname,
+            self._fun.to_json(),
+            {lbl: [[bb.label for bb in path] for path in paths] for (lbl, paths) in self._loops.items()}
+        ]
+
+def loadNewBoogieLvlSet(lvlSetFile):
+    # Small helper funct to make sure we didn't
+    # accidentally give two levels the same name
+    def assertUniqueKeys(kvs):
+      keys = [x[0] for x in kvs]
+      assert (len(set(keys)) == len(keys))
+      return dict(kvs)
+
+    lvlSet = load(open(lvlSetFile, "r"), object_pairs_hook=assertUniqueKeys)
+    lvlSetDir = dirname(abspath(realpath(lvlSetFile)))
+    error("Loading level set " + lvlSet["name"] + " from " + lvlSetFile);
+    lvls = OrderedDict()
+    for t in lvlSet["levels"]:
+        lvlName = t[0]
+        lvlPath = t[1]
+
+        for i in range(len(lvlPath)):
+          lvlPath[i] = join(lvlSetDir, lvlPath[i])
+            
+        error("Loading level: ", lvlPath[0])
+        lvl = BoogieLevel.load(lvlPath[0])
+        lvls[lvlName] = lvl
+
+    return (lvlSet["name"], lvls)
+
 
 
 def loadBoogieFile(fname: str):

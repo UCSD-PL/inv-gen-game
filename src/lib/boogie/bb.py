@@ -54,6 +54,12 @@ class BB(List[AstStmt]):
 
         return object.__eq__(self, other)
 
+    def to_json(self) -> Any:
+        return [self.label,
+                [bb.label for bb in self._predecessors],
+                [str(stmt) for stmt in self],
+                [bb.label for bb in self._successors]]
+
 class Function(object):
     @staticmethod
     def load(filename: str) -> Iterable["Function"]:
@@ -151,3 +157,12 @@ class Function(object):
                     continue
 
                 bb[stmt_idx] = AstAssignment(stmt.lhs.map, AstMapUpdate(stmt.lhs.map, stmt.lhs.index, stmt.rhs))
+
+    def to_json(self) -> Any:
+        return [
+                self.name,
+                [(name, str(typ)) for (name, typ) in self.parameters],
+                [(name, str(typ)) for (name, typ) in self.locals],
+                [(name, str(typ)) for (name, typ) in self.returns],
+                [bb.to_json() for bb in self._bbs.values()],
+        ]

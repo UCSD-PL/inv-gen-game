@@ -12,7 +12,7 @@ from lib.boogie.predicate_transformers import wp_stmts, sp_stmt
 from lib.boogie.interp import Store
 from copy import copy
 from lib.boogie.bb import Function, Label_T, BB
-from typing import Dict, Optional, Set, Tuple, List
+from typing import Dict, Optional, Set, Tuple, List, Any
 import z3
 
 # TODO: Can I make these an instance of forward dataflow analysis?
@@ -65,6 +65,22 @@ class Violation:
 
   def __repr__(s) -> str:
     return s.__str__()
+
+  def to_json(s) -> Any:
+    lblPath = []  # type: List[str]
+    envs = [] # type: List[List[Store]]
+
+    for nd in s._path:
+        assert isinstance(nd, SSABBNode)
+        lblPath.append(nd.bb.label)
+        envs.append([dict(unssa_z3_model(s._ctrex, replMap)) for replMap in nd.repl_maps])
+
+    last_stmts = [] # type: List[Tuple[str, Store]]
+
+    for (stmt, replMap) in s._lastBBCompletedStmts:
+        last_stmts.append((str(stmt), dict(unssa_z3_model(s._ctrex, replMap))))
+
+    return (lblPath, envs, last_stmts)
 
 InvNetwork = Dict[Label_T, Set[AstExpr]]
 ViolationNetwork = Dict[Label_T, Set[Tuple[AstExpr, "Violation"]]]
