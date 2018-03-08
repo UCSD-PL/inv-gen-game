@@ -94,3 +94,8 @@ export function rpc_logEvent(workerId: string, name: string, data: any): any {
 export function logEvent(name: string, data: any): any {
   return rpc_logEvent(Args.get_worker_id(), name, data);
 }
+
+export function rpc_checkSoundness(lvlSet: string, lvlId: string, invs: { [label: string] : invariantT[] },
+                              cb: (res: any) => void) {  // Post-cond counterexample to all invariants
+  rpc.call("App.checkSoundness", [ lvlSet, lvlId, invs, mturkId() ], cb, log)
+}

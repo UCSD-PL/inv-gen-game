@@ -50,6 +50,8 @@
     "ts/util.ts",
     "ts/main.ts",
     "ts/types.ts",
+    "ts/new_game.ts",
+    "ts/boogie.ts",
     "ts/tutorial.ts"
   ],
   "atom": {
