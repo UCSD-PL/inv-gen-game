@@ -22,11 +22,15 @@ requirejs.config({
     "main": "build/ts/main",
     "util": "build/ts/util",
     "boogie": "build/ts/boogie",
-    "new_game": "build/ts/new_game"
+    "new_game": "build/ts/new_game",
+    "phaser": "./phaser"
   },
   shim: {
+    'phaser': {
+      exports: 'Phaser'
+    }
   },
-  waitSeconds: 10,
+  waitSeconds: 0,
 });
 
 requirejs(
