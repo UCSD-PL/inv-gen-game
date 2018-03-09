@@ -18,7 +18,7 @@ import z3
 # TODO: Extend this to support limited number of statements at begining/end.
 #       This would simplify some of the inv_networks code.
 class Path(List[BB]):
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(tuple(self))
 
 #A (potentially) non-deterministic path is a sequnce of basic blocks or other non-deterministic paths.
@@ -46,7 +46,7 @@ class NondetNode(object):
 
 NondetPathNode_T = Union[BB, NondetNode]
 class NondetPath(List[NondetPathNode_T]):
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(tuple(self))
 
 # TODO: Abstract the definition of NondetPath and NondetSSAPath to a single
@@ -219,7 +219,7 @@ def ssa_stmt(stmt: AstStmt, prev_replm: ReplMap_T, cur_replm: ReplMap_T) -> AstS
     if isinstance(stmt, AstAssignment):
         lhs = replace(stmt.lhs, cur_replm)
         rhs = replace(stmt.rhs, prev_replm)
-        assert isinstance(lhs, AstId) or isinstance(lhs, AstMapIndex)
+        assert isinstance(lhs, AstId)
         assert isinstance(rhs, AstExpr)
         return AstAssignment(lhs,rhs)
     else:

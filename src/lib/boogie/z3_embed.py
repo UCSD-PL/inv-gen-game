@@ -577,7 +577,7 @@ def stmt_to_z3(stmt: ast.AstNode, typeEnv: TypeEnv_T) -> z3.ExprRef:
     if (isinstance(stmt, ast.AstAssignment)):
         lvalue = typeEnv[stmt.lhs](str(stmt.lhs))
         rhs = expr_to_z3(stmt.rhs, typeEnv)
-        return _force_bool(lvalue == rhs)
+        return _force_expr(lvalue == rhs)
     elif (isinstance(stmt, ast.AstAssert)):
         return (expr_to_z3(stmt.expr, typeEnv))
     elif (isinstance(stmt, ast.AstAssume)):

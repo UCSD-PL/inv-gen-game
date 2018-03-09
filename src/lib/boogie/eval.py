@@ -74,7 +74,11 @@ def instantiateAndEval(inv: AstExpr,
         m = maybeModel(And([stmt_to_z3(s, typeEnv) for s in p]))
 
         if (m):
-            const_vals = { AstId(x) : AstNumber(m[x]) for x in symConsts } # type: ReplMap_T
+            const_vals = {} # type: ReplMap_T
+            for x in symConsts:
+                v = m[x]
+                assert isinstance(v, int);
+                const_vals[AstId(x)] = AstNumber(v)
             res.append(_force_expr(replace(inst_inv, const_vals)))
 
     return res

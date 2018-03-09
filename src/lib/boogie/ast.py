@@ -96,7 +96,7 @@ class AstAssume(AstOneExprStmt):
     def __str__(s) -> str: return "assume (" + str(s.expr) + ");";
 
 class AstAssignment(AstStmt):
-    def __init__(s, lhs: AstId, rhs: AstExpr) -> None:  AstNode.__init__(s, lhs, rhs)
+    def __init__(s, lhs: Union[AstId, AstMapIndex], rhs: AstExpr) -> None:  AstNode.__init__(s, lhs, rhs)
     def __str__(s) -> str: return str(s.lhs) + " := " + str(s.rhs) + ";"
 
 class AstHavoc(AstStmt):
