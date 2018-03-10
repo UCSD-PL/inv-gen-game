@@ -237,7 +237,6 @@ class BoogieLevel(object):
             if bb in path:
                 loop_path = path[path.index(bb):] + [bb]
                 prefix = path[:path.index(bb)]
-                print ("Found Loop :{} body: {} ".format(bb.label, loop_path))
                 if bb.label not in loops:
                     loops[bb.label] = set([Path(loop_path)])
                 else:

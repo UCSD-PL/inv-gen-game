@@ -3,8 +3,8 @@ from lib.boogie.ast import parseAst, AstImplementation, AstLabel, \
         AstReturn, AstNode, AstStmt, AstType, AstProgram, AstMapIndex,\
         AstMapUpdate
 from collections import namedtuple
-from ..common.util import unique
-from typing import Dict, List, Iterable, Tuple, Iterator, Any
+from ..common.util import unique, get_uid
+from typing import Dict, List, Iterable, Tuple, Iterator, Any, Set
 
 Label_T = str
 Bindings_T = Iterable[Tuple[str, AstType]]
@@ -59,6 +59,37 @@ class BB(List[AstStmt]):
                 [bb.label for bb in self._predecessors],
                 [str(stmt) for stmt in self],
                 [bb.label for bb in self._successors]]
+
+    def is_gcl(self) -> bool:
+        """ A BB is in GCL form if all the assumes come first in the statement
+        list, and all of the asserts come last. """
+        def stmt_weight(stmt: AstStmt) -> int:
+            if isinstance(stmt, AstAssume):
+                return 0
+            else:
+                return 1
+
+        stmt_weights = [stmt_weight(stmt) for stmt in self]
+        return stmt_weights == sorted(stmt_weights)
+
+    def pp(self) -> str:
+        return self.label + ":\n" + \
+            "\n".join("    " + str(x) for x in self) + \
+            "\n    goto {};".format(",".join(bb.label for bb in self.successors()))
+
+    def reachable(self) -> Iterable["BB"]:
+        reachable = set()  # type: Set[BB]
+        workQ = [self]  # type: List[BB]
+        while len(workQ) > 0:
+            bb = workQ.pop()
+            if bb in reachable:
+                continue
+
+            reachable.add(bb)
+            workQ.extend(bb.successors())
+
+        return reachable
+
 
 class Function(object):
     @staticmethod
@@ -119,7 +150,7 @@ class Function(object):
             f._bbs[exitBB.label] = exitBB
 
         return f
-    
+
     def __init__(self, name: str, bbs: Iterable[BB], parameters: Bindings_T, local_vars: Bindings_T, returns: Bindings_T) -> None:
         self.name = name
         self._bbs = {bb.label: bb for bb in bbs}
@@ -132,7 +163,7 @@ class Function(object):
         return unique([bb for bb in self._bbs.values() if not bb.isInternal() and bb.isEntry()])
 
     def exits(self) -> Iterator[BB]:
-        return iter([bb for bb in self._bbs.values() if not bb.isInternal() and bb.isExit()])
+        return iter([bb for bb in self._bbs.values() if bb.isExit()])
 
     def exit(self) -> BB:
         return unique(self.exits())
@@ -153,7 +184,7 @@ class Function(object):
             for stmt_idx in range(len(bb)):
                 stmt = bb[stmt_idx]
                 if not (isinstance(stmt, AstAssignment) and
-                    isinstance(stmt.lhs, AstMapIndex)):
+                        isinstance(stmt.lhs, AstMapIndex)):
                     continue
 
                 bb[stmt_idx] = AstAssignment(stmt.lhs.map, AstMapUpdate(stmt.lhs.map, stmt.lhs.index, stmt.rhs))
@@ -166,3 +197,84 @@ class Function(object):
                 [(name, str(typ)) for (name, typ) in self.returns],
                 [bb.to_json() for bb in self._bbs.values()],
         ]
+
+    def is_gcl(self) -> bool:
+        return all(bb.is_gcl() for bb in self._bbs.values())
+
+    def split_asserts(self) -> Tuple["Function", Dict[BB, BB]]:
+        workQ = [(None, self.entry())]  # type: List[Tuple[BB, BB]]
+        bbMap = {}  # type: Dict[BB, BB]
+
+        while len(workQ) > 0:
+            (from_bb, cur_bb) = workQ.pop()
+            if cur_bb in bbMap: # already visited cur_bb and created a copy
+                if from_bb is not None:
+                    from_bb._successors.append(bbMap[cur_bb])
+                    bbMap[cur_bb]._predecessors.append(from_bb)
+                continue
+
+            new_bb = BB(
+                cur_bb.label,
+                [bbMap[x] for x in cur_bb.predecessors() if x in bbMap],
+                [],
+                [],
+                False,
+            )
+
+            for pred in cur_bb.predecessors():
+                if pred not in bbMap:
+                    continue
+
+                bbMap[pred]._successors.append(new_bb)
+
+            bbMap[cur_bb] = new_bb
+
+            for stmt in cur_bb.stmts():
+                if isinstance(stmt, AstAssert):
+                    if new_bb.isInternal() and new_bb.label.startswith("_assert_"):
+                        new_bb.append(stmt)
+                    else:
+                        tmp_bb = BB(
+                            get_uid("_assert"),
+                            [new_bb],
+                            [stmt],
+                            [],
+                            True
+                        )
+                        new_bb._successors.append(tmp_bb)
+                        new_bb = tmp_bb
+                else:
+                    if new_bb.isInternal() and new_bb.label.startswith("_assert_"):
+                        tmp_bb = BB(
+                            get_uid("_assign"),
+                            [new_bb],
+                            [stmt],
+                            [],
+                            True
+                        )
+                        new_bb._successors.append(tmp_bb)
+                        new_bb = tmp_bb
+                    else:
+                        new_bb.append(stmt)
+
+            new_bb._successors = [bbMap[x] for x in cur_bb.successors() if x in bbMap]
+
+            for succ in cur_bb.successors():
+                workQ.append((new_bb, succ))
+
+        return (Function(self.name, bbMap[self.entry()].reachable(),
+                         self.parameters, self.locals, self.returns), bbMap)
+
+    def pp(self) -> str:
+        def pp_bindings(b: Bindings_T) -> str:
+            return ",".join("{}:{}".format(str(id), str(typ)) for (id, typ) in self.parameters)
+
+        def pp_locals(b: Bindings_T) -> str:
+            return "\n".join("    var {}: {};".format(str(id), str(typ)) for (id, typ) in self.parameters)
+
+        return "implementation {}({}) returns ({})\n{{\n{}\n{}\n}}".format(
+            self.name,
+            pp_bindings(self.parameters),
+            pp_bindings(self.returns),
+            pp_locals(self.locals),
+            "\n\n".join(bb.pp() for bb in self._bbs.values()))

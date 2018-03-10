@@ -1,4 +1,4 @@
-from typing import Any, TypeVar, Iterable, Callable, Set, Union, List, Tuple, Sized
+from typing import Any, TypeVar, Iterable, Callable, Set, Union, List, Tuple, Sized, Dict
 import traceback
 from itertools import chain, combinations
 from sys import exc_info, stderr
@@ -75,3 +75,17 @@ def first(it: Iterable[T], pred: Callable[[T], bool]) -> int:
             return ctr
         ctr += 1
     return -1
+
+
+_uids = {}  # type: Dict[str,int]
+
+
+def get_uid(prefix: str) -> str:
+    global _uids
+
+    if prefix not in _uids:
+        _uids[prefix] = -1
+
+    _uids[prefix] += 1
+
+    return prefix + "_" + str(_uids[prefix])
