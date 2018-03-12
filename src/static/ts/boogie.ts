@@ -1,13 +1,17 @@
 import {single, entries, assert} from "./util"
+import {HasId, DiGraph} from "./graph"
 
 export type Stmt_T = string;
 export type Expr_T = string;
 
-export interface BB {
-  label: string;
-  predecessors: string[];
-  successors: string[];
+export class BB extends DiGraph implements HasId {
+  id: string;
   stmts: Stmt_T[];
+  constructor(label: string, stmts: Stmt_T[]) {
+    super();
+    this.id = label;
+    this.stmts = stmts;
+  }
 }
 
 export interface Binding {
@@ -42,16 +46,26 @@ export class Fun {
     this.bbs = bbs;
   }
 
-  entry(): string {
-    let entryBbs: string[] = entries(this.bbs).filter(
-      (lbl:string) => this.bbs[lbl].predecessors.length == 0);
-    return single<string>(entryBbs);
+  entry(): BB {
+    let entries: BB[] = [];
+    for (let lbl in this.bbs) {
+      let bb = this.bbs[lbl];
+      if (bb.predecessors.length == 0) {
+        entries.push(bb)
+      }
+    }
+    return single<BB>(entries);
   }
 
-  exit(): string {
-    let exitBbs: string[] = entries(this.bbs).filter(
-      (lbl:string) => this.bbs[lbl].successors.length == 0);
-    return single<string>(exitBbs);
+  exit(): BB {
+    let exits: BB[] = [];
+    for (let lbl in this.bbs) {
+      let bb = this.bbs[lbl];
+      if (bb.successors.length == 0) {
+        exits.push(bb)
+      }
+    }
+    return single<BB>(exits);
   }
 
   static from_json(json: any): Fun {
@@ -59,12 +73,13 @@ export class Fun {
 
     for (let json_bb of json[4]) {
       let label: string = json_bb[0]
-      bbs[label] = {
-        label: label,
-        predecessors: json_bb[1] as string[],
-        stmts: json_bb[2] as string[],
-        successors: json_bb[3] as string[],
-      }
+      bbs[label] = new BB(label, json_bb[2] as string[]);
+    }
+
+    for (let json_bb of json[4]) {
+      let label: string = json_bb[0]
+      bbs[label].predecessors = json_bb[1].map((x:string): BB => bbs[x]);
+      bbs[label].successors = json_bb[3].map((x:string): BB => bbs[x]);
     }
 
     return new Fun(
@@ -79,8 +94,8 @@ export class Fun {
   addEdge(fromLbl: string, toLbl: string): void {
     assert((fromLbl in this.bbs), "Unknown from BB " + fromLbl);
     assert((toLbl in this.bbs), "Unknown to BB " + toLbl);
-    this.bbs[fromLbl].successors.push(toLbl);
-    this.bbs[toLbl].predecessors.push(fromLbl);
+    this.bbs[fromLbl].successors.push(this.bbs[toLbl]);
+    this.bbs[toLbl].predecessors.push(this.bbs[fromLbl]);
   }
 
   addNewBB(lbl: string,
@@ -101,12 +116,7 @@ export class Fun {
       stmts = [];
     }
 
-    this.bbs[lbl] = {
-      label: lbl,
-      predecessors: [],
-      stmts: stmts,
-      successors: [],
-    }
+    this.bbs[lbl] = new BB(lbl, stmts);
 
     for (let pred of predecessors) {
       this.addEdge(pred, lbl);

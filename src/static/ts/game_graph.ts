@@ -81,7 +81,7 @@ export function buildGraph(f: Fun): [Node, NodeMap] {
   let entry: Node = null;
 
   // Build entry node. (a sequence of assume -> assign)
-  let entryBB = f.bbs[f.entry()];
+  let entryBB = f.entry();
   let [assumes, rest] = split_assumes(entryBB.stmts);
   entry = new AssumeNode(getUid("nd"), and(assumes.map(assume_expr)));
 
@@ -101,25 +101,25 @@ export function buildGraph(f: Fun): [Node, NodeMap] {
     let node : Node;
     let [assumes, rest] = split_assumes(bb.stmts);
 
-    if (bb.label in bbMap) {
-      pred.addSuccessor(bbMap[bb.label])
+    if (bb.id in bbMap) {
+      pred.addSuccessor(bbMap[bb.id])
       continue;
     }
 
     node = mkNode(rest);
-    bbMap[bb.label] = node;
+    bbMap[bb.id] = node;
     pred.addSuccessor(node);
 
     if (bb.successors.length == 0) {
       // Exit node
     } else if (bb.successors.length == 1) {
-      let nextBB = f.bbs[bb.successors[0]];
+      let nextBB = bb.successors[0];
       let [assumes, rest] = split_assumes(nextBB.stmts);
       // No assumes(only branches have assumes) and non-empty node
       assert(assumes.length == 0);
       workQ.push([nextBB, node])
     } else if (bb.successors.length == 2) {
-      let [lhsBB, rhsBB]: BB[] = bb.successors.map((x:string) => f.bbs[x]);
+      let [lhsBB, rhsBB]: BB[] = bb.successors;
       let [lhsAssume, lhsRest] = split_assumes(lhsBB.stmts);
       let [rhsAssume, rhsRest] = split_assumes(rhsBB.stmts);
 
@@ -132,8 +132,8 @@ export function buildGraph(f: Fun): [Node, NodeMap] {
       // TODO: Pick if expr intelligently
       let ifExpr = lhsExpr;
       let ifNode = new IfNode(getUid("nd"), ifExpr);
-      if (!(bb.label in bbMap)) {
-        bbMap[bb.label] = ifNode;
+      if (!(bb.id in bbMap)) {
+        bbMap[bb.id] = ifNode;
       }
       node.addSuccessor(ifNode);
       workQ.push([lhsBB, ifNode])
