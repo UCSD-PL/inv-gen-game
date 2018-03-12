@@ -1,6 +1,49 @@
 export type directionT = "up" | "down" | "left" | "right"
 
+export type StrMap<T> = { [key: string]: T};
 export type strset = Set<string>
+
+export function intersection<T>(s1: Set<T>, s2: Set<T>): Set<T> {
+  let res: Set<T> = new Set();
+  for (let x of s1) {
+    if (s2.has(x)) {
+      res.add(x)
+    }
+  }
+
+  return res;
+}
+
+export function max<T>(a: T[]): T {
+  let max : T = a[0];
+  for (let v of a) {
+    if (v>max) {
+      max = v;
+    }
+  }
+
+  return max;
+}
+
+// In-place union. Modifies s1
+export function union<T>(s1: Set<T>, s2: Set<T>): Set<T> {
+  for (let e of s2) {
+    s1.add(e);
+  }
+  return s1;
+}
+
+
+let uidCtrs : { [key: string]: number } = {};
+
+export function getUid(prefix: string): string {
+  if (!(prefix in uidCtrs)) {
+    uidCtrs[prefix] = -1;
+  }
+
+  uidCtrs[prefix]++;
+  return prefix + uidCtrs[prefix];
+}
 
 export function emptyStrset(): strset {
   return new Set();
@@ -345,14 +388,6 @@ export class Script {
   }
 }
 
-/* In-place union - modifies s1 */
-export function union(s1: strset, s2: strset): strset {
-  for (let e of s2) {
-    s1.add(e);
-  }
-  return s1;
-}
-
 export function setlen(s: strset): number {
   return s.size;
 }
@@ -497,6 +532,31 @@ function shape_eq(o1: any, o2: any) {
     return true;
   }
   assert(false, "Unexpected objects being compared: " + o1 + " and " + o2);
+}
+
+export function entries(o: Object): string[] {
+  let res: string[] = [];
+  for (let i in o) {
+    if (!o.hasOwnProperty(i)) {
+      continue
+    }
+
+    res.push(i);
+  }
+
+  return res;
+}
+
+export function single<T>(l:T[]|Set<T>): T {
+  if (l instanceof Set) {
+    assert(l.size == 1, "Unexpected number of things: " + l);
+  } else {
+    assert(l.length == 1, "Unexpected number of things: " + l);
+  }
+
+  for (let x of l) {
+    return x;
+  }
 }
 
 export function unique<T>(l:T[], id:(x:T)=>string): T[] {

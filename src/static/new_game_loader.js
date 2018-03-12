@@ -22,6 +22,8 @@ requirejs.config({
     "main": "build/ts/main",
     "util": "build/ts/util",
     "boogie": "build/ts/boogie",
+    "game_graph": "build/ts/game_graph",
+    "graph": "build/ts/graph",
     "new_game": "build/ts/new_game",
     "phaser": "./phaser"
   },
