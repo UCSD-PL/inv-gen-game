@@ -190,7 +190,8 @@ Loops_T = Dict[Label_T, Set[Path]]
 class BoogieLevel(object):
     @staticmethod
     def load(fname: str) -> "BoogieLevel":
-        fun = Function.load(fname)
+        fun = [f.split_asserts()[0] for f in Function.load(fname)]
+        print (fun[0].pp());
         # TODO: Support multiple functions
         loops = BoogieLevel._discover_loops(unique(fun))
         traces = [] # type: List[List[Store]]
@@ -274,9 +275,10 @@ def loadNewBoogieLvlSet(lvlSetFile):
 
         for i in range(len(lvlPath)):
           lvlPath[i] = join(lvlSetDir, lvlPath[i])
-            
+
         error("Loading level: ", lvlPath[0])
         lvl = BoogieLevel.load(lvlPath[0])
+        assert lvl._fun.is_gcl();
         lvls[lvlName] = lvl
 
     return (lvlSet["name"], lvls)

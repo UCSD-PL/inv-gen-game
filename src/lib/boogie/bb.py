@@ -73,9 +73,11 @@ class BB(List[AstStmt]):
         return stmt_weights == sorted(stmt_weights)
 
     def pp(self) -> str:
-        return self.label + ":\n" + \
-            "\n".join("    " + str(x) for x in self) + \
+        goto_str = "" if len(self.successors()) == 0 else \
             "\n    goto {};".format(",".join(bb.label for bb in self.successors()))
+
+        return self.label + ":\n" + \
+            "\n".join("    " + str(x) for x in self) + goto_str
 
     def reachable(self) -> Iterable["BB"]:
         reachable = set()  # type: Set[BB]
@@ -101,6 +103,7 @@ class Function(object):
         for decl in prog.decls:
             assert isinstance(decl, AstImplementation)
             funcs.append(Function.build(decl))
+
         return funcs
 
     @staticmethod
@@ -256,8 +259,6 @@ class Function(object):
                         new_bb = tmp_bb
                     else:
                         new_bb.append(stmt)
-
-            new_bb._successors = [bbMap[x] for x in cur_bb.successors() if x in bbMap]
 
             for succ in cur_bb.successors():
                 workQ.append((new_bb, succ))
