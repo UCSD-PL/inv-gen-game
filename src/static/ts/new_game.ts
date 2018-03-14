@@ -14,8 +14,20 @@ import {FiniteAnimation, Move} from "./animation"
 
 type InvNetwork = StrMap<ESNode[]>;
 type Violation = any[];
+type SpriteMap = StrMap<Phaser.Sprite>;
 
 type GameMode = "selected" | "waiting" | "animation" | "unselected";
+
+function isSound(vs: Violation[], nd: UserNode): boolean {
+  // Return true if the invariants at node nd are sound despite
+  // the potential failures
+  for (let v of vs) {
+    if (v[0][v[0].length-1] == nd.label) {
+      return false;
+    }
+  }
+  return true;
+}
 
 class SimpleGame {
   entry: Node;
@@ -27,8 +39,14 @@ class SimpleGame {
   f: Fun;
   mode: GameMode;
 
+  width: number;
+  height: number;
+  textSprites: SpriteMap;
+
   constructor(graph: Node, n: NodeMap, f: Fun) {
-    this.game = new Phaser.Game(800, 600, Phaser.AUTO, 'content',
+    this.width = 800;
+    this.height = 600;
+    this.game = new Phaser.Game(this.width, this.height, Phaser.AUTO, 'content',
       { preload: this.preload, create: this.create, update: this.update});
     this.entry = graph;
     this.userNodes = []
@@ -38,6 +56,7 @@ class SimpleGame {
     this.curAnim = null;
     this.f = f;
     this.unselect();
+    this.textSprites = {};
   }
 
   game: Phaser.Game;
@@ -84,7 +103,7 @@ class SimpleGame {
     }
   }
 
-  draw(nd: Node, pos: Point, size: number): any {
+  drawNode(nd: Node, pos: Point, size: number): Phaser.Sprite {
     let style = { font: size + "px Courier New, Courier, monospace", align: "center", fill: "#000000" }
     let text: string;
     if (nd instanceof AssignNode) {
@@ -196,16 +215,40 @@ class SimpleGame {
       points = points.concat(path);
     }
 
-    let bug = this.game.add.sprite(points[0].x, points[0].y, "bug")
-    let anim = new Move(bug, points, 30);
-    anim.onDone(() => { bug.destroy(); });
+    function envToText(v: any) {
+      let res = ""
+      for (let k in v) {
+        res += "" + k + "=" + v[k] + " ";
+      }
+      return res;
+    }
+
+    let bug = this.game.add.sprite(0, 0, "bug")
+    let msg = this.game.add.group();
+    msg.add(bug);
+    let style = { font: "10px Courier New, Courier, monospace", fill: "#000000" }
+    msg.add(this.game.add.text(20, 0, envToText(script[0][1])), style);
+    let anim = new Move(msg, points, 80);
+    anim.onDone(() => { msg.destroy(); });
 
     return anim;
   }
 
   create: any = () => {
     let fontSize = 15;
-    let [sizeMap, ownSizeMap, relPosMap] = this.computeLayout(fontSize);
+
+    // Build text off-screen
+    bfs(this.entry, (p: Node, n: Node) => {
+      this.textSprites[n.id] = this.drawNode(n, { x: this.width, y: this.height }, 15);
+    }, null);
+    // Compute sizes
+    let ownSizeMap: StrMap<Size> = {};
+    for (let id in this.textSprites) {
+      ownSizeMap[id] = { w: this.textSprites[id].width,
+                         h: this.textSprites[id].height }
+    }
+
+    let [sizeMap, relPosMap] = this.computeLayout(ownSizeMap);
     console.log("Size Map: ", sizeMap);
     console.log("relPosMap: ", relPosMap);
     let pos: StrMap<Point> = {};
@@ -227,7 +270,10 @@ class SimpleGame {
       }
 
       pos[next.id] = p;
-      this.draw(next, add(p, {y:0, x: -ownSizeMap[next.id].w/2}), fontSize);
+      let centerP = add(p, {y:0, x: -ownSizeMap[next.id].w/2});
+      this.textSprites[next.id].x = centerP.x;
+      this.textSprites[next.id].y = centerP.y;
+
       if (prev != null) {
         let start: Point = add(prevP, { x: 0, y: sizeMap[prev.id].h });
         if (!(prev.id in this.edges)) {
@@ -285,14 +331,11 @@ class SimpleGame {
     })
   }
 
-  computeLayout(fontSize: number): [StrMap<Size>, StrMap<Size>, StrMap<[Node, Point]>] {
+  computeLayout(sizeMap: StrMap<Size>): [StrMap<Size>, StrMap<[Node, Point]>] {
     let topo: StrMap<number> = topo_sort(this.entry);
     let exitNode: Node = exit(this.entry);
-    let size: StrMap<Size> = {};
     let width: StrMap<number> = {};
     let ifEndPoints: StrMap<[Node, Node, Node]> = {};
-    let ft_width = fontSize*0.6;
-    let ft_height = fontSize*1.5;
     let h_spacing = 50;
     let backedge_space = 30;
     let relPos: StrMap<[Node, Point]> = {};
@@ -333,24 +376,10 @@ class SimpleGame {
     bfs(this.entry, if_endpoints, null);
     console.log(ifEndPoints);
 
-    // Pass 2: Cache estimated sizes
-    function estimateSize(n: Node): Size {
-      if (n instanceof AssignNode) {
-        return { w: max(n.stmts.map((x)=>x.length))*ft_width,
-                 h: n.stmts.length * ft_height }
-      } else if (n instanceof ExprNode) {
-        return { w: n.expr.length * ft_width, h: ft_height }
-      } else {
-        throw new Error("NYI node " + n);
-      }
-    }
-    bfs(this.entry, (prev: Node, cur: Node): void => { size[cur.id] = estimateSize(cur); }, null);
-    console.log("Size: ", size);
-
     // Pass 3: Compute the widhts for each part of the graph
 
     function computeWidth(start: Node, end: Node): number {
-      let sz: Size = size[start.id];
+      let sz: Size = sizeMap[start.id];
       let res: number;
 
       if (start == end) {
@@ -402,7 +431,7 @@ class SimpleGame {
       if (prev == null) {
         p = { x: 0, y: 0};
       } else {
-        let rel_y = size[prev.id].h + h_spacing;
+        let rel_y = sizeMap[prev.id].h + h_spacing;
         if (prev instanceof IfNode) {
           if (next == prev.successors[0]) {
             // Lhs
@@ -422,8 +451,8 @@ class SimpleGame {
     console.log(relPos);
 
     let final_size: StrMap<Size> = {}
-    for(let id in size) {
-      final_size[id] = { w: width[id], h: size[id].h };
+    for(let id in sizeMap) {
+      final_size[id] = { w: width[id], h: sizeMap[id].h };
     }
 
     // Gather user nodes
@@ -433,7 +462,7 @@ class SimpleGame {
       }
     }, null)
 
-    return [final_size, size, relPos];
+    return [final_size, relPos];
   }
 }
 
