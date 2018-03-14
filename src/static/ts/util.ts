@@ -3,6 +3,14 @@ export type directionT = "up" | "down" | "left" | "right"
 export type StrMap<T> = { [key: string]: T};
 export type strset = Set<string>
 
+export function repeat<T>(e: T, n: number): T[] {
+  let res: T[] = [];
+  for(let i = 0; i < n; i++) {
+    res.push(e);
+  }
+  return res;
+}
+
 export function intersection<T>(s1: Set<T>, s2: Set<T>): Set<T> {
   let res: Set<T> = new Set();
   for (let x of s1) {

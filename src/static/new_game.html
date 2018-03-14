@@ -17,10 +17,15 @@
   <!-- our code -->
   <link rel="stylesheet" href="inv.css">
   <link rel="stylesheet" href="arrow.css">
+  <link rel="stylesheet" href="newgame.css">
   <script src="require.js" data-main="new_game_loader.js"></script>
 </head>
 <body>
-  <div class='container' id='content'>
-  </div> 
+  <div class='overlay' id='overlay'></div>
+  <div class='container' id='main'>
+    <span> Expression: <input type='text' id='inv' disabled=''></input></span>
+    <div id='content'>
+    </div>
+  </div>
 </body>
 </html>

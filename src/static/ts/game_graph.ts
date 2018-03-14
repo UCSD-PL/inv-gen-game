@@ -1,6 +1,6 @@
 import {Fun, BB, Stmt_T, Expr_T} from "./boogie";
-import {getUid, assert, single} from "./util"
-import {HasId, DiGraph, leaves} from "./graph"
+import {StrMap, getUid, assert, single, repeat} from "./util"
+import {HasId, DiGraph, leaves, splitEdge} from "./graph"
 
 export abstract class Node extends DiGraph implements HasId {
   id: string;
@@ -27,13 +27,20 @@ export class AssignNode extends Node {
   }
 }
 
+export class UserNode extends ExprNode {
+  label: string;
+  constructor(id: string, expr: Expr_T, label: string) {
+    super(id, expr);
+    this.label = label;
+  }
+}
 export class IfNode extends ExprNode { }
 export class AssumeNode extends ExprNode { }
 export class AssertNode extends ExprNode { }
 export class EmptyNode extends Node { }
 
 let assumeRE = / *assume *(.*);/;
-let assertRE = / *assume *(.*);/;
+let assertRE = / *assert *(.*);/;
 
 function split_assumes(stmts: Stmt_T[]): [Stmt_T[], Stmt_T[]] {
   let assumes: Stmt_T[] = [];
@@ -74,7 +81,7 @@ function is_assert(stmt: Stmt_T): boolean {
   return stmt.match(assertRE) !== null
 }
 
-type NodeMap ={ [label: string]: Node };
+export type NodeMap = StrMap<Node[]>;
 
 export function buildGraph(f: Fun): [Node, NodeMap] {
   let bbMap: NodeMap = {};
@@ -95,6 +102,7 @@ export function buildGraph(f: Fun): [Node, NodeMap] {
       }
   }
 
+  // TODO: Convert to bfs
   let workQ: [BB, Node][] = [[entryBB, entry]];
   while (workQ.length > 0) {
     let [bb, pred] = workQ.shift();
@@ -102,20 +110,31 @@ export function buildGraph(f: Fun): [Node, NodeMap] {
     let [assumes, rest] = split_assumes(bb.stmts);
 
     if (bb.id in bbMap) {
-      pred.addSuccessor(bbMap[bb.id])
+      assert(bbMap[bb.id].length == 1);
+      let header = bbMap[bb.id][0];
+      assert(header.predecessors.length == 1,
+        "All loop headers have only 2 in-edges");
+      let newHeader = new UserNode(getUid("nd"), "false", bb.id);
+      splitEdge(header.predecessors[0], header, newHeader);
+      pred.addSuccessor(newHeader)
+      bbMap[bb.id][0] = newHeader;
       continue;
     }
 
     node = mkNode(rest);
-    bbMap[bb.id] = node;
+    if (bb.stmts.length > 0)
+      bbMap[bb.id] = repeat(node, bb.stmts.length);
+    else
+      bbMap[bb.id] = [node];
     pred.addSuccessor(node);
+    console.log(bb.id, bbMap[bb.id], bb.stmts);
 
     if (bb.successors.length == 0) {
       // Exit node
     } else if (bb.successors.length == 1) {
       let nextBB = bb.successors[0];
       let [assumes, rest] = split_assumes(nextBB.stmts);
-      // No assumes(only branches have assumes) and non-empty node
+      // No assumes(only branch targets have assumes) and non-empty node
       assert(assumes.length == 0);
       workQ.push([nextBB, node])
     } else if (bb.successors.length == 2) {
@@ -133,7 +152,7 @@ export function buildGraph(f: Fun): [Node, NodeMap] {
       let ifExpr = lhsExpr;
       let ifNode = new IfNode(getUid("nd"), ifExpr);
       if (!(bb.id in bbMap)) {
-        bbMap[bb.id] = ifNode;
+        bbMap[bb.id][bbMap[bb.id].length] = ifNode;
       }
       node.addSuccessor(ifNode);
       workQ.push([lhsBB, ifNode])
@@ -141,6 +160,11 @@ export function buildGraph(f: Fun): [Node, NodeMap] {
     } else {
       assert(false, "Too many successors for bb " + bb);
     }
+  }
+
+  [assumes, rest] = split_assumes(entryBB.stmts);
+  for (let i = 0; i < assumes.length; i++) {
+    bbMap[entryBB.id][i] = entry;
   }
 
   return [entry, bbMap];
@@ -161,8 +185,10 @@ export function removeEmptyNodes(entry: Node, m: NodeMap): [Node, NodeMap] {
       nd.snip();
 
       for (let k in m) {
-        if (m[k] == nd) {
-          m[k] = nd.successors[0];
+        for (let i = 0; i < m[k].length; i++) {
+          if (m[k][i] == nd) {
+            m[k][i] = nd.successors[0];
+          }
         }
       }
 

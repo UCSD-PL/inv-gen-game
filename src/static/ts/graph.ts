@@ -100,3 +100,37 @@ export function leaves<T extends DiGraph>(n: T): T[] {
   bfs(n, addLeaf, null);
   return res;
 }
+
+export function splitEdge<T extends DiGraph>(fromN: T, toN: T, withN: T): void {
+  let succIdx = fromN.successors.indexOf(toN);
+  let predIdx = toN.predecessors.indexOf(fromN);
+  assert(succIdx != -1 && predIdx != -1,
+    "Edge " + fromN + "-> " + toN + " doesn't exist");
+
+  fromN.successors[succIdx] = withN;
+  toN.predecessors[predIdx] = withN;
+  withN.predecessors = [fromN];
+  withN.successors = [toN];
+}
+
+// Check if there is a path from formN to toN, and return it if there is.
+export function path<T extends DiGraph & HasId>(fromN: T, toN: T): T[] {
+  let pred: StrMap<T> = {};
+  assert(fromN != toN);
+
+  // TODO: Add a way for cb to terminate exploration
+  function cb(n: T, n1: T) { pred[n1.id] = n; }
+  bfs(fromN, cb, null);
+
+
+  if (!(toN.id in pred))
+    return null;
+
+  let path : T[] = [];
+  while (toN != fromN) {
+    path.unshift(toN);
+    toN = pred[toN.id];
+  }
+  path.unshift(fromN);
+  return path;
+}

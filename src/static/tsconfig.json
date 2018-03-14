@@ -53,6 +53,8 @@
     "ts/new_game.ts",
     "ts/boogie.ts",
     "ts/graph.ts",
+    "ts/geometry.ts",
+    "ts/animation.ts",
     "ts/game_graph.ts",
     "ts/tutorial.ts"
   ],
