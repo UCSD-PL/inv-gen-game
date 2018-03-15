@@ -4,21 +4,26 @@ import {parse} from "esprima"
 import {Node as ESNode} from "estree";
 import {invariantT} from "./types"
 import * as Phaser from "phaser"
+import {Point} from "phaser";
 import {topo_sort, bfs, path} from "./graph";
 import {Expr_T} from "./boogie";
 import {getUid, StrMap, assert, max, intersection, single} from "./util"
 import {Node, ExprNode, AssignNode, IfNode, AssumeNode, UserNode,
         AssertNode, buildGraph, removeEmptyNodes, exit, NodeMap} from "./game_graph"
-import {Size, Point, Vector, Path, add} from "./geometry"
 import {FiniteAnimation, Move} from "./animation"
 
 type InvNetwork = StrMap<ESNode[]>;
 type Violation = any[];
 type SpriteMap = StrMap<Phaser.Sprite>;
 type PointMap = StrMap<Point>;
+type Path = Point[];
 type PathMap = StrMap<Point[]>;
 
 type GameMode = "selected" | "waiting" | "animation" | "unselected";
+interface Size {
+  w: number;
+  h: number;
+}
 
 function isSound(vs: Violation[], nd: UserNode): boolean {
   // Return true if the invariants at node nd are sound despite
@@ -235,9 +240,9 @@ class SimpleGame {
   }
 
   mkAnimation(v: Violation): FiniteAnimation {
+    let valArr = this.getValPath(v);
     let script: any[] = [];
 
-    let valArr = this.getValPath(v);
     for (let i = 0; i < valArr.length-1; i++) {
       let [node, stmtIdx, vals] = valArr[i];
       let [nextNode, nextStmtIdx, nextVals] = valArr[i+1];
@@ -450,23 +455,24 @@ class SimpleGame {
       if (prev == null) {
         assert(next == this.entry);
         let w = final_size[next.id].w/2;
-        p = { x: 300, y: 0 };
+        p = new Point(300, 0);
       } else {
         prevP = pos[prev.id];
-        p = add(prevP, relp);
+        p = Point.add(prevP, relp);
       }
 
       pos[next.id] = p;
     }, null);
 
+    console.log(pos);
     // Compute paths
     function computeForwardEdge(prev: Node, next: Node) {
       if (prev == null) return;
       let prevSprite = spriteMap[prev.id];
       let nextSprite = spriteMap[next.id];
 
-      let start: Point = add(pos[prev.id], { x: prevSprite.width/2, y: prevSprite.height });
-      let end: Point = add(pos[next.id], { x: nextSprite.width/2, y: 0 });
+      let start: Point = Point.add(pos[prev.id], new Point(prevSprite.width/2, prevSprite.height));
+      let end: Point = Point.add(pos[next.id], new Point(nextSprite.width/2, 0));
 
       if (!(prev.id in edges)) {
         edges[prev.id] = {};
@@ -484,7 +490,7 @@ class SimpleGame {
       let toS: Size = { w: toSprite.width, h: toSprite.height };
 
       let toBlockS: Size = final_size[next.successors[0].successors[0].id];
-      let start = add(fromP, { x: -5, y: fromS.h/2 });
+      let start = Point.add(fromP, new Point(-5, fromS.h/2));
       let j1: Point = {x: toP.x - toBlockS.w,  y: start.y};
       let j2: Point = {x: j1.x,  y: (toP.y + toS.h/2)};
       let end: Point = {x: toP.x - 5,  y: (toP.y + toS.h/2)};

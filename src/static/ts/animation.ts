@@ -1,4 +1,3 @@
-import {Point} from "./geometry"
 import {assert} from "./util"
 import * as Phaser from "phaser"
 
@@ -71,12 +70,12 @@ export class AnimationSequence extends FiniteAnimation {
 
 export class Move extends FiniteAnimation {
   thing: Phaser.Sprite;
-  path: Point[];
+  path: Phaser.Point[];
   xPoints: number[];
   yPoints: number[];
   steps: number;
 
-  constructor(thing: Phaser.Sprite, path: Point[], steps?: number) {
+  constructor(thing: Phaser.Sprite, path: Phaser.Point[], steps?: number) {
     if (steps === undefined) {
       steps = 10;
     }
