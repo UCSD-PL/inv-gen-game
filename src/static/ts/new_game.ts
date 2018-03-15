@@ -15,6 +15,8 @@ import {FiniteAnimation, Move} from "./animation"
 type InvNetwork = StrMap<ESNode[]>;
 type Violation = any[];
 type SpriteMap = StrMap<Phaser.Sprite>;
+type PointMap = StrMap<Point>;
+type PathMap = StrMap<Point[]>;
 
 type GameMode = "selected" | "waiting" | "animation" | "unselected";
 
@@ -34,7 +36,6 @@ class SimpleGame {
   selected: UserNode;
   userNodes: UserNode[];
   bbToNode: NodeMap;
-  edges: StrMap<StrMap<Path>>;
   curAnim: FiniteAnimation;
   f: Fun;
   mode: GameMode;
@@ -42,6 +43,8 @@ class SimpleGame {
   width: number;
   height: number;
   textSprites: SpriteMap;
+  edges: StrMap<StrMap<Path>>;
+  pos: PointMap;
 
   constructor(graph: Node, n: NodeMap, f: Fun) {
     this.width = 800;
@@ -50,7 +53,6 @@ class SimpleGame {
       { preload: this.preload, create: this.create, update: this.update});
     this.entry = graph;
     this.userNodes = []
-    console.log("bbNode: ", n);
     this.bbToNode = n;
     this.edges = {};
     this.curAnim = null;
@@ -103,6 +105,21 @@ class SimpleGame {
     }
   }
 
+  drawEdge(path: Path, fill?: number): void {
+    let g = this.game.add.graphics(0, 0);
+    if (fill === undefined) {
+      fill = 0xffd900;
+    }
+    g.lineStyle(10, fill, 1);
+    for (var i in path) {
+      if (i == "0") {
+        g.moveTo(path[i].x, path[i].y);
+      } else {
+        g.lineTo(path[i].x, path[i].y);
+      }
+    }
+  }
+
   drawNode(nd: Node, pos: Point, size: number): Phaser.Sprite {
     let style = { font: size + "px Courier New, Courier, monospace", align: "center", fill: "#000000" }
     let text: string;
@@ -111,7 +128,6 @@ class SimpleGame {
       text = nd.stmts.join("\n");
     } else if (nd instanceof ExprNode) {
       text = nd.expr
-      console.log(nd.id, nd.expr);
       if (nd instanceof AssumeNode) {
         style.fill = "#00ff00"
       } else if (nd instanceof AssertNode) {
@@ -127,7 +143,6 @@ class SimpleGame {
     let body = this.game.add.text(pos.x, pos.y, text, style);
     if (nd instanceof UserNode) {
       // Add onclick handler
-      console.log(body);
       body.inputEnabled = true;
       body.events.onInputDown.add(() => { this.select(nd); }, this);
     }
@@ -152,9 +167,7 @@ class SimpleGame {
       let bbLbl = nd.label;
       invNet[bbLbl] = [parse(nd.expr)];
     }
-    console.log(invNet);
     rpc_checkSoundness("unsolved-new-benchmarks2", "i-sqrt", invNet, (res) => {
-      console.log("rpc_checkSoundness(): ", res);
       // TODO: Disable clicks
       // TODO: Show all violations
       // Show one violations
@@ -162,19 +175,41 @@ class SimpleGame {
         // Yay win!
         console.log("YAY");
       } else {
-        console.log("Got", res.length, "violations.");
-        console.log("Showing", res[0]);
+        console.log("Got", res.length, "violations:", res);
+        let p = this.getValPath(res[0]);
+        let red_edges: Set<string> = new Set();
+
+        for (let i = 0; i < p.length-1; i++) {
+          let [node, stmtIdx, vals] = p[i];
+          let [nextNode, nextStmtIdx, nextVals] = p[i+1];
+
+          if (node == nextNode) continue;
+          let leg = path(node, nextNode);
+
+          for (let j = 0; j < leg.length-1; j++) {
+            let legN = leg[j], legN1 = leg[j+1];
+            red_edges.add(legN.id+ legN1.id);
+          }
+        }
+
+        for (let id1 in this.edges) {
+          for (let id2 in this.edges[id1]) {
+            if (red_edges.has(id1 + id2)) {
+              this.drawEdge(this.edges[id1][id2], 0xff0000);
+            } else {
+              this.drawEdge(this.edges[id1][id2]);
+            }
+          }
+        }
         this.animate(this.mkAnimation(res[0]));
       }
     });
   }
 
-  mkAnimation(v: Violation): FiniteAnimation {
+  getValPath(v: Violation): [Node, number, any][] {
     let bbLabels: string[] = v[0];
     let values: any[] = v[1];
-    let script: any[] = [];
     let valArr: [Node, number, any][] = [];
-
     for (let i = 0; i < values.length; i++) {
       for (let j = 0; j < values[i].length; j++) {
         let lbl = bbLabels[i];
@@ -196,7 +231,13 @@ class SimpleGame {
         valArr.push([node, j, values[i][j]]);
       }
     }
+    return valArr;
+  }
 
+  mkAnimation(v: Violation): FiniteAnimation {
+    let script: any[] = [];
+
+    let valArr = this.getValPath(v);
     for (let i = 0; i < valArr.length-1; i++) {
       let [node, stmtIdx, vals] = valArr[i];
       let [nextNode, nextStmtIdx, nextVals] = valArr[i+1];
@@ -241,85 +282,23 @@ class SimpleGame {
     bfs(this.entry, (p: Node, n: Node) => {
       this.textSprites[n.id] = this.drawNode(n, { x: this.width, y: this.height }, 15);
     }, null);
-    // Compute sizes
-    let ownSizeMap: StrMap<Size> = {};
-    for (let id in this.textSprites) {
-      ownSizeMap[id] = { w: this.textSprites[id].width,
-                         h: this.textSprites[id].height }
-    }
+    // Compute layout
+    let [pos, edges] = this.computeLayout(this.textSprites);
 
-    let [sizeMap, relPosMap] = this.computeLayout(ownSizeMap);
-    console.log("Size Map: ", sizeMap);
-    console.log("relPosMap: ", relPosMap);
-    let pos: StrMap<Point> = {};
-    let g = this.game.add.graphics(0, 0);
-    g.lineStyle(10, 0xffd900, 1);
+    // Position sprites
+    for (let id in pos) {
+      this.textSprites[id].x = pos[id].x;
+      this.textSprites[id].y = pos[id].y;
 
-    let drawNode = (prev: Node, next: Node): void => {
-      let [dummy, relp] = relPosMap[next.id];
-      let prevP;
-      let p: Point;
-
-      assert(dummy == prev);
-      if (prev == null) {
-        assert(next == this.entry);
-        p = { x: sizeMap[this.entry.id].w/2, y: 0 };
-      } else {
-        prevP = pos[prev.id];
-        p = add(prevP, relp);
-      }
-
-      pos[next.id] = p;
-      let centerP = add(p, {y:0, x: -ownSizeMap[next.id].w/2});
-      this.textSprites[next.id].x = centerP.x;
-      this.textSprites[next.id].y = centerP.y;
-
-      if (prev != null) {
-        let start: Point = add(prevP, { x: 0, y: sizeMap[prev.id].h });
-        if (!(prev.id in this.edges)) {
-          this.edges[prev.id] = {};
-        }
-        this.edges[prev.id][next.id] = [start, p];
-        g.moveTo(start.x, start.y);
-        g.lineTo(p.x, p.y);
+      // Draw outgoing edges
+      for (let next in edges[id]) {
+        this.drawEdge(edges[id][next]);
       }
     }
 
-    let drawBackedge = (prev: Node, next: Node): void => {
-      let path : Path;
-      let fromP: Point = pos[prev.id];
-      let toP: Point = pos[next.id];
-      let fromS: Size = ownSizeMap[prev.id];
-      let toS: Size = ownSizeMap[next.id];
+    this.edges = edges;
+    this.pos = pos;
 
-      if (prev.successors[0].reachable().has(next)) {
-        // LHS
-        let toBlockS: Size = sizeMap[next.successors[0].successors[0].id];
-        let start = add(fromP, { x: -fromS.w/2, y: fromS.h/2 });
-        let j1: Point = {x: toP.x - toBlockS.w,  y: start.y};
-        let j2: Point = {x: j1.x,  y: (toP.y + toS.h/2)};
-        let end: Point = {x: toP.x - toS.w/2,  y: (toP.y + toS.h/2)};
-        path = [start, j1, j2, end];
-      } else {
-        // RHS
-        throw new Error("NYI");
-      }
-      if (!(prev.id in this.edges)) {
-        this.edges[prev.id] = {};
-      }
-      this.edges[prev.id][next.id] = path;
-
-      for (var i in path) {
-        if (i == "0") {
-          g.moveTo(path[i].x, path[i].y);
-        } else {
-          g.lineTo(path[i].x, path[i].y);
-        }
-      }
-    }
-
-    bfs(this.entry, drawNode, drawBackedge);
-    console.log("Pos: ", pos);
     let invBox = $("#inv")
     invBox.keyup((e) => {
       if(e.keyCode == 13)
@@ -331,14 +310,16 @@ class SimpleGame {
     })
   }
 
-  computeLayout(sizeMap: StrMap<Size>): [StrMap<Size>, StrMap<[Node, Point]>] {
+  computeLayout(spriteMap: SpriteMap): [PointMap, StrMap<PathMap>] {
     let topo: StrMap<number> = topo_sort(this.entry);
     let exitNode: Node = exit(this.entry);
     let width: StrMap<number> = {};
     let ifEndPoints: StrMap<[Node, Node, Node]> = {};
     let h_spacing = 50;
     let backedge_space = 30;
-    let relPos: StrMap<[Node, Point]> = {};
+    let relPos: StrMap<[Node, Point]>= {};
+    let pos: PointMap = {};
+    let edges: StrMap<PathMap> = {};
 
     // Pass 1: For each IfNode, compute its lhs and rhs terminators, and union point (if any)
     function if_endpoints(prev: Node, next: Node) {
@@ -356,16 +337,13 @@ class SimpleGame {
       assert(union_nd != null);
 
       if (union_nd == lhs) {
-        console.log("rhs is a loop, lhs exits");
         let rhs_endpoint = single(intersection(new Set(next.predecessors), rhs.reachable()));
         ifEndPoints[next.id] = [exitNode, rhs_endpoint, null];
       } else if (union_nd == rhs) {
-        console.log("lhs is a loop, rhs exits");
         let lhs_endpoint = single(intersection(new Set(next.predecessors), lhs.reachable()));
         ifEndPoints[next.id] = [lhs_endpoint, exitNode, null];
       } else {
         // If node with a union point
-        console.log("if node with 2 halfs and a continuation");
         let lhs_endpoint = single(intersection(new Set(union_nd.predecessors), lhs.reachable()));
         let rhs_endpoint = single(intersection(new Set(union_nd.predecessors), rhs.reachable()));
         ifEndPoints[next.id] = [lhs_endpoint, rhs_endpoint, union_nd];
@@ -374,12 +352,12 @@ class SimpleGame {
     }
 
     bfs(this.entry, if_endpoints, null);
-    console.log(ifEndPoints);
 
-    // Pass 3: Compute the widhts for each part of the graph
+    // Pass 2: Compute the widhts for each part of the graph
 
     function computeWidth(start: Node, end: Node): number {
-      let sz: Size = sizeMap[start.id];
+      let sprite = spriteMap[start.id];
+      let sz: Size = { w: sprite.width, h: sprite.height };
       let res: number;
 
       if (start == end) {
@@ -421,38 +399,38 @@ class SimpleGame {
     }
 
     computeWidth(this.entry, exitNode);
-    console.log(width);
 
-    // Pass 4: Compute relative positions:
+    // Pass 3: Compute relative positions:
     function compute_rel_pos(prev: Node, next: Node): void {
       let p: Point;
+      let sp = spriteMap[next.id];
       let myWidth = width[next.id];
 
       if (prev == null) {
-        p = { x: 0, y: 0};
+        p = { x: -sp.width/2, y: 0};
       } else {
-        let rel_y = sizeMap[prev.id].h + h_spacing;
+        let prevSp = spriteMap[prev.id];
+        let rel_y = prevSp.height + h_spacing;
         if (prev instanceof IfNode) {
           if (next == prev.successors[0]) {
             // Lhs
-            p = { x: -width[next.id]/2, y: rel_y };
+            p = { x: -width[next.id]/2-sp.width/2+prevSp.width/2, y: rel_y };
           } else {
             // Rhs
-            p = { x: width[next.id]/2, y: rel_y };
+            p = { x: width[next.id]/2-sp.width/2+prevSp.width/2, y: rel_y };
           }
         } else {
-          p = { x: 0, y: rel_y }
+          p = { x: prevSp.width/2-sp.width/2, y: rel_y }
         }
       }
 
       relPos[next.id] = [prev, p];
     }
     bfs(this.entry, compute_rel_pos, null);
-    console.log(relPos);
 
     let final_size: StrMap<Size> = {}
-    for(let id in sizeMap) {
-      final_size[id] = { w: width[id], h: sizeMap[id].h };
+    for(let id in spriteMap) {
+      final_size[id] = { w: width[id], h: spriteMap[id].height };
     }
 
     // Gather user nodes
@@ -462,7 +440,63 @@ class SimpleGame {
       }
     }, null)
 
-    return [final_size, relPos];
+    // Compute absolute positions
+    bfs(this.entry, (prev: Node, next: Node): void => {
+      let [dummy, relp] = relPos[next.id];
+      assert(dummy == prev);
+      let prevP;
+      let p: Point;
+
+      if (prev == null) {
+        assert(next == this.entry);
+        let w = final_size[next.id].w/2;
+        p = { x: 300, y: 0 };
+      } else {
+        prevP = pos[prev.id];
+        p = add(prevP, relp);
+      }
+
+      pos[next.id] = p;
+    }, null);
+
+    // Compute paths
+    function computeForwardEdge(prev: Node, next: Node) {
+      if (prev == null) return;
+      let prevSprite = spriteMap[prev.id];
+      let nextSprite = spriteMap[next.id];
+
+      let start: Point = add(pos[prev.id], { x: prevSprite.width/2, y: prevSprite.height });
+      let end: Point = add(pos[next.id], { x: nextSprite.width/2, y: 0 });
+
+      if (!(prev.id in edges)) {
+        edges[prev.id] = {};
+      }
+      edges[prev.id][next.id] = [start, end];
+    }
+
+    function computeBackedge(prev: Node, next: Node) {
+      let path : Path;
+      let fromP: Point = pos[prev.id];
+      let toP: Point = pos[next.id];
+      let fromSprite = spriteMap[prev.id];
+      let toSprite = spriteMap[next.id];
+      let fromS: Size = { w: fromSprite.width, h: fromSprite.height };
+      let toS: Size = { w: toSprite.width, h: toSprite.height };
+
+      let toBlockS: Size = final_size[next.successors[0].successors[0].id];
+      let start = add(fromP, { x: -5, y: fromS.h/2 });
+      let j1: Point = {x: toP.x - toBlockS.w,  y: start.y};
+      let j2: Point = {x: j1.x,  y: (toP.y + toS.h/2)};
+      let end: Point = {x: toP.x - 5,  y: (toP.y + toS.h/2)};
+      if (!(prev.id in edges)) {
+        edges[prev.id] = {};
+      }
+      edges[prev.id][next.id] = [start, j1, j2, end];
+    }
+
+    bfs(this.entry, computeForwardEdge, computeBackedge);
+
+    return [pos, edges];
   }
 }
 
@@ -472,8 +506,6 @@ $(document).ready(function() {
     let fun = Fun.from_json(lvl[1]);
     let [graph_entry, mapping] = buildGraph(fun);
     [graph_entry, mapping] = removeEmptyNodes(graph_entry, mapping);
-    console.log(graph_entry);
-    console.log(mapping);
     let game = new SimpleGame(graph_entry, mapping, fun);
   })
 })

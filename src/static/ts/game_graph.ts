@@ -127,7 +127,6 @@ export function buildGraph(f: Fun): [Node, NodeMap] {
     else
       bbMap[bb.id] = [node];
     pred.addSuccessor(node);
-    console.log(bb.id, bbMap[bb.id], bb.stmts);
 
     if (bb.successors.length == 0) {
       // Exit node
