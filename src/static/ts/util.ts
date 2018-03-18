@@ -22,6 +22,28 @@ export function intersection<T>(s1: Set<T>, s2: Set<T>): Set<T> {
   return res;
 }
 
+// Non-mutating union - s1 and s2 are unchanged
+export function union2<T>(s1: Set<T>, s2: Set<T>): Set<T> {
+  let res = new Set();
+  for (let e of s1) {
+    res.add(e);
+  }
+  for (let e of s2) {
+    res.add(e);
+  }
+  return res;
+}
+
+// Non-mutating difference - s1 and s2 are unchanged
+export function difference2<T>(s1: Set<T>, s2: Set<T>): Set<T> {
+  let res = new Set();
+  for (let e of s1) {
+    if (s2.has(e)) continue;
+    res.add(e);
+  }
+  return res;
+}
+
 export function max<T>(a: T[]): T {
   let max : T = a[0];
   for (let v of a) {
@@ -83,6 +105,95 @@ export function difference(s1: strset, s2: strset): strset {
     res.add(k);
   }
   return res;
+}
+
+type EqFun<T> = (a: T, b: T) => boolean;
+
+export function arrEq<T>(l1: T[], l2: T[], eq?: EqFun<T>): boolean {
+  if (l1.length != l2.length) return false;
+  for (let i1 in l1) {
+    if (!(i1 in l2) || l1[i1] != l2[i1]) return false;
+  }
+  return true;
+}
+
+export function diff<T>(a: StrMap<T>,
+                        b: StrMap<T>,
+                        eq?: EqFun<T>): [Set<string>, Set<string>, Set<string>] {
+  // Compute the triple <removed entries, changed entries, new  entries>
+  // between a and b
+  if (eq === undefined) {
+    eq = (x: T, y: T) => x == y;
+  }
+  let removed : Set<string> = new Set();
+  let changed: Set<string> = new Set();
+  let added : Set<string> = new Set();
+  for (let id in a) {
+    if (!(id in b)) {
+      removed.add(id);
+    } else if (!eq(a[id], b[id])) {
+      changed.add(id);
+    }
+  }
+
+  for (let id in b) {
+    if (!(id in a)) {
+      added.add(id);
+    }
+  }
+
+  return [removed, changed, added];
+}
+
+export function diff2<T>(a: StrMap<StrMap<T>>,
+                        b: StrMap<StrMap<T>>,
+                        eq?: EqFun<T>): [Set<[string, string]>,
+                                         Set<[string, string]>,
+                                         Set<[string, string]>]
+{
+  // Compute the triple <removed entries, changed entries, new  entries>
+  // between a and b
+  if (eq === undefined) {
+    eq = (x: T, y: T) => x == y;
+  }
+  let removed : Set<[string, string]> = new Set();
+  let changed: Set<[string, string]> = new Set();
+  let added : Set<[string, string]> = new Set();
+
+  let removedId: Set<string>;
+  let dummy: Set<string>;
+  let addedId: Set<string>;
+  [removedId, dummy, addedId] = diff(a, b);
+
+  for (let id1 of removedId) {
+    for (let id2 in a[id1]) {
+      removed.add([id1, id2]);
+    }
+  }
+
+  for (let id1 of addedId) {
+    for (let id2 in b[id1]) {
+      added.add([id1, id2]);
+    }
+  }
+
+  for (let id1 in a) {
+    if (!(id1 in b)) {
+      continue;
+    }
+    let [removedId2, changedId2, addedId2] = diff(a[id1], b[id1], eq);
+    for (let id2 of removedId2) {
+      removed.add([id1, id2])
+    }
+    for (let id2 of changedId2) {
+      changed.add([id1, id2])
+    }
+    for (let id2 of addedId2) {
+      added.add([id1, id2])
+    }
+  }
+
+  return [removed, changed, added];
 }
 
 export function isEmpty(s: strset): boolean {
@@ -609,4 +720,36 @@ export function queryAppend(qStr: string, append: string): string {
     qStr += "&";
   }
   return qStr + append;
+}
+
+export function mapMap<T, U>(m: StrMap<T>, f: (x:T)=>U): StrMap<U> {
+  let res: StrMap<U> = {};
+  for (let id in m) {
+    res[id] = f(m[id]);
+  }
+
+  return res;
+}
+
+export function mapMap2<T, U>(m: StrMap<StrMap<T>>, f: (x:T)=>U): StrMap<StrMap<U>> {
+  return mapMap<StrMap<T>, StrMap<U>>(m, (m: StrMap<T>): StrMap<U> => mapMap(m, f) );
+}
+
+
+export function copyMap<T>(m: StrMap<T>): StrMap<T> {
+  let res: StrMap<T> = {};
+  for (let id in m) {
+    res[id] = m[id];
+  }
+
+  return res;
+}
+
+export function copyMap2<T>(m: StrMap<StrMap<T>>): StrMap<StrMap<T>> {
+  let res: StrMap<StrMap<T>> = {};
+  for (let id in m) {
+    res[id] = copyMap(m[id]);
+  }
+
+  return res;
 }

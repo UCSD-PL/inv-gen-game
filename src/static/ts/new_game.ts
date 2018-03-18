@@ -7,7 +7,7 @@ import * as Phaser from "phaser"
 import {Point} from "phaser";
 import {topo_sort, bfs, path} from "./graph";
 import {Expr_T} from "./boogie";
-import {getUid, StrMap, assert, max, intersection, single} from "./util"
+import {getUid, StrMap, assert, max, intersection, single, diff, diff2, arrEq, union2, copyMap2, mapMap2, copyMap, difference2} from "./util"
 import {Node, ExprNode, AssignNode, IfNode, AssumeNode, UserNode,
         AssertNode, buildGraph, removeEmptyNodes, exit, NodeMap} from "./game_graph"
 import {FiniteAnimation, Move} from "./animation"
@@ -18,11 +18,27 @@ type SpriteMap = StrMap<Phaser.Sprite>;
 type PointMap = StrMap<Point>;
 type Path = Point[];
 type PathMap = StrMap<Point[]>;
+type EdgeMap = StrMap<StrMap<Path>>
+type EdgeState = "unknown" | "good" | "fail"
+type EdgeStates = StrMap<StrMap<EdgeState>>
+type Layout = [SpriteMap, PointMap, EdgeMap, EdgeStates];
+type Color = number;
 
 type GameMode = "selected" | "waiting" | "animation" | "unselected";
 interface Size {
   w: number;
   h: number;
+}
+
+function edgeColor(st: EdgeState): Color {
+  if (st == "unknown") {
+    return 0xb4b4b4;
+  } else if (st == "good") {
+    return 0x006400
+  } else {
+    assert(st == "fail")
+    return 0xff0000
+  }
 }
 
 function isSound(vs: Violation[], nd: UserNode): boolean {
@@ -48,8 +64,12 @@ class SimpleGame {
   width: number;
   height: number;
   textSprites: SpriteMap;
+
+  nodeSprites: SpriteMap;
   edges: StrMap<StrMap<Path>>;
+  edgeStates: EdgeStates;
   pos: PointMap;
+  graphics: Phaser.Graphics;
 
   constructor(graph: Node, n: NodeMap, f: Fun) {
     this.width = 800;
@@ -60,10 +80,12 @@ class SimpleGame {
     this.userNodes = []
     this.bbToNode = n;
     this.edges = {};
+    this.edgeStates = {};
     this.curAnim = null;
     this.f = f;
-    this.unselect();
+    this.nodeSprites = {};
     this.textSprites = {};
+    this.unselect();
   }
 
   game: Phaser.Game;
@@ -88,7 +110,111 @@ class SimpleGame {
     $("#overlay").prop("display", "block");
   }
 
-  animate(a: FiniteAnimation): void {
+  updateLayout(oldL: Layout, newL: Layout, onUpdate: ()=>any): void {
+    let [oldSpr, oldPos, oldEdges, oldEdgeState] = oldL;
+    let [newSpr, newPos, newEdges, newEdgeState] = newL;
+    let eraseEdges: Set<[string, string]>;
+    let repaintEdges: Set<[string, string]>;
+    // Todo: Better to render paths to textures and show them like that?
+
+    // Compute sprites to disappear and edges that need removal/repaint
+    let [removedSprites, changedSprites, addedSprites] = diff(oldSpr, newSpr);
+    let [dummy3, movedSprites, dummy4] = diff(oldPos, newPos);
+    let [removedEdges, changedEdges, addedEdges] = diff2(oldEdges, newEdges, arrEq);
+    let [dummy1, changedEdgeStates, dummy2] = diff2(oldEdgeState, newEdgeState);
+
+    console.log("OldEdges: ", oldEdges, " newEdges:", newEdges);
+    changedEdges = union2(changedEdges, changedEdgeStates);
+    movedSprites = difference2(movedSprites, changedSprites);
+    console.log("Sprites: (removed: ", removedSprites, ", changed:", changedSprites, ", added: ", addedSprites, ")")
+    console.log("Edges: (removed: ", removedEdges, ", changed:", changedEdges, ", added: ", addedEdges, ")")
+    console.log("EdgeStates: (removed: ", dummy1, ", changed:", changedEdgeStates, ", added: ", dummy2, ")")
+
+    let bye = this.game.add.group();
+    let hello = this.game.add.group();
+
+    // Compute sprites that need to disappear
+    for (let id of union2(removedSprites, changedSprites)) {
+      bye.add(oldSpr[id])
+    }
+    // Compute sprites that need to appear
+    for (let id of union2(addedSprites, changedSprites)) {
+      let s = newSpr[id];
+      s.x = newPos[id].x;
+      s.y = newPos[id].y;
+      hello.add(s);
+    }
+
+    // Compute animations for sprites that need to move
+    // TODO: fix this code when sprites change shape
+    let moveTweens: Phaser.Tween[] = [];
+    for (let id1 of movedSprites) {
+      let moveTw = this.game.add.tween(oldSpr[id1]);
+      moveTw.to({ x: newPos[id1].x, y: newPos[id1].y }, 1000, Phaser.Easing.Linear.None);
+      moveTweens.push(moveTw);
+    }
+
+    // Compute edges to erase/repaint
+    eraseEdges = union2(removedEdges, changedEdges);
+    repaintEdges = union2(changedEdges, addedEdges);
+
+    // Put it all toghether with continuations:
+    // Step 1: Remove nodes that need removal and erase all paths that need erasing
+    let step1 = (next: ()=>any) => {
+      console.log("Step1: erase edges ", eraseEdges, " and remove sprites ", bye);
+      for (let toErase of eraseEdges) {
+        let [id1, id2] = toErase;
+        this.drawEdge(this.graphics, oldEdges[id1][id2], 0xffffff);
+      }
+      if (bye.length > 0) {
+        let byeAnim = this.game.add.tween(bye);
+        byeAnim.to({alpha: 0}, 100, Phaser.Easing.Linear.None);
+        byeAnim.onComplete.add(() => { bye.kill(); next(); })
+        byeAnim.start();
+      } else {
+        next();
+      }
+    }
+    // Step 2: Move all sprites
+    let step2 = (next: ()=>any) => {
+      console.log("Step2: move tweens ", moveTweens);
+      if (moveTweens.length == 0) {
+        next();
+        return;
+      }
+
+      moveTweens[0].onComplete.add(next);
+      for (let t of moveTweens) {
+        t.start();
+      }
+    }
+
+    // Step 3: Repaint paths that need it, fade in new sprites
+    let step3 = (next: ()=>any) => {
+      console.log("Step3: repaint edges", repaintEdges, "and show sprites", hello);
+      for (let toRepaint of repaintEdges) {
+        let [id1, id2] = toRepaint;
+        this.drawEdge(this.graphics, newEdges[id1][id2], edgeColor(newEdgeState[id1][id2]));
+      }
+      if (hello.length > 0) {
+        let helloAnim = this.game.add.tween(hello);
+        helloAnim.to({alpha: 1}, 100, Phaser.Easing.Linear.None);
+        helloAnim.onComplete.add(() => { next(); })
+        helloAnim.start();
+      } else {
+        next();
+      }
+    }
+
+    // Kick it off
+    step1( () => { step2(() => { step3(onUpdate) }); });
+    this.nodeSprites = newSpr;
+    this.pos = newPos;
+    this.edges = newEdges;
+    this.edgeStates = newEdgeState;
+  }
+
+  animateViolation(a: FiniteAnimation): void {
     $("#overlay").prop("display", "block");
     this.mode = "animation";
     this.curAnim = a;
@@ -110,8 +236,7 @@ class SimpleGame {
     }
   }
 
-  drawEdge(path: Path, fill?: number): void {
-    let g = this.game.add.graphics(0, 0);
+  drawEdge(g: Phaser.Graphics, path: Path, fill?: number): void {
     if (fill === undefined) {
       fill = 0xffd900;
     }
@@ -176,13 +301,17 @@ class SimpleGame {
       // TODO: Disable clicks
       // TODO: Show all violations
       // Show one violations
+      let curLayout: Layout = [this.nodeSprites, this.pos, this.edges, this.edgeStates];
+      let newSprites: EdgeStates = copyMap(this.nodeSprites);
+      let newStates: EdgeStates = mapMap2(this.edgeStates, (x: EdgeState):EdgeState=>"good");
+      let onUpdate: ()=>any = () => 0;
       if (res.length == 0) {
         // Yay win!
         console.log("YAY");
       } else {
         console.log("Got", res.length, "violations:", res);
         let p = this.getValPath(res[0]);
-        let red_edges: Set<string> = new Set();
+        let redEdges: Set<[string, string]> = new Set();
 
         for (let i = 0; i < p.length-1; i++) {
           let [node, stmtIdx, vals] = p[i];
@@ -193,21 +322,18 @@ class SimpleGame {
 
           for (let j = 0; j < leg.length-1; j++) {
             let legN = leg[j], legN1 = leg[j+1];
-            red_edges.add(legN.id+ legN1.id);
+            newStates[legN.id][legN1.id] = "fail"
           }
         }
 
-        for (let id1 in this.edges) {
-          for (let id2 in this.edges[id1]) {
-            if (red_edges.has(id1 + id2)) {
-              this.drawEdge(this.edges[id1][id2], 0xff0000);
-            } else {
-              this.drawEdge(this.edges[id1][id2]);
-            }
-          }
+        onUpdate= () => {
+          console.log("layout update done");
+          this.animateViolation(this.mkAnimation(res[0]));
         }
-        this.animate(this.mkAnimation(res[0]));
       }
+      newSprites[this.selected.id] = this.drawNode(this.selected, new Point(800, 600), 15)
+      let newLayout: Layout = [newSprites, this.pos, this.edges, newStates];
+      this.updateLayout(curLayout, newLayout, onUpdate);
     });
   }
 
@@ -274,7 +400,7 @@ class SimpleGame {
     msg.add(bug);
     let style = { font: "10px Courier New, Courier, monospace", fill: "#000000" }
     msg.add(this.game.add.text(20, 0, envToText(script[0][1])), style);
-    let anim = new Move(msg, points, 80);
+    let anim = new Move(msg, points, 100);
     anim.onDone(() => { msg.destroy(); });
 
     return anim;
@@ -282,6 +408,7 @@ class SimpleGame {
 
   create: any = () => {
     let fontSize = 15;
+    this.graphics = this.game.add.graphics(0, 0);
 
     // Build text off-screen
     bfs(this.entry, (p: Node, n: Node) => {
@@ -289,20 +416,22 @@ class SimpleGame {
     }, null);
     // Compute layout
     let [pos, edges] = this.computeLayout(this.textSprites);
-
-    // Position sprites
-    for (let id in pos) {
-      this.textSprites[id].x = pos[id].x;
-      this.textSprites[id].y = pos[id].y;
-
-      // Draw outgoing edges
-      for (let next in edges[id]) {
-        this.drawEdge(edges[id][next]);
+    let edgeStates: StrMap<StrMap<EdgeState>> = {};
+    for (let id1 in edges) {
+      edgeStates[id1] = {}
+      for (let id2 in edges[id1]) {
+        edgeStates[id1][id2] = "unknown";
       }
     }
+    let newLayout: Layout = [this.textSprites, pos, edges, edgeStates];
+    let oldLayout: Layout = [{}, {}, {}, {}];
+
+    // Position sprites
+    this.updateLayout(oldLayout, newLayout, ()=> {console.log("Yay I updated")});
 
     this.edges = edges;
     this.pos = pos;
+    this.edgeStates = edgeStates;
 
     let invBox = $("#inv")
     invBox.keyup((e) => {
