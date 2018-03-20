@@ -11,12 +11,19 @@ export abstract class FiniteAnimation extends Animation {
   private _current: number;
   private _total: number;
   private _doneCb: (()=>any)[];
+  private _startCb: (()=>any)[];
 
   constructor(total: number) {
     super();
     this._current = -1;
     this._total = total;
     this._doneCb = [];
+    this._startCb = [];
+  }
+
+  protected decCtr(): void {
+    assert(this._current >= 0);
+    this._current --;
   }
 
   protected bumpCtr(): void {
@@ -28,14 +35,29 @@ export abstract class FiniteAnimation extends Animation {
       }
     }
   };
-  protected resetCtr(): void { this._current = 0; };
+
+  protected jumpCtr(to: number): void {
+    assert (to >= 0 && to < this.total());
+    this._current = to;
+  }
+
+  public resetCtr(): void { this._current = 0; };
   protected disableCtr(): void { this._current = -1; };
   protected total(): number { return this._total; }
-  protected current(): number { return this._current; }
+  public current(): number { return this._current; }
+  public onStart(cb: ()=> any): void { this._startCb.push(cb); }
   public onDone(cb: ()=> any): void { this._doneCb.push(cb); }
+  abstract back():  void;
+  abstract jumpToEnd():  void;
 
   playing(): boolean {
     return this.current() >= 0 && this.current() < this.total();
+  }
+
+  start() {
+    for(let cb of this._startCb) {
+      cb();
+    }
   }
 
 }
@@ -49,20 +71,46 @@ export class AnimationSequence extends FiniteAnimation {
     this.animations = anims;
   }
 
-  tick() {
-    assert(this.playing());
+  back() {
     let cur = this.current();
-    if (this.animations[cur].playing()) {
-      this.animations[cur].tick();
+    assert(cur >= 0);
+    if (this.animations[cur].current() > 0) {
+      this.animations[cur].back();
     } else {
-      this.bumpCtr();
-      if (cur < this.animations.length) {
-        this.animations[cur].start();
+      this.decCtr();
+      if (cur >= 0) {
+        this.animations[cur].jumpToEnd();
       }
     }
   }
 
+  tick() {
+    let cur = this.current();
+    assert(this.playing());
+    if (this.animations[cur].playing()) {
+      this.animations[cur].tick();
+    } else {
+      this.bumpCtr();
+      if (this.playing()) {
+        this.animations[this.current()].start();
+      }
+    }
+  }
+
+  jumpCtr(to: number) {
+    this.jumpCtr(to);
+    let curAnim: FiniteAnimation = this.animations[this.current()];
+    curAnim.resetCtr();
+  }
+
+  jumpToEnd() {
+    this.jumpCtr(this.animations.length-1);
+    let curAnim: FiniteAnimation = this.animations[this.current()];
+    curAnim.jumpToEnd();
+  }
+
   start(): void {
+    super.start();
     this.resetCtr();
     this.animations[this.current()].start();
   }
@@ -86,15 +134,30 @@ export class Move extends FiniteAnimation {
     this.yPoints = path.map((p)=>p.y);
   }
 
-  tick() {
-    assert(this.playing());
+  private position(): void {
     let cur = this.current(), total = this.total();
     this.thing.x = Phaser.Math.linearInterpolation(this.xPoints, (cur+1)/total);
     this.thing.y = Phaser.Math.linearInterpolation(this.yPoints, (cur+1)/total);
+  }
+
+  tick() {
+    assert(this.playing());
+    this.position();
     this.bumpCtr();
   }
 
+  back() {
+    this.decCtr();
+    this.position();
+  }
+
+  jumpToEnd() {
+    this.jumpCtr(this.total()-1);
+    this.position();
+  }
+
   start(): void {
+    super.start();
     this.resetCtr();
     this.thing.x = this.xPoints[0];
     this.thing.y = this.yPoints[0];
