@@ -385,7 +385,13 @@ class SimpleGame {
       t.onComplete.add((obj: any, tw: Phaser.Tween) => {
         if (this.animationStopRequested) {
           this.animationStopRequested = false;
+          let rest = tw.chainedTween;
           tw.chainedTween = null;
+          // Cleanup remaining tweens
+          while (rest != null) {
+            rest.manager.remove(rest);
+            rest = rest.chainedTween;
+          }
         }
       });
 
