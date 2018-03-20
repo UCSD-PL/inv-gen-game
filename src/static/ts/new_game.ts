@@ -244,11 +244,13 @@ class SimpleGame {
     }
 
     // Kick it off
-    step1( () => { step2(() => { step3(onUpdate) }); });
-    this.nodeSprites = newSpr;
-    this.pos = newPos;
-    this.edges = newEdges;
-    this.edgeStates = newEdgeState;
+    step1( () => { step2(() => { step3(() => {
+      this.nodeSprites = newSpr;
+      this.pos = newPos;
+      this.edges = newEdges;
+      this.edgeStates = newEdgeState;
+      onUpdate();
+    }) }); });
   }
 
   _controlsPlaying(): void {
@@ -558,7 +560,6 @@ class SimpleGame {
         }
       }
       let newLayout: Layout = [this.nodeSprites, this.pos, this.edges, newStates];
-      console.log(this.edgeStates, newStates)
       this.updateLayout(curLayout, newLayout, onDone);
     });
   }
@@ -578,7 +579,8 @@ class SimpleGame {
       let curLayout: Layout = [this.nodeSprites, this.pos, this.edges, this.edgeStates];
       let newSprites: EdgeStates = copyMap(this.nodeSprites);
       newSprites[this.selected.id] = this.drawNode(this.selected, new Point(800, 600), 15)
-      let newLayout: Layout = [this.nodeSprites, this.pos, this.edges, this.edgeStates];
+      let newLayout: Layout = [newSprites, this.pos, this.edges, this.edgeStates];
+      this.updateLayout(curLayout, newLayout, ()=>{});
     });
   }
 
