@@ -34,6 +34,9 @@ interface Size {
   h: number;
 }
 
+let bugWidth = 20;
+let bugHeight = 25;
+
 function edgeColor(st: EdgeState): Color {
   if (st == "unknown") {
     return 0xb4b4b4;
@@ -287,7 +290,7 @@ class SimpleGame {
       this.hideViolation();
     }
     let [buttonSprite, v, trace, traceLayout]: ViolationInfo = this.curViolations[idx];
-    let style = { font: "15px Courier New, Courier, monospace", fill: "#000000" }
+    let style = { font: "15px Courier New, Courier, monospace", fill: "#000000", backgroundColor: "#ffffff" }
     let [dummy, startPoint, startText] = traceLayout[0]
     let err = this.game.add.group()
     let bug = this.getSprite("bug", 0, 0)
@@ -851,12 +854,13 @@ class SimpleGame {
 
     // Compute paths
     function computeForwardEdge(prev: Node, next: Node) {
+      // Forward edges are always vertical
       if (prev == null) return;
       let prevSprite = spriteMap[prev.id];
       let nextSprite = spriteMap[next.id];
 
-      let start: Point = Point.add(pos[prev.id], new Point(prevSprite.width/2, prevSprite.height));
-      let end: Point = Point.add(pos[next.id], new Point(nextSprite.width/2, 0));
+      let start: Point = Point.add(pos[prev.id], new Point(prevSprite.width/2, prevSprite.height + bugHeight/2));
+      let end: Point = Point.add(pos[next.id], new Point(nextSprite.width/2, -bugHeight/2));
 
       if (!(prev.id in edges)) {
         edges[prev.id] = {};
@@ -865,6 +869,7 @@ class SimpleGame {
     }
 
     function computeBackedge(prev: Node, next: Node) {
+      // Backwards edges always consist of 3 lines - left, up, right
       let path : Path;
       let fromP: Point = pos[prev.id];
       let toP: Point = pos[next.id];
@@ -874,10 +879,10 @@ class SimpleGame {
       let toS: Size = { w: toSprite.width, h: toSprite.height };
 
       let toBlockS: Size = final_size[next.successors[0].successors[0].id];
-      let start = Point.add(fromP, new Point(-5, fromS.h/2));
+      let start = Point.add(fromP, new Point(-bugWidth/2, fromS.h/2));
       let j1: Point = {x: toP.x - toBlockS.w,  y: start.y};
       let j2: Point = {x: j1.x,  y: (toP.y + toS.h/2)};
-      let end: Point = {x: toP.x - 5,  y: (toP.y + toS.h/2)};
+      let end: Point = {x: toP.x - bugWidth/2,  y: (toP.y + toS.h/2)};
       if (!(prev.id in edges)) {
         edges[prev.id] = {};
       }
