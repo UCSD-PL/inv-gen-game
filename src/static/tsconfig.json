@@ -53,7 +53,6 @@
     "ts/new_game.ts",
     "ts/boogie.ts",
     "ts/graph.ts",
-    "ts/animation.ts",
     "ts/game_graph.ts",
     "../../node_modules/phaser-ce/typescript/phaser.d.ts",
     "ts/tutorial.ts"

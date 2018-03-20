@@ -3,6 +3,14 @@ export type directionT = "up" | "down" | "left" | "right"
 export type StrMap<T> = { [key: string]: T};
 export type strset = Set<string>
 
+export function reversed<T>(l: T[]): T[] {
+  let res: T[] = [];
+  for (let e of l) {
+    res.unshift(e)
+  }
+  return res;
+}
+
 export function repeat<T>(e: T, n: number): T[] {
   let res: T[] = [];
   for(let i = 0; i < n; i++) {

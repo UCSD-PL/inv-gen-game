@@ -25,7 +25,6 @@ requirejs.config({
     "game_graph": "build/ts/game_graph",
     "graph": "build/ts/graph",
     "geometry": "build/ts/geometry",
-    "animation": "build/ts/animation",
     "new_game": "build/ts/new_game",
     "phaser": "./phaser"
   },
