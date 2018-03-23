@@ -20,7 +20,7 @@ export class TextIcon extends Phaser.Group {
             this._text = text;
             text.x = icon.width + 5;
         } else {
-            let style = { font: fontSize + "px Courier New, Courier, monospace", align: "center", fill: "#000000" }
+            let style = { font: fontSize + "px Courier New, Courier, monospace", align: "center", fill: "#000000", backgroundColor: "#ffffff" }
             this._text = game.add.text(icon.width/2+5, 0, text, style);
         }
         this._text.y = -this._text.height/2
@@ -40,7 +40,7 @@ export class TextIcon extends Phaser.Group {
 
     public setText(s: string) {
         this._text.text = s;
-        this._text.y = this._icon.height/2-this._text.height/2
+        this._text.y = -this._text.height/2
     }
 
     public hideText(): void {

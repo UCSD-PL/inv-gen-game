@@ -201,7 +201,7 @@ class SimpleGame {
   graphics: Phaser.Graphics;
   curViolations: ViolationInfo;
   spritePool: SpritePool;
-  selectedViolation: [Phaser.Sprite, Phaser.Text, number, number];
+  selectedViolation: [TextIcon, number, number];
   animationStopRequested: boolean;
 
   constructor(graph: Node, n: NodeMap, f: Fun) {
@@ -407,13 +407,12 @@ class SimpleGame {
 
   hideViolation(): void {
     assert (this.selectedViolation != null)
-    let [err, text, idx, step] = this.selectedViolation;
-    let bug = err.children[0];
-    err.remove(bug);
-    this.game.add.existing(bug);
-    this.putSprite(bug);
-    err.destroy(true);
-    text.destroy();
+    let [err, idx, step] = this.selectedViolation;
+    let icon = err.icon();
+    (err as Phaser.Group).remove(icon);
+    this.game.add.existing(icon);
+    this.putSprite(icon);
+    (err as Phaser.Group).destroy(true);
     this.selectedViolation = null;
     this._controlsDisable();
   }
@@ -423,16 +422,11 @@ class SimpleGame {
       this.hideViolation();
     }
     let [buttonSprite, v, trace, traceLayout]: ViolationInfo = this.curViolations[idx];
-    let style = { font: "15px Courier New, Courier, monospace", fill: "#000000", backgroundColor: "#ffffff" }
     let [dummy, startPoint, startText] = traceLayout[0]
-    let err = this.game.add.group()
-    let bug = this.getSprite("bug", 0, 0)
-    let text = this.game.add.text(20, 0, "", style);
-    err.add(bug);
-    err.add(text);
-    bug.exists = true;
-    this.selectedViolation = [err, text, idx, 0];
+    let err = new TextIcon(this.game, this.getSprite("bug", 0, 0), "", "trace_bug_" + idx, 0, 0, true)
+    this.selectedViolation = [err, idx, 0];
     this.positionBug(0);
+    err.icon().exists = true;
     this._controlsStopped();
   }
 
@@ -440,7 +434,7 @@ class SimpleGame {
     // Set the position and text of the bug to correspond with given step in the
     // trace If that step is traveling along edge paths, place it at start of
     // that path.
-    let [err, text, idx, curStep] = this.selectedViolation;
+    let [err, idx, curStep] = this.selectedViolation;
     let [buttonSprite, v, trace, traceLayout]: ViolationInfo = this.curViolations[idx];
 
     let [dummy, pos, newText]: TraceLayoutStep = traceLayout[step];
@@ -450,10 +444,9 @@ class SimpleGame {
     } else {
       finalPos = pos[0];
     }
-    let bug = err.children[0];
-    err.x = finalPos.x - bug.width/2; err.y = finalPos.y - bug.width/2;
-    text.text = newText;
-    this.selectedViolation[3] = step;
+    err.setPos(finalPos.x, finalPos.y)
+    err.setText(newText)
+    this.selectedViolation[2] = step;
   }
 
   private getBugTween(err: Phaser.Group,
@@ -462,7 +455,6 @@ class SimpleGame {
     let inc: number = (forward ? 1 : -1);
     let t: Phaser.Tween = this.game.add.tween(err);
     let text = err.children[1];
-    let icon = err.children[0];
     let nextStep = curStep + inc;
 
     let pickSide = (p: Path): Point => (forward? p[0] : p[p.length-1]);
@@ -491,16 +483,15 @@ class SimpleGame {
     }
 
     for (let pt of path) {
-      t.to({x:pt.x - icon.width/2, y:pt.y - icon.width/2}, 500, Phaser.Easing.Quadratic.Out)
+      t.to({x:pt.x, y:pt.y}, 500, Phaser.Easing.Quadratic.Out)
     }
-    t.onComplete.add(()=> {text.text = newText;this.selectedViolation[3] = nextStep;})
+    t.onComplete.add(()=> {text.text = newText;this.selectedViolation[2] = nextStep;})
     return t;
   }
 
   playBug(): void {
-    let [err, text, idx, curStep] = this.selectedViolation;
+    let [err, idx, curStep] = this.selectedViolation;
     let [buttonSprite, v, trace, traceLayout]: ViolationInfo = this.curViolations[idx];
-    let bug = err.children[0];
     let oldT: Phaser.Tween = null;
     let first: Phaser.Tween = null;
     let t, last: Phaser.Tween;
@@ -539,7 +530,7 @@ class SimpleGame {
   }
 
   stepForward(): void {
-    let [err, text, idx, curStep] = this.selectedViolation;
+    let [err, idx, curStep] = this.selectedViolation;
     let [buttonSprite, v, trace, traceLayout]: ViolationInfo = this.curViolations[idx];
     if (curStep >= traceLayout.length-1) {
       this.positionBug(0);
@@ -550,7 +541,7 @@ class SimpleGame {
   }
 
   stepBackwards(): void {
-    let [err, text, idx, curStep] = this.selectedViolation;
+    let [err, idx, curStep] = this.selectedViolation;
     let [buttonSprite, v, trace, traceLayout]: ViolationInfo = this.curViolations[idx];
 
     if (curStep <= 0)  {
@@ -628,19 +619,19 @@ class SimpleGame {
   rightOf(n: Node): Point {
     // Get the point left of n in the current layout
     let sp = this.nodeSprites[n.id];
-    return Point.add(this.pos[n.id], new Point(sp.getWidth(), sp.getHeight()/2));
+    return Point.add(this.pos[n.id], new Point(sp.getWidth(), 0));
   }
 
   under(n: Node): Point {
     // Get the point under n in the current layout
     let sp = this.nodeSprites[n.id];
-    return Point.add(this.pos[n.id], new Point(sp.getWidth()/2, sp.getHeight()));
+    return Point.add(this.pos[n.id], new Point(0, sp.getHeight()/2));
   }
 
   above(n: Node): Point {
     // Get the point above n in the current layout
     let sp = this.nodeSprites[n.id];
-    return Point.add(this.pos[n.id], new Point(sp.getWidth()/2, 0));
+    return Point.add(this.pos[n.id], new Point(0, -sp.getHeight()/2));
   }
 
   checkInvs: any = (invs: InvNetwork, onDone: ()=>void) => {
@@ -675,7 +666,7 @@ class SimpleGame {
             }
           }
           let blamed = this.getFaultyNode(trace);
-          let bugPos = this.rightOf(blamed).add(10 + this.curViolations.length * 40, 0);
+          let bugPos = this.rightOf(blamed).add(this.curViolations.length * 40, -10);
           let bug = this.getSprite("bug", bugPos.x, bugPos.y, true)
           let traceLayout = this.layoutTrace(trace);
 
