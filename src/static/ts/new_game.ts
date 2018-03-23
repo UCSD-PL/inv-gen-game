@@ -10,10 +10,11 @@ import {Expr_T} from "./boogie";
 import {getUid, StrMap, assert, max, intersection, single, diff, diff2, arrEq, union2, copyMap2, mapMap2, copyMap, difference2, reversed} from "./util"
 import {Node, ExprNode, AssignNode, IfNode, AssumeNode, UserNode,
         AssertNode, buildGraph, removeEmptyNodes, exit, NodeMap} from "./game_graph"
+import {TextIcon} from "./texticon"
 
 type InvNetwork = StrMap<ESNode[]>;
 type Violation = any[];
-type SpriteMap = StrMap<Phaser.Sprite>;
+type SpriteMap = StrMap<TextIcon>;
 type PointMap = StrMap<Point>;
 type Path = Point[];
 type PathMap = StrMap<Point[]>;
@@ -37,6 +38,121 @@ interface Size {
 let bugWidth = 20;
 let bugHeight = 25;
 
+export class SourceIcon extends TextIcon {
+    constructor(game: SimpleGame, nd: AssumeNode, x?: number, y?: number) {
+      super(game.game, game.getSprite("source", 0, 0, true), nd.expr, "src_" + nd.id, x, y);
+    }
+    public exitPoint(): Phaser.Point {
+        return new Phaser.Point(
+            this._icon.x + this._icon.width/2,
+            this._icon.y + this._icon.height
+        )
+    }
+}
+
+export class SinkIcon extends TextIcon {
+    constructor(game: SimpleGame, nd: AssertNode, x?: number, y?: number) {
+      super(game.game, game.getSprite("sink", 0, 0, true), nd.expr, "sink_" + nd.id, x, y);
+    }
+    public entryPoint(): Phaser.Point {
+        return new Phaser.Point(
+            this._icon.x + this._icon.width/2,
+            this._icon.y
+        )
+    }
+}
+
+export class BranchIcon extends TextIcon {
+    constructor(game: SimpleGame, nd: AssertNode, x?: number, y?: number) {
+      super(game.game, game.getSprite("branch", 0, 0, true), nd.expr, "br_" + nd.id, x, y);
+    }
+    public entryPoint(): Phaser.Point {
+        return new Phaser.Point(
+            this._icon.x + this._icon.width/2,
+            this._icon.y
+        )
+    }
+    public lhsExitPoint(): Phaser.Point {
+        return new Phaser.Point(
+            this._icon.x + this._icon.width/4,
+            this._icon.y + this._icon.height
+        )
+    }
+
+    public rhsExitPoint(): Phaser.Point {
+        return new Phaser.Point(
+            this._icon.x + 3*this._icon.width/4,
+            this._icon.y + this._icon.height
+        )
+    }
+}
+
+export class InputOutputIcon extends TextIcon {
+    // Code duplication with OutputIcon - don't want to implement mixins just
+    // for this one case
+    constructor(game: SimpleGame, nd: UserNode, x?: number, y?: number) {
+      super(game.game, game.getSprite("funnel", 0, 0, true), nd.expr, "br_" + nd.id, x, y);
+      this.icon().inputEnabled = true;
+      this.icon().events.onInputDown.add(() => { game.select(nd); }, this);
+    }
+    public entryPoint(): Phaser.Point {
+        return new Phaser.Point(
+            this._icon.x + this._icon.width/2,
+            this._icon.y
+        )
+    }
+    public exitPoint(): Phaser.Point {
+        return new Phaser.Point(
+            this._icon.x + this._icon.width/2,
+            this._icon.y + this._icon.height
+        )
+    }
+}
+
+export class TransformerIcon extends TextIcon {
+    // Code duplication with OutputIcon - don't want to implement mixins just
+    // for this one case
+    constructor(game: SimpleGame, nd: AssignNode, x?: number, y?: number) {
+      let text = nd.stmts.join("\n");
+      super(game.game, game.getSprite("gearbox", 0, 0, true), text, "br_" + nd.id, x, y, false);
+      this.icon().inputEnabled = true;
+      this.icon().events.onInputDown.add(() => {
+        game.transformLayout(() => this.toggleText());
+      }, this);
+    }
+    public entryPoint(): Phaser.Point {
+        return new Phaser.Point(
+            this._icon.x + this._icon.width/2,
+            this._icon.y
+        )
+    }
+    public exitPoint(): Phaser.Point {
+        return new Phaser.Point(
+            this._icon.x + this._icon.width/2,
+            this._icon.y + this._icon.height
+        )
+    }
+}
+
+function getEntry(ti: TextIcon): Phaser.Point {
+  if (ti instanceof SinkIcon ||
+      ti instanceof BranchIcon ||
+      ti instanceof TransformerIcon ||
+      ti instanceof InputOutputIcon) {
+    return ti.entryPoint();
+  }
+  assert(false, "Node [" + ti.getText() + "] doesn't have an entry point.")
+}
+
+function getExit(ti: TextIcon): Phaser.Point {
+  if (ti instanceof SourceIcon ||
+      ti instanceof TransformerIcon ||
+      ti instanceof InputOutputIcon) {
+    return ti.exitPoint();
+  }
+  assert(false, "Node [" + ti.getText() + "] doesn't have an exit point.")
+}
+
 function edgeColor(st: EdgeState): Color {
   if (st == "unknown") {
     return 0xb4b4b4;
@@ -46,6 +162,12 @@ function edgeColor(st: EdgeState): Color {
     assert(st == "fail")
     return 0xff0000
   }
+}
+
+function pathEq(p1: Path, p2: Path): boolean {
+    return arrEq(p1, p2, (pt1: Point, pt2: Point) => {
+      return (pt1.x == pt2.x && pt1.y == pt2.y);
+    })
 }
 
 function isSound(vs: Violation[], nd: UserNode): boolean {
@@ -151,6 +273,16 @@ class SimpleGame {
     $("#overlay").prop("display", "block");
   }
 
+  transformLayout(modifier: ()=>any): void {
+    // Apply modifier to change the visual layout (not adding/removing sprites),
+    // compute the new layout, and run the animations to transition
+    let oldLayout: Layout = [this.nodeSprites, this.pos, this.edges, this.edgeStates];
+    modifier();
+    let [newPos, newEdges] = this.computeLayout(this.nodeSprites);
+    let newLayout: Layout = [this.nodeSprites, newPos, newEdges, this.edgeStates];
+    this.updateLayout(oldLayout, newLayout, ()=>{});
+  }
+
   updateLayout(oldL: Layout, newL: Layout, onUpdate: ()=>any): void {
     let [oldSpr, oldPos, oldEdges, oldEdgeState] = oldL;
     let [newSpr, newPos, newEdges, newEdgeState] = newL;
@@ -161,7 +293,7 @@ class SimpleGame {
     // Compute sprites to disappear and edges that need removal/repaint
     let [removedSprites, changedSprites, addedSprites] = diff(oldSpr, newSpr);
     let [dummy3, movedSprites, dummy4] = diff(oldPos, newPos);
-    let [removedEdges, changedEdges, addedEdges] = diff2(oldEdges, newEdges, arrEq);
+    let [removedEdges, changedEdges, addedEdges] = diff2(oldEdges, newEdges, pathEq);
     let [dummy1, changedEdgeStates, dummy2] = diff2(oldEdgeState, newEdgeState);
 
     changedEdges = union2(changedEdges, changedEdgeStates);
@@ -177,8 +309,7 @@ class SimpleGame {
     // Compute sprites that need to appear
     for (let id of union2(addedSprites, changedSprites)) {
       let s = newSpr[id];
-      s.x = newPos[id].x;
-      s.y = newPos[id].y;
+      s.setPos(newPos[id]);
       hello.add(s);
     }
 
@@ -187,7 +318,7 @@ class SimpleGame {
     let moveTweens: Phaser.Tween[] = [];
     for (let id1 of movedSprites) {
       let moveTw = this.game.add.tween(oldSpr[id1]);
-      moveTw.to({ x: newPos[id1].x, y: newPos[id1].y }, 1000, Phaser.Easing.Linear.None);
+      moveTw.to({ x: newPos[id1].x, y: newPos[id1].y }, 250, Phaser.Easing.Quadratic.Out);
       moveTweens.push(moveTw);
     }
 
@@ -205,7 +336,7 @@ class SimpleGame {
       }
       if (bye.length > 0) {
         let byeAnim = this.game.add.tween(bye);
-        byeAnim.to({alpha: 0}, 100, Phaser.Easing.Linear.None);
+        byeAnim.to({alpha: 0}, 250, Phaser.Easing.Quadratic.Out);
         byeAnim.onComplete.add(() => { bye.kill(); next(); })
         byeAnim.start();
       } else {
@@ -235,7 +366,7 @@ class SimpleGame {
       }
       if (hello.length > 0) {
         let helloAnim = this.game.add.tween(hello);
-        helloAnim.to({alpha: 1}, 100, Phaser.Easing.Linear.None);
+        helloAnim.to({alpha: 1}, 250, Phaser.Easing.Quadratic.Out);
         helloAnim.onComplete.add(() => { next(); })
         helloAnim.start();
       } else {
@@ -434,6 +565,11 @@ class SimpleGame {
   preload: any = () => {
     this.game.stage.backgroundColor = "#ffffff";
     this.game.load.image('bug', 'img/ladybug.png');
+    this.game.load.image('source', 'img/source_small.png');
+    this.game.load.image('sink', 'img/sink_small.png');
+    this.game.load.image('gearbox', 'img/gearbox_small.png');
+    this.game.load.image('funnel', 'img/funnel_small.png');
+    this.game.load.image('branch', 'img/branch_small.png');
   }
 
   update: any = () => {
@@ -454,32 +590,19 @@ class SimpleGame {
   }
 
   drawNode(nd: Node, pos: Point, size: number): Phaser.Sprite {
-    let style = { font: size + "px Courier New, Courier, monospace", align: "center", fill: "#000000" }
-    let text: string;
-    if (nd instanceof AssignNode) {
-      style.fill = "#000000";
-      text = nd.stmts.join("\n");
-    } else if (nd instanceof ExprNode) {
-      text = nd.expr
-      if (nd instanceof AssumeNode) {
-        style.fill = "#00ff00"
-      } else if (nd instanceof AssertNode) {
-        style.fill = "#ff0000"
-      } else if (nd instanceof UserNode) {
-        style.fill = "#0000ff"
-      } else if (nd instanceof IfNode) {
-        style.fill = "#8b4513"
-      }
+    if (nd instanceof AssumeNode) {
+      return new SourceIcon(this, nd, pos.x, pos.y);
+    } else if (nd instanceof AssertNode) {
+      return new SinkIcon(this, nd, pos.x, pos.y);
+    } else if (nd instanceof AssignNode) {
+      return new TransformerIcon(this, nd, pos.x, pos.y);
+    } else if (nd instanceof IfNode) {
+      return new BranchIcon(this, nd, pos.x, pos.y);
+    } else if (nd instanceof UserNode) {
+      return new InputOutputIcon(this, nd, pos.x, pos.y);
     } else {
       throw new Error("NYI" + nd);
     }
-    let body = this.game.add.text(pos.x, pos.y, text, style);
-    if (nd instanceof UserNode) {
-      // Add onclick handler
-      body.inputEnabled = true;
-      body.events.onInputDown.add(() => { this.select(nd); }, this);
-    }
-    return body
   }
 
   getFaultyNode(t: Trace): UserNode {
@@ -505,19 +628,19 @@ class SimpleGame {
   rightOf(n: Node): Point {
     // Get the point left of n in the current layout
     let sp = this.nodeSprites[n.id];
-    return Point.add(this.pos[n.id], new Point(sp.width, sp.height/2));
+    return Point.add(this.pos[n.id], new Point(sp.getWidth(), sp.getHeight()/2));
   }
 
   under(n: Node): Point {
     // Get the point under n in the current layout
     let sp = this.nodeSprites[n.id];
-    return Point.add(this.pos[n.id], new Point(sp.width/2, sp.height));
+    return Point.add(this.pos[n.id], new Point(sp.getWidth()/2, sp.getHeight()));
   }
 
   above(n: Node): Point {
     // Get the point above n in the current layout
     let sp = this.nodeSprites[n.id];
-    return Point.add(this.pos[n.id], new Point(sp.width/2, 0));
+    return Point.add(this.pos[n.id], new Point(sp.getWidth()/2, 0));
   }
 
   checkInvs: any = (invs: InvNetwork, onDone: ()=>void) => {
@@ -583,7 +706,7 @@ class SimpleGame {
     let invNet: InvNetwork = this.getInvNetwork();
     this.checkInvs(invNet, ()=> {
       let curLayout: Layout = [this.nodeSprites, this.pos, this.edges, this.edgeStates];
-      let newSprites: EdgeStates = copyMap(this.nodeSprites);
+      let newSprites: SpriteMap = copyMap(this.nodeSprites);
       newSprites[this.selected.id] = this.drawNode(this.selected, new Point(800, 600), 15)
       let newLayout: Layout = [newSprites, this.pos, this.edges, this.edgeStates];
       this.updateLayout(curLayout, newLayout, ()=>{});
@@ -634,14 +757,15 @@ class SimpleGame {
     let stmtCtr = 0;
     for (let i = 1; i < t.length; i++) {
       let [node, stmtIdx, vals] = t[i];
-      let sprite = this.nodeSprites[node.id];
+      let sprite: TextIcon = this.nodeSprites[node.id];
       let [prevNode, prevStmtIdx, prevVals] = t[i-1];
       if (node == prevNode ) {
         // Only step through assignments
         if (!(node instanceof AssignNode)) continue;
-        let y_step = sprite.height / node.stmts.length;
-        let x_pos = sprite.x + sprite.width + 10;
-        let pt = new Point(x_pos, sprite.y + y_step * (stmtCtr));
+        let textNode: Phaser.Text = sprite.getText();
+        let y_step = textNode.height / node.stmts.length;
+        let x_pos = sprite.getX() + textNode.x + textNode.width + 10;
+        let pt = new Point(x_pos, sprite.getY() + textNode.y + y_step * (stmtCtr));
         traceLayout.push([i, pt, envToText(vals)])
         stmtCtr ++;
       } else {
@@ -653,6 +777,7 @@ class SimpleGame {
           let edgePath: Path = this.edges[leg[j].id][leg[j+1].id];
           subPath = subPath.concat(edgePath);
         }
+
         traceLayout.push([i-1, subPath, envToText(vals)]);
         traceLayout.push([i, subPath[subPath.length-1], envToText(vals)]);
       }
@@ -668,7 +793,7 @@ class SimpleGame {
     bfs(this.entry, (p: Node, n: Node) => {
       this.textSprites[n.id] = this.drawNode(n, { x: this.width, y: this.height }, 15);
     }, null);
-    // Compute layoutcreate
+    // Compute layout
     let [pos, edges] = this.computeLayout(this.textSprites);
     let edgeStates: StrMap<StrMap<EdgeState>> = {};
     for (let id1 in edges) {
@@ -681,11 +806,10 @@ class SimpleGame {
     let oldLayout: Layout = [{}, {}, {}, {}];
 
     // Position sprites
-    this.updateLayout(oldLayout, newLayout, ()=> {console.log("Yay I updated")});
-
-    this.edges = edges;
-    this.pos = pos;
-    this.edgeStates = edgeStates;
+    this.updateLayout(oldLayout, newLayout, ()=> {
+      console.log("Yay my first update!")
+      this.checkInvs(this.getInvNetwork(), ()=>{});
+    });
 
     let invBox = $("#inv")
     invBox.keyup((e) => {
@@ -708,7 +832,6 @@ class SimpleGame {
       this._controlsStopped();
     })
     this._controlsDisable();
-    this.checkInvs(this.getInvNetwork(), ()=>{});
   }
 
   computeLayout(spriteMap: SpriteMap): [PointMap, StrMap<PathMap>] {
@@ -758,7 +881,8 @@ class SimpleGame {
 
     function computeWidth(start: Node, end: Node): number {
       let sprite = spriteMap[start.id];
-      let sz: Size = { w: sprite.width, h: sprite.height };
+      assert(sprite != null && sprite instanceof TextIcon);
+      let sz: Size = { w: sprite.getWidth(), h: sprite.getHeight() };
       let res: number;
 
       if (start == end) {
@@ -800,6 +924,7 @@ class SimpleGame {
     }
 
     computeWidth(this.entry, exitNode);
+    //console.log("Widths: ", width);
 
     // Pass 3: Compute relative positions:
     function compute_rel_pos(prev: Node, next: Node): void {
@@ -808,32 +933,40 @@ class SimpleGame {
       let myWidth = width[next.id];
 
       if (prev == null) {
-        p = { x: -sp.width/2, y: 0};
+        p = new Point(-sp.getWidth()/2, 0);
       } else {
-        let prevSp = spriteMap[prev.id];
-        let rel_y = prevSp.height + h_spacing;
+        let prevSp: TextIcon = spriteMap[prev.id];
+        let rel_y = prevSp.getHeight() + h_spacing;
+        let prevExit: Point;
+        let myEntry: Point = getEntry(sp);
+
         if (prev instanceof IfNode) {
           if (next == prev.successors[0]) {
             // Lhs
-            p = { x: -width[next.id]/2-sp.width/2+prevSp.width/2, y: rel_y };
+            prevExit = (prevSp as BranchIcon).lhsExitPoint()
+            prevExit.subtract(width[next.id]/2, 0)
           } else {
             // Rhs
-            p = { x: width[next.id]/2-sp.width/2+prevSp.width/2, y: rel_y };
+            prevExit = (prevSp as BranchIcon).rhsExitPoint()
+            prevExit.add(width[next.id]/2, 0)
           }
         } else {
-          p = { x: prevSp.width/2-sp.width/2, y: rel_y }
+          prevExit = getExit(prevSp);
         }
+        p = Point.subtract(prevExit, myEntry).add(0, h_spacing);
       }
 
       relPos[next.id] = [prev, p];
     }
     bfs(this.entry, compute_rel_pos, null);
+    //console.log("Relative positions: ", relPos);
 
     let final_size: StrMap<Size> = {}
     for(let id in spriteMap) {
-      final_size[id] = { w: width[id], h: spriteMap[id].height };
+      final_size[id] = { w: width[id], h: spriteMap[id].getHeight() };
     }
 
+    //console.log("Final sizes: ", final_size);
     // Gather user nodes
     bfs(this.entry, (p: Node, n: Node) => {
       if (n instanceof UserNode) {
@@ -851,7 +984,7 @@ class SimpleGame {
       if (prev == null) {
         assert(next == this.entry);
         let w = final_size[next.id].w/2;
-        p = new Point(300, 0);
+        p = new Point(300, 40);
       } else {
         prevP = pos[prev.id];
         p = Point.add(prevP, relp);
@@ -860,15 +993,44 @@ class SimpleGame {
       pos[next.id] = p;
     }, null);
 
+    //console.log("Absolute positions: ", pos);
+    function _getPathStart(from: Node, to: Node): Point {
+      let fromSprite: TextIcon = spriteMap[from.id];
+      let toSprite = spriteMap[to.id];
+      let pathStart: Point;
+
+      if (fromSprite instanceof BranchIcon) {
+        if (to == from.successors[0]) {
+          pathStart = fromSprite.lhsExitPoint();
+        } else {
+          pathStart = fromSprite.rhsExitPoint();
+        }
+      } else {
+        pathStart = getExit(fromSprite);
+      }
+      return Point.add(pathStart, pos[from.id], pathStart);
+    }
+
+    function _getPathEnd(from: Node, to: Node): Point {
+      let fromSprite: TextIcon = spriteMap[from.id];
+      let toSprite = spriteMap[to.id];
+      let pathEnd: Point = getEntry(toSprite);
+      pathEnd = Point.add(pathEnd, pos[to.id], pathEnd);
+      if (to instanceof UserNode && (to as Node).reachable().has(from)) {
+        // This is a backedge
+        return Point.add(pathEnd, new Point(-5, 0), pathEnd);
+      } else {
+        return pathEnd;
+      }
+    }
     // Compute paths
     function computeForwardEdge(prev: Node, next: Node) {
       // Forward edges are always vertical
       if (prev == null) return;
-      let prevSprite = spriteMap[prev.id];
+      let prevSprite: TextIcon = spriteMap[prev.id];
       let nextSprite = spriteMap[next.id];
-
-      let start: Point = Point.add(pos[prev.id], new Point(prevSprite.width/2, prevSprite.height + bugHeight/2));
-      let end: Point = Point.add(pos[next.id], new Point(nextSprite.width/2, -bugHeight/2));
+      let start: Point = _getPathStart(prev, next);
+      let end: Point = _getPathEnd(prev, next);
 
       if (!(prev.id in edges)) {
         edges[prev.id] = {};
@@ -877,24 +1039,22 @@ class SimpleGame {
     }
 
     function computeBackedge(prev: Node, next: Node) {
-      // Backwards edges always consist of 3 lines - left, up, right
+      // Backwards edges always consist of 5 lines - down, left, up, right, down
       let path : Path;
-      let fromP: Point = pos[prev.id];
-      let toP: Point = pos[next.id];
-      let fromSprite = spriteMap[prev.id];
-      let toSprite = spriteMap[next.id];
-      let fromS: Size = { w: fromSprite.width, h: fromSprite.height };
-      let toS: Size = { w: toSprite.width, h: toSprite.height };
-
+      let prevSprite: TextIcon = spriteMap[prev.id];
+      let nextSprite = spriteMap[next.id];
       let toBlockS: Size = final_size[next.successors[0].successors[0].id];
-      let start = Point.add(fromP, new Point(-bugWidth/2, fromS.h/2));
-      let j1: Point = {x: toP.x - toBlockS.w,  y: start.y};
-      let j2: Point = {x: j1.x,  y: (toP.y + toS.h/2)};
-      let end: Point = {x: toP.x - bugWidth/2,  y: (toP.y + toS.h/2)};
+      let start: Point = _getPathStart(prev, next);
+      let end: Point = _getPathEnd(prev, next);
+      let j1: Point = Point.add(start, new Point(0, 20));
+      let j2: Point = Point.add(j1, new Point(-(prevSprite.icon().width/2+20), 0))
+      let j3: Point = new Point(j2.x, end.y-20);
+      let j4: Point = new Point(end.x, j3.y);
+
       if (!(prev.id in edges)) {
         edges[prev.id] = {};
       }
-      edges[prev.id][next.id] = [start, j1, j2, end];
+      edges[prev.id][next.id] = [start, j1, j2, j3, j4, end];
     }
 
     bfs(this.entry, computeForwardEdge, computeBackedge);

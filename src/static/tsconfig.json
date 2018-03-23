@@ -2,7 +2,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-	"esprima": ["."]
+      "esprima": ["."]
     },
     "declaration": false,
     "module": "amd",
@@ -54,8 +54,12 @@
     "ts/boogie.ts",
     "ts/graph.ts",
     "ts/game_graph.ts",
-    "../../node_modules/phaser-ce/typescript/phaser.d.ts",
+    "ts/texticon.ts",
     "ts/tutorial.ts"
+  ],
+  "include": [
+    "../../node_modules/phaser-ce/typescript/phaser.d.ts",
+    "../../node_modules/phaser-ce/typescript/pixi.d.ts"
   ],
   "atom": {
     "rewriteTsconfig": true

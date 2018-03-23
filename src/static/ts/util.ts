@@ -119,8 +119,11 @@ type EqFun<T> = (a: T, b: T) => boolean;
 
 export function arrEq<T>(l1: T[], l2: T[], eq?: EqFun<T>): boolean {
   if (l1.length != l2.length) return false;
+  if (eq == undefined) {
+    eq = (x:T, y:T): boolean => x ==y;
+  }
   for (let i1 in l1) {
-    if (!(i1 in l2) || l1[i1] != l2[i1]) return false;
+    if (!(i1 in l2) || !eq(l1[i1], l2[i1])) return false;
   }
   return true;
 }
