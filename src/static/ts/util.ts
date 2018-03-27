@@ -116,16 +116,40 @@ export function difference(s1: strset, s2: strset): strset {
 }
 
 type EqFun<T> = (a: T, b: T) => boolean;
+export function structEq(o1: any, o2: any): boolean {
+  if ((typeof o1) !== (typeof o2)) {
+    return false;
+  }
 
-export function arrEq<T>(l1: T[], l2: T[], eq?: EqFun<T>): boolean {
-  if (l1.length != l2.length) return false;
-  if (eq == undefined) {
-    eq = (x:T, y:T): boolean => x ==y;
+  // First try comparing as arrays
+  if (o1 instanceof Array) {
+    if (!(o2 instanceof Array)) return false;
+    if (o1.length != o2.length) return false;
+
+    for (let i1 in o1) {
+      if (!(i1 in o2) || !structEq(o1[i1], o2[i1])) return false;
+    }
+    return true;
   }
-  for (let i1 in l1) {
-    if (!(i1 in l2) || !eq(l1[i1], l2[i1])) return false;
+
+  // Next as objects
+  if (o1 instanceof Object) {
+    if (!(o2 instanceof Object)) return false;
+    for(let k in o1) {
+      if (!(k in o2) || !structEq(o1[k], o2[k])) {
+        return false;
+      }
+    }
+    for(let k in o2) {
+      if (!(k in o1)) {
+        return false;
+      }
+    }
+
+    return true;
   }
-  return true;
+  // Finally as primitives
+  return o1 === o2;
 }
 
 export function diff<T>(a: StrMap<T>,
@@ -223,8 +247,12 @@ export function assert(c: boolean, msg?: any): void {
   if (msg === undefined)
     msg = "Oh-oh";
 
-  if (!c)
-    throw msg || "Assertion failed.";
+  if (!c) {
+    if (msg === undefined) {
+      msg = "Assertion failed.";
+    }
+    throw msg;
+  }
 }
 
 function fst<T1, T2>(x: [T1, T2]): T1 { return x[0]; }

@@ -7,7 +7,7 @@ import * as Phaser from "phaser"
 import {Point} from "phaser";
 import {topo_sort, bfs, path} from "./graph";
 import {Expr_T} from "./boogie";
-import {getUid, StrMap, assert, max, intersection, single, diff, diff2, arrEq, union2, copyMap2, mapMap2, copyMap, difference2, reversed} from "./util"
+import {getUid, StrMap, assert, max, intersection, single, diff, diff2, union2, copyMap2, mapMap2, copyMap, difference2, reversed, structEq} from "./util"
 import {Node, ExprNode, AssignNode, IfNode, AssumeNode, UserNode,
         AssertNode, buildGraph, removeEmptyNodes, exit, NodeMap} from "./game_graph"
 import {TextIcon} from "./texticon"
@@ -164,12 +164,6 @@ function edgeColor(st: EdgeState): Color {
   }
 }
 
-function pathEq(p1: Path, p2: Path): boolean {
-    return arrEq(p1, p2, (pt1: Point, pt2: Point) => {
-      return (pt1.x == pt2.x && pt1.y == pt2.y);
-    })
-}
-
 function isSound(vs: Violation[], nd: UserNode): boolean {
   // Return true if the invariants at node nd are sound despite
   // the potential failures
@@ -296,7 +290,7 @@ class SimpleGame {
     // Compute sprites to disappear and edges that need removal/repaint
     let [removedSprites, changedSprites, addedSprites] = diff(oldSpr, newSpr);
     let [dummy3, movedSprites, dummy4] = diff(oldPos, newPos);
-    let [removedEdges, changedEdges, addedEdges] = diff2(oldEdges, newEdges, pathEq);
+    let [removedEdges, changedEdges, addedEdges] = diff2(oldEdges, newEdges, structEq);
     let [dummy1, changedEdgeStates, dummy2] = diff2(oldEdgeState, newEdgeState);
 
     changedEdges = union2(changedEdges, changedEdgeStates);
@@ -709,25 +703,38 @@ class SimpleGame {
     let bbLabels: string[] = v[0];
     let values: any[] = v[1];
     let valArr: Trace = [];
+    let prevNode: Node;
+    let prevVal: any;
     for (let i = 0; i < values.length; i++) {
-      for (let j = 0; j < values[i].length; j++) {
-        let lbl = bbLabels[i];
-        let node: Node;
+      let lbl = bbLabels[i];
 
+      if (values[i].length == 0) {
+        valArr.push([this.bbToNode[lbl][0], 0, valArr[valArr.length-1][2]]);
+      }
+
+      for (let j = 0; j < values[i].length; j++) {
+        let node: Node = (j > 0 ? this.bbToNode[lbl][j-1] : this.bbToNode[lbl][0]);
         assert(lbl in this.bbToNode, "Label " + lbl + " missing.");
         assert(j <= this.bbToNode[lbl].length, "Too many values: " + j + " for " + lbl);
 
-        if (j == this.bbToNode[lbl].length) {
-          if (i == values.length - 1) {
-            // We are at the value after the exit block
-            continue;
-          }
-          node = this.bbToNode[bbLabels[i+1]][0];
-        } else {
-          node = this.bbToNode[lbl][j];
+        if (prevNode !== undefined && prevNode != node && j != 0) {
+          // Block split due to assume
+          valArr.push([node, j-1, prevVal]);
         }
 
-        valArr.push([node, j, values[i][j]]);
+        if (node instanceof AssignNode) {
+          valArr.push([node, j-1, values[i][j]]);
+        } else {
+          if (j == 0) {
+            valArr.push([node, j-1, values[i][j]]);
+          } else {
+            let [n1, d, v] = valArr[valArr.length-1];
+            assert(n1 === node);
+            assert(structEq(v, values[i][j]));
+          }
+        }
+        prevNode = node;
+        prevVal = values[i][j];
       }
     }
     return valArr;

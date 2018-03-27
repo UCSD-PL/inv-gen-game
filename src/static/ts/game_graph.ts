@@ -123,7 +123,7 @@ export function buildGraph(f: Fun): [Node, NodeMap] {
 
     node = mkNode(rest);
     if (bb.stmts.length > 0)
-      bbMap[bb.id] = repeat(node, bb.stmts.length);
+      bbMap[bb.id] = repeat(pred, assumes.length).concat(repeat(node, rest.length));
     else
       bbMap[bb.id] = [node];
     pred.addSuccessor(node);
@@ -150,20 +150,12 @@ export function buildGraph(f: Fun): [Node, NodeMap] {
       // TODO: Pick if expr intelligently
       let ifExpr = lhsExpr;
       let ifNode = new IfNode(getUid("nd"), ifExpr);
-      if (!(bb.id in bbMap)) {
-        bbMap[bb.id][bbMap[bb.id].length] = ifNode;
-      }
       node.addSuccessor(ifNode);
       workQ.push([lhsBB, ifNode])
       workQ.push([rhsBB, ifNode])
     } else {
       assert(false, "Too many successors for bb " + bb);
     }
-  }
-
-  [assumes, rest] = split_assumes(entryBB.stmts);
-  for (let i = 0; i < assumes.length; i++) {
-    bbMap[entryBB.id][i] = entry;
   }
 
   return [entry, bbMap];
