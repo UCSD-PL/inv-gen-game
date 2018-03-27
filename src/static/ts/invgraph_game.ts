@@ -24,10 +24,10 @@ type EdgeStates = StrMap<StrMap<EdgeState>>
 type Layout = [SpriteMap, PointMap, EdgeMap, EdgeStates];
 type Color = number;
 
-type TraceElement = [Node, number, any];
-type Trace = TraceElement[]
-type TraceLayoutStep =[number, (Point | Point[]), string]
-type TraceLayout = TraceLayoutStep[]
+export type TraceElement = [Node, number, any];
+export type Trace = TraceElement[]
+export type TraceLayoutStep =[number, (Point | Point[]), string]
+export type TraceLayout = TraceLayoutStep[]
 
 type GameMode = "selected" | "waiting" | "animation" | "unselected" | "show_trace";
 interface Size {
@@ -39,7 +39,7 @@ let bugWidth = 20;
 let bugHeight = 25;
 
 export class PlaceholderIcon extends TextIcon {
-    constructor(game: SimpleGame, nd: PlaceholderNode, x?: number, y?: number) {
+    constructor(game: InvGraphGame, nd: PlaceholderNode, x?: number, y?: number) {
       super(game.game, game.getSprite("placeholder", 0, 0, true), "", "plchldr_" + nd.id, x, y);
     }
     public entryPoint(): Phaser.Point {
@@ -61,7 +61,7 @@ export class PlaceholderIcon extends TextIcon {
 }
 
 export class SourceIcon extends TextIcon {
-    constructor(game: SimpleGame, nd: AssumeNode, x?: number, y?: number) {
+    constructor(game: InvGraphGame, nd: AssumeNode, x?: number, y?: number) {
       super(game.game, game.getSprite("source", 0, 0, true), nd.expr, "src_" + nd.id, x, y);
     }
     public exitPoint(): Phaser.Point {
@@ -73,7 +73,7 @@ export class SourceIcon extends TextIcon {
 }
 
 export class SinkIcon extends TextIcon {
-    constructor(game: SimpleGame, nd: AssertNode, x?: number, y?: number) {
+    constructor(game: InvGraphGame, nd: AssertNode, x?: number, y?: number) {
       super(game.game, game.getSprite("sink", 0, 0, true), nd.expr, "sink_" + nd.id, x, y);
     }
     public entryPoint(): Phaser.Point {
@@ -85,7 +85,7 @@ export class SinkIcon extends TextIcon {
 }
 
 export class BranchIcon extends TextIcon {
-    constructor(game: SimpleGame, nd: AssertNode, x?: number, y?: number) {
+    constructor(game: InvGraphGame, nd: AssertNode, x?: number, y?: number) {
       super(game.game, game.getSprite("branch", 0, 0, true), nd.expr, "br_" + nd.id, x, y);
     }
     public entryPoint(): Phaser.Point {
@@ -112,7 +112,7 @@ export class BranchIcon extends TextIcon {
 export class InputOutputIcon extends TextIcon {
     // Code duplication with OutputIcon - don't want to implement mixins just
     // for this one case
-    constructor(game: SimpleGame, nd: UserNode, x?: number, y?: number) {
+    constructor(game: InvGraphGame, nd: UserNode, x?: number, y?: number) {
       super(game.game, game.getSprite("funnel", 0, 0, true), nd.expr, "br_" + nd.id, x, y);
       this.icon().inputEnabled = true;
       this.icon().events.onInputDown.add(() => { game.select(nd); }, this);
@@ -135,7 +135,7 @@ export class InputOutputIcon extends TextIcon {
 export class TransformerIcon extends TextIcon {
     // Code duplication with OutputIcon - don't want to implement mixins just
     // for this one case
-    constructor(game: SimpleGame, nd: AssignNode, x?: number, y?: number) {
+    constructor(game: InvGraphGame, nd: AssignNode, x?: number, y?: number) {
       let text = nd.stmts.join("\n");
       super(game.game, game.getSprite("gearbox", 0, 0, true), text, "br_" + nd.id, x, y, false);
       this.icon().inputEnabled = true;
@@ -204,7 +204,7 @@ function isSound(vs: Violation[], nd: UserNode): boolean {
 type SpritePool = StrMap<Set<Phaser.Sprite>>;
 type ViolationInfo = [Phaser.Sprite, Violation, Trace][];
 
-export class SimpleGame {
+export class InvGraphGame {
   entry: Node;
   selected: UserNode;
   userNodes: UserNode[];
@@ -224,12 +224,16 @@ export class SimpleGame {
   selectedViolation: [TextIcon, number, Trace, TraceLayout];
   animationStopRequested: boolean;
   lvlId: string;
+  game: Phaser.Game;
 
-  constructor(graph: Node, n: NodeMap, f: Fun, lvlId: string) {
+  constructor(container: string, graph: Node, n: NodeMap, f: Fun, lvlId: string) {
     this.width = 800;
     this.height = 600;
-    this.game = new Phaser.Game(this.width, this.height, Phaser.AUTO, 'content',
-      { preload: this.preload, create: this.create, update: this.update});
+    this.game = new Phaser.Game(this.width, this.height, Phaser.AUTO, container,
+      { preload: ()=>{this.preload()},
+        create: ()=>{this.create()},
+        update: ()=>{this.update()}
+      });
     this.entry = graph;
     this.userNodes = []
     this.bbToNode = n;
@@ -273,26 +277,17 @@ export class SimpleGame {
     this.spritePool[key].add(s);
   }
 
-  game: Phaser.Game;
-
-  unselect():void {
+  protected unselect():void {
     this.mode = "unselected";
     this.selected = null;
-    $("#inv").val("");
-    $("#inv").prop("disabled", true);
-    $("#overlay").prop("display", "none");
   }
 
   select(n: UserNode):void {
     this.mode = "selected";
     this.selected = n;
-    $("#inv").val(n.expr);
-    $("#inv").prop("disabled", false);
-    $("#overlay").prop("display", "none");
   }
 
   waiting(): void {
-    $("#overlay").prop("display", "block");
   }
 
   transformLayout(modifier: ()=>any, onDone?: ()=>any): void {
@@ -411,27 +406,6 @@ export class SimpleGame {
     }) }); });
   }
 
-  _controlsPlaying(): void {
-    $("#step").prop("disabled", true);
-    $("#back").prop("disabled", true);
-    $("#play").prop("disabled", true);
-    $("#stop").prop("disabled", false);
-  }
-
-  _controlsStopped(): void {
-    $("#step").prop("disabled", false);
-    $("#back").prop("disabled", false);
-    $("#play").prop("disabled", false);
-    $("#stop").prop("disabled", true);
-  }
-
-  _controlsDisable(): void {
-    $("#step").prop("disabled", true);
-    $("#back").prop("disabled", true);
-    $("#play").prop("disabled", true);
-    $("#stop").prop("disabled", true);
-  }
-
   hideViolation(): void {
     assert (this.selectedViolation != null)
     let [err, step] = this.selectedViolation;
@@ -441,7 +415,6 @@ export class SimpleGame {
     this.putSprite(icon);
     (err as Phaser.Group).destroy(true);
     this.selectedViolation = null;
-    this._controlsDisable();
   }
 
   showViolation(traceLayout: TraceLayout, trace: Trace): void {
@@ -453,7 +426,6 @@ export class SimpleGame {
     this.selectedViolation = [err, 0, trace, traceLayout];
     this.positionBug(0);
     err.icon().exists = true;
-    this._controlsStopped();
   }
 
   private positionBug(step: number) {
@@ -514,7 +486,7 @@ export class SimpleGame {
     return t;
   }
 
-  playBug(): void {
+  playBug(onComplete?: ()=>any): void {
     let [err, curStep, trace, traceLayout] = this.selectedViolation;
     let oldT: Phaser.Tween = null;
     let first: Phaser.Tween = null;
@@ -549,7 +521,9 @@ export class SimpleGame {
       }
     }
     last = t;
-    last.onComplete.add(()=>{this._controlsStopped()});
+    if (onComplete != undefined) {
+      last.onComplete.add(onComplete);
+    }
     first.start();
   }
 
@@ -819,7 +793,7 @@ export class SimpleGame {
     return traceLayout;
   }
 
-  create: any = () => {
+  create(): void {
     let fontSize = 15;
     this.graphics = this.game.add.graphics(0, 0);
 
@@ -844,28 +818,6 @@ export class SimpleGame {
       console.log("Yay my first update!")
       this.checkInvs(this.getInvNetwork(), ()=>{});
     });
-
-    let invBox = $("#inv")
-    invBox.keyup((e) => {
-      if(e.keyCode == 13)
-      {
-        this.userInput(invBox.val());
-      } else if (e.keyCode == 27) {
-        this.unselect();
-      }
-    })
-
-    $("#step").on("click", (e) => { this.stepForward();})
-    $("#back").on("click", (e) => { this.stepBackwards();})
-    $("#play").on("click", (e) => {
-      this.playBug();
-      this._controlsPlaying();
-    })
-    $("#stop").on("click", (e) => {
-      this.animationStopRequested = true;
-      this._controlsStopped();
-    })
-    this._controlsDisable();
   }
 
   computeLayout(spriteMap: SpriteMap): [PointMap, StrMap<PathMap>] {
