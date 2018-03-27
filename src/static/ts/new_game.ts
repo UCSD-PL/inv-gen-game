@@ -94,6 +94,7 @@ export class InputOutputIcon extends TextIcon {
       super(game.game, game.getSprite("funnel", 0, 0, true), nd.expr, "br_" + nd.id, x, y);
       this.icon().inputEnabled = true;
       this.icon().events.onInputDown.add(() => { game.select(nd); }, this);
+      this.icon().input.useHandCursor = true;
     }
     public entryPoint(): Phaser.Point {
         return new Phaser.Point(
@@ -119,6 +120,7 @@ export class TransformerIcon extends TextIcon {
       this.icon().events.onInputDown.add(() => {
         game.transformLayout(() => this.toggleText());
       }, this);
+      this.icon().input.useHandCursor = true;
     }
     public entryPoint(): Phaser.Point {
         return new Phaser.Point(
@@ -267,17 +269,17 @@ class SimpleGame {
     $("#overlay").prop("display", "block");
   }
 
-  transformLayout(modifier: ()=>any): void {
+  transformLayout(modifier: ()=>any, onDone?: ()=>any): void {
     // Apply modifier to change the visual layout (not adding/removing sprites),
     // compute the new layout, and run the animations to transition
-    let oldLayout: Layout = [this.nodeSprites, this.pos, this.edges, this.edgeStates];
+    let oldLayout: Layout = [copyMap(this.nodeSprites), copyMap(this.pos), copyMap2(this.edges), copyMap2(this.edgeStates)];
     modifier();
     let [newPos, newEdges] = this.computeLayout(this.nodeSprites);
     let newLayout: Layout = [this.nodeSprites, newPos, newEdges, this.edgeStates];
-    this.updateLayout(oldLayout, newLayout, ()=>{});
+    this.updateLayout(oldLayout, newLayout, onDone);
   }
 
-  updateLayout(oldL: Layout, newL: Layout, onUpdate: ()=>any): void {
+  updateLayout(oldL: Layout, newL: Layout, onUpdate?: ()=>any): void {
     if (this.selectedViolation != null) {
       this.hideViolation();
     }
@@ -377,7 +379,9 @@ class SimpleGame {
       this.pos = newPos;
       this.edges = newEdges;
       this.edgeStates = newEdgeState;
-      onUpdate();
+      if (onUpdate !== undefined) {
+        onUpdate();
+      }
     }) }); });
   }
 
@@ -628,21 +632,27 @@ class SimpleGame {
 
   checkInvs: any = (invs: InvNetwork, onDone: ()=>void) => {
     rpc_checkSoundness("unsolved-new-benchmarks2", "i-sqrt", invs, (res) => {
-      // TODO: Disable clicks
-      let curLayout: Layout = [this.nodeSprites, this.pos, this.edges, this.edgeStates];
-      let newStates: EdgeStates = mapMap2(this.edgeStates, (x: EdgeState):EdgeState=>"good");
+      // Clear any currently selected/displayed violations.
+      if (this.selectedViolation != null) this.hideViolation();
+      for (let v of this.curViolations) {
+        this.putSprite(v[0])
+      }
+      this.curViolations = [];
+
+      // TODO: Success graphics?
       if (res.length == 0) {
-        // Yay win!
         console.log("YAY");
-      } else {
-        console.log("Got", res.length, "violations:", res);
-        if (this.selectedViolation != null) this.hideViolation();
-        for (let v of this.curViolations) {
-          this.putSprite(v[0])
+        return;
+      }
+
+      console.log("Got", res.length, "violations:", res);
+      this.transformLayout(() => {
+        for (let e1 in this.edgeStates) {
+          for (let e2 in this.edgeStates[e1]) {
+            this.edgeStates[e1][e2] = "good";
+          }
         }
-        this.curViolations = [];
-        // For each consecutive trace elements, figure out what edges in the game
-        // are affected.
+
         for (let v of res) {
           let trace = this.getTrace(v);
           for (let i = 0; i < trace.length-1; i++) {
@@ -654,7 +664,7 @@ class SimpleGame {
 
             for (let j = 0; j < leg.length-1; j++) {
               let legN = leg[j], legN1 = leg[j+1];
-              newStates[legN.id][legN1.id] = "fail"
+              this.edgeStates[legN.id][legN1.id] = "fail"
             }
           }
           let blamed = this.getFaultyNode(trace);
@@ -662,6 +672,7 @@ class SimpleGame {
           let bug = this.getSprite("bug", bugPos.x, bugPos.y, true)
 
           bug.inputEnabled = true;
+          bug.input.useHandCursor = true;
           bug.events.onInputDown.removeAll();
           let idx = this.curViolations.length;
           let cbFactory = (idx: number) => (() => {
@@ -672,9 +683,7 @@ class SimpleGame {
 
           this.curViolations.push([bug, v, trace]);
         }
-      }
-      let newLayout: Layout = [this.nodeSprites, this.pos, this.edges, newStates];
-      this.updateLayout(curLayout, newLayout, onDone);
+      }, onDone);
     });
   }
 
@@ -690,11 +699,9 @@ class SimpleGame {
     this.selected.expr = inv;
     let invNet: InvNetwork = this.getInvNetwork();
     this.checkInvs(invNet, ()=> {
-      let curLayout: Layout = [this.nodeSprites, this.pos, this.edges, this.edgeStates];
-      let newSprites: SpriteMap = copyMap(this.nodeSprites);
-      newSprites[this.selected.id] = this.drawNode(this.selected, new Point(800, 600), 15)
-      let newLayout: Layout = [newSprites, this.pos, this.edges, this.edgeStates];
-      this.updateLayout(curLayout, newLayout, ()=>{});
+      this.transformLayout(() => {
+        this.nodeSprites[this.selected.id] = this.drawNode(this.selected, new Point(800, 600), 15)
+      });
     });
   }
 
