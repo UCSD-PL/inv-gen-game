@@ -43,6 +43,19 @@ export abstract class DiGraph {
     succ.predecessors = this.predecessors;
   }
 
+  replace(other: this): void {
+    for (let pred of this.predecessors) {
+      pred.successors[pred.successors.indexOf(this)] = other;
+    }
+
+    for (let succ of this.successors) {
+      succ.predecessors[succ.predecessors.indexOf(this)] = other;
+    }
+
+    other.predecessors = this.predecessors
+    other.successors = this.successors
+  }
+
   reachable(): Set<this> {
     let res: Set<this> = new Set();
     function discover(prev, next) { res.add(next); }
@@ -53,8 +66,8 @@ export abstract class DiGraph {
 
 export function bfs<T extends DiGraph>(
   node: T,
-  discover: (f:T,t:T)=>any,
-  backedge: (f:T,t:T)=>any): void
+  discover?: (f:T,t:T)=>any,
+  backedge?: (f:T,t:T)=>any): void
 {
   let visited: Set<T> = new Set();
   let workQ: [T, T][] = [[null, node]];
@@ -62,13 +75,13 @@ export function bfs<T extends DiGraph>(
   while (workQ.length > 0) {
     let [prev, next]: [T,T] = workQ.shift();
     if (visited.has(next)) {
-      if (backedge !== null) {
+      if (backedge !== null && backedge !== undefined) {
         backedge(prev, next)
       }
       continue;
     }
     visited.add(next);
-    if (discover != null)
+    if (discover != null && discover !== undefined)
       discover(prev, next);
     workQ = workQ.concat(next.successors.map((succ): [T,T] => [next, succ]));
   }

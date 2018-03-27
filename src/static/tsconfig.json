@@ -54,6 +54,7 @@
     "ts/boogie.ts",
     "ts/graph.ts",
     "ts/game_graph.ts",
+    "ts/invgraph_game.ts",
     "ts/texticon.ts",
     "ts/tutorial.ts"
   ],

@@ -26,6 +26,7 @@ requirejs.config({
     "graph": "build/ts/graph",
     "geometry": "build/ts/geometry",
     "texticon": "build/ts/texticon",
+    "invgraph_game": "build/ts/invgraph_game",
     "new_game": "build/ts/new_game",
     "phaser": "./phaser"
   },

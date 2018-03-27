@@ -1,6 +1,6 @@
 import {Fun, BB, Stmt_T, Expr_T} from "./boogie";
 import {StrMap, getUid, assert, single, repeat} from "./util"
-import {HasId, DiGraph, leaves, splitEdge} from "./graph"
+import {HasId, DiGraph, leaves, splitEdge, bfs} from "./graph"
 
 export abstract class Node extends DiGraph implements HasId {
   id: string;
@@ -38,9 +38,10 @@ export class IfNode extends ExprNode { }
 export class AssumeNode extends ExprNode { }
 export class AssertNode extends ExprNode { }
 export class EmptyNode extends Node { }
+export class PlaceholderNode extends Node { }
 
-let assumeRE = / *assume *(.*);/;
-let assertRE = / *assert *(.*);/;
+let assumeRE = / *assume *\(\((.*)\)\);/;
+let assertRE = / *assert *\(\((.*)\)\);/;
 
 function split_assumes(stmts: Stmt_T[]): [Stmt_T[], Stmt_T[]] {
   let assumes: Stmt_T[] = [];
@@ -161,34 +162,31 @@ export function buildGraph(f: Fun): [Node, NodeMap] {
   return [entry, bbMap];
 }
 
-export function removeEmptyNodes(entry: Node, m: NodeMap): [Node, NodeMap] {
+export function removeEmptyNodes(entry: Node, m: NodeMap, placeholders?: boolean): [Node, NodeMap] {
+  if (placeholders === undefined) placeholders = false;
   let res: Node = entry;
-  let workQ: Node[] = [entry];
-  let visited: { [key: string]: boolean } = {};
 
-  while (workQ.length > 0) {
-    let nd = workQ.shift();
-    if (nd.id in visited)
-      continue;
-    visited[nd.id] = true;
+  bfs(entry, (prev: Node, cur: Node) => {
+    if (!(cur instanceof EmptyNode)) return;
+    if (cur.successors.length == 0 && placeholders) {
+      cur.replace(new PlaceholderNode(getUid("placeholder_")));
+      return
+    }
 
-    if (nd instanceof EmptyNode) {
-      nd.snip();
+    cur.snip();
 
-      for (let k in m) {
-        for (let i = 0; i < m[k].length; i++) {
-          if (m[k][i] == nd) {
-            m[k][i] = nd.successors[0];
-          }
+    for (let k in m) {
+      for (let i = 0; i < m[k].length; i++) {
+        if (m[k][i] == cur) {
+          m[k][i] = cur.successors[0];
         }
       }
-
-      if (res == nd) {
-        res = nd.successors[0];
-      }
     }
-    workQ = workQ.concat(nd.successors);
-  }
+
+    if (res == cur) {
+      res = cur.successors[0];
+    }
+  })
 
   return [res, m];
 }
