@@ -12,8 +12,8 @@ import {Node, ExprNode, AssignNode, IfNode, AssumeNode, UserNode,
         AssertNode, buildGraph, removeEmptyNodes, exit, NodeMap, PlaceholderNode} from "./game_graph"
 import {TextIcon} from "./texticon"
 
-type InvNetwork = StrMap<ESNode[]>;
-type Violation = any[];
+export type InvNetwork = StrMap<ESNode[]>;
+export type Violation = any[];
 type SpriteMap = StrMap<TextIcon>;
 type PointMap = StrMap<Point>;
 type Path = Point[];
@@ -190,40 +190,29 @@ function edgeColor(st: EdgeState): Color {
   }
 }
 
-function isSound(vs: Violation[], nd: UserNode): boolean {
-  // Return true if the invariants at node nd are sound despite
-  // the potential failures
-  for (let v of vs) {
-    if (v[0][v[0].length-1] == nd.label) {
-      return false;
-    }
-  }
-  return true;
-}
-
 type SpritePool = StrMap<Set<Phaser.Sprite>>;
 type ViolationInfo = [Phaser.Sprite, Violation, Trace][];
 
 export class InvGraphGame {
-  entry: Node;
-  selected: UserNode;
-  userNodes: UserNode[];
-  bbToNode: NodeMap;
-  f: Fun;
-  mode: GameMode;
-  width: number;
-  height: number;
-  textSprites: SpriteMap;
-  nodeSprites: SpriteMap;
-  edges: StrMap<StrMap<Path>>;
-  edgeStates: EdgeStates;
-  pos: PointMap;
-  graphics: Phaser.Graphics;
-  curViolations: ViolationInfo;
-  spritePool: SpritePool;
-  selectedViolation: [TextIcon, number, Trace, TraceLayout];
-  animationStopRequested: boolean;
-  lvlId: string;
+  protected entry: Node;
+  protected selected: UserNode;
+  protected userNodes: UserNode[];
+  protected bbToNode: NodeMap;
+  protected f: Fun;
+  protected mode: GameMode;
+  protected width: number;
+  protected height: number;
+  protected textSprites: SpriteMap;
+  protected nodeSprites: SpriteMap;
+  protected edges: StrMap<StrMap<Path>>;
+  protected edgeStates: EdgeStates;
+  protected pos: PointMap;
+  protected graphics: Phaser.Graphics;
+  protected curViolations: ViolationInfo;
+  protected spritePool: SpritePool;
+  protected selectedViolation: [TextIcon, number, Trace, TraceLayout];
+  protected animationStopRequested: boolean;
+  protected lvlId: string;
   game: Phaser.Game;
 
   constructor(container: string, graph: Node, n: NodeMap, f: Fun, lvlId: string) {
@@ -277,7 +266,7 @@ export class InvGraphGame {
     this.spritePool[key].add(s);
   }
 
-  protected unselect():void {
+  unselect():void {
     this.mode = "unselected";
     this.selected = null;
   }
@@ -285,9 +274,6 @@ export class InvGraphGame {
   select(n: UserNode):void {
     this.mode = "selected";
     this.selected = n;
-  }
-
-  waiting(): void {
   }
 
   transformLayout(modifier: ()=>any, onDone?: ()=>any): void {
@@ -300,7 +286,7 @@ export class InvGraphGame {
     this.updateLayout(oldLayout, newLayout, onDone);
   }
 
-  updateLayout(oldL: Layout, newL: Layout, onUpdate?: ()=>any): void {
+  private updateLayout(oldL: Layout, newL: Layout, onUpdate?: ()=>any): void {
     if (this.selectedViolation != null) {
       this.hideViolation();
     }
@@ -633,78 +619,57 @@ export class InvGraphGame {
     return Point.add(this.pos[n.id], new Point(0, -sp.getHeight()/2));
   }
 
-  checkInvs: any = (invs: InvNetwork, onDone: ()=>void) => {
-    rpc_checkSoundness("unsolved-new-benchmarks2", this.lvlId, invs, (res) => {
-      // Clear any currently selected/displayed violations.
-      if (this.selectedViolation != null) this.hideViolation();
-      for (let v of this.curViolations) {
-        this.putSprite(v[0])
+  setViolations(vs: Violation[], onDone: ()=>any): void {
+    console.log("Got", vs.length, "violations:", vs);
+    if (this.selectedViolation != null) this.hideViolation();
+    for (let v of this.curViolations) {
+      this.putSprite(v[0])
+    }
+    this.curViolations = [];
+    this.transformLayout(() => {
+      for (let e1 in this.edgeStates) {
+        for (let e2 in this.edgeStates[e1]) {
+          this.edgeStates[e1][e2] = "good";
+        }
       }
-      this.curViolations = [];
 
-      // TODO: Success graphics?
-      if (res.length == 0) {
-        console.log("YAY");
-        return;
-      }
+      for (let v of vs) {
+        let trace = this.getTrace(v);
+        for (let i = 0; i < trace.length-1; i++) {
+          let [node, stmtIdx, vals]: TraceElement = trace[i];
+          let [nextNode, nextStmtIdx, nextVals]: TraceElement = trace[i+1];
 
-      console.log("Got", res.length, "violations:", res);
-      this.transformLayout(() => {
-        for (let e1 in this.edgeStates) {
-          for (let e2 in this.edgeStates[e1]) {
-            this.edgeStates[e1][e2] = "good";
+          if (node == nextNode) continue;
+          let leg = path(node, nextNode);
+
+          for (let j = 0; j < leg.length-1; j++) {
+            let legN = leg[j], legN1 = leg[j+1];
+            this.edgeStates[legN.id][legN1.id] = "fail"
           }
         }
+        let blamed = this.getFaultyNode(trace);
+        let bugPos = this.rightOf(blamed).add(this.curViolations.length * 40, -10);
+        let bug = this.getSprite("bug", bugPos.x, bugPos.y, true)
 
-        for (let v of res) {
-          let trace = this.getTrace(v);
-          for (let i = 0; i < trace.length-1; i++) {
-            let [node, stmtIdx, vals]: TraceElement = trace[i];
-            let [nextNode, nextStmtIdx, nextVals]: TraceElement = trace[i+1];
+        bug.inputEnabled = true;
+        bug.input.useHandCursor = true;
+        bug.events.onInputDown.removeAll();
+        let idx = this.curViolations.length;
+        let cbFactory = (idx: number) => (() => {
+          let traceLayout = this.layoutTrace(trace);
+          this.showViolation(traceLayout, trace);
+        });
+        bug.events.onInputDown.add(cbFactory(idx), this);
 
-            if (node == nextNode) continue;
-            let leg = path(node, nextNode);
-
-            for (let j = 0; j < leg.length-1; j++) {
-              let legN = leg[j], legN1 = leg[j+1];
-              this.edgeStates[legN.id][legN1.id] = "fail"
-            }
-          }
-          let blamed = this.getFaultyNode(trace);
-          let bugPos = this.rightOf(blamed).add(this.curViolations.length * 40, -10);
-          let bug = this.getSprite("bug", bugPos.x, bugPos.y, true)
-
-          bug.inputEnabled = true;
-          bug.input.useHandCursor = true;
-          bug.events.onInputDown.removeAll();
-          let idx = this.curViolations.length;
-          let cbFactory = (idx: number) => (() => {
-            let traceLayout = this.layoutTrace(trace);
-            this.showViolation(traceLayout, trace);
-          });
-          bug.events.onInputDown.add(cbFactory(idx), this);
-
-          this.curViolations.push([bug, v, trace]);
-        }
-      }, onDone);
-    });
+        this.curViolations.push([bug, v, trace]);
+      }
+    }, onDone);
   }
 
-  userInput: any = (inv: string) => {
-    assert(this.selected != null);
-    try {
-      let pinv = parse(inv);
-    } catch (e) {
-      console.log("Couldn't parse");
-      return
-    }
-
-    this.selected.expr = inv;
-    let invNet: InvNetwork = this.getInvNetwork();
-    this.checkInvs(invNet, ()=> {
-      this.transformLayout(() => {
-        this.nodeSprites[this.selected.id] = this.drawNode(this.selected, new Point(800, 600), 15)
-      });
+  setExpr(nd: ExprNode, expr: string): void {
+    nd.expr = expr;
+    this.transformLayout(() => {
+      this.nodeSprites[this.selected.id] = this.drawNode(this.selected, new Point(800, 600), 15)
     });
   }
 
@@ -814,10 +779,11 @@ export class InvGraphGame {
     let oldLayout: Layout = [{}, {}, {}, {}];
 
     // Position sprites
-    this.updateLayout(oldLayout, newLayout, ()=> {
-      console.log("Yay my first update!")
-      this.checkInvs(this.getInvNetwork(), ()=>{});
-    });
+    this.updateLayout(oldLayout, newLayout, ()=> this.onFirstUpdate());
+  }
+
+  onFirstUpdate(): void {
+    console.log("Yay my first update!")
   }
 
   computeLayout(spriteMap: SpriteMap): [PointMap, StrMap<PathMap>] {
@@ -863,7 +829,7 @@ export class InvGraphGame {
 
     bfs(this.entry, if_endpoints, null);
 
-    // Pass 2: Compute the widhts for each part of the graph
+    // Pass 2: Compute the widths for each part of the graph
 
     function computeWidth(start: Node, end: Node): number {
       let sprite = spriteMap[start.id];
