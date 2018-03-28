@@ -29,14 +29,10 @@ export type Trace = TraceElement[]
 export type TraceLayoutStep =[number, (Point | Point[]), string]
 export type TraceLayout = TraceLayoutStep[]
 
-type GameMode = "selected" | "waiting" | "animation" | "unselected" | "show_trace";
 interface Size {
   w: number;
   h: number;
 }
-
-let bugWidth = 20;
-let bugHeight = 25;
 
 export class PlaceholderIcon extends TextIcon {
     constructor(game: InvGraphGame, nd: PlaceholderNode, x?: number, y?: number) {
@@ -199,7 +195,6 @@ export class InvGraphGame {
   protected userNodes: UserNode[];
   protected bbToNode: NodeMap;
   protected f: Fun;
-  protected mode: GameMode;
   protected width: number;
   protected height: number;
   protected textSprites: SpriteMap;
@@ -267,12 +262,10 @@ export class InvGraphGame {
   }
 
   unselect():void {
-    this.mode = "unselected";
     this.selected = null;
   }
 
   select(n: UserNode):void {
-    this.mode = "selected";
     this.selected = n;
   }
 
