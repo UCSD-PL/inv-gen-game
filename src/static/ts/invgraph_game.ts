@@ -425,12 +425,11 @@ export class InvGraphGame {
     this.selectedViolation[1] = step;
   }
 
-  private getBugTween(err: Phaser.Group,
+  private getBugTween(err: TextIcon,
                       traceLayout: TraceLayout, curStep: number, forward: boolean): Phaser.Tween {
     // Compute the animation to move the bug one step forward/backward from its current step.
     let inc: number = (forward ? 1 : -1);
     let t: Phaser.Tween = this.game.add.tween(err);
-    let text = err.children[1];
     let nextStep = curStep + inc;
 
     let pickSide = (p: Path): Point => (forward? p[0] : p[p.length-1]);
@@ -461,7 +460,7 @@ export class InvGraphGame {
     for (let pt of path) {
       t.to({x:pt.x, y:pt.y}, 500, Phaser.Easing.Quadratic.Out)
     }
-    t.onComplete.add(()=> {text.text = newText;this.selectedViolation[1] = nextStep;})
+    t.onComplete.add(()=> {err.setText(newText);this.selectedViolation[1] = nextStep;})
     return t;
   }
 
@@ -729,9 +728,8 @@ export class InvGraphGame {
         // Only step through assignments
         if (!(node instanceof AssignNode) || !sprite.isTextShown()) continue;
         let textNode: Phaser.Text = sprite.getText();
-        let y_step = textNode.height / node.stmts.length;
-        let x_pos = sprite.getX() + textNode.x + textNode.width + 10;
-        let pt = new Point(x_pos, sprite.getY() + textNode.y + y_step * (stmtCtr));
+        let textPos: Phaser.Point = new Point(sprite.getX() + textNode.x, sprite.getY() + textNode.y)
+        let pt = sprite.rightOfLine(stmtCtr).add(textPos.x + 10, textPos.y)
         traceLayout.push([i, pt, envToText(vals)])
         stmtCtr ++;
       } else {
