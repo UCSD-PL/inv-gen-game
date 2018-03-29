@@ -116,13 +116,13 @@ export class InputOutputIcon extends TextIcon {
     }
     public entryPoint(): Phaser.Point {
         return new Phaser.Point(
-            this._icon.x + this._icon.width/2,
+            this._icon.x + 19,
             this._icon.y
         )
     }
     public exitPoint(): Phaser.Point {
         return new Phaser.Point(
-            this._icon.x + this._icon.width/2,
+            this._icon.x + 54,
             this._icon.y + this._icon.height
         )
     }
@@ -714,7 +714,7 @@ export class InvGraphGame {
     function envToText(v: any) {
       let res = ""
       for (let k in v) {
-        res += "" + k + "=" + v[k] + " ";
+        res += "" + k + ":" + v[k] + " ";
       }
       return res;
     }
