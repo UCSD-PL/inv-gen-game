@@ -726,7 +726,7 @@ export class InvGraphGame {
       let [prevNode, prevStmtIdx, prevVals] = t[i-1];
       if (node == prevNode ) {
         // Only step through assignments
-        if (!(node instanceof AssignNode) || !sprite.isTextShown()) continue;
+        if (!(node instanceof AssignNode) || !sprite.isLineShown(0)) continue;
         let textNode: Phaser.Text = sprite.getText();
         let textPos: Phaser.Point = new Point(sprite.getX() + textNode.x, sprite.getY() + textNode.y)
         let pt = sprite.rightOfLine(stmtCtr).add(textPos.x + 10, textPos.y)

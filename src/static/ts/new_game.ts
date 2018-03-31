@@ -2,11 +2,10 @@ import {rpc_loadLvlBasic, rpc_checkSoundness} from "./rpc";
 import {Fun, BB} from "./boogie";
 import * as Phaser from "phaser"
 import {Node, buildGraph, removeEmptyNodes, UserNode} from "./game_graph"
-import {InvGraphGame, TraceLayout, Trace, InvNetwork} from "./invgraph_game"
+import {InvGraphGame, TraceLayout, Trace, InvNetwork, InputOutputIcon} from "./invgraph_game"
 import {assert} from "./util"
 import {parse} from "esprima"
 import {Point} from "phaser";
-
 
 class SimpleGame extends InvGraphGame {
   unselect(): void {
@@ -90,7 +89,13 @@ class SimpleGame extends InvGraphGame {
 
   checkInvs: any = (invs: InvNetwork, onDone: ()=>void) => {
     rpc_checkSoundness("unsolved-new-benchmarks2", this.lvlId, invs, (res) => {
-      this.setViolations(res, onDone);
+      this.setViolations(res, () => {
+        this.transformLayout(() => {
+          if (this.selected !== null) {
+            this.nodeSprites[this.selected.id] = this.drawNode(this.selected, new Point(800, 600), 15)
+          }
+        }, onDone);
+      });
     });
   }
 
@@ -110,11 +115,7 @@ class SimpleGame extends InvGraphGame {
 
     this.selected.expr = inv;
     let invNet: InvNetwork = this.getInvNetwork();
-    this.checkInvs(invNet, ()=> {
-      this.transformLayout(() => {
-        this.nodeSprites[this.selected.id] = this.drawNode(this.selected, new Point(800, 600), 15)
-      });
-    });
+    this.checkInvs(invNet, ()=> {});
   }
 
 }
