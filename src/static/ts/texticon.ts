@@ -1,13 +1,23 @@
 import * as Phaser from "phaser"
 import {Point} from "phaser";
-import {assert} from "./util"
+import {assert, shallowCopy, structEq} from "./util"
+
+type LineOptions = {
+    style: object,
+    removable: boolean,
+    editable: boolean,
+    editingNow: boolean,
+    visible: boolean
+};
 
 export class TextIcon extends Phaser.Group {
     protected _icon: Phaser.Sprite;
     protected _text: Phaser.Group;
     protected _lines: string[];
     protected _game: Phaser.Game;
-    protected _defaultStyle: object;
+    protected _defaultOpts: LineOptions;
+    protected _lineOpts: LineOptions[];
+    protected _focused: number;
 
     constructor(game: Phaser.Game, icon: Phaser.Sprite, text: (string|string[]), name?: string, x?: number, y?:number, startShown?: boolean) {
         super(game, undefined, name, undefined, undefined, undefined);
@@ -19,32 +29,63 @@ export class TextIcon extends Phaser.Group {
         this._icon = icon;
         this._icon.x = -this._icon.width/2;
         this._icon.y =  -this._icon.height/2;
-        let fontSize = 15;
-        this._defaultStyle = { font: fontSize + "px Courier New, Courier, monospace", align: "center", fill: "#000000", backgroundColor: "#ffffff" }
-        let lines: string[] = ((text instanceof Array) ? text : text.split("\n"));
-        this._updateText(lines, startShown)
+        this._defaultOpts = {
+            style: { font: "15px Courier New, Courier, monospace", align: "center", fill: "#000000", backgroundColor: "#ffffff" },
+            removable: false,
+            editable: false,
+            editingNow: false,
+            visible: startShown,
+        }
+        this._lineOpts = [];
+        this.setText(((text instanceof Array) ? text : text.split("\n")), {})
+        this._focused = undefined;
         super.add(this._icon);
         super.add(this._text);
         super.x = x; super.y = y;
     }
 
-    private _updateText(newLines: string[], show: boolean) {
-        let idx = 0;
-        if (this._text !== undefined) {
-            super.remove(this._text);
+    private _textMatch(): boolean {
+        // Return True iff the text in the current Phaser.Text objects matches the text
+        // in this._lines
+        if (this._text == undefined) return false;
+        if (this._lines.length != this._text.children.length) return false;
+
+        for (let i = 0; i < this._lines.length; i++) {
+            if (this._lines[i] != this.getLine(i).text) {
+                return false;
+            }
         }
-        let lineGrp = this._game.add.group();
-        lineGrp.exists = false;
-        for (let ln of newLines) {
-            this._game.add.text(0, lineGrp.height, ln, this._defaultStyle, lineGrp);
-            idx++;
+
+        return true;
+    }
+
+    protected _render(): void {
+        let lineGrp: Phaser.Group;
+
+        if (!this._textMatch()) {
+            lineGrp = (this._text !== undefined ? this._text : this._game.add.group())
+            lineGrp.removeAll(true);
+            let idx = 0;
+            for (let ln of this._lines) {
+                let opts = this._lineOpts[idx];
+                let line = this._game.add.text(0, lineGrp.height, ln, opts.style, lineGrp);
+                line.exists = opts.visible;
+                idx++;
+            }
+        } else {
+            lineGrp = this._text;
+        }
+
+        for (let i = 0; i < this._lines.length; i++) {
+            let yOff = (i == 0 ? 0 : lineGrp.children[i-1].y + lineGrp.children[i-1].height);
+            let opts = this._lineOpts[i];
+            let line = lineGrp.children[i];
+            line.exists = opts.visible;
+            line.y = yOff;
         }
         this._text = lineGrp;
-        super.add(this._text);
         this._text.y = -this._text.height/2;
         this._text.x = this._icon.width/2 + 5;
-        this._text.exists = show;
-        this._lines = newLines;
     }
 
     public getText(): Phaser.Group {
@@ -64,31 +105,36 @@ export class TextIcon extends Phaser.Group {
         return this._icon;
     }
 
-    public setText(s: (string|string[])) {
-        let t: string[] = (s instanceof Array ? s : s.split("\n"));
-        this._updateText(t, this._text.exists)
+    public setText(s: (string|string[]), newOpts?: {[id: number]: LineOptions}) {
+        if (newOpts === undefined) {
+            newOpts = {};
+        }
+
+        this._lines = (s instanceof Array ? s : s.split("\n"));
+        this._lineOpts = [];
+        for (let i = 0; i < this._lines.length; i++) {
+            this._lineOpts.push(shallowCopy((i in newOpts ? newOpts[i] : this._defaultOpts)));
+        }
+        this._render();
     }
 
     public hideText(): void {
-        for (let ln of this._text.children) {
-            ln.exists = false;
-        }
+        this._lineOpts.forEach((opt)=> {opt.visible = false});
+        this._render();
     }
 
     public showText(): void {
-        for (let ln of this._text.children) {
-            ln.exists = false;
-        }
+        this._lineOpts.forEach((opt)=> {opt.visible = true;});
+        this._render();
     }
 
     public toggleText(): void {
-        for (let ln of this._text.children) {
-            ln.exists = !ln.exists;
-        }
+        this._lineOpts.forEach((opt)=> {opt.visible = !opt.visible;});
+        this._render();
     }
 
-    public isTextShown():boolean {
-        return this._text.children[0].exists;
+    public isLineShown(i: number):boolean {
+        return this._lineOpts[i].visible;
     }
 
     public getX(): number { return (this as Phaser.Group).x; }

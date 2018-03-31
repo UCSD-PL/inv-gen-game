@@ -152,6 +152,31 @@ export function structEq(o1: any, o2: any): boolean {
   return o1 === o2;
 }
 
+export function shallowCopy<T>(o: T): T {
+  // Array shallow copy
+  if (o instanceof Array) {
+    let res:any = [];
+    for (let el of o) {
+      res.push(el)
+    }
+    return res;
+  }
+
+  // Object shallow copy
+  if (o instanceof Object) {
+    let res: any = [];
+    for (let k in o) {
+      res[k] = o[k];
+    }
+    return res;
+  }
+  // Primitive
+  if (typeof(o) == "string" || typeof(o) == "number" || typeof(o) == "boolean") {
+    return o;
+  }
+  assert(false, "Can't shallow copy " + o)
+}
+
 export function diff<T>(a: StrMap<T>,
                         b: StrMap<T>,
                         eq?: EqFun<T>): [Set<string>, Set<string>, Set<string>] {
@@ -774,14 +799,8 @@ export function mapMap2<T, U>(m: StrMap<StrMap<T>>, f: (x:T)=>U): StrMap<StrMap<
   return mapMap<StrMap<T>, StrMap<U>>(m, (m: StrMap<T>): StrMap<U> => mapMap(m, f) );
 }
 
-
 export function copyMap<T>(m: StrMap<T>): StrMap<T> {
-  let res: StrMap<T> = {};
-  for (let id in m) {
-    res[id] = m[id];
-  }
-
-  return res;
+  return shallowCopy(m);
 }
 
 export function copyMap2<T>(m: StrMap<StrMap<T>>): StrMap<StrMap<T>> {
@@ -789,6 +808,5 @@ export function copyMap2<T>(m: StrMap<StrMap<T>>): StrMap<StrMap<T>> {
   for (let id in m) {
     res[id] = copyMap(m[id]);
   }
-
   return res;
 }
