@@ -13,7 +13,9 @@
     "removeComments": true,
     "rootDir": ".",
     "suppressImplicitAnyIndexErrors": true,
-    "target": "es6"
+    "target": "es6",
+    "typeRoots": ["../../node_modules/@types", "../../node_modules"],
+    "types": ["phaser-ce", "esprima", "estree", "jquery", "jquery-jsonrpcclient", "jqueryui"]
   },
   "formatCodeOptions": {
     "indentSize": 2,
@@ -57,10 +59,6 @@
     "ts/invgraph_game.ts",
     "ts/texticon.ts",
     "ts/tutorial.ts"
-  ],
-  "include": [
-    "../../node_modules/phaser-ce/typescript/phaser.d.ts",
-    "../../node_modules/phaser-ce/typescript/pixi.d.ts"
   ],
   "atom": {
     "rewriteTsconfig": true

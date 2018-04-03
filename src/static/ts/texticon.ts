@@ -1,5 +1,5 @@
-import * as Phaser from "phaser"
-import {Point} from "phaser";
+import * as Phaser from "phaser-ce"
+import {Point} from "phaser-ce";
 import {assert, shallowCopy, structEq} from "./util"
 
 type LineOptions = {

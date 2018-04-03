@@ -3,8 +3,8 @@ import {Fun, BB} from "./boogie";
 import {parse} from "esprima"
 import {Node as ESNode} from "estree";
 import {invariantT} from "./types"
-import * as Phaser from "phaser"
-import {Point} from "phaser";
+import * as Phaser from "phaser-ce"
+import {Point} from "phaser-ce";
 import {topo_sort, bfs, path} from "./graph";
 import {Expr_T} from "./boogie";
 import {getUid, StrMap, assert, max, intersection, single, diff, diff2, union2, copyMap2, mapMap2, copyMap, difference2, reversed, structEq} from "./util"

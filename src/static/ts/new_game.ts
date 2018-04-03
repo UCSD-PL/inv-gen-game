@@ -1,11 +1,11 @@
 import {rpc_loadLvlBasic, rpc_checkSoundness} from "./rpc";
 import {Fun, BB} from "./boogie";
-import * as Phaser from "phaser"
+import * as Phaser from "phaser-ce"
 import {Node, buildGraph, removeEmptyNodes, UserNode} from "./game_graph"
 import {InvGraphGame, TraceLayout, Trace, InvNetwork, InputOutputIcon} from "./invgraph_game"
 import {assert} from "./util"
 import {parse} from "esprima"
-import {Point} from "phaser";
+import {Point} from "phaser-ce";
 
 class SimpleGame extends InvGraphGame {
   unselect(): void {
