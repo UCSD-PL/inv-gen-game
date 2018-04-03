@@ -1,16 +1,7 @@
 #! /usr/bin/env bash
 
-if [[ $# -ne 2 ]] ; then
-  echo "Usage $0 <target-directory> <python-version>"
-  exit -1
-fi
-
-if [[ "$2" -eq "2" ]] ; then
-  PY="$(which python)"
-elif [[ "$2" -eq "3" ]] ; then
-  PY="$(which python3)"
-else
-  echo "$2 is not a valid python version. Enter 2 or 3"
+if [[ $# -ne 1 ]] ; then
+  echo "Usage $0 <target-directory>"
   exit -1
 fi
 
@@ -25,12 +16,6 @@ DIR="$( cd $1 && pwd )"
 $PY -m venv $DIR
 
 source $DIR/bin/activate
-
-if [[ "$2" -eq "2" ]] ; then
-  PY="$(which python)"
-else
-  PY="$(which python3)"
-fi
 
 $PY -m pip install wheel
 $PY -m pip install flask
@@ -52,10 +37,7 @@ $PY -m pip install infinite
 $PY -m pip install mysql-python
 $PY -m pip install pycparser
 $PY -m pip install mypy
-
-if [ "$2" == "3" ] ; then
-  $PY -m pip install mypy
-fi
+$PY -m pip install mypy
 
 if [ ! -d $DIR/third_party ] ; then
   mkdir $DIR/third_party
