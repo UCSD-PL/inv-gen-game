@@ -258,7 +258,7 @@ export class InvGraphGame {
     s.kill();
     let key = s.key;
     assert(key in this.spritePool);
-    this.spritePool[key].add(s);
+    this.spritePool[key as string].add(s);
   }
 
   unselect():void {
@@ -555,7 +555,7 @@ export class InvGraphGame {
     }
   }
 
-  drawNode(nd: Node, pos: Point, size: number): Phaser.Sprite {
+  drawNode(nd: Node, pos: Point, size: number): TextIcon {
     if (nd instanceof AssumeNode) {
       return new SourceIcon(this, nd, pos.x, pos.y);
     } else if (nd instanceof AssertNode) {
@@ -727,7 +727,7 @@ export class InvGraphGame {
       if (node == prevNode ) {
         // Only step through assignments
         if (!(node instanceof AssignNode) || !sprite.isLineShown(0)) continue;
-        let textNode: Phaser.Text = sprite.getText();
+        let textNode: Phaser.Group = sprite.getText();
         let textPos: Phaser.Point = new Point(sprite.getX() + textNode.x, sprite.getY() + textNode.y)
         let pt = sprite.rightOfLine(stmtCtr).add(textPos.x + 10, textPos.y)
         traceLayout.push([i, pt, envToText(vals)])
@@ -755,7 +755,7 @@ export class InvGraphGame {
 
     // Build text off-screen
     bfs(this.entry, (p: Node, n: Node) => {
-      this.textSprites[n.id] = this.drawNode(n, { x: this.width, y: this.height }, 15);
+      this.textSprites[n.id] = this.drawNode(n, new Point(this.width, this.height), 15);
     }, null);
     // Compute layout
     let [pos, edges] = this.computeLayout(this.textSprites);

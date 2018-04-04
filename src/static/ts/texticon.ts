@@ -1,4 +1,4 @@
-import * as Phaser from "phaser-ce"
+import * as Phaser from "phaser-ce";
 import {Point} from "phaser-ce";
 import {assert, shallowCopy, structEq} from "./util"
 
@@ -77,9 +77,9 @@ export class TextIcon extends Phaser.Group {
         }
 
         for (let i = 0; i < this._lines.length; i++) {
-            let yOff = (i == 0 ? 0 : lineGrp.children[i-1].y + lineGrp.children[i-1].height);
+            let yOff = (i == 0 ? 0 : lineGrp.children[i-1].y + (lineGrp.children[i-1] as Phaser.Text).height);
             let opts = this._lineOpts[i];
-            let line = lineGrp.children[i];
+            let line : Phaser.Text = lineGrp.children[i] as Phaser.Text;
             line.exists = opts.visible;
             line.y = yOff;
         }
@@ -93,7 +93,7 @@ export class TextIcon extends Phaser.Group {
     }
 
     public getLine(i: number): Phaser.Text {
-        return this._text.children[i];
+        return this._text.children[i] as Phaser.Text;
     }
 
     public rightOfLine(i: number): Phaser.Point {
