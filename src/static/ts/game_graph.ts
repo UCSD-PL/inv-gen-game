@@ -12,10 +12,10 @@ export abstract class Node extends DiGraph implements HasId {
 }
 
 export abstract class ExprNode extends Node {
-  expr: Expr_T;
-  constructor(id: string, expr: Expr_T) {
+  exprs: Expr_T[];
+  constructor(id: string, expr: (Expr_T[] | Expr_T)) {
     super(id);
-    this.expr = expr;
+    this.exprs = (expr instanceof Array ? expr : [expr]);
   }
 }
 

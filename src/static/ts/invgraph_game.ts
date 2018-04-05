@@ -58,7 +58,7 @@ export class PlaceholderIcon extends TextIcon {
 
 export class SourceIcon extends TextIcon {
     constructor(game: InvGraphGame, nd: AssumeNode, x?: number, y?: number) {
-      super(game.game, game.getSprite("source", 0, 0, true), nd.expr, "src_" + nd.id, x, y);
+      super(game.game, game.getSprite("source", 0, 0, true), nd.exprs, "src_" + nd.id, x, y);
     }
     public exitPoint(): Phaser.Point {
         return new Phaser.Point(
@@ -70,7 +70,7 @@ export class SourceIcon extends TextIcon {
 
 export class SinkIcon extends TextIcon {
     constructor(game: InvGraphGame, nd: AssertNode, x?: number, y?: number) {
-      super(game.game, game.getSprite("sink", 0, 0, true), nd.expr, "sink_" + nd.id, x, y);
+      super(game.game, game.getSprite("sink", 0, 0, true), nd.exprs, "sink_" + nd.id, x, y);
     }
     public entryPoint(): Phaser.Point {
         return new Phaser.Point(
@@ -82,7 +82,7 @@ export class SinkIcon extends TextIcon {
 
 export class BranchIcon extends TextIcon {
     constructor(game: InvGraphGame, nd: AssertNode, x?: number, y?: number) {
-      super(game.game, game.getSprite("branch", 0, 0, true), nd.expr, "br_" + nd.id, x, y);
+      super(game.game, game.getSprite("branch", 0, 0, true), nd.exprs, "br_" + nd.id, x, y);
     }
     public entryPoint(): Phaser.Point {
         return new Phaser.Point(
@@ -109,7 +109,7 @@ export class InputOutputIcon extends TextIcon {
     // Code duplication with OutputIcon - don't want to implement mixins just
     // for this one case
     constructor(game: InvGraphGame, nd: UserNode, x?: number, y?: number) {
-      super(game.game, game.getSprite("funnel", 0, 0, true), nd.expr, "br_" + nd.id, x, y);
+      super(game.game, game.getSprite("funnel", 0, 0, true), nd.exprs, "br_" + nd.id, x, y);
       this.icon().inputEnabled = true;
       this.icon().events.onInputDown.add(() => { game.select(nd); }, this);
       this.icon().input.useHandCursor = true;
@@ -588,7 +588,7 @@ export class InvGraphGame {
       assert(nd.successors.length == 1 &&
         nd.successors[0] instanceof IfNode);
       let bbLbl = nd.label;
-      invNet[bbLbl] = [parse(nd.expr)];
+      invNet[bbLbl] = nd.exprs.map((expr) => parse(expr));
     }
     return invNet;
   }
@@ -658,8 +658,8 @@ export class InvGraphGame {
     }, onDone);
   }
 
-  setExpr(nd: ExprNode, expr: string): void {
-    nd.expr = expr;
+  setExpr(nd: ExprNode, exprs: string[]): void {
+    nd.exprs = exprs;
     this.transformLayout(() => {
       this.nodeSprites[this.selected.id] = this.drawNode(this.selected, new Point(800, 600), 15)
     });

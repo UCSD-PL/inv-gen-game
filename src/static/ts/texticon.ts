@@ -61,6 +61,8 @@ export class TextIcon extends Phaser.Group {
 
     protected _render(): void {
         let lineGrp: Phaser.Group;
+        let rmIconStyle = { font: "15px Courier New, Courier, monospace", align: "center", fill: "#ff0000", backgroundColor: "#ffffff" };
+
 
         if (!this._textMatch()) {
             lineGrp = (this._text !== undefined ? this._text : this._game.add.group())
@@ -68,8 +70,17 @@ export class TextIcon extends Phaser.Group {
             let idx = 0;
             for (let ln of this._lines) {
                 let opts = this._lineOpts[idx];
-                let line = this._game.add.text(0, lineGrp.height, ln, opts.style, lineGrp);
-                line.exists = opts.visible;
+                let line = this._game.add.group(lineGrp);
+                line.x = 0;
+                line.y = lineGrp.height
+
+                let lineText = this._game.add.text(0, 0, ln, opts.style, line);
+                lineText.exists = opts.visible;
+                lineGrp.add(line);
+
+                if (opts.removable) {
+                    let remIcon = this._game.add.text(lineText.width, 0, " -", rmIconStyle, line);
+                }
                 idx++;
             }
         } else {

@@ -17,7 +17,7 @@ class SimpleGame extends InvGraphGame {
 
   select(n: UserNode):void {
     super.select(n);
-    $("#inv").val(n.expr);
+    $("#inv").val(n.exprs.join("&&"));
     $("#inv").prop("disabled", false);
     $("#overlay").prop("display", "none");
   }
@@ -113,7 +113,7 @@ class SimpleGame extends InvGraphGame {
       return
     }
 
-    this.selected.expr = inv;
+    this.selected.exprs = inv.split("&&").map((s: string) => s.trim());
     let invNet: InvNetwork = this.getInvNetwork();
     this.checkInvs(invNet, ()=> {});
   }
