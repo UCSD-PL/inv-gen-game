@@ -711,14 +711,26 @@ export class InvGraphGame {
     // Given a Trace, compute the locations where
     // bugs/text should appear for each step of the trace
     let traceLayout: TraceLayout = [];
+    let var_names = [];
+    for (let i = 1; i < t.length; i++) {
+      let [node, stmtIdx, vals] = t[i];
+      for (let k in vals) {
+        if (var_names.indexOf(k) == -1) {
+          var_names.push(k);
+        }
+      }
+    }
     function envToText(v: any) {
-      let res = ""
-      for (let k in v) {
-        res += "" + k + ":" + v[k] + " ";
+      let res = "";
+      for (let i = 0; i < var_names.length; i++) {
+        let k = var_names[i];
+        if (k in v) {
+          res += "" + k + ":" + v[k] + " ";
+        }
       }
       return res;
     }
-
+    
     let stmtCtr = 0;
     for (let i = 1; i < t.length; i++) {
       let [node, stmtIdx, vals] = t[i];
