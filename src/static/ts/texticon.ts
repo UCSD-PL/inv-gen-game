@@ -62,6 +62,13 @@ export class TextIcon extends Phaser.Group {
         return true;
     }
 
+    public edit(lineIdx: number): void {
+        let opts = this._lineOpts[lineIdx];
+        assert(opts.editable);
+        opts.editingNow = true;
+        this._render();
+    }
+
     protected _render(): void {
         let lineGrp: Phaser.Group;
         let rmIconStyle = { font: "15px Courier New, Courier, monospace", align: "center", fill: "#ff0000", backgroundColor: "#ffffff" };
@@ -105,8 +112,7 @@ export class TextIcon extends Phaser.Group {
                 if (opts.editable && !opts.editingNow) {
                     lineText.inputEnabled = true;
                     lineText.events.onInputDown.add(((lineIdx: number) => ()=> {
-                        this._lineOpts[lineIdx].editingNow = true;
-                        this._render();
+                        this.edit(lineIdx);
                     })(idx));
                 }
                 idx++;

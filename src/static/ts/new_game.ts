@@ -42,9 +42,23 @@ class SimpleGame extends InvGraphGame {
         // newLines must have nd.unsound as its suffix (since those are immutable)
         assert(structEq(soundLines, nd.sound))
 
-        nd.sound = soundLines;
+        unknownLines = unknownLines.filter((ln: string) => ln.trim().length != 0);
+
+        for (let i = 0; i < unknownLines.length; i++) {
+          try {
+            parse(unknownLines[i]);
+          } catch (err) {
+            // Couldn't parse i-th line
+            console.log("Error parsing: " + err);
+            gameEl.edit(i);
+            return;
+          }
+        }
+        nd.sound = soundLines; 
         nd.unsound = unknownLines;
-        this.onUserInput();
+
+        let invNet: InvNetwork = this.getInvNetwork();
+        this.checkInvs(invNet, ()=> {});
       })
     })
   }
@@ -94,11 +108,6 @@ class SimpleGame extends InvGraphGame {
         onComplete();
       }
     });
-  }
-
-  onUserInput: any = () => {
-    let invNet: InvNetwork = this.getInvNetwork();
-    this.checkInvs(invNet, ()=> {});
   }
 
   checkInvs: any = (invs: InvNetwork, onDone: ()=>void) => {
