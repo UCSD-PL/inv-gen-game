@@ -62,6 +62,10 @@ export abstract class DiGraph {
     bfs(this, discover, null);
     return res;
   }
+
+  forEachReachable(cb: (node: this)=>any): void {
+    bfs(this, (prev, cur)=> cb(cur));
+  }
 }
 
 export function bfs<T extends DiGraph>(
