@@ -4,13 +4,14 @@ import {parse} from "esprima"
 import {Node as ESNode} from "estree";
 import {invariantT} from "./types"
 import * as Phaser from "phaser-ce"
+import * as PhaserInput from "phaser-input"
 import {Point} from "phaser-ce";
 import {topo_sort, bfs, path} from "./graph";
 import {Expr_T} from "./boogie";
-import {getUid, StrMap, assert, max, intersection, single, diff, diff2, union2, copyMap2, mapMap2, copyMap, difference2, reversed, structEq} from "./util"
+import {getUid, StrMap, assert, max, intersection, single, diff, diff2, union2, copyMap2, mapMap2, copyMap, difference2, reversed, structEq, repeat, shallowCopy} from "./util"
 import {Node, ExprNode, AssignNode, IfNode, AssumeNode, UserNode,
         AssertNode, buildGraph, removeEmptyNodes, exit, NodeMap, PlaceholderNode} from "./game_graph"
-import {TextIcon} from "./texticon"
+import {LineOptions, TextIcon} from "./texticon"
 
 export type InvNetwork = StrMap<ESNode[]>;
 export type Violation = any[];
@@ -106,13 +107,24 @@ export class BranchIcon extends TextIcon {
 }
 
 export class InputOutputIcon extends TextIcon {
+  protected unsound: Expr_T[];
+  protected sound: Expr_T[];
+
     // Code duplication with OutputIcon - don't want to implement mixins just
     // for this one case
     constructor(game: InvGraphGame, nd: UserNode, x?: number, y?: number) {
-      super(game.game, game.getSprite("funnel", 0, 0, true), nd.exprs, "br_" + nd.id, x, y);
+      super(game.game, game.getSprite("funnel", 0, 0, true), [], "un_" + nd.id, x, y);
       this.icon().inputEnabled = true;
-      this.icon().events.onInputDown.add(() => { game.select(nd); }, this);
+      this.icon().events.onInputDown.add(() => {
+        this._lines.unshift("");
+        this._lineOpts.unshift(shallowCopy(this._defaultOpts));
+        this._lineOpts[0].editable = true;
+        this._lineOpts[0].removable = true;
+        this._lineOpts[0].editingNow = true;
+        this._render();
+      }, this);
       this.icon().input.useHandCursor = true;
+      this.setInvariants(nd.sound, nd.unsound);
     }
     public entryPoint(): Phaser.Point {
         return new Phaser.Point(
@@ -120,11 +132,35 @@ export class InputOutputIcon extends TextIcon {
             this._icon.y
         )
     }
+
     public exitPoint(): Phaser.Point {
         return new Phaser.Point(
             this._icon.x + 54,
             this._icon.y + this._icon.height
         )
+    }
+
+    setInvariants(sound: Expr_T[], unsound: Expr_T[]): void {
+      this.sound = sound;
+      this.unsound = unsound;
+
+      let allInvs: Expr_T[] = unsound.concat(sound);
+      let good: LineOptions = {
+              style: { font: "15px Courier New, Courier, monospace", align: "center", fill: "#00ff00", backgroundColor: "#ffffff" },
+              removable: false,
+              editable: false,
+              editingNow: false,
+              visible: true,
+      }
+      let bad: LineOptions = {
+              style: { font: "15px Courier New, Courier, monospace", align: "center", fill: "#ff0000", backgroundColor: "#ffffff" },
+              removable: true,
+              editable: true,
+              editingNow: false,
+              visible: true,
+      }
+      let allOpts: LineOptions[] = repeat(bad, unsound.length).concat(repeat(good, sound.length))
+      this.setText(allInvs, allOpts)
     }
 }
 
@@ -133,7 +169,7 @@ export class TransformerIcon extends TextIcon {
     // for this one case
     constructor(game: InvGraphGame, nd: AssignNode, x?: number, y?: number) {
       let text = nd.stmts.join("\n");
-      super(game.game, game.getSprite("gearbox", 0, 0, true), text, "br_" + nd.id, x, y, false);
+      super(game.game, game.getSprite("gearbox", 0, 0, true), text, "tr_" + nd.id, x, y, false);
       this.icon().inputEnabled = true;
       this.icon().events.onInputDown.add(() => {
         game.transformLayout(() => this.toggleText());
@@ -191,7 +227,6 @@ type ViolationInfo = [Phaser.Sprite, Violation, Trace][];
 
 export class InvGraphGame {
   protected entry: Node;
-  protected selected: UserNode;
   protected userNodes: UserNode[];
   protected bbToNode: NodeMap;
   protected f: Fun;
@@ -226,7 +261,6 @@ export class InvGraphGame {
     this.f = f;
     this.nodeSprites = {};
     this.textSprites = {};
-    this.unselect();
     this.spritePool = {};
     this.curViolations = [];
     this.animationStopRequested = false;
@@ -259,14 +293,6 @@ export class InvGraphGame {
     let key = s.key;
     assert(key in this.spritePool);
     this.spritePool[key as string].add(s);
-  }
-
-  unselect():void {
-    this.selected = null;
-  }
-
-  select(n: UserNode):void {
-    this.selected = n;
   }
 
   transformLayout(modifier: ()=>any, onDone?: ()=>any): void {
@@ -555,7 +581,7 @@ export class InvGraphGame {
     }
   }
 
-  drawNode(nd: Node, pos: Point, size: number): TextIcon {
+  drawNode(nd: Node, pos: Point): TextIcon {
     if (nd instanceof AssumeNode) {
       return new SourceIcon(this, nd, pos.x, pos.y);
     } else if (nd instanceof AssertNode) {
@@ -588,7 +614,8 @@ export class InvGraphGame {
       assert(nd.successors.length == 1 &&
         nd.successors[0] instanceof IfNode);
       let bbLbl = nd.label;
-      invNet[bbLbl] = nd.exprs.map((expr) => parse(expr));
+      let invs = nd.sound.concat(nd.unsound)
+      invNet[bbLbl] = invs.length == 0 ? [parse("false")] : invs.map((expr) => parse(expr));
     }
     return invNet;
   }
@@ -656,13 +683,6 @@ export class InvGraphGame {
         this.curViolations.push([bug, v, trace]);
       }
     }, onDone);
-  }
-
-  setExpr(nd: ExprNode, exprs: string[]): void {
-    nd.exprs = exprs;
-    this.transformLayout(() => {
-      this.nodeSprites[this.selected.id] = this.drawNode(this.selected, new Point(800, 600), 15)
-    });
   }
 
   getTrace(v: Violation): Trace {
@@ -762,12 +782,12 @@ export class InvGraphGame {
   }
 
   create(): void {
-    let fontSize = 15;
     this.graphics = this.game.add.graphics(0, 0);
+    this.game.add.plugin(PhaserInput.Plugin);
 
     // Build text off-screen
     bfs(this.entry, (p: Node, n: Node) => {
-      this.textSprites[n.id] = this.drawNode(n, new Point(this.width, this.height), 15);
+      this.textSprites[n.id] = this.drawNode(n, new Point(this.width, this.height));
     }, null);
     // Compute layout
     let [pos, edges] = this.computeLayout(this.textSprites);

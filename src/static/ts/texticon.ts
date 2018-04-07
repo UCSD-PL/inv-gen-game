@@ -1,8 +1,9 @@
 import * as Phaser from "phaser-ce";
+import * as PhaserInput from "phaser-input";
 import {Point} from "phaser-ce";
 import {assert, shallowCopy, structEq} from "./util"
 
-type LineOptions = {
+export type LineOptions = {
     style: object,
     removable: boolean,
     editable: boolean,
@@ -18,6 +19,7 @@ export class TextIcon extends Phaser.Group {
     protected _defaultOpts: LineOptions;
     protected _lineOpts: LineOptions[];
     protected _focused: number;
+    public onChanged: Phaser.Signal;
 
     constructor(game: Phaser.Game, icon: Phaser.Sprite, text: (string|string[]), name?: string, x?: number, y?:number, startShown?: boolean) {
         super(game, undefined, name, undefined, undefined, undefined);
@@ -25,6 +27,7 @@ export class TextIcon extends Phaser.Group {
         if (y == undefined) y = 0;
         if (startShown == undefined) startShown = true;
 
+        this.onChanged = new Phaser.Signal();
         this._game = game;
         this._icon = icon;
         this._icon.x = -this._icon.width/2;
@@ -71,15 +74,40 @@ export class TextIcon extends Phaser.Group {
             for (let ln of this._lines) {
                 let opts = this._lineOpts[idx];
                 let line = this._game.add.group(lineGrp);
-                line.x = 0;
-                line.y = lineGrp.height
-
-                let lineText = this._game.add.text(0, 0, ln, opts.style, line);
-                lineText.exists = opts.visible;
-                lineGrp.add(line);
+                let lineText: Phaser.Text | PhaserInput.InputField;
+                if (opts.editingNow) {
+                    let input = (this._game.add as any).inputField(0, 0, this._defaultOpts.style);
+                    input.setText(ln);
+                    input.focusOutOnEnter = true;
+                    line.add(input);
+                    input.focusOut.add(((lineIdx: number) => ()=> {
+                        this._lines[lineIdx] = input.value;
+                        this._lineOpts[lineIdx].editingNow = false;
+                        this._render();
+                        this.onChanged.dispatch(this, this._lines);
+                    })(idx))
+                    lineText = input;
+                    input.startFocus();
+                } else {
+                    lineText = this._game.add.text(0, 0, ln, opts.style, line);
+                }
 
                 if (opts.removable) {
                     let remIcon = this._game.add.text(lineText.width, 0, " -", rmIconStyle, line);
+                    remIcon.inputEnabled = true;
+                    remIcon.events.onInputDown.add(((lineIdx: number) => ()=> {
+                        this._lines.splice(lineIdx, 1);
+                        this._lineOpts.splice(lineIdx, 1)
+                        this._render();
+                        this.onChanged.dispatch(this, this._lines)
+                    })(idx));
+                }
+                if (opts.editable && !opts.editingNow) {
+                    lineText.inputEnabled = true;
+                    lineText.events.onInputDown.add(((lineIdx: number) => ()=> {
+                        this._lineOpts[lineIdx].editingNow = true;
+                        this._render();
+                    })(idx));
                 }
                 idx++;
             }
@@ -90,9 +118,10 @@ export class TextIcon extends Phaser.Group {
         for (let i = 0; i < this._lines.length; i++) {
             let yOff = (i == 0 ? 0 : lineGrp.children[i-1].y + (lineGrp.children[i-1] as Phaser.Text).height);
             let opts = this._lineOpts[i];
-            let line : Phaser.Text = lineGrp.children[i] as Phaser.Text;
-            line.exists = opts.visible;
+            let line : Phaser.Group = lineGrp.children[i] as Phaser.Group;
+            line.x = 0;
             line.y = yOff;
+            line.children.forEach((child: any) => {child.exists = opts.visible;})
         }
         this._text = lineGrp;
         this._text.y = -this._text.height/2;

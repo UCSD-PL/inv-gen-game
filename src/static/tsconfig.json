@@ -14,8 +14,8 @@
     "rootDir": ".",
     "suppressImplicitAnyIndexErrors": true,
     "target": "es6",
-    "typeRoots": ["../../node_modules/@types", "../../node_modules"],
-    "types": ["phaser-ce", "esprima", "estree", "jquery", "jquery-jsonrpcclient", "jqueryui"]
+    "typeRoots": ["../../node_modules/@types", "../../node_modules", "../../node_modules/@orange-games/"],
+    "types": ["phaser-ce", "esprima", "estree", "jquery", "jquery-jsonrpcclient", "jqueryui", "phaser-input"]
   },
   "formatCodeOptions": {
     "indentSize": 2,

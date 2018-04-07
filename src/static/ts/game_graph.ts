@@ -27,11 +27,20 @@ export class AssignNode extends Node {
   }
 }
 
-export class UserNode extends ExprNode {
+export class UserNode extends Node {
   label: string;
-  constructor(id: string, expr: Expr_T, label: string) {
-    super(id, expr);
+  sound: Expr_T[];
+  unsound: Expr_T[];
+
+  constructor(id: string, sound: Expr_T[], unsound: Expr_T[], label: string) {
+    super(id);
     this.label = label;
+    this.sound = sound;
+    this.unsound = unsound;
+  }
+
+  get exprs(): Expr_T[] {
+    return this.sound.concat(this.unsound);
   }
 }
 export class IfNode extends ExprNode { }
@@ -115,7 +124,7 @@ export function buildGraph(f: Fun): [Node, NodeMap] {
       let header = bbMap[bb.id][0];
       assert(header.predecessors.length == 1,
         "All loop headers have only 2 in-edges");
-      let newHeader = new UserNode(getUid("nd"), "false", bb.id);
+      let newHeader = new UserNode(getUid("nd"), [], [], bb.id);
       splitEdge(header.predecessors[0], header, newHeader);
       pred.addSuccessor(newHeader)
       bbMap[bb.id][0] = newHeader;

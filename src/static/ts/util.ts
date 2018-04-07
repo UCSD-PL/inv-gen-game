@@ -164,7 +164,7 @@ export function shallowCopy<T>(o: T): T {
 
   // Object shallow copy
   if (o instanceof Object) {
-    let res: any = [];
+    let res: any = {};
     for (let k in o) {
       res[k] = o[k];
     }
