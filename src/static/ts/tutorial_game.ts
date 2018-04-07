@@ -1,13 +1,13 @@
 import {rpc_loadLvlBasic, rpc_checkSoundness} from "./rpc";
 import {Fun, BB} from "./boogie";
 import * as Phaser from "phaser-ce"
-import {Node, buildGraph, removeEmptyNodes, UserNode} from "./game_graph"
+import {Node, AssumeNode, buildGraph, removeEmptyNodes, UserNode, AssignNode, AssertNode} from "./game_graph"
 import {InvGraphGame, TraceLayout, Trace, InvNetwork, InputOutputIcon} from "./invgraph_game"
-import {assert} from "./util"
+import {assert, getUid} from "./util"
 import {parse} from "esprima"
 import {Point} from "phaser-ce";
 
-class SimpleGame extends InvGraphGame {
+class TutorialGame extends InvGraphGame {
   unselect(): void {
     super.unselect();
     $("#inv").val("");
@@ -88,15 +88,19 @@ class SimpleGame extends InvGraphGame {
   }
 
   checkInvs: any = (invs: InvNetwork, onDone: ()=>void) => {
-    rpc_checkSoundness("unsolved-new-benchmarks2", this.lvlId, invs, (res) => {
-      this.setViolations(res, () => {
-        this.transformLayout(() => {
-          if (this.selected !== null) {
-            this.nodeSprites[this.selected.id] = this.drawNode(this.selected, new Point(800, 600), 15)
-          }
-        }, onDone);
-      });
-    });
+    let v = [];
+    v[0] = ["anon0"];
+    v[1] = [[{n:1}, {n:1}, {n:2}, {n:2}]];
+    this.setViolations([v], onDone);
+    // rpc_checkSoundness("unsolved-new-benchmarks2", this.lvlId, invs, (res) => {
+    //   this.setViolations(res, () => {
+    //     this.transformLayout(() => {
+    //       if (this.selected !== null) {
+    //         this.nodeSprites[this.selected.id] = this.drawNode(this.selected, new Point(800, 600), 15)
+    //       }
+    //     }, onDone);
+    //   });
+    // });
   }
 
   onFirstUpdate(): void {
@@ -121,19 +125,12 @@ class SimpleGame extends InvGraphGame {
 }
 
 $(document).ready(function() {
-
-  let lvlName = "i-sqrt"
-  let lvlSet = "unsolved-new-benchmarks2"
-  /*
-  let lvlName = "tut01"
-  let lvlSet = "tutorial"
-  */
-  rpc_loadLvlBasic(lvlSet, lvlName, (lvl) => {
-    let fun = Fun.from_json(lvl[1]);
-    let [graph_entry, mapping] = buildGraph(fun);
-    console.log("Initial:", graph_entry);
-    [graph_entry, mapping] = removeEmptyNodes(graph_entry, mapping, true);
-    console.log("After cleanup of empty nodes:", graph_entry);
-    let game = new SimpleGame("content", graph_entry, mapping, lvlName);
-  })
+  console.log("Sorin Says Hi");
+  let entry: Node = new AssumeNode(getUid("nd"), "n>0");
+  let assign: Node = new AssignNode(getUid("nd"), ["n := n+1"]);
+  let assert: Node = new AssertNode(getUid("nd"), "n > 10");
+  entry.addSuccessor(assign);
+  assign.addSuccessor(assert);
+  let bbMap = {"anon0": [entry, assign, assert]};
+  let game = new TutorialGame("content", entry, bbMap, "bogus");
 })
