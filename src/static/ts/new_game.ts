@@ -159,6 +159,6 @@ $(document).ready(function() {
     console.log("Initial:", graph_entry);
     [graph_entry, mapping] = removeEmptyNodes(graph_entry, mapping, true);
     console.log("After cleanup of empty nodes:", graph_entry);
-    let game = new SimpleGame("content", graph_entry, mapping, fun, lvlName);
+    let game = new SimpleGame("content", graph_entry, mapping, lvlName);
   })
 })
