@@ -116,10 +116,10 @@ export class InputOutputIcon extends TextIcon {
       super(game.game, game.getSprite("funnel", 0, 0, true), [], "un_" + nd.id, x, y);
       this.icon().inputEnabled = true;
       this.icon().events.onInputDown.add(() => {
-        this._lines.unshift("");
-        this._lineOpts.unshift(shallowCopy(this._defaultOpts));
-        this._lineOpts[0].editable = true;
-        this._lineOpts[0].removable = true;
+        if (this.unsound.length == 0) {
+          this.unsound.push("");
+          this.setInvariants(nd.sound, nd.unsound);
+        }
         this._lineOpts[0].editingNow = true;
         this._render();
       }, this);
@@ -154,7 +154,7 @@ export class InputOutputIcon extends TextIcon {
       }
       let bad: LineOptions = {
               style: { font: "15px Courier New, Courier, monospace", align: "center", fill: "#ff0000", backgroundColor: "#ffffff" },
-              removable: true,
+              removable: false,
               editable: true,
               editingNow: false,
               visible: true,
