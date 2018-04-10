@@ -245,7 +245,7 @@ export class InvGraphGame {
   protected lvlId: string;
   game: Phaser.Game;
 
-  constructor(container: string, graph: Node, n: NodeMap, f: Fun, lvlId: string) {
+  constructor(container: string, graph: Node, n: NodeMap, lvlId: string) {
     this.width = 800;
     this.height = 600;
     this.game = new Phaser.Game(this.width, this.height, Phaser.AUTO, container,
@@ -258,7 +258,6 @@ export class InvGraphGame {
     this.bbToNode = n;
     this.edges = {};
     this.edgeStates = {};
-    this.f = f;
     this.nodeSprites = {};
     this.textSprites = {};
     this.spritePool = {};
@@ -599,12 +598,10 @@ export class InvGraphGame {
     }
   }
 
-  getFaultyNode(t: Trace): UserNode {
-    // Every counter-example trace either begins or ends (or both) at a UserNode
-    let start: UserNode = (t[0][0] instanceof UserNode ? t[0][0] as UserNode: null);
-    let end: UserNode = (t[t.length-1][0] instanceof UserNode ? t[t.length-1][0] as UserNode: null);
-    assert (start !== null || end !== null);
-    return (start !== null ? start : end);
+  getFaultyNode(t: Trace): Node {
+    let start = t[0][0];
+    let end = t[t.length-1][0];
+    return (end instanceof UserNode ? end : start);
   }
 
   getInvNetwork(): InvNetwork {
