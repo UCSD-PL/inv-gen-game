@@ -62,4 +62,4 @@ EXPOSE 5000
 
 WORKDIR /app/src
 # Run app.py when the container launches
-CMD python3 src/server.py --local --log useractions.log --lvlset ../lvlsets/unsolved-leftover-split.lvlset --db mysql+pymysql://gamification:m58xXuH5VBuWXtaW@gamificationfacebook.cpepc4fuqyhq.us-west-2.rds.amazonaws.com/game --adminToken fuzzy --timeout 60
+CMD python3 server.py --local --log useractions.log --lvlset ../lvlsets/unsolved-leftover-split.lvlset --db mysql+pymysql://gamification:m58xXuH5VBuWXtaW@gamificationfacebook.cpepc4fuqyhq.us-west-2.rds.amazonaws.com/game --adminToken fuzzy --timeout 60
