@@ -308,7 +308,7 @@ export class InvGraphGame {
 
   private updateLayout(oldL: Layout, newL: Layout, onUpdate?: ()=>any): void {
     if (this.selectedViolation != null) {
-      this.hideViolation();
+      this.hideViolation(); // TODO: Show violation afterwards
     }
     let [oldSpr, oldPos, oldEdges, oldEdgeState] = oldL;
     let [newSpr, newPos, newEdges, newEdgeState] = newL;
@@ -431,7 +431,9 @@ export class InvGraphGame {
     let err = new TextIcon(this.game, this.getSprite("bug", 0, 0), "", "cur_trace_bug", 0, 0, true)
     this.selectedViolation = [err, 0, trace, traceLayout];
     this.positionBug(0);
-    err.icon().exists = true;
+    let icon = err.icon();
+    icon.inputEnabled = true;
+    icon.exists = true;
   }
 
   private positionBug(step: number) {
@@ -815,6 +817,18 @@ export class InvGraphGame {
 
     // Position sprites
     this.updateLayout(oldLayout, newLayout, ()=> this.onFirstUpdate());
+    let up: Phaser.Key = this.game.input.keyboard.addKey(38); // TODO
+    let down: Phaser.Key = this.game.input.keyboard.addKey(40); // TODO
+    up.onDown.add(() => {
+      if (this.selectedViolation != null) {
+        this.stepBackwards();
+      }
+    })
+    down.onDown.add(() => {
+      if (this.selectedViolation != null) {
+        this.stepForward();
+      }
+    })
   }
 
   onFirstUpdate(): void {
