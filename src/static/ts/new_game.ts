@@ -9,31 +9,8 @@ import {Point} from "phaser-ce";
 import { TextIcon } from "ts/texticon";
 
 class SimpleGame extends InvGraphGame {
-  unselect(): void {
-    $("#inv").val("");
-    $("#inv").prop("disabled", true);
-    $("#overlay").prop("display", "none");
-  }
-
-  select(n: UserNode):void {
-    $("#inv").val(n.exprs.join("&&"));
-    $("#inv").prop("disabled", false);
-    $("#overlay").prop("display", "none");
-  }
-
   create(): void {
     super.create();
-    $("#step").on("click", (e) => { this.stepForward();})
-    $("#back").on("click", (e) => { this.stepBackwards();})
-    $("#play").on("click", (e) => {
-      this.playBug();
-      this._controlsPlaying();
-    })
-    $("#stop").on("click", (e) => {
-      this.animationStopRequested = true;
-      this._controlsStopped();
-    })
-    this._controlsDisable();
     this.forEachUserNode((nd: UserNode) => {
       this.textSprites[nd.id].onChanged.add((gameEl: TextIcon, newLines: string[])=> {
         assert (newLines.length >= nd.sound.length)
@@ -68,46 +45,6 @@ class SimpleGame extends InvGraphGame {
       if (!(nd instanceof UserNode))  return;
       cb(nd);
     })
-  }
-
-  _controlsPlaying(): void {
-    $("#step").prop("disabled", true);
-    $("#back").prop("disabled", true);
-    $("#play").prop("disabled", true);
-    $("#stop").prop("disabled", false);
-  }
-
-  _controlsStopped(): void {
-    $("#step").prop("disabled", false);
-    $("#back").prop("disabled", false);
-    $("#play").prop("disabled", false);
-    $("#stop").prop("disabled", true);
-  }
-
-  _controlsDisable(): void {
-    $("#step").prop("disabled", true);
-    $("#back").prop("disabled", true);
-    $("#play").prop("disabled", true);
-    $("#stop").prop("disabled", true);
-  }
-
-  hideViolation(): void {
-    super.hideViolation();
-    this._controlsDisable();
-  }
-
-  showViolation(traceLayout: TraceLayout, trace: Trace): void {
-    super.showViolation(traceLayout, trace);
-    this._controlsStopped();
-  }
-
-  playBug(onComplete?: ()=>any) {
-    super.playBug(()=>{
-      this._controlsStopped();
-      if (onComplete !== undefined) {
-        onComplete();
-      }
-    });
   }
 
   checkInvs: any = (invs: InvNetwork, onDone: ()=>void) => {

@@ -307,8 +307,10 @@ export class InvGraphGame {
   }
 
   private updateLayout(oldL: Layout, newL: Layout, onUpdate?: ()=>any): void {
+    let shouldShowViolation: boolean = false;
     if (this.selectedViolation != null) {
       this.hideViolation(); // TODO: Show violation afterwards
+      shouldShowViolation = true;
     }
     let [oldSpr, oldPos, oldEdges, oldEdgeState] = oldL;
     let [newSpr, newPos, newEdges, newEdgeState] = newL;
@@ -406,6 +408,11 @@ export class InvGraphGame {
       this.pos = newPos;
       this.edges = newEdges;
       this.edgeStates = newEdgeState;
+      if (shouldShowViolation) {
+        let trace: Trace = this.curViolations[0][1];
+        let traceLayout = this.layoutTrace(trace);
+        this.showViolation(traceLayout, trace)
+      }
       if (onUpdate !== undefined) {
         onUpdate();
       }
@@ -662,10 +669,12 @@ export class InvGraphGame {
   }
 
   setViolations(vs: Violation[], onDone: ()=>any): void {
-    console.log("Out of ", vs.length, " violations(", vs, "picking earilest violation: ", this.earilestViolation(vs));
-    vs = [this.earilestViolation(vs)];
     if (this.selectedViolation != null) this.hideViolation();
     this.curViolations = [];
+    if (vs.length > 0) {
+      vs = [this.earilestViolation(vs)];
+      console.log("Out of ", vs.length, " violations(", vs, "picking earilest violation: ", this.earilestViolation(vs));
+    }
     this.transformLayout(() => {
       for (let e1 in this.edgeStates) {
         for (let e2 in this.edgeStates[e1]) {
@@ -690,11 +699,13 @@ export class InvGraphGame {
         this.curViolations.push([v, trace]);
       }
     }, ()=> {
-      assert(vs.length == 1);
-      let trace = this.getTrace(vs[0]);
-      let traceLayout = this.layoutTrace(trace);
-      console.log("Show violation:", traceLayout, trace)
-      this.showViolation(traceLayout, trace);
+      if (vs.length > 0) {
+        assert(vs.length == 1);
+        let trace = this.getTrace(vs[0]);
+        let traceLayout = this.layoutTrace(trace);
+        console.log("Show violation:", traceLayout, trace)
+        this.showViolation(traceLayout, trace);
+      }
       onDone();
     });
   }
@@ -817,8 +828,8 @@ export class InvGraphGame {
 
     // Position sprites
     this.updateLayout(oldLayout, newLayout, ()=> this.onFirstUpdate());
-    let up: Phaser.Key = this.game.input.keyboard.addKey(38); // TODO
-    let down: Phaser.Key = this.game.input.keyboard.addKey(40); // TODO
+    let up: Phaser.Key = this.game.input.keyboard.addKey(38);
+    let down: Phaser.Key = this.game.input.keyboard.addKey(40);
     up.onDown.add(() => {
       if (this.selectedViolation != null) {
         this.stepBackwards();
