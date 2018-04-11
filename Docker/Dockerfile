@@ -46,19 +46,20 @@ RUN  git clone -b dockerized https://8c27f4108ac53546e205d396e86dd25cce7016a8:x-
 WORKDIR /app
 
 # Copy the current directory contents into the container at /app
-ADD . /app
+#ADD . /app
  
 # Install any needed packages specified in requirements.txt
 RUN pip3 install -r requirements.txt \
  && bash ./setupServer.sh
 
-CMD ["/bin/bash"]
+#CMD ["/bin/bash"]
 
 # Make port 80 available to the world outside this container
-#EXPOSE 80
+EXPOSE 5000
 
 # Define environment variable
 #ENV NAME World
 
+WORKDIR /app/src
 # Run app.py when the container launches
-#CMD python  --local --log useractions.log --lvlset ../lvlsets/unsolved-leftover-split.lvlset --db mysql+pymysql://gamification:m58xXuH5VBuWXtaW@gamificationfacebook.cpepc4fuqyhq.us-west-2.rds.amazonaws.com/game --adminToken fuzzy --timeout 60
+CMD python3 src/server.py --local --log useractions.log --lvlset ../lvlsets/unsolved-leftover-split.lvlset --db mysql+pymysql://gamification:m58xXuH5VBuWXtaW@gamificationfacebook.cpepc4fuqyhq.us-west-2.rds.amazonaws.com/game --adminToken fuzzy --timeout 60
