@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
   zip \
   python3 \
   python3-dev \
-  python-pip \
+  python3-pip \
   python3-venv \
   build-essential \
   mono-devel \
@@ -27,13 +27,16 @@ RUN apt-get update && apt-get install -y \
   openjdk-8-jdk \
  && rm -rf /var/lib/apt/lists/* \
  && npm install -g gulp-cli \
- && npm install --save-dev typescript gulp gulp-typescript \
- && npm install --save-dev browserify tsify vinyl-source-stream \
- && npm install --save-dev watchify gulp-util \
- && npm install --save-dev gulp-uglify vinyl-buffer gulp-sourcemaps \
- && npm install jquery --save \
- && npm install @types/jquery --save \
- && npm install --save @types/jquery-jsonrpcclient
+ && npm install -g --save-dev typescript gulp gulp-typescript \
+ && npm install -g --save-dev browserify tsify vinyl-source-stream \
+ && npm install -g --save-dev watchify gulp-util \
+ && npm install -g --save-dev gulp-uglify vinyl-buffer gulp-sourcemaps \
+ && npm install -g tsc \
+ && npm install -g typings \
+ && npm install -g typescript \
+ && npm install -g jquery --save \
+ && npm install -g @types/jquery --save \
+ && npm install -g --save @types/jquery-jsonrpcclient
 
 
 # Downloading the latest version of the app
@@ -46,8 +49,7 @@ WORKDIR /app
 ADD . /app
  
 # Install any needed packages specified in requirements.txt
-RUN pip install --upgrade pip \
- && pip install -r requirements.txt \
+RUN pip3 install -r requirements.txt \
  && bash ./setupServer.sh
 
 CMD ["/bin/bash"]
