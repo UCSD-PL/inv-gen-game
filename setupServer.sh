@@ -33,17 +33,23 @@ if [ ! -e $DIR/bin/z3 ]; then
   popd
 fi
 
-if [ ! -e $DIR/third_party/boogie ]; then
-  pushd $DIR/third_party
-  git clone https://github.com/boogie-org/boogie.git
-  cd boogie
-  wget -4 https://nuget.org/nuget.exe
-  mono ./nuget.exe restore Source/Boogie.sln
-  mozroots --import --sync
-  xbuild Source/Boogie.sln
-  ln -s $DIR/third_party/z3/build/z3 Binaries/z3.exe
-  popd
-fi
+MYDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" 
+
+pushd $MYDIR/src/harness/dilig/
+make
+popd
+pushd $MYDIR/intro-benchmarks
+make
+popd
+pushd $MYDIR/intro-benchmarks-pruned
+make
+popd
+pushd $MYDIR/test-benchmarks
+make
+popd
+pushd $MYDIR/src/frontend
+make
+popd
 
 deactivate
 
@@ -58,4 +64,17 @@ deactivate
 echo "export JAVA_HOME=\${JAVA_HOME:-\$(dirname \$(dirname \$(dirname \$(readlink -f \$(/usr/bin/which java)))))}" >> $DIR/bin/activate
 # echo "export PATH=\$PATH:$MYDIR/node_modules/.bin/" >> $DIR/bin/activate
 
-echo "To begin developing run source $DIR/bin/activate and then make"
+
+tar cvf server.tar env
+tar --exclude='src/static' rvf server.tar src
+tar rvf server.tar lvlsets
+tar rvf server.tar dilig-benchmarks
+tar rvf server.tar ice-benchmarks
+tar rvf server.tar max-benchmarks
+tar rvf server.tar node_modules
+tar rvf server.tar sv_auto_trans
+tar rvf server.tar sv_manual_trans
+tar rvf server.tar run.sh
+tar rvf server.tar requirements.txt
+
+echo "Server image created in server.tar"

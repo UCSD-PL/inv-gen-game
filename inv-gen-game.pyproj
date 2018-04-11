@@ -5,9 +5,9 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{eaa40a43-8b3b-4abf-acb1-522d40eab799}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>src\server.py</StartupFile>
+    <StartupFile>src/server.py</StartupFile>
     <SearchPath>src\</SearchPath>
-    <WorkingDirectory>.</WorkingDirectory>
+    <WorkingDirectory>src</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <ProjectTypeGuids>{789894c7-04a9-4a11-a6b5-3f4435165112};{1b580a1a-fdb3-4b32-83e1-6407eb2722e6};{349c5851-65df-11da-9384-00065b846f21};{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <LaunchProvider>Web launcher</LaunchProvider>
@@ -15,6 +15,9 @@
     <WebBrowserUrl>http://localhost</WebBrowserUrl>
     <PythonWsgiHandler>{StartupModule}.wsgi_app</PythonWsgiHandler>
     <UseIISExpress>true</UseIISExpress>
+    <CommandLineArguments>--local --log useractions.log --lvlset ../lvlsets/unsolved-leftover-split.lvlset --db mysql+pymysql://gamification:m58xXuH5VBuWXtaW@gamificationfacebook.cpepc4fuqyhq.us-west-2.rds.amazonaws.com/game --adminToken fuzzy --timeout 60</CommandLineArguments>
+    <IsWindowsApplication>False</IsWindowsApplication>
+    <WebBrowserPort>5000</WebBrowserPort>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
@@ -430,7 +433,6 @@
     <Content Include="dilig-benchmarks\single\46.desugared.sol" />
     <Content Include="dilig-benchmarks\single\46.desugared.trace" />
     <Content Include="dilig-benchmarks\single\46.ice-dt.bpl" />
-    <Content Include="Dockerfile" />
     <Content Include="ice-benchmarks\add-run.c" />
     <Content Include="ice-benchmarks\add.bpl" />
     <Content Include="ice-benchmarks\add.c" />
@@ -1109,45 +1111,6 @@
     <Content Include="src\next_lvl.sh" />
     <Content Include="src\populate_data.sh" />
     <Content Include="src\run_daikon.sh" />
-    <Content Include="src\static\admin.css" />
-    <Content Include="src\static\admin.html" />
-    <Content Include="src\static\arrow.css" />
-    <Content Include="src\static\consent.html" />
-    <Content Include="src\static\dashboard.html" />
-    <Content Include="src\static\esprima.js" />
-    <Content Include="src\static\game.html" />
-    <Content Include="src\static\game_twop.html" />
-    <Content Include="src\static\gulpfile.js" />
-    <Content Include="src\static\inv.css" />
-    <Content Include="src\static\knife-down.gif" />
-    <Content Include="src\static\knife-up.gif" />
-    <Content Include="src\static\Makefile" />
-    <Content Include="src\static\mturk_landing.html" />
-    <Content Include="src\static\package.json" />
-    <Content Include="src\static\qualification_tutorial.html" />
-    <Content Include="src\static\survey.html" />
-    <Content Include="src\static\tsconfig.json" />
-    <Content Include="src\static\ts\bonus.ts" />
-    <Content Include="src\static\ts\container.ts" />
-    <Content Include="src\static\ts\ctrexGameLogic.ts" />
-    <Content Include="src\static\ts\ctrexTracesWindow.ts" />
-    <Content Include="src\static\ts\curvedarrow.ts" />
-    <Content Include="src\static\ts\eval.ts" />
-    <Content Include="src\static\ts\gameLogic.ts" />
-    <Content Include="src\static\ts\level.ts" />
-    <Content Include="src\static\ts\logic.ts" />
-    <Content Include="src\static\ts\powerups.ts" />
-    <Content Include="src\static\ts\pp.ts" />
-    <Content Include="src\static\ts\progressWindow.ts" />
-    <Content Include="src\static\ts\roundsGameLogic.ts" />
-    <Content Include="src\static\ts\rpc.ts" />
-    <Content Include="src\static\ts\scoreWindow.ts" />
-    <Content Include="src\static\ts\stickyWindow.ts" />
-    <Content Include="src\static\ts\traceWindow.ts" />
-    <Content Include="src\static\ts\util.ts" />
-    <Content Include="src\static\tutorial.html" />
-    <Content Include="src\static\tutorial_twop.html" />
-    <Content Include="src\static\typings.json" />
     <Content Include="src\stubs\frozendict.pyi" />
     <Content Include="src\stubs\pyparsing.pyi" />
     <Content Include="src\stubs\Pyro4\errors.pyi" />
@@ -2727,8 +2690,7 @@
     <Folder Include="src\lib\daikon" />
     <Folder Include="src\lib\ice" />
     <Folder Include="src\lib\invgen" />
-    <Folder Include="src\static" />
-    <Folder Include="F:\Workspace\Gamification\phaser-inv-gen-game\inv-gen-game\src\static\ts\" />
+    <Folder Include="src\static\" />
     <Folder Include="src\static\ts\" />
     <Folder Include="src\stubs" />
     <Folder Include="src\stubs\Pyro4" />
@@ -2751,6 +2713,13 @@
     <Folder Include="sv_manual_trans\loops\count_up_down_true-unreach-call_true-termination.desugared.new_fuzz_traces" />
     <Folder Include="test-benchmarks" />
     <Folder Include="test-conditional" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="src\frontend\frontend.njsproj">
+      <Name>frontend</Name>
+      <Project>{6d6e04e6-eca6-49eb-9573-15ac5e3f3201}</Project>
+      <Private>True</Private>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Interpreter Include="env\">

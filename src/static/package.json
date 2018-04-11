@@ -12,5 +12,14 @@
     "gulp": "^3.9.1",
     "gulp-typescript": "^4.0.1",
     "typescript": "^2.7.2"
+
+  },
+  "dependencies": {
+    "@types/facebook-js-sdk": "2.8.3",
+    "@types/esprima": "2.1.35",
+    "@types/estree": "0.0.38",
+    "@types/jquery": "1.10.34",
+    "@types/jquery-jsonrpcclient": "0.7.29",
+    "@types/jqueryui": "1.9.27"
   }
 }

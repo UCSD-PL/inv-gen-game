@@ -191,7 +191,8 @@ def levelsPlayedInSession(session, assignmentId):
   return q.count()
 
 def open_db(path):
-  if "mysql+mysqldb://" in path:
+  if ('mysql+pymysql://' in args.db):
+    #if "mysql+mysqldb://" in path:
     sessionF = open_mysql_db(path)
   else:
     sessionF = open_sqlite_db(path)

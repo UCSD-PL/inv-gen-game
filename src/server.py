@@ -1,6 +1,6 @@
-#! /usr/bin/env python
+#!  /usr/bin/env python
 from flask import Flask
-from flask import request
+from flask import request, redirect, url_for
 from flask_jsonrpc import JSONRPC as rpc
 from os.path import dirname, abspath, realpath, join, isfile
 from js import esprimaToZ3, esprimaToBoogie, boogieToEsprima, \
@@ -33,39 +33,42 @@ from server_common import openLog, log, log_d, pp_exc
 
 class Server(Flask):
     def get_send_file_max_age(self, name):
-        if (name in [ 'jquery-1.12.0.min.js', \
+        if (name in ['jquery-1.12.0.min.js', \
                       'jquery-migrate-1.2.1.min.js', \
                       'jquery.jsonrpcclient.js']):
             return 100000
 
         return 0
 
-app = Server(__name__, static_folder='static/', static_url_path='')
+app = Server(__name__, static_folder='frontend/', static_url_path='/game')
 api = rpc(app, '/api')
+
+@app.route('/')
+def index():
+    return redirect(url_for('static', filename='app/start.html'))
 
 ## Utility functions #################################################
 def getLastVerResult(lvlset, lvlid, session, workerId=None):
     events = session.query(Event)
-    verifyAttempts = events.filter(Event.type == "VerifyAttempt").all();
-    verifyAttempts = [x for x in verifyAttempts if x.payl()["lvlset"] == lvlset and x.payl()["lvlid"] == lvlid
-          and (workerId is None or x.payl()["workerId"] == workerId)];
+    verifyAttempts = events.filter(Event.type == "VerifyAttempt").all()
+    verifyAttempts = [x for x in verifyAttempts if x.payl()["lvlset"] == lvlset and x.payl()["lvlid"] == lvlid and (workerId is None or x.payl()["workerId"] == workerId)]
     if (len(verifyAttempts) > 0):
-      return verifyAttempts[-1].payl();
+      return verifyAttempts[-1].payl()
     else:
-      return None;
+      return None
 
 def divisionToMul(inv):
     if isinstance(inv, AstBinExpr) and \
        inv.op in ['==', '<', '>', '<=', '>=', '!==']:
-        if (isinstance(inv.lhs, AstBinExpr) and inv.lhs.op == 'div' and\
+        if (isinstance(inv.lhs, AstBinExpr) and inv.lhs.op == 'div' and \
                 isinstance(inv.lhs.rhs, AstNumber)):
                     return AstBinExpr(inv.lhs.lhs, inv.op, \
-                                      AstBinExpr(inv.rhs, '*', inv.lhs.rhs));
+                                      AstBinExpr(inv.rhs, '*', inv.lhs.rhs))
 
-        if (isinstance(inv.rhs, AstBinExpr) and inv.rhs.op == 'div' and\
+        if (isinstance(inv.rhs, AstBinExpr) and inv.rhs.op == 'div' and \
                 isinstance(inv.rhs.rhs, AstNumber)):
                     return AstBinExpr(AstBinExpr(inv.lhs, "*", inv.rhs.rhs), \
-                                      inv.op, inv.rhs.lhs);
+                                      inv.op, inv.rhs.lhs)
     return inv
 
 columnSwaps = {
@@ -91,7 +94,7 @@ def logEvent(workerId, name, data, mturkId):
         as JSON in both the textual log, as well as in the database """
     session = sessionF()
     addEvent(workerId, name, time(), args.ename, request.remote_addr, \
-             data, session, mturkId);
+             data, session, mturkId)
     return None
 
 @api.method("App.getTutorialDone")
@@ -191,7 +194,7 @@ def genNextLvl(workerId, mturkId, levelSet, levelId, invs, individualMode):
         counterexamples to invs to the current level. The new level has the
         same id as levelId with ".g" appended at the end. This is a hack.
     """
-    s = sessionF();
+    s = sessionF()
     if (levelSet not in traces):
         raise Exception("Unkonwn level set " + str(levelSet))
 
@@ -222,11 +225,11 @@ def genNextLvl(workerId, mturkId, levelSet, levelId, invs, individualMode):
 
 
     otherInvs = lastSoundInvs.union(lastNonindInvs)
-    ((overfitted, _), (_, _), sound, violations) =\
+    ((overfitted, _), (_, _), sound, violations) = \
       tryAndVerifyLvl(lvl, userInvs, otherInvs, args.timeout)
 
     # See if the level is solved
-    solved = len(violations) == 0;
+    solved = len(violations) == 0
     if (solved):
         payl = [levelSet, levelId, invs, [ boogieToEsprimaExpr(e) for e in sound ]]
         addEvent("verifier", "GenNext.Solved", time(), args.ename, \
@@ -240,7 +243,7 @@ def genNextLvl(workerId, mturkId, levelSet, levelId, invs, individualMode):
     bbs = lvl["program"]
     loop = lvl["loop"]
     ctrexInvs = lastSoundInvs.union(userInvs)
-    safetyCtrex =\
+    safetyCtrex = \
         loopInvSafetyCtrex(loop, ctrexInvs, bbs, args.timeout)
     redRows = [ fix(x) for x in safetyCtrex if len(x) != 0 ]
     print("RedRows: ", redRows)
@@ -249,11 +252,11 @@ def genNextLvl(workerId, mturkId, levelSet, levelId, invs, individualMode):
         payl = [levelSet, levelId, invs, [ boogieToEsprimaExpr(e) for e in ctrexInvs ]]
         addEvent("verifier", "GenNext.NoNewRows", time(), args.ename, \
                  "localhost", payl, s, mturkId)
-        newLvl = copy(lvl);
+        newLvl = copy(lvl)
         newLvlId = levelId + ".g"
         newLvl["data"][0].extend(greenRows)
         newLvl["data"][2].extend(redRows)
-        traces[levelSet][newLvlId] = newLvl;
+        traces[levelSet][newLvlId] = newLvl
         return loadLvl(levelSet, newLvlId, mturkId, individualMode)
     else:
         # Else give them the actual next level
@@ -265,7 +268,7 @@ def genNextLvl(workerId, mturkId, levelSet, levelId, invs, individualMode):
 def loadNextLvl(workerId, mturkId, individualMode):
     """ Return the unsolved level seen by the fewest users. """
     assignmentId = mturkId[2]
-    session = sessionF();
+    session = sessionF()
 
     if args.maxlvls is not None:
       # It's inefficient to look through all the levels twice.  This can
@@ -273,7 +276,7 @@ def loadNextLvl(workerId, mturkId, individualMode):
       if levelsPlayedInSession(session, assignmentId) >= args.maxlvls:
         return
 
-    level_names = list(traces[curLevelSetName].keys());
+    level_names = list(traces[curLevelSetName].keys())
     sort_keys = [len(allInvs(session, enames=[args.ename],
       lvlsets=[curLevelSetName], lvls=[x])) for x in level_names]
     if individualMode:
@@ -321,7 +324,7 @@ def instantiate(invs, traceVars, trace, mturkId): #pylint: disable=unused-argume
 
             for z3Inv in z3Invs:
                 if implies(z3Inv, instZ3Inv):
-                    implied = True;
+                    implied = True
                     break
 
             if (implied):
@@ -362,7 +365,7 @@ def getPositiveExamples(levelSet, levelId, cur_expl_state, overfittedInvs, num):
     found = []
     need = num
     overfitBoogieInvs = [esprimaToBoogie(x, {}) for x in overfittedInvs]
-    negatedVals, _= findNegatingTrace(loop, bbs, num, overfitBoogieInvs)
+    negatedVals, _ = findNegatingTrace(loop, bbs, num, overfitBoogieInvs)
 
     if (negatedVals):
         newExpState = (_from_dict(lvl['variables'], negatedVals[0]), 0, False)
@@ -376,9 +379,9 @@ def getPositiveExamples(levelSet, levelId, cur_expl_state, overfittedInvs, num):
 
         good_env = _to_dict(lvl['variables'], loop_head)
         # Lets first try to find terminating executions:
-        new_vals, terminating = _tryUnroll(loop, bbs, nunrolls+1, \
-                                           nunrolls+1+need, None, good_env)
-        new_vals = new_vals[nunrolls+1:]
+        new_vals, terminating = _tryUnroll(loop, bbs, nunrolls + 1, \
+                                           nunrolls + 1 + need, None, good_env)
+        new_vals = new_vals[nunrolls + 1:]
         cur_expl_state[ind] = (loop_head, nunrolls + len(new_vals), terminating)
 
         found.extend(new_vals)
@@ -393,7 +396,7 @@ def getPositiveExamples(levelSet, levelId, cur_expl_state, overfittedInvs, num):
         if (len(new_vals) == 0):
             break
         newExpState = (_from_dict(lvl['variables'], new_vals[0]), \
-                       len(new_vals)-1, \
+                       len(new_vals) - 1, \
                        terminating)
         cur_expl_state.append(newExpState)
 
@@ -420,7 +423,7 @@ def equivalentPairs(invL1, invL2, mturkId): #pylint: disable=unused-argument
         try:
           equiv = equivalent(x, y)
         except Unknown:
-          equiv = False; # Conservative assumption
+          equiv = False # Conservative assumption
 
         if (equiv):
           res.append((x,y))
@@ -448,7 +451,7 @@ def impliedPairs(invL1, invL2, mturkId): #pylint: disable=unused-argument
         try:
           impl = implies(x, y)
         except Unknown:
-          impl = False; # Conservative assumption
+          impl = False # Conservative assumption
 
         if (impl):
           res.append((x,y))
@@ -469,8 +472,7 @@ def isTautology(inv, mturkId): #pylint: disable=unused-argument
       res = (tautology(esprimaToZ3(inv, {})))
       return res
     except Unknown:
-      return False; # Conservative assumption
-
+      return False # Conservative assumption
 @api.method("App.tryAndVerify")
 @pp_exc
 @log_d(str, str, pp_EsprimaInvs, pp_mturkId, bool, pp_tryAndVerifyRes)
@@ -494,7 +496,7 @@ def tryAndVerify(levelSet, levelId, invs, mturkId, individualMode):
               invs (not just the sound ones). This is used by the 'rounds' game
               mode to generate red rows for the next level.
     """ 
-    s = sessionF();
+    s = sessionF()
     if (levelSet not in traces):
         raise Exception("Unkonwn level set " + str(levelSet))
 
@@ -513,7 +515,7 @@ def tryAndVerify(levelSet, levelId, invs, mturkId, individualMode):
                       str(levelSet) + " not a dynamic boogie level.")
 
     workerId, _, _ = mturkId
-    print(repr(set));
+    print(repr(set))
     userInvs = set([ esprimaToBoogie(x, {}) for x in invs ])
     otherInvs = set([])
     lastVer = getLastVerResult(levelSet, levelId, s,
@@ -523,18 +525,18 @@ def tryAndVerify(levelSet, levelId, invs, mturkId, individualMode):
       otherInvs = otherInvs.union([parseExprAst(x) for x in lastVer["sound"]])
       otherInvs = otherInvs.union([parseExprAst(x) for x in lastVer["nonind"]])
 
-    ((overfitted, _), (nonind, _), sound, violations) =\
+    ((overfitted, _), (nonind, _), sound, violations) = \
       tryAndVerifyLvl(lvl, userInvs, otherInvs, args.timeout)
 
     # See if the level is solved
-    solved = len(violations) == 0;
+    solved = len(violations) == 0
     fix = lambda x: _from_dict(lvl['variables'], x, 0)
 
     if (not solved):
         bbs = lvl["program"]
         loop = lvl["loop"]
         direct_ctrexs = loopInvSafetyCtrex(loop, otherInvs.union(userInvs),\
-                                           bbs, args.timeout);
+                                           bbs, args.timeout)
     else:
         direct_ctrexs = []
 
@@ -551,7 +553,7 @@ def tryAndVerify(levelSet, levelId, invs, mturkId, individualMode):
 
 
     res = (overfitted, nonind, sound, safety_ctrexs, direct_ctrexs)
-    payl ={
+    payl = {
       "lvlset": levelSet,
       "lvlid": levelId,
       "overfitted":nodups([str(esprimaToBoogie(x[0], {})) for x in overfitted]),
@@ -572,13 +574,13 @@ def simplifyInv(inv, mturkId): #pylint: disable=unused-argument
     """ Given an invariant inv return its 'simplified' version. We
         treat that as the canonical version of an invariant. Simplification
         is performed by z3 """
-    boogieInv = esprimaToBoogie(inv, {});
-    noDivBoogie = divisionToMul(boogieInv);
+    boogieInv = esprimaToBoogie(inv, {})
+    noDivBoogie = divisionToMul(boogieInv)
     z3_inv = expr_to_z3(noDivBoogie, AllIntTypeEnv())
     print(z3_inv, boogieInv)
-    simpl_z3_inv = simplify(z3_inv, arith_lhs=True);
-    simpl_boogie_inv = z3_expr_to_boogie(simpl_z3_inv);
-    return boogieToEsprima(simpl_boogie_inv);
+    simpl_z3_inv = simplify(z3_inv, arith_lhs=True)
+    simpl_boogie_inv = z3_expr_to_boogie(simpl_z3_inv)
+    return boogieToEsprima(simpl_boogie_inv)
 
 @api.method("App.getRandomCode")
 @pp_exc
@@ -596,9 +598,9 @@ def getVal(key):
         synchronizing shared state. 
     """
     if (type(key) != str):
-      raise Exception("Key must be string");
+      raise Exception("Key must be string")
 
-    return kvStore[key];
+    return kvStore[key]
 
 @api.method("App.set")
 @pp_exc
@@ -608,22 +610,22 @@ def setVal(key, val, expectedGen):
         synchronizing shared state. 
     """
     if (type(key) != str):
-      raise Exception("Key must be string");
+      raise Exception("Key must be string")
 
     if (expectedGen != -1):
       (curGen, curVal) = kvStore[key]
     else:
       if (key in kvStore):
         raise Exception("Trying to add a new key with gen 0 " + \
-                        "but key already there: " + key);
+                        "but key already there: " + key)
 
     if (expectedGen != -1 and curGen != expectedGen):
-      return (curGen, curVal);
+      return (curGen, curVal)
     else:
-      kvStore[key] = (expectedGen + 1, val);
+      kvStore[key] = (expectedGen + 1, val)
       return (expectedGen + 1, val)
 
-    return kvStore[key];
+    return kvStore[key]
 
 # Admin Calls:
 @api.method("App.getLogs")
@@ -634,16 +636,16 @@ def getLogs(inputToken, afterTimestamp, afterId):
       or afterId if specified). This is only used by admin interface.
   """
   if inputToken != adminToken:
-    raise Exception(str(inputToken) + " not a valid token.");
+    raise Exception(str(inputToken) + " not a valid token.")
 
-  s = sessionF();
+  s = sessionF()
   if (afterTimestamp != None):
     afterT = datetime.strptime(afterTimestamp, "%a, %d %b %Y %H:%M:%S %Z")
-    evts = s.query(Event).filter(Event.time > afterT).all();
+    evts = s.query(Event).filter(Event.time > afterT).all()
   elif (afterId != None):
-    evts = s.query(Event).filter(Event.id > afterId).all();
+    evts = s.query(Event).filter(Event.id > afterId).all()
   else:
-    evts = s.query(Event).all();
+    evts = s.query(Event).all()
 
   return [ { "id": e.id,
              "type": e.type,
@@ -662,7 +664,7 @@ def getSolutions(): # Lvlset is assumed to be current by default
   res = { }
   for lvlId in lvls:
     solnFile = lvls[lvlId]["path"][0][:-len(".bpl")] + ".sol"
-    soln = open(solnFile).read().strip();
+    soln = open(solnFile).read().strip()
     boogieSoln = parseExprAst(soln)
     res[curLevelSetName + "," + lvlId] = [boogieToEsprimaExpr(boogieSoln)]
   return res
@@ -677,8 +679,7 @@ def reportProblem(mturkId, lvl, desc):
   lines = []
   lines.append("A problem report has been submitted.")
   lines.append("")
-  lines.append("Time: %s" %
-    datetime.now().strftime("%a, %d %b %Y %H:%M:%S %Z"))
+  lines.append("Time: %s" % datetime.now().strftime("%a, %d %b %Y %H:%M:%S %Z"))
   lines.append("HIT: %s" % mturkId[1])
   lines.append("Worker: %s" % mturkId[0])
   lines.append("Experiment: %s" % args.ename)
@@ -694,8 +695,7 @@ if __name__ == "__main__":
     p.add_argument('--local', action='store_true',
             help='Run without SSL for local testing')
     p.add_argument('--log', type=str,
-            help='an optional log file to store all user actions. ' +
-                 'Entries are stored in JSON format.')
+            help='an optional log file to store all user actions. ' + 'Entries are stored in JSON format.')
     p.add_argument('--port', type=int, help='an optional port number')
     p.add_argument('--ename', type=str, default='default',
             help='Name for experiment; if none provided, use "default"')
@@ -704,8 +704,7 @@ if __name__ == "__main__":
             help='Lvlset to use for serving benchmarks"')
     p.add_argument('--db', type=str, help='Path to database', required=True)
     p.add_argument('--adminToken', type=str,
-            help='Secret token for logging in to admin interface. ' +
-            'If omitted will be randomly generated')
+            help='Secret token for logging in to admin interface. ' + 'If omitted will be randomly generated')
     p.add_argument('--timeout', type=int, default=60,
             help='Timeout in seconds for z3 queries.')
     p.add_argument('--email', type=str,
@@ -717,9 +716,9 @@ if __name__ == "__main__":
     p.add_argument('--replay', action='store_true',
             help='Enable replaying levels')
 
-    args = p.parse_args();
-
-    if ('mysql+mysqldb://' in args.db):
+    args = p.parse_args()
+    if ('mysql+pymysql://' in args.db):
+      #if ('mysql+mysqldb://' in args.db):
       sessionF = open_mysql_db(args.db)
     else:
       sessionF = open_sqlite_db(args.db)
@@ -727,20 +726,21 @@ if __name__ == "__main__":
     if (args.adminToken):
       adminToken = args.adminToken
     else:
-      adminToken = randomToken(5);
+      adminToken = randomToken(5)
 
     if args.log:
-        openLog(args.log);
+        openLog(args.log)
 
     MYDIR = dirname(abspath(realpath(__file__)))
     ROOT_DIR = dirname(MYDIR)
 
     if args.local:
-      host = '127.0.0.1'
+      #host = '127.0.0.1'
+      host = '0.0.0.0'
       sslContext = None
     else:
       host = '0.0.0.0'
-      sslContext = MYDIR + '/cert.pem', MYDIR + '/privkey.pem'
+      sslContext = None # MYDIR + '/cert.pem', MYDIR + '/privkey.pem'
 
     curLevelSetName, lvls = loadBoogieLvlSet(args.lvlset)
     traces = { curLevelSetName: lvls }

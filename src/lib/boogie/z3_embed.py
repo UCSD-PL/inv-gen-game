@@ -101,30 +101,32 @@ class Z3ServerInstance(object):
         return 0
 
 
+def runDaemon(q: PQueue) -> None:
+    import os
+
+    out = "z3_child.%d.out" % os.getpid()
+    err = "z3_child.%d.err" % os.getpid()
+
+    error("Redirecting child", os.getpid(), "streams to", out, err)
+
+    sys.stdout.close()
+    sys.stderr.close()
+
+    sys.stdout = open(out, "w")
+    sys.stderr = open(err, "w")
+
+    daemon = Pyro4.Daemon()
+    uri = daemon.register(Z3ServerInstance)
+    sys.stderr.write("Notify parent of my uri: " + str(uri) + "\n")
+    sys.stderr.flush()
+    q.put(uri)
+    # Small window for racing
+    daemon.requestLoop()
+
 def startAndWaitForZ3Instance() -> Tuple[Process, Pyro4.URI]:
     q = PQueue() # type: PQueue 
 
-    def runDaemon(q: PQueue) -> None:
-        import os
 
-        out = "z3_child.%d.out" % os.getpid()
-        err = "z3_child.%d.err" % os.getpid()
-
-        error("Redirecting child", os.getpid(), "streams to", out, err)
-
-        sys.stdout.close()
-        sys.stderr.close()
-
-        sys.stdout = open(out, "w")
-        sys.stderr = open(err, "w")
-
-        daemon = Pyro4.Daemon()
-        uri = daemon.register(Z3ServerInstance)
-        sys.stderr.write("Notify parent of my uri: " + str(uri) + "\n")
-        sys.stderr.flush()
-        q.put(uri)
-        # Small window for racing
-        daemon.requestLoop()
 
     p = Process(target=runDaemon, args=(q,))
     p.start()

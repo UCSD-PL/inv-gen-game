@@ -45,7 +45,8 @@ if __name__ == "__main__":
 
   args = p.parse_args()
 
-  if "mysql+mysqldb://" in args.db:
+  if ('mysql+pymysql://' in args.db):
+    # if "mysql+mysqldb://" in args.db:
     sessionF = open_mysql_db(args.db)
   else:
     sessionF = open_sqlite_db(args.db)

@@ -1,3 +1,4 @@
+wheel==0.30.0
 asn1crypto==0.24.0
 boto==2.48.0
 cffi==1.11.4
@@ -14,7 +15,6 @@ ipaddress==1.0.19
 itsdangerous==0.24
 Jinja2==2.10
 MarkupSafe==1.0
-mysql-connector-python==8.0.6
 pip==9.0.1
 ply==3.10
 pycparser==2.18
@@ -30,3 +30,4 @@ slimit==0.8.1
 SQLAlchemy==1.2.2
 tabulate==0.8.2
 Werkzeug==0.14.1
+PyMySQL==0.8.0

@@ -1,0 +1,61 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Invariant Generation Game</title>
+    <!-- bootstrap stylesheet -->
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+          integrity="sha256-7s5uDGW3AHqw6xtJmNNtr+OBRJUlgkNJEo78P4b0yRw="
+          crossorigin="anonymous">
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css"
+          integrity="sha256-o8bM0Z5cFvrvvvQp0EJFi4LICvBA9FCx7iCNuojVsN8="
+          crossorigin="anonymous">
+
+    <!-- our code -->
+    <link rel="stylesheet" href="../css/inv.css">
+    <link rel="stylesheet" href="../css/arrow.css">
+</head>
+<body>
+    <div class='container'>
+    </div>
+    <div class='overlay' style='display: none;' id='done-screen'>
+        <div class="container">
+            <h1 class='text-center'>Welcome to InvGen!</h1>
+            <span> &nbsp; </span>
+            <p>
+                <h2 class='text-center'>
+                    InvGen is a prototype game aiming to assist software verification! For more info please check out our <a href='http://cseweb.ucsd.edu/~dbounov/papers/invgen.pdf'>paper</a>.
+                </h2>
+            </p>
+            <span> &nbsp; </span>
+            <p>
+                <h2 class='text-center'>
+                    You can look at the game <b><a href='tutorial.html?noifs'> tutorial </a></b> or jump straight to the actual <b><a href='game.html?noifs'> game</a></b>!
+                </h2>
+            </p>
+        </div>
+    </div>
+
+    <!-- third party libraries -->
+    <script src="https://code.jquery.com/jquery-1.12.0.min.js"
+            integrity="sha256-Xxq2X+KtazgaGuA2cWR1v3jJsuMJUozyIXDB3e793L8=" crossorigin="anonymous"></script>
+    <script src="../js/jquery.jsonrpcclient.js"></script>
+    <script src="https://code.jquery.com/color/jquery.color-2.1.2.min.js"
+            integrity="sha256-H28SdxWrZ387Ldn0qogCzFiUDDxfPiNIyJX7BECQkDE=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"
+            integrity="sha256-xNjb53/rY+WmG+4L6tTl9m6PpqknWZvRt0rO1SRnJzw=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+            integrity="sha256-pS96pU17yq+gVu4KBQJi38VpSuKN7otMrDQprzf/DWY=" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"
+            integrity="sha256-KXn5puMvxCw+dAYznun+drMdG1IFl3agK0p/pqT9KAo=" crossorigin="anonymous"></script>
+    <script>
+        $(document).ready(function () {
+            $("#done-screen").fadeIn(1000);
+        })
+    </script>
+</body>
+</html>

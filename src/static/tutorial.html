@@ -1,9 +1,9 @@
-<html>
+﻿<html>
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
+   
   <script src="jquery-1.12.0.min.js"></script>
   <script src="jquery.jsonrpcclient.js"></script>
   <script src="jquery.color-2.1.2.min.js"></script>
@@ -14,37 +14,59 @@
   <link rel="stylesheet" href="inv.css">
   <link rel="stylesheet" href="arrow.css">
   <script src="require.js" data-main="tutorial_loader.js"></script>
+
 </head>
 <body tabindex="-1">
-  <div class='container'>
+<script>
+    window.fbAsyncInit = function() {
+        FB.init({
+            appId: '158511131519028',
+            cookie     : true,
+            xfbml      : true,
+            version: 'v2.12'
+        });
+      
+        FB.AppEvents.logPageView();   
+      
+    };
+
+    (function(d, s, id){
+        var js, fjs = d.getElementsByTagName(s)[0];
+        if (d.getElementById(id)) {return;}
+        js = d.createElement(s); js.id = id;
+        js.src = "https://connect.facebook.net/en_US/sdk.js";
+        fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+</script>
+<div class='container'>
     <div class='row' id='hit-preview-warning'>
     </div>
     <div class='row'>
-      <div class='col-md-1' id='dummy'>
-      </div>
-      <div class='col-md-1' id='sticky'>
-      </div>
-      <div class='col-md-6' id='middle'>
-        <div class='row' id='data-display' style="font-family:monospace;">
+        <div class='col-md-1' id='dummy'>
         </div>
-        <div class='row-md-6 spaced' id='errormsg'> </div>
-        <div class='row-md-6' id='done-row'>
-          <div class='col-md-6 col-md-offset-4' style='margin-top: 30px;'>
-            <button id='next-lvl' class='btn-next'> Next Level </button>
-          </div>
+        <div class='col-md-1' id='sticky'>
         </div>
-      </div>
-      <div class='col-md-3' >
-        <div id='score-div-row' class='row positioned box progressWindow'>
-          <div class='col-md-2'> Score: </div>
-          <div id='score-div' class='col-md-7 col-md-offset-3'>
-          </div>
+        <div class='col-md-6' id='middle'>
+            <div class='row' id='data-display' style="font-family: monospace;">
+            </div>
+            <div class='row-md-6 spaced' id='errormsg'> </div>
+            <div class='row-md-6' id='done-row'>
+                <div class='col-md-6 col-md-offset-4' style='margin-top: 30px;'>
+                    <button id='next-lvl' class='btn-next'> Next Level </button>
+                </div>
+            </div>
         </div>
-        <div class='row good centered positioned' id='discovered-invariants-div'>
+        <div class='col-md-3'>
+            <div id='score-div-row' class='row positioned box progressWindow'>
+                <div class='col-md-2'> Score: </div>
+                <div id='score-div' class='col-md-7 col-md-offset-3'>
+                </div>
+            </div>
+            <div class='row good centered positioned' id='discovered-invariants-div'>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
-  <div class='overlay text-center' style='display: none;'></div> 
+</div>
+<div class='overlay text-center' style='display: none;'></div>
 </body>
 </html>
