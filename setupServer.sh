@@ -65,16 +65,16 @@ echo "export JAVA_HOME=\${JAVA_HOME:-\$(dirname \$(dirname \$(dirname \$(readlin
 # echo "export PATH=\$PATH:$MYDIR/node_modules/.bin/" >> $DIR/bin/activate
 
 
-tar cvf server.tar env
-tar --exclude='src/static' rvf server.tar src
-tar rvf server.tar lvlsets
-tar rvf server.tar dilig-benchmarks
-tar rvf server.tar ice-benchmarks
-tar rvf server.tar max-benchmarks
-tar rvf server.tar node_modules
-tar rvf server.tar sv_auto_trans
-tar rvf server.tar sv_manual_trans
-tar rvf server.tar run.sh
-tar rvf server.tar requirements.txt
+# tar cvf server.tar env
+# tar --exclude='src/static' rvf server.tar src
+# tar rvf server.tar lvlsets
+# tar rvf server.tar dilig-benchmarks
+# tar rvf server.tar ice-benchmarks
+# tar rvf server.tar max-benchmarks
+# tar rvf server.tar node_modules
+# tar rvf server.tar sv_auto_trans
+# tar rvf server.tar sv_manual_trans
+# tar rvf server.tar run.sh
+# tar rvf server.tar requirements.txt
 
 echo "Server image created in server.tar"
