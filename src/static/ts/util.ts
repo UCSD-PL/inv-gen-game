@@ -768,13 +768,32 @@ function isin<T>(needle:T, hay:T[], id:(x:T)=>string): boolean {
   return false;
 }
 
-export function min(...args: number[]): number {
-  let min = args[0];
-  for (var i in args)
-    if (args[i] < min) {
-      min = args[i];
+export function min<T>(args: T[]): T;
+export function min<T>(...args: T[]): T;
+export function min<T>(...args: any[]): T {
+  if (args.length == 1) {
+    assert(args instanceof Array);
+    return this.apply(null, args[0]);
+  } else {
+    assert(args.length > 0);
+    let min = args[0];
+    for (var i in args)
+      if (args[i] < min) {
+        min = args[i];
+      }
+    return min as T
+  }
+}
+
+export function min_cmp<T>(vals: T[], lt?: (a:T, b:T)=>boolean): T {
+  let min = vals[0];
+  for (var i in vals) {
+    let isLT: boolean = (lt == undefined ? vals[i] < min : lt(vals[i], min));
+    if (isLT) {
+      min = vals[i];
     }
-  return min
+  }
+  return min as T
 }
 
 export function queryAppend(qStr: string, append: string): string {

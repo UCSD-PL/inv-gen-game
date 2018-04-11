@@ -112,29 +112,29 @@ class SimpleGame extends InvGraphGame {
 
   checkInvs: any = (invs: InvNetwork, onDone: ()=>void) => {
     rpc_checkSoundness("unsolved-new-benchmarks2", this.lvlId, invs, (res: Violation[]) => {
-      this.setViolations(res, () => {
-        this.transformLayout(() => {
-          let soundnessViolations: StrMap<Violation[]> = {};
-          for (let v of res) {
-            let t: Trace = this.getTrace(v);
-            let end: UserNode = (t[t.length-1][0] instanceof UserNode ? t[t.length-1][0] as UserNode: null);
-            if (end == null) continue;
-            if (!(end.id in soundnessViolations)) {
-              soundnessViolations[end.id] = [];
-            }
-            soundnessViolations[end.id].push(v);
+      this.transformLayout(() => {
+        let soundnessViolations: StrMap<Violation[]> = {};
+        for (let v of res) {
+          let t: Trace = this.getTrace(v);
+          let end: UserNode = (t[t.length-1][0] instanceof UserNode ? t[t.length-1][0] as UserNode: null);
+          if (end == null) continue;
+          if (!(end.id in soundnessViolations)) {
+            soundnessViolations[end.id] = [];
           }
+          soundnessViolations[end.id].push(v);
+        }
 
-          this.forEachUserNode((un: UserNode) => {
-            if (!(un.id in soundnessViolations) || 
-                soundnessViolations[un.id].length == 0) {
-              un.sound = un.unsound.concat(un.sound);
-              un.unsound = [];
-            }
-            let spriteNode = this.nodeSprites[un.id] as InputOutputIcon;
-            spriteNode.setInvariants(un.sound, un.unsound);
-          })
-        }, onDone);
+        this.forEachUserNode((un: UserNode) => {
+          if (!(un.id in soundnessViolations) || 
+              soundnessViolations[un.id].length == 0) {
+            un.sound = un.unsound.concat(un.sound);
+            un.unsound = [];
+          }
+          let spriteNode = this.nodeSprites[un.id] as InputOutputIcon;
+          spriteNode.setInvariants(un.sound, un.unsound);
+        })
+      }, () => {
+        this.setViolations(res, onDone);
       });
     });
   }
