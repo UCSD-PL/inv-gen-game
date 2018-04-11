@@ -8,7 +8,9 @@ import * as PhaserInput from "phaser-input"
 import {Point} from "phaser-ce";
 import {topo_sort, bfs, path} from "./graph";
 import {Expr_T} from "./boogie";
-import {getUid, StrMap, assert, max, intersection, single, diff, diff2, union2, copyMap2, mapMap2, copyMap, difference2, reversed, structEq, repeat, shallowCopy} from "./util"
+import {getUid, StrMap, assert, max, intersection, single, diff, diff2,
+        union2, copyMap2, mapMap2, copyMap, difference2, reversed, structEq,
+        repeat, shallowCopy, min_cmp} from "./util"
 import {Node, ExprNode, AssignNode, IfNode, AssumeNode, UserNode,
         AssertNode, buildGraph, removeEmptyNodes, exit, NodeMap, PlaceholderNode} from "./game_graph"
 import {LineOptions, TextIcon} from "./texticon"
@@ -223,7 +225,7 @@ function edgeColor(st: EdgeState): Color {
 }
 
 type SpritePool = StrMap<Set<Phaser.Sprite>>;
-type ViolationInfo = [Phaser.Sprite, Violation, Trace][];
+type ViolationInfo = [Violation, Trace][];
 
 export class InvGraphGame {
   protected entry: Node;
@@ -412,7 +414,7 @@ export class InvGraphGame {
 
   hideViolation(): void {
     assert (this.selectedViolation != null)
-    let [err, step] = this.selectedViolation;
+    let [err, step, trace, traceLayout] = this.selectedViolation;
     let icon = err.icon();
     (err as Phaser.Group).remove(icon);
     this.game.add.existing(icon);
@@ -635,12 +637,32 @@ export class InvGraphGame {
     return Point.add(this.pos[n.id], new Point(0, -sp.getHeight()/2));
   }
 
-  setViolations(vs: Violation[], onDone: ()=>any): void {
-    console.log("Got", vs.length, "violations:", vs);
-    if (this.selectedViolation != null) this.hideViolation();
-    for (let v of this.curViolations) {
-      this.putSprite(v[0])
+  earilestViolation(vs: Violation[]): Violation {
+    // Find the violation v out of vs, that is closest to the start of the
+    // function. We do this by sorting all violations lexicographically based on the
+    // bfs traversal order of their start and end nodes.
+    let nodeIdx: StrMap<number> = {};
+    let nodes: Node[] = [];
+    bfs(this.entry, (prev: Node, cur: Node) => {
+      if (prev == null) {
+        nodeIdx[cur.id] = 0;
+      } else {
+        nodeIdx[cur.id] = nodeIdx[prev.id] + 1;
+      }
+      nodes.push(cur);
+    })
+    let violationKey = (v: Violation): [number, number] => {
+      let t = this.getTrace(v);
+      let endpoints: [Node, Node] = [t[0][0], t[t.length-1][0]];
+      return [nodeIdx[endpoints[0].id], nodeIdx[endpoints[1].id]];
     }
+    return min_cmp(vs, (a: Violation, b: Violation) => violationKey(a) < violationKey(b));
+  }
+
+  setViolations(vs: Violation[], onDone: ()=>any): void {
+    console.log("Out of ", vs.length, " violations(", vs, "picking earilest violation: ", this.earilestViolation(vs));
+    vs = [this.earilestViolation(vs)];
+    if (this.selectedViolation != null) this.hideViolation();
     this.curViolations = [];
     this.transformLayout(() => {
       for (let e1 in this.edgeStates) {
@@ -663,23 +685,16 @@ export class InvGraphGame {
             this.edgeStates[legN.id][legN1.id] = "fail"
           }
         }
-        let blamed = this.getFaultyNode(trace);
-        let bugPos = this.rightOf(blamed).add(this.curViolations.length * 40, -10);
-        let bug = this.getSprite("bug", bugPos.x, bugPos.y, true)
-
-        bug.inputEnabled = true;
-        bug.input.useHandCursor = true;
-        bug.events.onInputDown.removeAll();
-        let idx = this.curViolations.length;
-        let cbFactory = (idx: number) => (() => {
-          let traceLayout = this.layoutTrace(trace);
-          this.showViolation(traceLayout, trace);
-        });
-        bug.events.onInputDown.add(cbFactory(idx), this);
-
-        this.curViolations.push([bug, v, trace]);
+        this.curViolations.push([v, trace]);
       }
-    }, onDone);
+    }, ()=> {
+      assert(vs.length == 1);
+      let trace = this.getTrace(vs[0]);
+      let traceLayout = this.layoutTrace(trace);
+      console.log("Show violation:", traceLayout, trace)
+      this.showViolation(traceLayout, trace);
+      onDone();
+    });
   }
 
   getTrace(v: Violation): Trace {
