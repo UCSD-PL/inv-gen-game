@@ -703,7 +703,6 @@ export class InvGraphGame {
         assert(vs.length == 1);
         let trace = this.getTrace(vs[0]);
         let traceLayout = this.layoutTrace(trace);
-        console.log("Show violation:", traceLayout, trace)
         this.showViolation(traceLayout, trace);
       }
       onDone();
@@ -781,7 +780,7 @@ export class InvGraphGame {
       let [node, stmtIdx, vals] = t[i];
       let sprite: TextIcon = this.nodeSprites[node.id];
       let [prevNode, prevStmtIdx, prevVals] = t[i-1];
-      if (node == prevNode ) {
+      if (node == prevNode) {
         // Only step through assignments
         if (!(node instanceof AssignNode) || !sprite.isLineShown(0)) continue;
         let textNode: Phaser.Group = sprite.getText();
@@ -798,6 +797,9 @@ export class InvGraphGame {
           let edgePath: Path = this.edges[leg[j].id][leg[j+1].id];
           subPath = subPath.concat(edgePath);
         }
+
+        subPath[0].add(0, 10);
+        subPath[subPath.length-1].add(0, -10);
 
         traceLayout.push([i-1, subPath, envToText(vals)]);
         traceLayout.push([i, subPath[subPath.length-1], envToText(vals)]);
@@ -871,12 +873,16 @@ export class InvGraphGame {
       }
 
       assert(union_nd != null);
+      let loop_endpoint = (if_node: Node, child: Node): Node => {
+        let pred = single(intersection(new Set(if_node.predecessors), child.reachable()));
+        return single(intersection(new Set(pred.predecessors), child.reachable()));
+      }
 
       if (union_nd == lhs) {
-        let rhs_endpoint = single(intersection(new Set(next.predecessors), rhs.reachable()));
+        let rhs_endpoint = loop_endpoint(next, rhs);
         ifEndPoints[next.id] = [exitNode, rhs_endpoint, null];
       } else if (union_nd == rhs) {
-        let lhs_endpoint = single(intersection(new Set(next.predecessors), lhs.reachable()));
+        let lhs_endpoint = loop_endpoint(next, lhs);
         ifEndPoints[next.id] = [lhs_endpoint, exitNode, null];
       } else {
         // If node with a union point
@@ -890,7 +896,6 @@ export class InvGraphGame {
     bfs(this.entry, if_endpoints, null);
 
     // Pass 2: Compute the widths for each part of the graph
-
     function computeWidth(start: Node, end: Node): number {
       let sprite = spriteMap[start.id];
       assert(sprite != null && sprite instanceof TextIcon);
