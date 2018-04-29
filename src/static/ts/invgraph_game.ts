@@ -54,9 +54,9 @@ export class PlaceholderIcon extends TextIcon {
         )
     }
 
-    public setText(s: string) {
-      assert(false, "Can't change text on placeholders")
-    }
+    // public setText(s: string) {
+    //   assert(false, "Can't change text on placeholders")
+    // }
 }
 
 export class SourceIcon extends TextIcon {
@@ -266,6 +266,7 @@ export class InvGraphGame {
     this.curViolations = [];
     this.animationStopRequested = false;
     this.lvlId = lvlId;
+    this.selectedViolation = null;
   }
 
   getSprite(img: string, x?: number, y?: number, show?: boolean): Phaser.Sprite {
@@ -282,6 +283,8 @@ export class InvGraphGame {
       s = this.game.add.sprite(x, y, img);
     } else {
       s = this.spritePool[img].values().next().value;
+      // Ask Dimo about this: seems to me like the following line 
+      // should not be there
       this.spritePool[img].delete(s);
       s.x = x; s.y = y;
     }
@@ -434,8 +437,10 @@ export class InvGraphGame {
     if (this.selectedViolation != null) {
       this.hideViolation();
     }
-    let [dummy, startPoint, startText] = traceLayout[0]
-    let err = new TextIcon(this.game, this.getSprite("bug", 0, 0), "", "cur_trace_bug", 0, 0, true)
+    let [dummy, startPoint, startText] = traceLayout[0];
+    let orb = this.getSprite("orb", 0, 0);
+    orb.scale.setTo(0.3);
+    let err = new TextIcon(this.game, orb, "", "cur_trace_bug", 0, 0, true);
     this.selectedViolation = [err, 0, trace, traceLayout];
     this.positionBug(0);
     let icon = err.icon();
@@ -572,6 +577,12 @@ export class InvGraphGame {
     this.game.load.image('funnel', 'img/funnel_small.png');
     this.game.load.image('branch', 'img/branch_small.png');
     this.game.load.image('placeholder', 'img/placeholder_small.png');
+    this.game.load.image('orb', 'img/orb.png');
+    this.game.load.image('whitespace', 'img/white_space.png');
+  //  this.game.load.spritesheet('explosion', 'img/explosion160x120.png', 160, 120, 90);
+    this.game.load.spritesheet('arrow_right', 'img/arrow_right_sheet.png', 28, 21, 20);
+    this.game.load.spritesheet('arrow_left', 'img/arrow_left_sheet.png', 28, 21, 20);
+
   }
 
   update: any = () => {
