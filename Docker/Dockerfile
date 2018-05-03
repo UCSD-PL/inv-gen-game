@@ -29,7 +29,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   libmysqlclient-dev \
   openjdk-8-jdk \
  && rm -rf /var/lib/apt/lists/* \
- && echo "$SSH_PASSWD" | chpasswd 
+ && echo "$SSH_PASSWD" | chpasswd \
  && npm install -g gulp-cli \
  && npm install -g --save-dev typescript gulp gulp-typescript \
  && npm install -g --save-dev browserify tsify vinyl-source-stream \
