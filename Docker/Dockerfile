@@ -5,9 +5,12 @@ LABEL version="0.0.1-beta"
 LABEL project="inv-gen-game"
 
 
+ENV SSH_PASSWD "root:Docker!"
 # Adding apt repository for Oracle Java
 # and adding required packages 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  dialog \
+  openssh-server \
   git \
   software-properties-common \
   wget \
@@ -26,6 +29,7 @@ RUN apt-get update && apt-get install -y \
   libmysqlclient-dev \
   openjdk-8-jdk \
  && rm -rf /var/lib/apt/lists/* \
+ && echo "$SSH_PASSWD" | chpasswd 
  && npm install -g gulp-cli \
  && npm install -g --save-dev typescript gulp gulp-typescript \
  && npm install -g --save-dev browserify tsify vinyl-source-stream \
@@ -45,6 +49,9 @@ RUN  git clone -b dockerized https://8c27f4108ac53546e205d396e86dd25cce7016a8:x-
 # Set the working directory to /app
 WORKDIR /app
 
+COPY sshd_config /etc/ssh/
+COPY init.sh /usr/local/bin/
+
 # Copy the current directory contents into the container at /app
 #ADD . /app
  
@@ -54,12 +61,15 @@ RUN pip3 install -r requirements.txt \
 
 #CMD ["/bin/bash"]
 
-# Make port 80 available to the world outside this container
-EXPOSE 5000
+RUN chmod u+x /usr/local/bin/init.sh
+
+EXPOSE 8000 2222
 
 # Define environment variable
 #ENV NAME World
 
 WORKDIR /app/src
 # Run app.py when the container launches
-CMD /bin/bash -c 'source ../env/bin/activate; python3 server.py --local --log useractions.log --lvlset ../lvlsets/unsolved-leftover-split.lvlset --db mysql+pymysql://gamification:m58xXuH5VBuWXtaW@gamificationfacebook.cpepc4fuqyhq.us-west-2.rds.amazonaws.com/game --adminToken fuzzy --timeout 60'
+ENTRYPOINT ["init.sh"]
+
+# ENTRYPOINT /bin/bash -c 'source ../env/bin/activate; python3 server.py --local --log useractions.log --lvlset ../lvlsets/unsolved-leftover-split.lvlset --db mysql+pymysql://gamification:m58xXuH5VBuWXtaW@gamificationfacebook.cpepc4fuqyhq.us-west-2.rds.amazonaws.com/game --adminToken fuzzy --timeout 60'

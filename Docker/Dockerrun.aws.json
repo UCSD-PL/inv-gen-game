@@ -1,5 +1,9 @@
 {
   "AWSEBDockerrunVersion": "1",
+  "Image": {
+    "Name": "mmenarini/invgame:latest",
+    "Update": "true"
+  },
   "Ports": [
     {
       "ContainerPort": "5000"
