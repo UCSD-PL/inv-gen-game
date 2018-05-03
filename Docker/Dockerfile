@@ -49,8 +49,8 @@ RUN  git clone -b dockerized https://8c27f4108ac53546e205d396e86dd25cce7016a8:x-
 # Set the working directory to /app
 WORKDIR /app
 
-COPY sshd_config /etc/ssh/
-COPY init.sh /usr/local/bin/
+COPY /app/sshd_config /etc/ssh/
+COPY /app/init.sh /usr/local/bin/
 
 # Copy the current directory contents into the container at /app
 #ADD . /app
