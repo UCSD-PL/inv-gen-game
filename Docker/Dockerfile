@@ -55,10 +55,11 @@ RUN cp /app/sshd_config /etc/ssh/ \
  
 # Install any needed packages specified in requirements.txt
 RUN pip3 install wheel \
+ && pip3 install setuptools \
  && pip3 install -r requirements.txt \
  && bash ./setupServer.sh
 
-ENV SQL_CONNECTION "gamification:m58xXuH5VBuWXtaW@gamificationfacebook.cpepc4fuqyhq.us-west-2.rds.amazonaws.com/game"
+ENV SQL_CONNECTION "mmenarini@invgame:sdljsd$903@invgame.mysql.database.azure.com/game"
 ENV ADMIN_TOKEN "fuzzy"
 ENV LEVEL_SET "../lvlsets/unsolved-leftover-split.lvlset"
 

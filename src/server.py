@@ -43,6 +43,10 @@ class Server(Flask):
 app = Server(__name__, static_folder='frontend/', static_url_path='/game')
 api = rpc(app, '/api')
 
+@app.route('/', methods=['POST'])
+def game():  # pragma: no cover
+    content = get_file('app/start.html')
+    return Response(content, mimetype="text/html")
 @app.route('/')
 def index():
     return redirect(url_for('static', filename='app/start.html'))
