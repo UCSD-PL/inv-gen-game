@@ -30,8 +30,8 @@ export class TextIcon extends Phaser.Group {
         this.onChanged = new Phaser.Signal();
         this._game = game;
         this._icon = icon;
-        this._icon.x = -this._icon.width/2;
-        this._icon.y =  -this._icon.height/2;
+        this._icon.x = Math.round(-this._icon.width/2);
+        this._icon.y =  Math.round(-this._icon.height/2);
         this._defaultOpts = {
             style: { font: "15px Courier New, Courier, monospace", align: "center", fill: "#000000", backgroundColor: "#ffffff" },
             removable: false,
@@ -130,8 +130,8 @@ export class TextIcon extends Phaser.Group {
             line.children.forEach((child: any) => {child.exists = opts.visible;})
         }
         this._text = lineGrp;
-        this._text.y = -this._text.height/2;
-        this._text.x = this._icon.width/2 + 5;
+        this._text.y = Math.round(-this._text.height/2);
+        this._text.x = Math.round(this._icon.width/2 + 5);
     }
 
     public getText(): Phaser.Group {
