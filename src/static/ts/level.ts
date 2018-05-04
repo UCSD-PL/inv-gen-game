@@ -1,4 +1,4 @@
-import {rpc_loadLvlBasic, rpc_loadLvlDynamic, rpc_loadNextLvlDynamic} from "./rpc";
+import {rpc_loadLvlBasic, rpc_loadLvlDynamic, rpc_loadNextLvlDynamic, loadLvlBasicRes} from "./rpc";
 import {Args} from "./util";
 import {dataT, invariantT} from "./types";
 
@@ -17,6 +17,10 @@ export class Level {
     });
   }
 
+  static fromJSON(json: loadLvlBasicRes): Level {
+    return new Level(json.id, json.variables, json.data, json.goal, json.hint, json.colSwap, json.startingInvs)
+  }
+  
   isReplay(): boolean {
     return this.startingInvs.length > 0;
   }

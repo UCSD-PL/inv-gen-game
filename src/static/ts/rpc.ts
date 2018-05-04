@@ -7,7 +7,7 @@ import {Node as ESNode} from "estree";
 
 export let rpc: JsonRpcClient = new $.JsonRpcClient({ ajaxUrl: "/api" })
 
-interface loadLvlBasicRes {
+export interface loadLvlBasicRes {
   id: string;
   variables: string[];
   data: dataT;
@@ -36,6 +36,10 @@ export function mturkId(): [string, string, string] {
 
 export function rpc_loadLvlBasic(lvlSet: string, id: string, cb:(res: loadLvlBasicRes) => void) {
   rpc.call("App.loadLvl", [lvlSet, id, mturkId()], (data:any) => cb(<loadLvlBasicRes>data), log);
+}
+
+export function rpc_loadLvlNew(lvlSet: string, id: string, cb:(res: any) => void) {
+  rpc.call("App.loadLvl", [lvlSet, id, mturkId()], cb, log);
 }
 
 export function rpc_loadLvlDynamic(lvlSet: string, id: string, cb:(res: loadLvlDynamicRes) => void) {

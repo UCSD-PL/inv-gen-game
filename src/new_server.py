@@ -61,7 +61,6 @@ def divisionToMul(inv):
     return inv
 
 def getLvl(levelSet, lvlId):
-    print (traces)
     if (levelSet not in traces):
         raise Exception("Unkonwn level set " + levelSet)
 

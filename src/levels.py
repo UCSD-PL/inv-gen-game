@@ -191,11 +191,15 @@ class BoogieLevel(object):
     @staticmethod
     def load(fname: str) -> "BoogieLevel":
         fun = [f.split_asserts()[0] for f in Function.load(fname)]
-        print (fun[0].pp());
         # TODO: Support multiple functions
         loops = BoogieLevel._discover_loops(unique(fun))
         traces = [] # type: List[List[Store]]
-        return BoogieLevel(fname, fun, loops, traces, "")
+        vars = [] # type: List[str]
+        try:
+            (vars, trace) = readTrace(fname[:-4] + ".trace");
+            traces = [trace];
+        except: pass
+        return BoogieLevel(fname, fun, loops, traces, vars, "")
 
     @staticmethod
     def load_answer(fname: str) -> InvNetwork:
@@ -212,11 +216,12 @@ class BoogieLevel(object):
             res[k] = set([parseExprAst(x) for x in invs])
         return res
 
-    def __init__(self, fname: str, funs: Iterable[Function], loops: Loops_T, traces: List[List[Store]], hint: str) -> None:
+    def __init__(self, fname: str, funs: Iterable[Function], loops: Loops_T, traces: List[List[Store]], vars: List[str], hint: str) -> None:
         self._fname = fname
         # TODO: Support multiple functions
         self._fun = unique(funs)
         self._loops = loops
+        self._vars = vars # type: List[str]
         self._traces = traces # type: List[List[Store]]
         self._hint = hint
 
@@ -254,7 +259,9 @@ class BoogieLevel(object):
         return [
             self._fname,
             self._fun.to_json(),
-            {lbl: [[bb.label for bb in path] for path in paths] for (lbl, paths) in self._loops.items()}
+            {lbl: [[bb.label for bb in path] for path in paths] for (lbl, paths) in self._loops.items()},
+            self._vars,
+            self._traces
         ]
 
 def loadNewBoogieLvlSet(lvlSetFile):
