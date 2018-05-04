@@ -66,6 +66,7 @@ ENV LEVEL_SET "../lvlsets/unsolved-leftover-split.lvlset"
 
 EXPOSE 8000 2222
 
+RUN  git pull
 WORKDIR /app/src
 # Run app.py when the container launches
 ENTRYPOINT ["init.sh"]
