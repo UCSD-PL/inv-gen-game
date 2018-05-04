@@ -72,8 +72,22 @@ export class SourceIcon extends TextIcon {
 }
 
 export class SinkIcon extends TextIcon {
-    constructor(game: InvGraphGame, nd: AssertNode, x?: number, y?: number) {
+    editable: boolean;
+    constructor(game: InvGraphGame, nd: AssertNode, x?: number, y?: number, editable = false) {
       super(game.game, game.getSprite("sink", 0, 0, true), nd.exprs, "sink_" + nd.id, x, y);
+      this.editable = false;
+      if (editable) this.makeEditable();
+    }
+    public makeEditable() {
+      if (!this.editable) {
+        this.icon().inputEnabled = true;
+        this.icon().events.onInputDown.add(() => {
+          this._lineOpts[0].editingNow = true;
+          this._render();
+        }, this);
+        this.icon().input.useHandCursor = true;
+        this.editable = true;
+      }
     }
     public entryPoint(): Phaser.Point {
         return new Phaser.Point(
@@ -283,8 +297,6 @@ export class InvGraphGame {
       s = this.game.add.sprite(x, y, img);
     } else {
       s = this.spritePool[img].values().next().value;
-      // Ask Dimo about this: seems to me like the following line 
-      // should not be there
       this.spritePool[img].delete(s);
       s.x = x; s.y = y;
     }
@@ -819,10 +831,7 @@ export class InvGraphGame {
     return traceLayout;
   }
 
-  create(): void {
-    this.graphics = this.game.add.graphics(0, 0);
-    this.game.add.plugin(PhaserInput.Plugin);
-
+  create_core(): void {
     // Build text off-screen
     bfs(this.entry, (p: Node, n: Node) => {
       this.textSprites[n.id] = this.drawNode(n, new Point(this.width, this.height));
@@ -841,6 +850,12 @@ export class InvGraphGame {
 
     // Position sprites
     this.updateLayout(oldLayout, newLayout, ()=> this.onFirstUpdate());
+  }
+
+  create(): void {
+    this.graphics = this.game.add.graphics(0, 0);
+    this.game.add.plugin(PhaserInput.Plugin);
+    this.create_core();
     let up: Phaser.Key = this.game.input.keyboard.addKey(38);
     let down: Phaser.Key = this.game.input.keyboard.addKey(40);
     up.onDown.add(() => {

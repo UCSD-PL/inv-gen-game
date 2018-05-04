@@ -2,7 +2,7 @@ import { rpc_loadLvlBasic, rpc_checkSoundness } from "./rpc";
 import { Fun, BB, Expr_T } from "./boogie";
 import * as Phaser from "phaser-ce"
 import { Node, AssumeNode, AssertNode, AssignNode, buildGraph, removeEmptyNodes, UserNode, PlaceholderNode, NodeMap } from "./game_graph"
-import { InvGraphGame, TraceLayout, Trace, InvNetwork, InputOutputIcon, Violation } from "./invgraph_game"
+import { InvGraphGame, TraceLayout, Trace, InvNetwork, InputOutputIcon, Violation, SinkIcon } from "./invgraph_game"
 import { getUid, assert, repeat, structEq, StrMap, Script, IStep } from "./util"
 import { parse } from "esprima"
 import { Point } from "phaser-ce";
@@ -173,9 +173,11 @@ class TutorialGame extends InvGraphGame {
     // this.checkInvs(this.getInvNetwork(), ()=>{});
   }
 
-  addHighlight(elmt: Node | TextIcon, str: (string | string[])) {
+  addHighlight(elmt: Node | TextIcon, str: (string | string[]), deltax = 0, deltay = 0) {
     let sprite = elmt instanceof TextIcon ? elmt : this.textSprites[elmt.id];
-    return new TutorialHighlight(this, str, sprite.getX() + sprite.getWidth(), sprite.getY());
+    return new TutorialHighlight(this, str,
+      sprite.getX() + sprite.getWidth() + deltax,
+      sprite.getY() + deltay);
   }
 
   addText(elmt: Node | TextIcon, str: (string | string[])) {
@@ -192,11 +194,13 @@ class TutorialGame extends InvGraphGame {
   }
 
   stepForward(): void {
+    console.log("stepForward: ", this.forwardCount);
     if (this.forwardCount == 0) return;
     if (this.forwardCount > 0) {
       super.stepForward();
       this.forwardCount--;
       if (this.forwardCount == 0) {
+        console.log("stepForward: going to next step");
         this.currScript.nextStep();
       }
     }
@@ -221,6 +225,7 @@ class TutorialGame extends InvGraphGame {
 
   nextStepOnForwardN(n:number): void {
     this.forwardCount = n;
+    console.log("nextStepOnForwardN: ", this.forwardCount);
   }
 
   nextStepOnBackwardsN(n:number): void {
@@ -235,7 +240,9 @@ class TutorialGame extends InvGraphGame {
     //     create: ()=>{this.create()},
     //     update: ()=>{this.update()}
     //   });
-    this.hideViolation();
+    if (this.selectedViolation != null) {
+      this.hideViolation();
+    }
     this.entry = graph;
     this.userNodes = []
     this.bbToNode = n;
@@ -247,8 +254,24 @@ class TutorialGame extends InvGraphGame {
     this.curViolations = [];
     this.animationStopRequested = false;
     this.lvlId = lvlId;
-    this.selectedViolation = null;
-    this.create();
+    this.create_core();
+  }
+
+  onNodeClick(n: Node): Phaser.Signal {
+    return this.textSprites[n.id].icon().events.onInputDown;
+  }
+
+  // onNodeClickOnce(n: Node, onClick: ()=>any): void {
+  //   this.textSprites[n.id].icon().events.onInputDown.addOnce(() => {
+  //     onClick();
+  //   });
+  // }
+  onNodeChanged(n: Node): Phaser.Signal {
+    return this.textSprites[n.id].onChanged;
+  }
+
+  getTextIcon(n: Node): TextIcon {
+    return this.textSprites[n.id];
   }
 }
 
@@ -257,6 +280,7 @@ $(document).ready(function () {
   let entry: Node;
   let placeholder: Node;
   let assign: Node;
+  let assert: Node;
   entry = new AssumeNode(getUid("nd"), "n>0");
   placeholder = new PlaceholderNode(getUid("placeholder"));
   entry.addSuccessor(placeholder);
@@ -279,137 +303,305 @@ $(document).ready(function () {
   // let bbMap = {"anon0": [entry, assign, assert]};
 
   let text = null;
+  let tutorial_steps_1 = null;
   let tutorial_steps_2 = null;
-  let tutorial_steps_1 = [{
+  let tutorial_steps_3 = null;
+
+  tutorial_steps_1 = [{
     setup: function (cs) {
       text = game.addHighlight(entry, "This is a gate that drops orbs. [press space]");
       cs.nextStepOnKeyClickOrTimeout(0, () => 0, 32);
     }
-  }, {
-    setup: function (cs) {
-      text.destroy();
-      text = game.addHighlight(entry,
-        ["'n>0' says that orbs leaving this gate carry",
-          "a value called 'n' that is > 0 [press space]"]);
-      cs.nextStepOnKeyClickOrTimeout(0, () => 0, 32);
-    }
-  }, {
-    setup: function (cs) {
-      text.destroy();
+  // }, {
+  //   setup: function (cs) {
+  //     text.destroy();
+  //     text = game.addHighlight(entry,
+  //       ["'n>0' says that orbs leaving this gate carry",
+  //         "a value called 'n' that is > 0 [press space]"]);
+  //     cs.nextStepOnKeyClickOrTimeout(0, () => 0, 32);
+  //   }
+  // }, {
+  //   setup: function (cs) {
+  //     text.destroy();
 
-      let v = [];
-      v[0] = ["anon0"];
-      // v[1] = [[{n:1}, {n:1}, {n:2}, {n:2}]];
-      v[1] = [[{ n: 1 }, { n: 1 }, { n: 1 }]];
-      let res = [v];
-      game.setCounterExample(res);
-      game.checkInvs(() => {
-        text = game.addHighlight(game.getOrb(),
-          ["For example, here is an orb that",
-            "carries the value n = 1. [press space]"]);
-        cs.nextStepOnKeyClickOrTimeout(0, () => 0, 32);
-      });
-      // text = game.game.add.text(0, 0, "hello world", { font: "15px Courier New, Courier, monospace", align: "center", fill: "#000000", backgroundColor: "#ffffff" });
-      // text = new TutorialText(game,"hello world",game.textSprites[entry.id].getX()+20,game.textSprites[entry.id].getY()+20);
-      // text = game.addHighlight(entry, "hello world");
-    }
-  }, {
-    setup: function (cs) {
-      text.destroy();
-      text = game.addHighlight(game.getOrb(),
-        ["The orb can move, press the down arrow"]);
-      game.nextStepOnForwardN(1);
-    }
-  }, {
-    setup: function (cs) {
-      setTimeout(function() {
-        text.destroy();
-        text = game.addHighlight(game.getOrb(),
-          ["Great! Now press the up arrow"]);
-      },1200);
-      game.nextStepOnBackwardsN(1);
-    }
-  }, {
-    setup: function (cs) {
-      setTimeout(function() {
-        text.destroy();
-        text = game.addHighlight(game.getOrb(),
-          ["Now you know how to move orbs! [press space]"]);
-          cs.nextStepOnKeyClickOrTimeout(0, () => 0, 32);
-      },1200);
-    }
-  }, {
-    setup: function (cs) {
-      text.destroy();
+  //     let v = [];
+  //     v[0] = ["anon0"];
+  //     v[1] = [[{ n: 1 }, { n: 1 }, { n: 1 }]];
+  //     let res = [v];
+  //     game.setCounterExample(res);
+  //     game.checkInvs(() => {
+  //       text = game.addHighlight(game.getOrb(),
+  //         ["For example, here is an orb that",
+  //           "carries the value n = 1. [press space]"]);
+  //       cs.nextStepOnKeyClickOrTimeout(0, () => 0, 32);
+  //     });
+  //   }
+  // }, {
+  //   setup: function (cs) {
+  //     text.destroy();
+  //     text = game.addHighlight(game.getOrb(),
+  //       ["The orb can move, press the down arrow"]);
+  //     game.nextStepOnForwardN(1);
+  //   }
+  // }, {
+  //   setup: function (cs) {
+  //     setTimeout(function() {
+  //       text.destroy();
+  //       text = game.addHighlight(game.getOrb(),
+  //         ["Great! Now press the up arrow"]);
+  //     },1200);
+  //     game.nextStepOnBackwardsN(1);
+  //   }
+  // }, {
+  //   setup: function (cs) {
+  //     setTimeout(function() {
+  //       text.destroy();
+  //       text = game.addHighlight(game.getOrb(),
+  //         ["Now you know how to move orbs! [press space]"]);
+  //         cs.nextStepOnKeyClickOrTimeout(0, () => 0, 32);
+  //     },1200);
+  //   }
+  // }, {
+  //   setup: function (cs) {
+  //     text.destroy();
 
-      let v = [];
-      v[0] = ["anon0"];
-      // v[1] = [[{n:1}, {n:1}, {n:2}, {n:2}]];
-      v[1] = [[{ n: 2 }, { n: 2 }, { n: 2 }]];
-      let res = [v];
-      game.setCounterExample(res);
-      game.checkInvs(() => {
-        text = game.addHighlight(game.getOrb(),
-          ["Here is another orb, with value n = 2",
-            "This value of n is also > 0. [press space]"]);
-        cs.nextStepOnKeyClickOrTimeout(0, () => 0, 32);
-      });
-    }
-  }, {
-    setup: function(cs) {
-      text.destroy();
-      text = game.addHighlight(game.getOrb(),
-        ["Move the orb down once, and up once"]);
-      game.nextStepOnForwardN(1);
-    }
-  }, {
-    setup: function(cs) {
-      game.nextStepOnBackwardsN(1);
-    }
-  }, {
-    setup: function(cs) {
-      setTimeout(function() {
-        text.destroy();
-        text = game.addText(game.getOrb(),
-          ["Good job, let's try another example!", "[press space]"]);
-        cs.nextStepOnKeyClickOrTimeout(0, () => 0, 32);
-      },1200);
-    },
+  //     let v = [];
+  //     v[0] = ["anon0"];
+  //     // v[1] = [[{n:1}, {n:1}, {n:2}, {n:2}]];
+  //     v[1] = [[{ n: 2 }, { n: 2 }, { n: 2 }]];
+  //     let res = [v];
+  //     game.setCounterExample(res);
+  //     game.checkInvs(() => {
+  //       text = game.addHighlight(game.getOrb(),
+  //         ["Here is another orb, with value n = 2",
+  //           "This value of n is also > 0. [press space]"]);
+  //       cs.nextStepOnKeyClickOrTimeout(0, () => 0, 32);
+  //     });
+  //   }
+  // }, {
+  //   setup: function(cs) {
+  //     text.destroy();
+  //     text = game.addHighlight(game.getOrb(),
+  //       ["Move the orb down once, and up once"]);
+  //     game.nextStepOnForwardN(1);
+  //   }
+  // }, {
+  //   setup: function(cs) {
+  //     game.nextStepOnBackwardsN(1);
+  //   }
+  // }, {
+  //   setup: function(cs) {
+  //     setTimeout(function() {
+  //       text.destroy();
+  //       text = game.addText(game.getOrb(),
+  //         ["Good job, let's try another example!", "[press space]"]);
+  //       cs.nextStepOnKeyClickOrTimeout(0, () => 0, 32);
+  //     },1200);
+  //   },
+  // }, {
+  //   setup: function(cs) {
+  //     text.destroy();
+  //     entry = new AssumeNode(getUid("nd"), "n>0");
+  //     assign = new AssignNode(getUid("nd"), ["n := n+1"]);
+  //     placeholder = new PlaceholderNode(getUid("placeholder"));
+  //     entry.addSuccessor(assign);
+  //     assign.addSuccessor(placeholder);
+  //     let bbMap = {"anon0": [entry, assign, placeholder]};
+
+  //     global_tutorial_steps = tutorial_steps_2;
+  //     game.updateGraph("content", entry, bbMap, "bogus");
+  //   },
+  // }];
+
+  // tutorial_steps_2 = [{
+  //   setup: function (cs) {
+  //     text = game.addHighlight(assign, "This box is a value transformer. [press space]");
+  //     cs.nextStepOnKeyClickOrTimeout(0, () => 0, 32);
+  //   }
+  // }, {
+  //   setup: function(cs) {
+  //     text.destroy();
+  //     let v = [];
+  //     v[0] = ["anon0"];
+  //     v[1] = [[{n:1}, {n:1}, {n:2}, {n:2}]];
+  //     let res = [v];
+  //     game.setCounterExample(res);
+  //     game.checkInvs(() => {
+  //       text = game.addHighlight(game.getOrb(),
+  //         ["Let's see what happens to this orb, which",
+  //           "carries the value n = 1. [press down]"]);
+  //       game.nextStepOnForwardN(1);
+  //     });
+  //   }
+  // }, {
+  //   setup: function (cs) {
+  //     setTimeout(function() {
+  //       text.destroy();
+  //       text = game.addHighlight(game.getOrb(),
+  //         ["Press down again, and look at the value of n"]);
+  //       game.nextStepOnForwardN(1);
+  //     },1200);
+  //   }
+  // }, {
+  //   setup: function (cs) {
+  //     setTimeout(function() {
+  //       text.destroy();
+  //       text = game.addHighlight(game.getOrb(),
+  //         ["The value of n went up by one!", 
+  //         "The gear box adds one! [press space]"]);
+  //     },1200);
+  //     cs.nextStepOnKeyClickOrTimeout(0, () => 0, 32);
+  //   }
+  // }, {
+  //   setup: function (cs) {
+  //     text.destroy();
+  //     text = game.addHighlight(game.getOrb(), ["Now move the orb back up"]);
+  //     game.nextStepOnBackwardsN(1);
+  //   }
+  // }, {
+  //   setup: function (cs) {
+  //     setTimeout(function() {
+  //       text.destroy();
+  //       text = game.addHighlight(game.getOrb(),
+  //         ["The value of n went back to 1!",
+  //         "Now move the orb back one"]);
+  //       game.nextStepOnBackwardsN(1);
+  //     },1200);
+  //   }
+  // }, {
+  //   setup: function (cs) {
+  //     setTimeout(function() {
+  //       text.destroy();
+  //       text = game.addHighlight(assign,
+  //         ["Great work!",
+  //         "Let's click on the gear box to see what's inside"]);
+  //       game.onNodeClick(assign).addOnce(() => { cs.nextStep() });
+  //     },1200);
+  //   }
+  // }, {
+  //   setup: function (cs) {
+  //     text.destroy();
+  //     setTimeout(function() {
+  //       text = game.addHighlight(assign,
+  //         ["You can now see inside: The gear box",
+  //         "increments n by one [press space]"]);
+  //       cs.nextStepOnKeyClickOrTimeout(0, () => 0, 32);
+  //     },1200);
+  //   }
+  // }, {
+  //   setup: function(cs) {
+  //     text.destroy();
+  //     text = game.addText(game.getOrb(),
+  //       ["Good job, let's go to the next example!", "[press space]"]);
+  //     cs.nextStepOnKeyClickOrTimeout(0, () => 0, 32);
+  //   },
   }, {
     setup: function(cs) {
       text.destroy();
       entry = new AssumeNode(getUid("nd"), "n>0");
       assign = new AssignNode(getUid("nd"), ["n := n+1"]);
-      placeholder = new PlaceholderNode(getUid("placeholder"));
+      assert = new AssertNode(getUid("nd"), "n > 10");
       entry.addSuccessor(assign);
-      assign.addSuccessor(placeholder);
-      let bbMap = {"anon0": [entry, assign, placeholder]};
+      assign.addSuccessor(assert);
+      let bbMap = {"anon0": [entry, assign, assert]};
 
       game.updateGraph("content", entry, bbMap, "bogus");
-      global_tutorial_steps = tutorial_steps_2;
-    },
+      global_tutorial_steps = tutorial_steps_3;
+    }
   }];
-  tutorial_steps_2 = [{
+  tutorial_steps_3 = [{
     setup: function (cs) {
-      text = game.addHighlight(assign, "This box is a value transformer. [press space]");
+      text = game.addHighlight(assert,
+        ["This a gate that absorbs orbs.",
+        "[press space]"]);
+      cs.nextStepOnKeyClickOrTimeout(0, () => 0, 32);
+    }    
+  // }, {
+  //   setup: function (cs) {
+  //     text.destroy();
+  //     text = game.addHighlight(assert,
+  //       ["'n>10' says that the gate can only absorb",
+  //         "orbs carrying 'n' > 10 [press space]"]);
+  //     cs.nextStepOnKeyClickOrTimeout(0, () => 0, 32);
+  //   }
+  // }, {
+  //   setup: function(cs) {
+  //     text.destroy();
+  //     let v = [];
+  //     v[0] = ["anon0"];
+  //     v[1] = [[{n:1}, {n:1}, {n:2}, {n:2}]];
+  //     let res = [v];
+  //     game.setCounterExample(res);
+  //     game.checkInvs(() => {
+  //       text = game.addHighlight(game.getOrb(),
+  //         ["Let's see what happens to this orb, which",
+  //           "carries the value n = 1. [press down twice]"]);
+  //       game.nextStepOnForwardN(2);
+  //     });
+  //   }
+  // }, {
+  //   setup: function (cs) {
+  //     setTimeout(function() {
+  //       text.destroy();
+  //       text = game.addHighlight(game.getOrb(),
+  //         ["Notice how the value of n is now 2",
+  //         "[press down again]"]);
+  //         game.nextStepOnForwardN(1);
+  //     },1200);
+  //   }
+  // }, {
+  //   setup: function (cs) {
+  //     setTimeout(function() {
+  //       text.destroy();
+  //       text = game.addHighlight(assert,
+  //         ["The value n = 2 makes n > 10 false, so the",
+  //         "orb cannot be absorbed [press space]"]);
+  //         cs.nextStepOnKeyClickOrTimeout(0, () => 0, 32);
+  //     },1200);
+  //   }
+  // }, {
+  //   setup: function (cs) {
+  //     text.destroy();
+  //     text = game.addHighlight(entry,
+  //       ["We show that this orb cannot be absorbed",
+  //       "on this path by coloring the path red [press space]"],
+  //       -50, 40);
+  //       cs.nextStepOnKeyClickOrTimeout(0, () => 0, 32);
+  //   }
+  }, {
+    setup: function (cs) {
+      text.destroy();
+      text = game.addHighlight(assert, ["Let's make the path green! [press space]"]);
       cs.nextStepOnKeyClickOrTimeout(0, () => 0, 32);
     }
   }, {
-    setup: function(cs) {
+    setup: function (cs) {
       text.destroy();
-      let v = [];
-      v[0] = ["anon0"];
-      v[1] = [[{n:1}, {n:1}, {n:2}, {n:2}]];
-      let res = [v];
-      game.setCounterExample(res);
-      game.checkInvs(() => {
-        text = game.addHighlight(game.getOrb(),
-          ["For example, here is an orb that",
-            "carries the value n = 1. [press space]"]);
-        cs.nextStepOnKeyClickOrTimeout(0, () => 0, 32);
+      (game.getTextIcon(assert) as SinkIcon).makeEditable();
+      text = game.addHighlight(assert, ["Click on the funnel next to the expression"]);
+      game.onNodeClick(assert).addOnce(() => { cs.nextStep() });
+    }
+  }, {
+    setup: function (cs) {
+      text.destroy();
+      text = game.addHighlight(assert, ["Change text to 'n>1' and press enter"]);
+      game.onNodeChanged(assert).addOnce((gameEl: TextIcon, newLines: string[]) =>  {
+        if (newLines[0].replace(/\s+/gm,'') === "n>1") {
+          cs.nextStep();
+        } else {
+          cs.nextStep(-2);
+        }
+        console.log(newLines);
       });
     }
-  }];
+  }, {
+    setup: function (cs) {
+      text.destroy();
+      text = game.addHighlight(assert,
+        ["Ok"]);
+    }
+  }]
+
   global_tutorial_steps = tutorial_steps_1;
   let game = new TutorialGame("content", entry, bbMap, "bogus", tutorial_steps_1);
 
