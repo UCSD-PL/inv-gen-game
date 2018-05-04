@@ -13,6 +13,7 @@ fi
 MYDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 DIR="$( cd $1 && pwd )"
 
+PY=python3
 $PY -m venv $DIR
 
 source $DIR/bin/activate
