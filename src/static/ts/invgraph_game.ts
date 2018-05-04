@@ -248,8 +248,8 @@ export class InvGraphGame {
   game: Phaser.Game;
 
   constructor(container: string, graph: Node, n: NodeMap, lvlId: string) {
-    this.width = 800;
-    this.height = 600;
+    this.width = 600;
+    this.height = 400;
     this.game = new Phaser.Game(this.width, this.height, Phaser.AUTO, container,
       { preload: ()=>{this.preload()},
         create: ()=>{this.create()},
@@ -996,6 +996,7 @@ export class InvGraphGame {
 
     //console.log("Final sizes: ", final_size);
     // Gather user nodes
+    this.userNodes = [];
     bfs(this.entry, (p: Node, n: Node) => {
       if (n instanceof UserNode) {
         this.userNodes.push(n);
@@ -1012,7 +1013,7 @@ export class InvGraphGame {
       if (prev == null) {
         assert(next == this.entry);
         let w = final_size[next.id].w/2;
-        p = new Point(300, 40);
+        p = new Point(150, 40);
       } else {
         prevP = pos[prev.id];
         p = Point.add(prevP, relp);

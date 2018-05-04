@@ -1,4 +1,4 @@
-import {rpc_loadLvlBasic, rpc_checkSoundness} from "./rpc";
+import {rpc_loadLvlNew, rpc_checkSoundness} from "./rpc";
 import {Fun, BB, Expr_T} from "./boogie";
 import * as Phaser from "phaser-ce"
 import {Node, buildGraph, removeEmptyNodes, UserNode} from "./game_graph"
@@ -7,6 +7,11 @@ import {assert, repeat, structEq, StrMap} from "./util"
 import {parse} from "esprima"
 import {Point} from "phaser-ce";
 import { TextIcon } from "ts/texticon";
+import { PositiveTracesWindow } from "traceWindow";
+import {Level} from "level";
+import {invPP} from "pp"
+import {invToJS, esprimaToStr, invEval, evalResultBool, interpretError} from "eval"
+import {invariantT} from "types"
 
 class SimpleGame extends InvGraphGame {
   create(): void {
@@ -80,22 +85,102 @@ class SimpleGame extends InvGraphGame {
     super.onFirstUpdate();
     this.checkInvs(this.getInvNetwork(), ()=>{});
   }
+
+  setExpr(expr: invariantT): void {
+    assert(this.userNodes.length == 1);
+    let nd: UserNode = this.userNodes[0];
+    let gameNd: TextIcon = this.nodeSprites[nd.id];
+
+    nd.unsound = [esprimaToStr(expr)];
+    let invNet: InvNetwork = this.getInvNetwork();
+    this.checkInvs(invNet, ()=> {});
+  }
+}
+
+function convertTrace(vs: string[], t: any): any {
+  let res = [];
+  for (let store of t) {
+    let row = [];
+    for (let v of vs) {
+      row.push(store[v]);
+    }
+    res.push(row);
+  }
+  return res
 }
 
 $(document).ready(function() {
-
   let lvlName = "i-sqrt"
   let lvlSet = "unsolved-new-benchmarks2"
   /*
   let lvlName = "tut01"
   let lvlSet = "tutorial"
   */
-  rpc_loadLvlBasic(lvlSet, lvlName, (lvl) => {
+  rpc_loadLvlNew(lvlSet, lvlName, (lvl) => {
     let fun = Fun.from_json(lvl[1]);
+    let vars = lvl[3]
+    let traces = lvl[4];
+    let trace = convertTrace(vars, traces[0]);
     let [graph_entry, mapping] = buildGraph(fun);
     console.log("Initial:", graph_entry);
     [graph_entry, mapping] = removeEmptyNodes(graph_entry, mapping, true);
     console.log("After cleanup of empty nodes:", graph_entry);
-    let game = new SimpleGame("content", graph_entry, mapping, lvlName);
+    let game = new SimpleGame("graph", graph_entry, mapping, lvlName);
+    let tracesW = new PositiveTracesWindow($('#traces').get()[0]);
+    let oldLvl = new Level(lvlName, vars, [trace, [], []], "", "", "", []);
+    tracesW.setVariables(oldLvl);
+    tracesW.addData(oldLvl.data);
+
+    function userInput(commit: boolean): void {
+      tracesW.disableSubmit();
+      tracesW.clearError();
+
+      let inv = invPP(tracesW.curExp().trim());
+      let desugaredInv = invToJS(inv)
+      let parsedInv:invariantT = null
+
+      try {
+        parsedInv = parse(desugaredInv);
+      } catch (err) {
+        tracesW.delayedError(inv + " is not a valid expression.");
+        return;
+      }
+
+      if (inv.length === 0) {
+        tracesW.evalResult({ clear: true });
+        return;
+      }
+
+      var jsInv = esprimaToStr(parsedInv);
+
+      try {
+        let pos_res = invEval(parsedInv, vars, trace);
+        let res: [any[], [any, any][], any[]] = [pos_res, [], []];
+        tracesW.evalResult({ data: res });
+
+        if (!evalResultBool(res))
+          return;
+        
+        let all = pos_res.length
+        let hold = pos_res.filter(function (x) { return x; }).length
+  
+        if (hold < all)
+          tracesW.error("Holds for " + hold + "/" + all + " cases.")
+        else {
+          tracesW.enableSubmit(); 
+          if (!commit) {
+            tracesW.msg("<span class='good'>Press Enter...</span>");
+            return;
+          } else {
+            game.setExpr(parsedInv);
+          }
+        }
+      } catch (err) {
+        console.log(err);
+        tracesW.delayedError(<string>interpretError(err));
+      }
+    }
+    tracesW.onChanged(() => { userInput(false); })
+    tracesW.onCommit(() => { userInput(true); })
   })
 })
