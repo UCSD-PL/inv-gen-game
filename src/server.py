@@ -1,6 +1,6 @@
 #!  /usr/bin/env python
 from flask import Flask
-from flask import request, redirect, url_for
+from flask import request, redirect, url_for, send_from_directory
 from flask_jsonrpc import JSONRPC as rpc
 from os.path import dirname, abspath, realpath, join, isfile
 from js import esprimaToZ3, esprimaToBoogie, boogieToEsprima, \
@@ -43,10 +43,9 @@ class Server(Flask):
 app = Server(__name__, static_folder='frontend/', static_url_path='/game')
 api = rpc(app, '/api')
 
-@app.route('/', methods=['POST'])
+@app.route('/game/app/start', methods=['GET', 'POST'])
 def game():  # pragma: no cover
-    content = get_file('app/start.html')
-    return Response(content, mimetype="text/html")
+    return send_from_directory('frontend/app', 'start.html', mimetype="text/html")
 @app.route('/')
 def index():
     return redirect(url_for('static', filename='app/start.html'))
