@@ -1,8 +1,7 @@
 # Use an official Python runtime as a base image
 FROM ubuntu:16.04
 
-LABEL version="0.0.2-beta"
-LABEL project="inv-gen-game"
+LABEL project="inv-gen-game-small"
 
 
 ENV SSH_PASSWD "root:Docker!"
@@ -13,8 +12,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   openssh-server \
   git \
   software-properties-common \
-  wget \
-  zip \
   python3 \
   python3-dev \
   python3-pip \
@@ -24,12 +21,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   mono-xbuild \
   nodejs-legacy \
   npm \
-  libssl-dev \
-  libffi-dev \
-  libmysqlclient-dev \
-  openjdk-8-jdk \
  && rm -rf /var/lib/apt/lists/* \
  && echo "$SSH_PASSWD" | chpasswd \
+ && git clone -b dockerized https://8c27f4108ac53546e205d396e86dd25cce7016a8:x-oauth-basic@github.com/UCSD-PL/inv-gen-game.git /app \
  && npm install -g gulp-cli \
  && npm install -g --save-dev typescript gulp gulp-typescript \
  && npm install -g --save-dev browserify tsify vinyl-source-stream \
@@ -40,24 +34,26 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
  && npm install -g typescript \
  && npm install -g jquery --save \
  && npm install -g @types/jquery --save \
- && npm install -g --save @types/jquery-jsonrpcclient
+ && npm install -g --save @types/jquery-jsonrpcclient \
+ && pip3 install wheel \
+ && pip3 install setuptools 
 
-
-# Downloading the latest version of the app
-RUN  git clone -b dockerized https://8c27f4108ac53546e205d396e86dd25cce7016a8:x-oauth-basic@github.com/UCSD-PL/inv-gen-game.git /app
+COPY sshd_config /etc/ssh/
 
 # Set the working directory to /app
 WORKDIR /app
 
-RUN cp /app/sshd_config /etc/ssh/ \
+
+LABEL version="v0.0.1-beta"
+
+COPY built_env.tgz /app/
+
+RUN git pull \
   && cp /app/init.sh /usr/local/bin/ \
-  && chmod u+x /usr/local/bin/init.sh
- 
-# Install any needed packages specified in requirements.txt
-RUN pip3 install wheel \
- && pip3 install setuptools \
- && pip3 install -r requirements.txt \
- && bash ./setupServer.sh
+  && chmod u+x /usr/local/bin/init.sh \ 
+  && tar zxf built_env.tgz \ 
+  && bash ./setupServer.sh
+
 
 ENV SQL_CONNECTION "mmenarini%40invgame:sdljsd%24903@invgame.mysql.database.azure.com/game"
 ENV ADMIN_TOKEN "fuzzy"
@@ -66,7 +62,6 @@ ENV LEVEL_SET "../lvlsets/unsolved-leftover-split.lvlset"
 
 EXPOSE 8000 2222
 
-RUN  git pull
 WORKDIR /app/src
 # Run app.py when the container launches
 ENTRYPOINT ["init.sh"]
