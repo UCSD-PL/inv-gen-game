@@ -537,13 +537,13 @@ $(document).ready(function () {
       text.destroy();
       let v = [];
       v[0] = ["anon0"];
-      v[1] = [[{n:1}, {n:1}, {n:2}, {n:2}]];
+      v[1] = [[{n:2}, {n:2}, {n:3}, {n:3}]];
       let res = [v];
       game.setCounterExample(res);
       game.checkInvs(() => {
         text = game.addHighlight(game.getOrb(),
           ["Let's see what happens to this orb, which",
-            "carries the value n = 1. [press down twice]"]);
+            "carries the value n = 2. [press down twice]"]);
         game.nextStepOnForwardN(2);
       });
     }
@@ -552,7 +552,7 @@ $(document).ready(function () {
       setTimeout(function() {
         text.destroy();
         text = game.addHighlight(game.getOrb(),
-          ["Notice how the value of n is now 2",
+          ["Notice how the value of n is now 3",
           "[press down again]"]);
           game.nextStepOnForwardN(1);
       },1200);
@@ -562,7 +562,7 @@ $(document).ready(function () {
       setTimeout(function() {
         text.destroy();
         text = game.addHighlight(assert,
-          ["The value n = 2 makes n > 10 false, so the",
+          ["The value n = 3 makes n > 10 false, so the",
           "orb cannot be absorbed [press space]"]);
           cs.nextStepOnKeyClickOrTimeout(0, () => 0, 32);
       },1200);
@@ -592,7 +592,7 @@ $(document).ready(function () {
   }, {
     setup: function (cs) {
       text.destroy();
-      text = game.addHighlight(assert, ["Change text to 'n>1'","and press enter"]);
+      text = game.addHighlight(assert, ["Change text to 'n>2'","and press enter"]);
       game.onNodeChanged(assert).addOnce((gameEl: TextIcon, newLines: string[]) =>  {
         if (newLines[0].replace(/\s+/gm,'') === "n>1") {
           cs.nextStep();
@@ -605,7 +605,7 @@ $(document).ready(function () {
     setup: function (cs) {
       text.destroy();
       text = game.addHighlight(game.getOrb(),
-        ["Yay! This orb with n = 2 passes through the",
+        ["Yay! This orb with n = 3 passes through the",
         "gate. But not so quick... [press space]"]);
       cs.nextStepOnKeyClickOrTimeout(0, () => 0, 32);
     }
@@ -614,14 +614,14 @@ $(document).ready(function () {
       text.destroy();
       let v = [];
       v[0] = ["anon0"];
-      v[1] = [[{n:0}, {n:0}, {n:1}, {n:1}]];
+      v[1] = [[{n:1}, {n:1}, {n:2}, {n:2}]];
       let res = [v];
       game.setCounterExample(res);
       game.checkInvs(() => {
         text = game.addHighlight(game.getOrb(),
           ["The path is still red!!!",
           "We are now given a new orb to look at",
-          "carrying the value n = 0. [press down twice]"]);
+          "carrying the value n = 1. [press down twice]"]);
         game.nextStepOnForwardN(2);
       });
     }
@@ -630,7 +630,7 @@ $(document).ready(function () {
       setTimeout(function() {
         text.destroy();
         text = game.addHighlight(game.getOrb(),
-          ["Here the value of n becomes 1",
+          ["Here the value of n becomes 2",
           "[press down again]"]);
           game.nextStepOnForwardN(1);
       },1200);
@@ -640,7 +640,7 @@ $(document).ready(function () {
       setTimeout(function() {
         text.destroy();
         text = game.addHighlight(assert,
-          ["n = 1 makes n > 1 false, so again the",
+          ["n = 2 makes n > 3 false, so again the",
           "orb cannot be absorbed [press space]"]);
           cs.nextStepOnKeyClickOrTimeout(0, () => 0, 32);
       },1200);
@@ -661,9 +661,9 @@ $(document).ready(function () {
   }, {
     setup: function (cs) {
       text.destroy();
-      text = game.addHighlight(assert, ["Change text to 'n>0'","and press enter"]);
+      text = game.addHighlight(assert, ["Change text to 'n>1'","and press enter"]);
       game.onNodeChanged(assert).addOnce((gameEl: TextIcon, newLines: string[]) =>  {
-        if (newLines[0].replace(/\s+/gm,'') === "n>0") {
+        if (newLines[0].replace(/\s+/gm,'') === "n>1") {
           cs.nextStep();
         } else {
           cs.nextStep(-2);
@@ -674,7 +674,7 @@ $(document).ready(function () {
     setup: function (cs) {
       text.destroy();
       text = game.addHighlight(game.getOrb(),
-        ["Yay! This orb with n = 1 now passes",
+        ["Yay! This orb with n = 2 now passes",
         "through the gate. [press space]"]);
       cs.nextStepOnKeyClickOrTimeout(0, () => 0, 32);
     }
@@ -684,7 +684,9 @@ $(document).ready(function () {
       game.setCounterExample([]);
       game.checkInvs(() => {
         text = game.addHighlight(entry,
-          ["And the path is green!"],
+          ["And the path is green!",
+          "Let's move on to another example", 
+          "[press space]"],
           -50, 40);
         cs.nextStepOnKeyClickOrTimeout(0, () => 0, 32);
       });
