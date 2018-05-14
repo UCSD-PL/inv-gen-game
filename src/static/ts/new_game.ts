@@ -1,9 +1,9 @@
 import {rpc_loadLvlNew, rpc_checkSoundness} from "./rpc";
 import {Fun, BB, Expr_T} from "./boogie";
 import * as Phaser from "phaser-ce"
-import {Node, buildGraph, removeEmptyNodes, UserNode} from "./game_graph"
+import {Node, buildGraph, removeEmptyNodes, UserNode, NodeMap} from "./game_graph"
 import {InvGraphGame, TraceLayout, Trace, InvNetwork, InputOutputIcon, Violation} from "./invgraph_game"
-import {assert, repeat, structEq, StrMap} from "./util"
+import {assert, repeat, structEq, StrMap, single} from "./util"
 import {parse} from "esprima"
 import {Point} from "phaser-ce";
 import { TextIcon } from "ts/texticon";
@@ -14,9 +14,27 @@ import {invToJS, esprimaToStr, invEval, evalResultBool, interpretError} from "ev
 import {invariantT} from "types"
 
 class SimpleGame extends InvGraphGame {
+  public onNodeFocused: Phaser.Signal;
+  public onNodeUnfocused: Phaser.Signal;
+  public onFoundInv: Phaser.Signal;
+  public focusedNode: UserNode;
+  public onUserTypedInv: Phaser.Signal;
+
+  constructor(container: string, graph: Node, n: NodeMap, lvlId: string) {
+    super(container, graph, n, lvlId);
+    this.onNodeFocused = new Phaser.Signal();
+    this.onNodeUnfocused = new Phaser.Signal();
+    this.onFoundInv = new Phaser.Signal();
+    this.onUserTypedInv = new Phaser.Signal();
+    this.focusedNode = null;
+  }
+
   create(): void {
     super.create();
     this.forEachUserNode((nd: UserNode) => {
+      this.textSprites[nd.id].onChildInputDown.add(() => {
+        this.onNodeFocused.dispatch(nd);
+      })
       this.textSprites[nd.id].onChanged.add((gameEl: TextIcon, newLines: string[])=> {
         assert (newLines.length >= nd.sound.length)
         let soundLines = newLines.slice(newLines.length-nd.sound.length);
@@ -69,6 +87,7 @@ class SimpleGame extends InvGraphGame {
         this.forEachUserNode((un: UserNode) => {
           if (!(un.id in soundnessViolations) || 
               soundnessViolations[un.id].length == 0) {
+            this.onFoundInv.dispatch(un, un.unsound);
             un.sound = un.unsound.concat(un.sound);
             un.unsound = [];
           }
@@ -127,9 +146,35 @@ $(document).ready(function() {
     console.log("After cleanup of empty nodes:", graph_entry);
     let game = new SimpleGame("graph", graph_entry, mapping, lvlName);
     let tracesW = new PositiveTracesWindow($('#traces').get()[0]);
-    let oldLvl = new Level(lvlName, vars, [trace, [], []], "", "", "", []);
-    tracesW.setVariables(oldLvl);
-    tracesW.addData(oldLvl.data);
+
+    let nodes: Set<Node> = graph_entry.reachable();
+    let userNodes: UserNode[] = [];
+    for (let nd of nodes) {
+      if (nd instanceof UserNode) {
+        userNodes.push(nd);
+      }
+    }
+    let traceMap: StrMap<any> = {};
+    traceMap[single(userNodes).id] = [vars, trace];
+    // For each user node, on click select it and display the data for it
+    // on the right hand windows
+    game.onNodeFocused.add((nd: UserNode) => {
+      let [vars, trace] = traceMap[nd.id];
+      let oldLvl = new Level(lvlName, vars, [trace, [], []], "", "", "", []);
+      tracesW.setVariables(oldLvl);
+      tracesW.addData(oldLvl.data);
+    })
+    game.onNodeUnfocused.add((nd: UserNode) => {
+      let [vars, trace] = [[], []];
+      let oldLvl = new Level(lvlName, vars, [trace, [], []], "", "", "", []);
+      tracesW.setVariables(oldLvl);
+      tracesW.addData(oldLvl.data);
+      $("#progress").hide();
+    })
+    game.onFoundInv.add((nd: UserNode, inv: string[]) => {
+      console.log(nd, inv)
+      $("#progress").append("<br>" + inv.join("<br>"));
+    })
 
     function userInput(commit: boolean): void {
       tracesW.disableSubmit();
