@@ -19,7 +19,10 @@ export class TextIcon extends Phaser.Group {
     protected _defaultOpts: LineOptions;
     protected _lineOpts: LineOptions[];
     protected _focused: number;
+    protected _inputBox: JQuery;
+
     public onChanged: Phaser.Signal;
+    public onTyped: Phaser.Signal;
 
     constructor(game: Phaser.Game, icon: Phaser.Sprite, text: (string|string[]), name?: string, x?: number, y?:number, startShown?: boolean) {
         super(game, undefined, name, undefined, undefined, undefined);
@@ -28,6 +31,7 @@ export class TextIcon extends Phaser.Group {
         if (startShown == undefined) startShown = true;
 
         this.onChanged = new Phaser.Signal();
+        this.onTyped = new Phaser.Signal();
         this._game = game;
         this._icon = icon;
         this._icon.x = -this._icon.width/2;
@@ -73,65 +77,97 @@ export class TextIcon extends Phaser.Group {
         let lineGrp: Phaser.Group;
         let rmIconStyle = { font: "15px Courier New, Courier, monospace", align: "center", fill: "#ff0000", backgroundColor: "#ffffff" };
 
+        function _height(arg: Phaser.Text|JQuery): number {
+            if (arg instanceof $) {
+                return (arg as JQuery).outerHeight();
+            } else {
+                return (arg as Phaser.Text).height;
+            }
+        }
 
-        if (!this._textMatch()) {
-            lineGrp = (this._text !== undefined ? this._text : this._game.add.group())
-            lineGrp.removeAll(true);
-            let idx = 0;
-            for (let ln of this._lines) {
-                let opts = this._lineOpts[idx];
-                let line = this._game.add.group(lineGrp);
-                let lineText: Phaser.Text | PhaserInput.InputField;
-                if (opts.editingNow) {
-                    let input = (this._game.add as any).inputField(0, 0, this._defaultOpts.style);
-                    input.setText(ln);
-                    input.focusOutOnEnter = true;
-                    line.add(input);
-                    input.focusOut.add(((lineIdx: number) => ()=> {
-                        this._lines[lineIdx] = input.value;
-                        this._lineOpts[lineIdx].editingNow = false;
-                        this._render();
-                        this.onChanged.dispatch(this, this._lines);
-                    })(idx))
-                    lineText = input;
-                    input.startFocus();
-                } else {
-                    lineText = this._game.add.text(0, 0, ln, opts.style, line);
-                }
-
-                if (opts.removable) {
-                    let remIcon = this._game.add.text(lineText.width, 0, " -", rmIconStyle, line);
-                    remIcon.inputEnabled = true;
-                    remIcon.events.onInputDown.add(((lineIdx: number) => ()=> {
-                        this._lines.splice(lineIdx, 1);
-                        this._lineOpts.splice(lineIdx, 1)
-                        this._render();
-                        this.onChanged.dispatch(this, this._lines)
-                    })(idx));
-                }
-                if (opts.editable && !opts.editingNow) {
+        lineGrp = (this._text !== undefined ? this._text : this._game.add.group())
+        lineGrp.removeAll(true);
+        if (this._inputBox != null) {
+            this._inputBox.remove();
+        }
+        let idx = 0;
+        let lineElts: (Phaser.Text |JQuery)[] = [];
+        for (let ln of this._lines) {
+            let opts = this._lineOpts[idx];
+            let lineText: Phaser.Text | JQuery;
+            if (opts.editingNow) {
+                let container: JQuery = $("#" + this.game.parent);
+                let input: JQuery = $("<input class='absPos' type='text'></input>");
+                input.val(ln);
+                input.change(((lineIdx: number) => ()=> {
+                    this._lines[lineIdx] = input.val();
+                    this._lineOpts[lineIdx].editingNow = false;
+                    this._render();
+                    this.onChanged.dispatch(this, this._lines);
+                })(idx))
+                this._inputBox = input;
+                container.append(this._inputBox)
+                this._inputBox.focus();
+                lineText = input;
+            } else {
+                lineText = this._game.add.text(0, 0, ln, opts.style, lineGrp);
+                if (opts.editable) {
                     lineText.inputEnabled = true;
                     lineText.events.onInputDown.add(((lineIdx: number) => ()=> {
                         this.edit(lineIdx);
                     })(idx));
                 }
-                idx++;
             }
-        } else {
-            lineGrp = this._text;
+            lineElts.push(lineText);
+            idx++;
         }
-
-        for (let i = 0; i < this._lines.length; i++) {
-            let yOff = (i == 0 ? 0 : lineGrp.children[i-1].y + (lineGrp.children[i-1] as Phaser.Text).height);
+        // Pass 1: Compute relative positions of Phaser.Text entries
+        let relY = 0;
+        for (let i = 0; i < lineElts.length; i++) {
+            let prevHeight: number;
+            if (i == 0) {
+                prevHeight = 0;
+            } else {
+                prevHeight = _height(lineElts[i-1]);
+            }
+            relY += prevHeight;
             let opts = this._lineOpts[i];
-            let line : Phaser.Group = lineGrp.children[i] as Phaser.Group;
-            line.x = 0;
-            line.y = yOff;
-            line.children.forEach((child: any) => {child.exists = opts.visible;})
+            if (lineElts[i] instanceof Phaser.Text) {
+                let line : Phaser.Text = lineElts[i] as Phaser.Text;
+                line.x = 0;
+                line.y = relY;
+                line.children.forEach((child: any) => {child.exists = opts.visible;})
+            }
         }
+        if (lineElts.length > 0) {
+            relY += _height(lineElts[lineElts.length-1]);
+        }
+        // Offset Phaser.Text entries vertically
         this._text = lineGrp;
-        this._text.y = -this._text.height/2;
+        this._text.y = -relY/2;
+        console.log("Height: ", relY)
         this._text.x = this._icon.width/2 + 5;
+
+        // Pass 2: Compute absolute positions of textboxes
+        relY = 0;
+        for (let i = 0; i < lineElts.length; i++) {
+            let prevHeight: number;
+            if (i == 0) {
+                prevHeight = 0;
+            } else {
+                prevHeight = _height(lineElts[i-1]);
+            }
+            relY += prevHeight;
+            let opts = this._lineOpts[i];
+            if (lineElts[i] instanceof $) {
+                let line: JQuery = lineElts[i] as JQuery;
+                // TODO: Very brittle hacky code - the 26 constant comes from the padding/margins of divs around
+                // the canvas.
+                console.log("icon world y", this._icon.world.y, "icon y", this._icon.y, "text y", this._text.y, "rely", relY);
+                line.css("left", this._icon.world.x - this._icon.x + this._text.x + 26)
+                line.css("top", this._icon.world.y - this._icon.y + this._text.y + relY + 26)
+            }
+        }
     }
 
     public getText(): Phaser.Group {
