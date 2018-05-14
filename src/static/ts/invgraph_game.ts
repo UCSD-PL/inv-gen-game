@@ -245,6 +245,7 @@ export class InvGraphGame {
   protected selectedViolation: [TextIcon, number, Trace, TraceLayout];
   protected animationStopRequested: boolean;
   protected lvlId: string;
+  protected stepPlaying: boolean;
   game: Phaser.Game;
 
   constructor(container: string, graph: Node, n: NodeMap, lvlId: string) {
@@ -267,6 +268,7 @@ export class InvGraphGame {
     this.animationStopRequested = false;
     this.lvlId = lvlId;
     this.selectedViolation = null;
+    this.stepPlaying = false;
   }
 
   getSprite(img: string, x?: number, y?: number, show?: boolean): Phaser.Sprite {
@@ -501,7 +503,8 @@ export class InvGraphGame {
     for (let pt of path) {
       t.to({x:pt.x, y:pt.y}, 500, Phaser.Easing.Quadratic.Out)
     }
-    t.onComplete.add(()=> {err.setText(newText);this.selectedViolation[1] = nextStep;})
+    t.onStart.add(() => {this.stepPlaying = true;})
+    t.onComplete.add(()=> {err.setText(newText);this.selectedViolation[1] = nextStep; this.stepPlaying = false; })
     return t;
   }
 
@@ -575,6 +578,7 @@ export class InvGraphGame {
     this.game.load.image('sink', 'img/sink_small.png');
     this.game.load.image('gearbox', 'img/gearbox_small.png');
     this.game.load.image('funnel', 'img/funnel_small.png');
+    this.game.load.image('funnel_selected', 'img/funnel_small_selected.png');
     this.game.load.image('branch', 'img/branch_small.png');
     this.game.load.image('placeholder', 'img/placeholder_small.png');
     this.game.load.image('orb', 'img/orb.png');
@@ -844,12 +848,12 @@ export class InvGraphGame {
     let up: Phaser.Key = this.game.input.keyboard.addKey(38);
     let down: Phaser.Key = this.game.input.keyboard.addKey(40);
     up.onDown.add(() => {
-      if (this.selectedViolation != null) {
+      if (this.selectedViolation != null && !this.stepPlaying) {
         this.stepBackwards();
       }
     })
     down.onDown.add(() => {
-      if (this.selectedViolation != null) {
+      if (this.selectedViolation != null && !this.stepPlaying) {
         this.stepForward();
       }
     })
