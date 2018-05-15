@@ -18,7 +18,7 @@ class SimpleGame extends InvGraphGame {
   public onNodeUnfocused: Phaser.Signal;
   public onFoundInv: Phaser.Signal;
   public onTriedInv: Phaser.Signal;
-  public focusedNode: UserNode;
+  public focusedNode: TextIcon;
   public onUserTypedInv: Phaser.Signal;
 
   constructor(container: string, graph: Node, n: NodeMap, lvlId: string) {
@@ -36,6 +36,7 @@ class SimpleGame extends InvGraphGame {
     this.forEachUserNode((nd: UserNode) => {
       this.textSprites[nd.id].onChildInputDown.add(() => {
         this.onNodeFocused.dispatch(nd);
+        this.focusedNode = this.textSprites[nd.id];
       })
       this.textSprites[nd.id].onChanged.add((gameEl: TextIcon, newVal: string) => {
         this.onUserTypedInv.dispatch(gameEl, newVal);
@@ -157,6 +158,8 @@ $(document).ready(function() {
     })
     game.onFoundInv.add((nd: UserNode, inv: string[]) => {
       $("#progress").append("<br>" + inv.join("<br>"));
+      game.onNodeUnfocused.dispatch(nd);
+      game.focusedNode = null;
       $(tracesW.parent).hide();
     })
     game.onUserTypedInv.add((nd: TextIcon, inv: string) => {
@@ -170,10 +173,17 @@ $(document).ready(function() {
     function userInput(commit: boolean): void {
       tracesW.disableSubmit();
       tracesW.clearError();
+      let rawInv = tracesW.curExp().trim()
 
-      let inv = invPP(tracesW.curExp().trim());
+      let inv = invPP(rawInv);
       let desugaredInv = invToJS(inv)
       let parsedInv:invariantT = null
+
+      if (!commit) {
+        console.log("Set: ", game.focusedNode, inv)
+        game.focusedNode.setEditedString(inv);
+      }
+
 
       try {
         parsedInv = parse(desugaredInv);
