@@ -146,6 +146,7 @@ $(document).ready(function() {
       let oldLvl = new Level(lvlName, vars, [trace, [], []], "", "", "", []);
       tracesW.setVariables(oldLvl);
       tracesW.addData(oldLvl.data);
+      $(tracesW.parent).show();
     })
     game.onNodeUnfocused.add((nd: UserNode) => {
       let [vars, trace] = [[], []];
@@ -156,6 +157,7 @@ $(document).ready(function() {
     })
     game.onFoundInv.add((nd: UserNode, inv: string[]) => {
       $("#progress").append("<br>" + inv.join("<br>"));
+      $(tracesW.parent).hide();
     })
     game.onUserTypedInv.add((nd: TextIcon, inv: string) => {
       tracesW.setExp(inv);
