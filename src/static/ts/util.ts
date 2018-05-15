@@ -503,8 +503,8 @@ export class Script {
   timeoutId: any;
 
   constructor(public steps: IStep[]) { this.nextStep(); }
-  nextStep(): void {
-    this.step++;
+  nextStep(nsteps = 0): void {
+    this.step = this.step + 1 + nsteps;
     this.cancelCb = null;
     this.steps[this.step].setup(this);
   }

@@ -72,8 +72,22 @@ export class SourceIcon extends TextIcon {
 }
 
 export class SinkIcon extends TextIcon {
-    constructor(game: InvGraphGame, nd: AssertNode, x?: number, y?: number) {
+    editable: boolean;
+    constructor(game: InvGraphGame, nd: AssertNode, x?: number, y?: number, editable = false) {
       super(game.game, game.getSprite("sink", 0, 0, true), nd.exprs, "sink_" + nd.id, x, y);
+      this.editable = false;
+      if (editable) this.makeEditable();
+    }
+    public makeEditable() {
+      if (!this.editable) {
+        this.icon().inputEnabled = true;
+        this.icon().events.onInputDown.add(() => {
+          this._lineOpts[0].editingNow = true;
+          this._render();
+        }, this);
+        this.icon().input.useHandCursor = true;
+        this.editable = true;
+      }
     }
     public entryPoint(): Phaser.Point {
         return new Phaser.Point(
@@ -249,8 +263,8 @@ export class InvGraphGame {
   game: Phaser.Game;
 
   constructor(container: string, graph: Node, n: NodeMap, lvlId: string) {
-    this.width = 600;
-    this.height = 400;
+    this.width = 800;
+    this.height = 600;
     this.game = new Phaser.Game(this.width, this.height, Phaser.AUTO, container,
       { preload: ()=>{this.preload()},
         create: ()=>{this.create()},
@@ -823,10 +837,7 @@ export class InvGraphGame {
     return traceLayout;
   }
 
-  create(): void {
-    this.graphics = this.game.add.graphics(0, 0);
-    this.game.add.plugin(PhaserInput.Plugin);
-
+  create_core(): void {
     // Build text off-screen
     bfs(this.entry, (p: Node, n: Node) => {
       this.textSprites[n.id] = this.drawNode(n, new Point(this.width, this.height));
@@ -854,6 +865,24 @@ export class InvGraphGame {
     })
     down.onDown.add(() => {
       if (this.selectedViolation != null && !this.stepPlaying) {
+        this.stepForward();
+      }
+    })
+  }
+
+  create(): void {
+    this.graphics = this.game.add.graphics(0, 0);
+    this.game.add.plugin(PhaserInput.Plugin);
+    this.create_core();
+    let up: Phaser.Key = this.game.input.keyboard.addKey(38);
+    let down: Phaser.Key = this.game.input.keyboard.addKey(40);
+    up.onDown.add(() => {
+      if (this.selectedViolation != null) {
+        this.stepBackwards();
+      }
+    })
+    down.onDown.add(() => {
+      if (this.selectedViolation != null) {
         this.stepForward();
       }
     })

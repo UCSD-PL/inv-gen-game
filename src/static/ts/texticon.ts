@@ -34,8 +34,8 @@ export class TextIcon extends Phaser.Group {
         this.onChanged = new Phaser.Signal();
         this._game = game;
         this._icon = icon;
-        this._icon.x = -this._icon.width/2;
-        this._icon.y =  -this._icon.height/2;
+        this._icon.x = Math.round(-this._icon.width/2);
+        this._icon.y =  Math.round(-this._icon.height/2);
         this._defaultOpts = {
             style: { font: "15px Courier New, Courier, monospace", align: "center", fill: "#000000", backgroundColor: "#ffffff" },
             removable: false,
