@@ -143,7 +143,8 @@ export class TextIcon extends Phaser.Group {
                 let line : Phaser.Text = lineElts[i] as Phaser.Text;
                 line.x = 0;
                 line.y = relY;
-                line.children.forEach((child: any) => {child.exists = opts.visible;})
+                console.log(line, opts.visible);
+                line.exists = opts.visible;
             }
         }
         if (lineElts.length > 0) {

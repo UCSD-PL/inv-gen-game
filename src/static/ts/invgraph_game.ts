@@ -60,8 +60,8 @@ export class PlaceholderIcon extends TextIcon {
 }
 
 export class SourceIcon extends TextIcon {
-    constructor(game: InvGraphGame, nd: AssumeNode, x?: number, y?: number) {
-      super(game.game, game.getSprite("source", 0, 0, true), nd.exprs, "src_" + nd.id, x, y);
+    constructor(game: InvGraphGame, nd: AssumeNode, x?: number, y?: number, startShown?: boolean) {
+      super(game.game, game.getSprite("source", 0, 0, true), nd.exprs, "src_" + nd.id, x, y, startShown);
     }
     public exitPoint(): Phaser.Point {
         return new Phaser.Point(
@@ -73,8 +73,8 @@ export class SourceIcon extends TextIcon {
 
 export class SinkIcon extends TextIcon {
     editable: boolean;
-    constructor(game: InvGraphGame, nd: AssertNode, x?: number, y?: number, editable = false) {
-      super(game.game, game.getSprite("sink", 0, 0, true), nd.exprs, "sink_" + nd.id, x, y);
+    constructor(game: InvGraphGame, nd: AssertNode, x?: number, y?: number, editable = false, startShown?: boolean) {
+      super(game.game, game.getSprite("sink", 0, 0, true), nd.exprs, "sink_" + nd.id, x, y, startShown);
       this.editable = false;
       if (editable) this.makeEditable();
     }
@@ -98,8 +98,8 @@ export class SinkIcon extends TextIcon {
 }
 
 export class BranchIcon extends TextIcon {
-    constructor(game: InvGraphGame, nd: AssertNode, x?: number, y?: number) {
-      super(game.game, game.getSprite("branch", 0, 0, true), nd.exprs, "br_" + nd.id, x, y);
+    constructor(game: InvGraphGame, nd: AssertNode, x?: number, y?: number, startShown?: boolean) {
+      super(game.game, game.getSprite("branch", 0, 0, true), nd.exprs, "br_" + nd.id, x, y, startShown);
     }
     public entryPoint(): Phaser.Point {
         return new Phaser.Point(
@@ -128,8 +128,8 @@ export class InputOutputIcon extends TextIcon {
 
     // Code duplication with OutputIcon - don't want to implement mixins just
     // for this one case
-    constructor(game: InvGraphGame, nd: UserNode, x?: number, y?: number) {
-      super(game.game, game.getSprite("funnel", 0, 0, true), [], "un_" + nd.id, x, y);
+    constructor(game: InvGraphGame, nd: UserNode, x?: number, y?: number, startShown?: boolean) {
+      super(game.game, game.getSprite("funnel", 0, 0, true), [], "un_" + nd.id, x, y, startShown);
       this.icon().inputEnabled = true;
       this.icon().events.onInputDown.add(() => {
         if (this.unsound.length == 0) {
@@ -183,9 +183,9 @@ export class InputOutputIcon extends TextIcon {
 export class TransformerIcon extends TextIcon {
     // Code duplication with OutputIcon - don't want to implement mixins just
     // for this one case
-    constructor(game: InvGraphGame, nd: AssignNode, x?: number, y?: number) {
+    constructor(game: InvGraphGame, nd: AssignNode, x?: number, y?: number, startShown?: boolean) {
       let text = nd.stmts.join("\n");
-      super(game.game, game.getSprite("gearbox", 0, 0, true), text, "tr_" + nd.id, x, y, false);
+      super(game.game, game.getSprite("gearbox", 0, 0, true), text, "tr_" + nd.id, x, y, startShown);
       this.icon().inputEnabled = true;
       this.icon().events.onInputDown.add(() => {
         game.transformLayout(() => this.toggleText());
@@ -622,15 +622,15 @@ export class InvGraphGame {
 
   drawNode(nd: Node, pos: Point): TextIcon {
     if (nd instanceof AssumeNode) {
-      return new SourceIcon(this, nd, pos.x, pos.y);
+      return new SourceIcon(this, nd, pos.x, pos.y, true);
     } else if (nd instanceof AssertNode) {
-      return new SinkIcon(this, nd, pos.x, pos.y);
+      return new SinkIcon(this, nd, pos.x, pos.y, true, true);
     } else if (nd instanceof AssignNode) {
-      return new TransformerIcon(this, nd, pos.x, pos.y);
+      return new TransformerIcon(this, nd, pos.x, pos.y, false);
     } else if (nd instanceof IfNode) {
-      return new BranchIcon(this, nd, pos.x, pos.y);
+      return new BranchIcon(this, nd, pos.x, pos.y, true);
     } else if (nd instanceof UserNode) {
-      return new InputOutputIcon(this, nd, pos.x, pos.y);
+      return new InputOutputIcon(this, nd, pos.x, pos.y, true);
     } else if (nd instanceof PlaceholderNode) {
       return new PlaceholderIcon(this, nd, pos.x, pos.y);
     } else {

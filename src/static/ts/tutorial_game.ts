@@ -271,7 +271,7 @@ class TutorialGame extends InvGraphGame {
   //   });
   // }
   onNodeChanged(n: Node): Phaser.Signal {
-    return this.textSprites[n.id].onChanged;
+    return this.textSprites[n.id].onSubmitted;
   }
 
   getTextIcon(n: Node): TextIcon {
@@ -594,7 +594,7 @@ $(document).ready(function () {
       text.destroy();
       text = game.addHighlight(assert, ["Change text to 'n>2'","and press enter"]);
       game.onNodeChanged(assert).addOnce((gameEl: TextIcon, newLines: string[]) =>  {
-        if (newLines[0].replace(/\s+/gm,'') === "n>1") {
+        if (newLines[0].replace(/\s+/gm,'') === "n>2") {
           cs.nextStep();
         } else {
           cs.nextStep(-2);
