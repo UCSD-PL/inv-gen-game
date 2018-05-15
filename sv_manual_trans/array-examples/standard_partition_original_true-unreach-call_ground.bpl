@@ -11,8 +11,8 @@ procedure main() returns (__RET: int)
   b := 0;
   c := 0;
   while ((a<100000))
-  invariant (forall k : int :: (0 <= k && k < b) ==> bb[k] >= 0);
-  invariant (forall k : int :: (0 <= k && k < c) ==> cc[k] < 0);
+  //invariant (forall k : int :: (0 <= k && k < b) ==> bb[k] >= 0);
+  //invariant (forall k : int :: (0 <= k && k < c) ==> cc[k] < 0);
   {
     if ((aa[a]>=0))
     {
@@ -28,14 +28,14 @@ procedure main() returns (__RET: int)
 
   x := 0;
   while ((x<b))
-  invariant true;
+  //invariant true;
   {
     assert((bb[x]>=0));
     x := x + 1;
   }
   x := 0;
   while ((x<c))
-  invariant true;
+  //invariant true;
   {
     assert((cc[x]<0));
     x := x + 1;

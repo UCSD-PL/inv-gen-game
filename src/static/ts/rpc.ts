@@ -7,7 +7,7 @@ import {Node as ESNode} from "estree";
 
 export let rpc: JsonRpcClient = new $.JsonRpcClient({ ajaxUrl: "/api" })
 
-interface loadLvlBasicRes {
+export interface loadLvlBasicRes {
   id: string;
   variables: string[];
   data: dataT;
@@ -36,6 +36,10 @@ export function mturkId(): [string, string, string] {
 
 export function rpc_loadLvlBasic(lvlSet: string, id: string, cb:(res: loadLvlBasicRes) => void) {
   rpc.call("App.loadLvl", [lvlSet, id, mturkId()], (data:any) => cb(<loadLvlBasicRes>data), log);
+}
+
+export function rpc_loadLvlNew(lvlSet: string, id: string, cb:(res: any) => void) {
+  rpc.call("App.loadLvl", [lvlSet, id, mturkId()], cb, log);
 }
 
 export function rpc_loadLvlDynamic(lvlSet: string, id: string, cb:(res: loadLvlDynamicRes) => void) {
@@ -93,4 +97,9 @@ export function rpc_logEvent(workerId: string, name: string, data: any): any {
 
 export function logEvent(name: string, data: any): any {
   return rpc_logEvent(Args.get_worker_id(), name, data);
+}
+
+export function rpc_checkSoundness(lvlSet: string, lvlId: string, invs: { [label: string] : invariantT[] },
+                              cb: (res: any) => void) {  // Post-cond counterexample to all invariants
+  rpc.call("App.checkSoundness", [ lvlSet, lvlId, invs, mturkId() ], cb, log)
 }

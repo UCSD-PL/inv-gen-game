@@ -22,7 +22,6 @@ implementation main() returns (__RET: int)
     goto anon14_LoopHead;
 
   anon14_LoopHead:
-    assert (forall k: int :: 0 <= k && k < i ==> largest2 >= array[k] || largest1 == array[k]) && largest1 >= largest2;
     goto anon14_LoopDone, anon14_LoopBody;
 
   anon14_LoopBody:
@@ -58,7 +57,6 @@ implementation main() returns (__RET: int)
     goto anon17_LoopHead;
 
   anon17_LoopHead:
-    assert (forall k: int :: 0 <= k && k < 10000 ==> largest2 >= array[k] || largest1 == array[k]) && largest1 >= largest2;
     goto anon17_LoopDone, anon17_LoopBody;
 
   anon17_LoopBody:
@@ -73,7 +71,6 @@ implementation main() returns (__RET: int)
     goto anon18_LoopHead;
 
   anon18_LoopHead:
-    assert (forall k: int :: 0 <= k && k < 10000 ==> largest2 >= array[k] || largest1 == array[k]) && largest1 >= largest2;
     goto anon18_LoopDone, anon18_LoopBody;
 
   anon18_LoopBody:

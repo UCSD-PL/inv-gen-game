@@ -9,7 +9,7 @@ procedure main() returns (__RET: int)
   j := 0;
   i := 0;
   while ((i<100000))
-  invariant j <= i && (forall k : int :: (0 <= k && k < j) ==> (C[k] >= k && C[k] <= k + i - j));
+  //invariant j <= i && (forall k : int :: (0 <= k && k < j) ==> (C[k] >= k && C[k] <= k + i - j));
   {
     if ((A[i]==B[i]))
     {
@@ -20,14 +20,14 @@ procedure main() returns (__RET: int)
   }
   x := 0;
   while ((x<j))
-  invariant true;
+  //invariant true;
   {
     assert((C[x]<=((x+i)-j)));
     x := x + 1;
   }
   x := 0;
   while ((x<j))
-  invariant true;
+  //invariant true;
   {
     assert((C[x]>=x));
     x := x + 1;

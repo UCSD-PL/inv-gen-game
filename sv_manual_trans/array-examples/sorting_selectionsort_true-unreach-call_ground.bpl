@@ -7,12 +7,12 @@ procedure main() returns (__RET: int)
   var s, k, tmp: int;
   i := 0;
   while ((i<100000))
-  invariant (forall l, m: int :: (0 <= l && l < i && l < m && m < 100000) ==> a[l] <= a[m]);
+  //invariant (forall l, m: int :: (0 <= l && l < i && l < m && m < 100000) ==> a[l] <= a[m]);
   { 
     k := (i+1);
     s := i;
     while ((k<100000))
-    invariant (forall l : int :: (i <= l && l < k) ==> a[s] <= a[l]) && i <= s && i < k;
+    //invariant (forall l : int :: (i <= l && l < k) ==> a[s] <= a[l]) && i <= s && i < k;
     { 
       if ((a[k]<a[s]))
       { 
@@ -31,11 +31,11 @@ procedure main() returns (__RET: int)
 
     x := 0;
     while ((x<i))
-    invariant true;
+    //invariant true;
     {
       y := (x+1);
       while ((y<i))
-      invariant x < y;
+      //invariant x < y;
       {
         assert((a[x]<=a[y]));
         y := y + 1;
@@ -44,7 +44,7 @@ procedure main() returns (__RET: int)
     } 
     x := i;
     while ((x<100000))
-    invariant x>= i;
+    //invariant x>= i;
     {
       assert((a[x]>=a[i]));
       x := x + 1;
@@ -54,11 +54,11 @@ procedure main() returns (__RET: int)
 
   x := 0;
   while ((x<100000))
-  invariant true;
+  //invariant true;
   {
     y := (x+1);
     while ((y<100000))
-    invariant y>x;
+    //invariant y>x;
     {
       assert((a[x]<=a[y]));
       y := y + 1;

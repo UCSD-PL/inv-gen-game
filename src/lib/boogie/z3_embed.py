@@ -1,6 +1,8 @@
 # pylint: disable=global-variable-not-assigned,no-self-argument
-from typing import Union, Tuple, Dict, Callable, Optional, Any, List, cast
+from typing import Union, Tuple, Dict, Callable, Optional, Any, List, cast, Type
 import lib.boogie.ast as ast
+import lib.boogie.bb as bb
+from lib.boogie.interp import BoogieVal, OpaqueVal, Store
 import z3
 
 from threading import Condition, local
@@ -9,36 +11,65 @@ from random import randint
 from multiprocessing import Process, Queue as PQueue
 from ..common.util import error
 import Pyro4
+from Pyro4.util import SerializerBase
 import sys
 import atexit
 from signal import signal, SIGTERM, SIGINT
 from functools import reduce
+from copy import copy
+from os import kill
+from signal import SIGINT, SIGKILL
 
 ctxHolder = local()
 
-Z3Val_T = Union[z3.IntNumRef, z3.BoolRef, str, int]
 Z3ValFactory_T = Callable[[str], z3.ExprRef]
-Env_T = Dict[str, int] #TODO: Can ths be long?
 TypeEnv_T = Dict[str, Z3ValFactory_T]
 
-def val_to_boogie(v: Z3Val_T) -> ast.AstExpr:
-    if (isinstance(v, z3.IntNumRef)):
-        return ast.AstNumber(v.as_long())
-    elif (isinstance(v, z3.BoolRef)):
-        return ast.AstTrue() if z3.is_true(v) else ast.AstFalse()
-    elif (v == "true"):
-        return ast.AstTrue()
-    elif (v == "false"):
-        return ast.AstFalse()
+def fi_deserialize(classname: str, d: Dict[Any, Any]) -> OpaqueVal:
+    return OpaqueVal.from_dict(d)
+
+def fi_serialize(obj: OpaqueVal) -> Dict[Any, Any]:
+    d=OpaqueVal.to_dict(obj)
+    assert "__class__" not in d
+    d["__class__"] = "OpaqueVal"
+    return d
+
+SerializerBase.register_dict_to_class("OpaqueVal", fi_deserialize)
+SerializerBase.register_class_to_dict(OpaqueVal, fi_serialize)
+
+def type_to_z3sort(ast_typ: ast.AstType) -> z3.SortRef:
+    if isinstance(ast_typ, ast.AstIntType):
+        return IntSort()
+    elif isinstance(ast_typ, ast.AstBoolType):
+        return BoolSort()
     else:
-        return ast.AstNumber(int(v))
+        assert isinstance(ast_typ, ast.AstMapType)
+        return z3.ArraySort(type_to_z3sort(ast_typ.domain), type_to_z3sort(ast_typ.range))
 
+def type_to_z3(ast_typ: ast.AstType) -> Z3ValFactory_T:
+    if isinstance(ast_typ, ast.AstIntType):
+        return Int
+    elif isinstance(ast_typ, ast.AstBoolType):
+        return Bool
+    else:
+        assert isinstance(ast_typ, ast.AstMapType)
+        def array_fac(name: str) -> z3.ArrayRef:
+            return z3.Array(name, type_to_z3sort(ast_typ.domainT), type_to_z3sort(ast_typ.rangeT))
+        return array_fac
+def get_typeenv(f: bb.Function) -> TypeEnv_T:
+    return dict((name, type_to_z3(ast_typ)) for (name, ast_typ) in list(f.parameters) + list(f.locals) + list(f.returns))
 
-def env_to_expr(env: Env_T, suff:str ="") -> ast.AstExpr:
-    return ast.ast_and(
-        [ast.AstBinExpr(ast.AstId(k + suff), "==", val_to_boogie(v))
-         for (k, v) in env.items()])
+def z3val_to_boogie(v: Union[z3.ExprRef, z3.FuncInterp]) -> BoogieVal:
+    if isinstance(v, z3.IntNumRef):
+        return v.as_long()
+    elif isinstance(v, z3.BoolRef):
+        return bool(v)
+    else:
+        print ("Func {} -> OpaqueVal".format(v))
+        return OpaqueVal()
 
+def model_to_store(m: z3.ModelRef) -> Store:
+    return { str(x): z3val_to_boogie(m[x]) for x in m}
 
 def getCtx() -> z3.Context:
     global ctxHolder
@@ -84,9 +115,10 @@ class Z3ServerInstance(object):
 
     @Pyro4.expose
     @wrapZ3Exc
-    def model(s) -> Env_T:
+    def model(s) -> Store:
         m = s._solver.model()
-        return {x.name(): m[x].as_long() for x in m}
+        print (m)
+        return model_to_store(m)
 
     @Pyro4.expose
     @wrapZ3Exc
@@ -192,13 +224,14 @@ class Z3ProxySolver:
         elif (r == "unsat"):
             return z3.unsat
         elif (r == "unknown"):
+            #print ("Unknown on query: {}".format(comm))
             raise Unknown("storing query NYI in proxy solver")
         elif (r == "crashed"):
             raise Crashed()
         else:
             raise Exception("bad reply to check: " + str(r))
 
-    def model(s) -> Env_T:
+    def model(s) -> Store:
         return s._remote.model()
 
     def to_smt2(s, p: z3.ExprRef) -> str:
@@ -213,12 +246,33 @@ class Z3ProxySolver:
 
     def _restartRemote(s) -> None:
         # Kill Old Process
-        s._proc.terminate()
-        s._proc.join()
+        s._shutdownRemote()
         # Restart
         s._proc, s._uri = startAndWaitForZ3Instance()
         s._remote = Pyro4.Proxy(s._uri)
         s.push()
+
+    def _shutdownRemote(s) -> None:
+        if s._proc.exitcode is not None:
+            return
+
+        # First interrupt politely
+        kill(s._proc.pid, SIGINT)
+        s._proc.join(1)
+
+        if s._proc.exitcode is not None:
+            return
+
+        # Next a bit more insistantly
+        s._proc.terminate()
+        s._proc.join(1)
+
+        if s._proc.exitcode is not None:
+            return
+
+        # And now we ran out of patience
+        kill(s._proc.pid, SIGKILL)
+        s._proc.join()
 
 
 z3ProcessPoolCond = Condition()
@@ -228,8 +282,10 @@ z3ProcessPool = {} # type: Dict[Z3ProxySolver, bool]
 
 
 def _cleanupChildProcesses() -> None:
+    global z3ProcessPool
     for proxy in z3ProcessPool:
-        proxy._proc.terminate()
+        proxy._shutdownRemote()
+    z3ProcessPool = {}
 
 
 atexit.register(_cleanupChildProcesses)
@@ -291,9 +347,21 @@ def releaseSolver(solver: Optional[Z3ProxySolver]) -> None:
         z3ProcessPoolCond.release()
 
 
+def IntSort() -> z3.ArithSortRef:
+    return z3.IntSort(ctx=getCtx())
+
 def Int(n: str) -> z3.ArithRef:
     return z3.Int(n, ctx=getCtx())
 
+
+def BoolSort() -> z3.BoolSortRef:
+    return z3.BoolSort(ctx=getCtx())
+
+def Bool(n: str) -> z3.BoolRef:
+    return z3.Bool(n, ctx=getCtx())
+
+def Array(n: str, domain: z3.SortRef, range: z3.SortRef) -> z3.ArrayRef:
+    return z3.Array(n, domain, range)
 
 def Or(*args: Any) -> z3.ExprRef:
     #TODO: Make args ExprRef and cast it for the + below
@@ -323,7 +391,7 @@ def BoolVal(v: bool) -> z3.BoolRef:
     return z3.BoolVal(v, ctx=getCtx())
 
 
-def counterex(pred: z3.ExprRef, timeout: Optional[int]=None, comm: str ="") -> Env_T:
+def counterex(pred: z3.ExprRef, timeout: Optional[int]=None, comm: str ="") -> Store:
     s = None
     try:
         s = getSolver()
@@ -342,31 +410,6 @@ def counterex(pred: z3.ExprRef, timeout: Optional[int]=None, comm: str ="") -> E
             releaseSolver(s)
 
 
-def counterexamples(pred: z3.ExprRef, num: int, timeout: Optional[int] =None, comm: str ="") -> List[Env_T]:
-    s = None
-    assert num > 0
-    try:
-        s = getSolver()
-        s.add(Not(pred))
-        counterexes = [] # type: List[Env_T]
-        while len(counterexes) < num:
-            try:
-                res = s.check(timeout, comm)
-                if res == z3.unsat:
-                    break
-
-                env = s.model()
-                counterexes.append(env)
-                s.add(Not(expr_to_z3(env_to_expr(env), AllIntTypeEnv())))
-            except Crashed:
-                continue
-            break
-
-        return counterexes
-    finally:
-        releaseSolver(s)
-
-
 def satisfiable(pred: z3.ExprRef, timeout: Optional[int] = None) -> bool:
     s = None
     try:
@@ -378,18 +421,21 @@ def satisfiable(pred: z3.ExprRef, timeout: Optional[int] = None) -> bool:
         releaseSolver(s)
 
 
-def unsatisfiable(pred: z3.ExprRef, timeout: Optional[int] =None) -> bool:
+def unsatisfiable(pred: z3.ExprRef, timeout: Optional[int] =None, comm: Optional[str] = None) -> bool:
     s = None
+    if comm is None:
+        comm = ""
+
     try:
         s = getSolver()
         s.add(pred)
-        res = s.check(timeout)
+        res = s.check(timeout, comm)
         return res == z3.unsat
     finally:
         releaseSolver(s)
 
 
-def model(pred: z3.ExprRef) -> Env_T:
+def model(pred: z3.ExprRef) -> Store:
     s = None
     try:
         s = getSolver()
@@ -401,7 +447,7 @@ def model(pred: z3.ExprRef) -> Env_T:
         releaseSolver(s)
 
 
-def maybeModel(pred: z3.ExprRef) -> Optional[Env_T]:
+def maybeModel(pred: z3.ExprRef) -> Optional[Store]:
     s = None
     try:
         s = getSolver()
@@ -429,14 +475,6 @@ def equivalent(inv1: z3.ExprRef, inv2: z3.ExprRef) -> bool:
 def tautology(inv: z3.ExprRef) -> bool:
     return unsatisfiable(Not(inv))
 
-
-class AllIntTypeEnv(TypeEnv_T):
-    def __getitem__(s, i: str) -> Z3ValFactory_T:
-        return Int
-
-def _force_bool(a: Any) -> z3.BoolRef:
-    assert isinstance(a, z3.BoolRef)
-    return a
 
 def _force_expr(a: Any) -> z3.ExprRef:
     assert isinstance(a, z3.ExprRef)
@@ -477,9 +515,9 @@ def expr_to_z3(expr: ast.AstExpr, typeEnv: TypeEnv_T) -> z3.ExprRef:
         elif expr.op == "&&":
             return And(e1, e2)
         elif expr.op == "==":
-            return _force_bool(e1 == e2)
+            return _force_expr(e1 == e2)
         elif expr.op == "!=":
-            return _force_bool(e1 != e2)
+            return _force_expr(e1 != e2)
         elif expr.op == "<":
             assert isinstance(e1, z3.ArithRef) and isinstance(e2, z3.ArithRef)
             return e1 < e2
@@ -509,6 +547,25 @@ def expr_to_z3(expr: ast.AstExpr, typeEnv: TypeEnv_T) -> z3.ExprRef:
             return e1 % e2
         else:
             raise Exception("Unknown binary operator " + str(expr.op))
+    elif isinstance(expr, ast.AstForallExpr):
+        inner_tenv = copy(typeEnv)
+        vs = []  # type: List[z3.ExprRef]
+
+        for binding in expr.bindings:
+            typ = binding.typ
+            for name in binding.names:
+                inner_tenv[name] = type_to_z3(typ)
+                vs.append(inner_tenv[name](name))
+        return z3.ForAll(vs, expr_to_z3(expr.expr, inner_tenv))
+    elif isinstance(expr, ast.AstMapIndex):
+        arr = expr_to_z3(expr.map, typeEnv)
+        ind = expr_to_z3(expr.index, typeEnv)
+        return z3.Select(arr, ind)
+    elif isinstance(expr, ast.AstMapUpdate):
+        arr = expr_to_z3(expr.map, typeEnv)
+        ind = expr_to_z3(expr.index, typeEnv)
+        new_val = expr_to_z3(expr.newVal, typeEnv)
+        return z3.Update(arr, ind, new_val)
     else:
         raise Exception("Unknown expression " + str(expr))
 
@@ -520,7 +577,7 @@ def stmt_to_z3(stmt: ast.AstNode, typeEnv: TypeEnv_T) -> z3.ExprRef:
     if (isinstance(stmt, ast.AstAssignment)):
         lvalue = typeEnv[stmt.lhs](str(stmt.lhs))
         rhs = expr_to_z3(stmt.rhs, typeEnv)
-        return _force_bool(lvalue == rhs)
+        return _force_expr(lvalue == rhs)
     elif (isinstance(stmt, ast.AstAssert)):
         return (expr_to_z3(stmt.expr, typeEnv))
     elif (isinstance(stmt, ast.AstAssume)):
@@ -574,7 +631,6 @@ def z3_expr_to_boogie(expr: z3.ExprRef) -> ast.AstExpr:
         }[d.name()]
         return ast.AstUnExpr(boogie_op, arg)
     elif (d.name() == "if" and d.arity() == 2):
-        # TODO: Check types of branches are bool
         c = cast(List[z3.ExprRef], expr.children())
         cond = z3_expr_to_boogie(c[0])
         thenB = z3_expr_to_boogie(c[1])
@@ -623,7 +679,6 @@ def z3_expr_to_boogie(expr: z3.ExprRef) -> ast.AstExpr:
         else:
             raise Exception("NYI")
     elif (d.name() == "if"):
-        # TODO: Check types of branches are bool
         c = cast(List[z3.ExprRef], expr.children())
         cond = z3_expr_to_boogie(c[0])
         thenB = z3_expr_to_boogie(c[1])

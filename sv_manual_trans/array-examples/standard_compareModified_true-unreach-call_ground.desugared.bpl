@@ -14,9 +14,6 @@ implementation main() returns (__RET: int)
     goto anon10_LoopHead;
 
   anon10_LoopHead:
-    assert (forall k: int :: 0 <= k && k < i ==> c[k] == a[k]);
-    assert rv ==> (forall k: int :: 0 <= k && k < i ==> a[k] == b[k]);
-    assert i <= 100000;
     goto anon10_LoopDone, anon10_LoopBody;
 
   anon10_LoopBody:
@@ -50,7 +47,6 @@ implementation main() returns (__RET: int)
     goto anon14_LoopHead;
 
   anon14_LoopHead:
-    assert (forall k: int :: 0 <= k && k < 100000 ==> c[k] == a[k]);
     goto anon14_LoopDone, anon14_LoopBody;
 
   anon14_LoopBody:
@@ -70,7 +66,6 @@ implementation main() returns (__RET: int)
     goto anon13_LoopHead;
 
   anon13_LoopHead:
-    assert rv ==> (forall k: int :: 0 <= k && k < 100000 ==> a[k] == b[k]);
     goto anon13_LoopDone, anon13_LoopBody;
 
   anon13_LoopBody:

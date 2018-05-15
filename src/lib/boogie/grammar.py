@@ -1,7 +1,7 @@
 #pylint: disable=no-self-argument,unused-argument, multiple-statements
 from typing import Any, TypeVar, Iterable, Union
 from pyparsing import delimitedList,nums, ParserElement, operatorPrecedence, \
-        opAssoc, StringEnd, ParseResults
+        opAssoc, StringEnd, ParseResults, restOfLine
 from ..common.parser import InfixExprParser
 from pyparsing import ZeroOrMore as ZoM,\
     OneOrMore as OoM,\
@@ -36,6 +36,7 @@ class BoogieParser(InfixExprParser[T]):
   def onType(s, prod: "ParserElement[T]", st: str, loc: int, toks:"ParseResults[T]") -> "Iterable[T]": raise Exception("NYI")
   def onLabeledStatement(s, prod: "ParserElement[T]", st: str, loc: int, toks:"ParseResults[T]") -> "Iterable[T]": raise Exception("NYI")
   def onMapIndex(s, prod: "ParserElement[T]", st: str, loc: int, toks:"ParseResults[T]") -> "Iterable[T]": raise Exception("NYI")
+  def onMapUpdate(s, prod: "ParserElement[T]", st: str, loc: int, toks:"ParseResults[T]") -> "Iterable[T]": raise Exception("NYI")
   def onQuantified(s, prod: "ParserElement[T]", st: str, loc: int, toks:"ParseResults[T]") -> "Iterable[T]": raise Exception("NYI")
   def onBinding(s, prod: "ParserElement[T]", st: str, loc: int, toks:"ParseResults[T]") -> "Iterable[T]": raise Exception("NYI")
 
@@ -182,6 +183,10 @@ class BoogieParser(InfixExprParser[T]):
             G(csl(s.IdsType)) + S(s.QSep) + s.Expr + S(s.RPARN)
     s.Quantified.setParseAction(
             lambda st, loc, toks:  s.onQuantified(s.Old, st, loc, toks))
+
+    s.MapUpdate = s.Id + S(s.LSQBR) + s.Expr + s.ASSGN + s.Expr + S(s.RSQBR)
+    s.MapUpdate.setParseAction(
+            lambda st, loc, toks:  s.onMapUpdate(s.Old, st, loc, toks))
 
     s.MapIndex = s.Id + S(s.LSQBR) + s.Expr + S(s.RSQBR)
     s.MapIndex.setParseAction(
@@ -350,6 +355,7 @@ class BoogieParser(InfixExprParser[T]):
     s.Program = ZoM(s.Decl) # type: ParserElement[T]
     s.Program.setParseAction(
             lambda st, loc, toks: s.onProgram(s.Program, st, loc, toks))
+    s.Program.ignore("//" + restOfLine)
 
   def parseExpr(s, st:str) -> T:
     return (s.Expr + StringEnd()).parseString(st)[0]

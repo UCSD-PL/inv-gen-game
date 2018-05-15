@@ -11,7 +11,6 @@ implementation main() returns (__RET: int)
     goto anon7_LoopHead;
 
   anon7_LoopHead:
-    assert (forall k: int :: 0 <= k && k < i ==> a[k] == 42);
     goto anon7_LoopDone, anon7_LoopBody;
 
   anon7_LoopBody:
@@ -26,7 +25,6 @@ implementation main() returns (__RET: int)
     goto anon8_LoopHead;
 
   anon8_LoopHead:
-    assert (forall k: int :: 0 <= k && k < i ==> a[k] == b[k]);
     goto anon8_LoopDone, anon8_LoopBody;
 
   anon8_LoopBody:
@@ -41,7 +39,6 @@ implementation main() returns (__RET: int)
     goto anon9_LoopHead;
 
   anon9_LoopHead:
-    assert (forall k: int :: 0 <= k && k < i ==> a[k] == b[k]);
     goto anon9_LoopDone, anon9_LoopBody;
 
   anon9_LoopBody:

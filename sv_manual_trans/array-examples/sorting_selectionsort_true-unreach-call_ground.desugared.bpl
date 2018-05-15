@@ -14,7 +14,6 @@ implementation main() returns (__RET: int)
     goto anon19_LoopHead;
 
   anon19_LoopHead:
-    assert (forall l: int, m: int :: 0 <= l && l < i && l < m && m < 100000 ==> a[l] <= a[m]);
     goto anon19_LoopDone, anon19_LoopBody;
 
   anon19_LoopBody:
@@ -24,7 +23,6 @@ implementation main() returns (__RET: int)
     goto anon20_LoopHead;
 
   anon20_LoopHead:
-    assert (forall l: int :: i <= l && l < k ==> a[s] <= a[l]) && i <= s && i < k;
     goto anon20_LoopDone, anon20_LoopBody;
 
   anon20_LoopBody:
@@ -57,7 +55,6 @@ implementation main() returns (__RET: int)
     goto anon23_LoopHead;
 
   anon23_LoopHead:
-    assert true;
     goto anon23_LoopDone, anon23_LoopBody;
 
   anon23_LoopBody:
@@ -66,7 +63,6 @@ implementation main() returns (__RET: int)
     goto anon24_LoopHead;
 
   anon24_LoopHead:
-    assert x < y;
     goto anon24_LoopDone, anon24_LoopBody;
 
   anon24_LoopBody:
@@ -86,7 +82,6 @@ implementation main() returns (__RET: int)
     goto anon25_LoopHead;
 
   anon25_LoopHead:
-    assert x >= i;
     goto anon25_LoopDone, anon25_LoopBody;
 
   anon25_LoopBody:
@@ -113,7 +108,6 @@ implementation main() returns (__RET: int)
     goto anon26_LoopHead;
 
   anon26_LoopHead:
-    assert true;
     goto anon26_LoopDone, anon26_LoopBody;
 
   anon26_LoopBody:
@@ -122,7 +116,6 @@ implementation main() returns (__RET: int)
     goto anon27_LoopHead;
 
   anon27_LoopHead:
-    assert y > x;
     goto anon27_LoopDone, anon27_LoopBody;
 
   anon27_LoopBody:

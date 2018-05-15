@@ -24,7 +24,6 @@ implementation main() returns (__RET: int)
     goto anon6_LoopHead;
 
   anon6_LoopHead:
-    assert (forall k: int :: 0 <= k && k < i ==> a[k] != marker) && a[pos] == marker && i <= pos;
     goto anon6_LoopDone, anon6_LoopBody;
 
   anon6_LoopBody:

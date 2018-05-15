@@ -1,17 +1,22 @@
 from lib.boogie.ast import parseExprAst, ast_or, ast_and
-from lib.boogie.bb import get_bbs, ensureSingleExit, bbEntry
 from boogie_loops import loops, get_loop_header_values
 from lib.common.util import unique, powerset, average, error
 from lib.boogie.analysis import livevars
 from lib.boogie.eval import instantiateAndEval, evalPred, _to_dict, execute
+from lib.boogie.interp import Store
 from collections import OrderedDict
 from os import listdir
 from os.path import dirname, join, abspath, realpath
 from infinite import product
 from json import load, dumps
 from random import randint
-from vc_check import loopInvOverfittedCtrex
 from functools import reduce
+
+from lib.boogie.ast import parseExprAst, AstExpr
+from lib.boogie.bb import Function, Label_T, BB
+from lib.boogie.paths import NondetPath, Path
+from lib.boogie.inv_networks import InvNetwork
+from typing import Dict, List, Tuple, Iterable, Set, Any
 
 def _tryUnroll(loop, bbs, min_un, max_un, bad_envs, good_env):
     # Lets first try to find a terminating loop between min and max iterations
@@ -106,6 +111,7 @@ def getInitialData(loop, bbs, nunrolls, invs, invVars = None, invConsts = None):
 
 
 def findNegatingTrace(loop, bbs, nunrolls, invs, invVrs = None):
+    from vc_check import loopInvOverfittedCtrex
     vals, terminates = _tryUnroll(loop, bbs, 0, nunrolls, None, None)
     traceVs = list(livevars(bbs)[loop.loop_paths[0][0]])
     vals = [ { x : env[x] for x in traceVs } for env in vals ]
@@ -152,22 +158,22 @@ def findNegatingTrace(loop, bbs, nunrolls, invs, invVrs = None):
     else:
         return (None, False)
 
-def readTrace(fname):
+def readTrace(fname: str) -> Tuple[List[str], List[Store]]:
     trace = open(fname, "r").read();
-    lines = [x for x in [x.strip() for x in trace.split('\n')] if len(x) != 0]
-    vs = [x for x in lines[0].split(' ') if len(x) != 0]
-    header_vals = [ ]
+    lines = [x for x in [x.strip() for x in trace.split('\n')] if len(x) != 0] # type: List[str]
+    vs = [x for x in lines[0].split(' ') if len(x) != 0] # type: List[str]
+    header_vals = [ ] # type: List[Store]
     for l in lines[1:]:
         if (l[0] == '#'):
             continue;
 
-        env = { }
+        env = { } # type: Store
         for (var,val) in zip(vs, [x for x in l.split(' ') if len(x) != 0]):
-            env[var] = val
+            env[var] = int(val)  # TODO: Support traces involving non-integer values
         header_vals.append(env);
     return (vs, header_vals)
 
-def writeTrace(fname, header_vals):
+def writeTrace(fname: str, header_vals: List[Store]) -> None:
     f = open(fname, "w");
 
     if (len(header_vals) != 0):
@@ -178,8 +184,115 @@ def writeTrace(fname, header_vals):
 
     f.close();
 
-#TODO: Remove multiround. Its crud.
-def loadBoogieFile(fname, multiround):
+
+Loops_T = Dict[Label_T, Set[Path]]
+
+class BoogieLevel(object):
+    @staticmethod
+    def load(fname: str) -> "BoogieLevel":
+        fun = [f.split_asserts()[0] for f in Function.load(fname)]
+        # TODO: Support multiple functions
+        loops = BoogieLevel._discover_loops(unique(fun))
+        traces = [] # type: List[List[Store]]
+        vars = [] # type: List[str]
+        try:
+            (vars, trace) = readTrace(fname[:-4] + ".trace");
+            traces = [trace];
+        except: pass
+        return BoogieLevel(fname, fun, loops, traces, vars, "")
+
+    @staticmethod
+    def load_answer(fname: str) -> InvNetwork:
+        json = load(open(fname, 'r'))
+        assert isinstance(json, dict)
+        res = {} # type: InvNetwork
+        for (k, v) in json.items():
+            assert isinstance(k, Label_T)
+            if isinstance(v, str):
+                invs = [v]
+            else:
+                assert isinstance(v, list)
+                invs = v
+            res[k] = set([parseExprAst(x) for x in invs])
+        return res
+
+    def __init__(self, fname: str, funs: Iterable[Function], loops: Loops_T, traces: List[List[Store]], vars: List[str], hint: str) -> None:
+        self._fname = fname
+        # TODO: Support multiple functions
+        self._fun = unique(funs)
+        self._loops = loops
+        self._vars = vars # type: List[str]
+        self._traces = traces # type: List[List[Store]]
+        self._hint = hint
+
+    @staticmethod
+    def _discover_loops(f: Function) -> Loops_T:
+        """ This code assumes that the function static control flow is well structured. Specifically:
+            1. Each loop has a unique loop header BB.
+            2. Each loop has a unique loop exit BB. All paths out of the loop go through E
+            3. Each branch is only 2 way
+            4. Each branch has a single unique join. 
+
+            For our purposes, a loop is just a list of simple paths, starting
+            and ending at the same header node. A loop is uniquely identified
+            by its header node label.
+        """
+        loops = {} # type: Loops_T
+        def _dfs(bb: BB, path: List[BB]) -> None:
+            #print ("_dfs({}, {})".format(bb, path))
+            if bb in path:
+                loop_path = path[path.index(bb):] + [bb]
+                prefix = path[:path.index(bb)]
+                if bb.label not in loops:
+                    loops[bb.label] = set([Path(loop_path)])
+                else:
+                    loops[bb.label].add(Path(loop_path))
+                return
+
+            for next_bb in bb.successors():
+                _dfs(next_bb, path + [bb])
+
+        _dfs(f.entry(), [])
+        return loops
+
+    def to_json(self) -> Any:
+        return [
+            self._fname,
+            self._fun.to_json(),
+            {lbl: [[bb.label for bb in path] for path in paths] for (lbl, paths) in self._loops.items()},
+            self._vars,
+            self._traces
+        ]
+
+def loadNewBoogieLvlSet(lvlSetFile):
+    # Small helper funct to make sure we didn't
+    # accidentally give two levels the same name
+    def assertUniqueKeys(kvs):
+      keys = [x[0] for x in kvs]
+      assert (len(set(keys)) == len(keys))
+      return dict(kvs)
+
+    lvlSet = load(open(lvlSetFile, "r"), object_pairs_hook=assertUniqueKeys)
+    lvlSetDir = dirname(abspath(realpath(lvlSetFile)))
+    error("Loading level set " + lvlSet["name"] + " from " + lvlSetFile);
+    lvls = OrderedDict()
+    for t in lvlSet["levels"]:
+        lvlName = t[0]
+        lvlPath = t[1]
+
+        for i in range(len(lvlPath)):
+          lvlPath[i] = join(lvlSetDir, lvlPath[i])
+
+        error("Loading level: ", lvlPath[0])
+        lvl = BoogieLevel.load(lvlPath[0])
+        assert lvl._fun.is_gcl();
+        lvls[lvlName] = lvl
+
+    return (lvlSet["name"], lvls)
+
+
+
+def loadBoogieFile(fname: str):
     bbs = get_bbs(fname)
     ensureSingleExit(bbs);
     loop = unique(loops(bbs),
@@ -202,20 +315,8 @@ def loadBoogieFile(fname, multiround):
         pass
 
     if (not header_vals):
-        header_vals, terminates = _tryUnroll(loop, bbs, 0, 4, None, None)
-        # Assume we have no tests with dead loops
-        assert(header_vals != [])
-        invTemplates = ["_sv_x<_sv_y", "_sv_x<=_sv_y", "_sv_x==_sc_c", \
-                        "_sv_x==_sv_y", "_sv_x==0", "_sv_x<0"]
-        invTemplates = [ parseExprAst(inv) for inv in invTemplates]
-
-        new_header_vals, new_terminates = \
-                getInitialData(loop, bbs, 4, invTemplates, [ "_sv_x", "_sv_y" ])
-
-        if (new_header_vals != None):
-            header_vals = new_header_vals
-            terminates = new_terminates
-            writeTrace(fname[:-4] + ".trace", new_header_vals);
+        header_vals, terminates = [], False
+        writeTrace(fname[:-4] + ".trace", new_header_vals);
 
     return { 'variables': vs,
              'data': [ [[ str(row[v]) for v in vs  ] for row in header_vals],
@@ -229,54 +330,9 @@ def loadBoogieFile(fname, multiround):
              'support_pos_ex' : True,
              'support_neg_ex' : True,
              'support_ind_ex' : True,
-             'multiround'     : multiround,
              'program' : bbs,
              'loop' : loop
     }
-
-def loadBoogies(dirN, multiround = False):
-    return { name[:-4] : loadBoogieFile(dirN + '/' + name, multiround)
-             for name in listdir(dirN) if name.endswith('.bpl') }
-
-def readTraceOnlyLvl(fname):
-    rows = []
-    first = True
-    for l in open(fname):
-        l = l.strip();
-        if (l == ''):
-            continue
-        row = {}
-        for (n,v) in [x.split('=') for x in l.split(' ')]:
-            row[n] = v
-
-        if (first):
-          vs = [x.split('=')[0] for x in l.split(' ')]
-          first = False;
-        rows.append(row)
-
-    hint = None
-    goal = None
-    try:
-        goal = load(open(fname[:-4] + '.goal'))
-        hint = open(fname[:-4] + '.hint').read()
-    except Exception:
-        pass
-
-    return { 'variables': vs,
-             'data': [[[ row.get(n, None) for n in vs  ]  for row in rows ],
-                      [],
-                      []],
-             'hint': hint,
-             'goal' : goal,
-             'support_pos_ex' : False,
-             'support_neg_ex' : False,
-             'support_ind_ex' : False,
-             'multiround'     : False,
-    }
-
-def loadTraces(dirN):
-    return { name[:-4] : readTraceOnlyLvl(dirN + '/' + name)
-             for name in listdir(dirN) if name.endswith('.out') }
 
 def loadBoogieLvlSet(lvlSetFile):
     # Small helper funct to make sure we didn't

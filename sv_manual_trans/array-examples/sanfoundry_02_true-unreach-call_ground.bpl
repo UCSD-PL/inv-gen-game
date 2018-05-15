@@ -16,7 +16,7 @@ procedure main() returns (__RET: int)
 
   i := 2;
   while ((i<100000))
-  invariant (forall k : int :: (0<=k && k < i) ==> (largest2 >= array[k] || largest1 == array[k] )) && largest1 >= largest2;
+  //invariant (forall k : int :: (0<=k && k < i) ==> (largest2 >= array[k] || largest1 == array[k] )) && largest1 >= largest2;
   {
     if ((array[i]>=largest1))
     {
@@ -33,14 +33,14 @@ procedure main() returns (__RET: int)
   }
   x := 0;
   while ((x<100000))
-  invariant (forall k : int :: (0<=k && k < 10000) ==> (largest2 >= array[k] || largest1 == array[k] )) && largest1 >= largest2;
+  //invariant (forall k : int :: (0<=k && k < 10000) ==> (largest2 >= array[k] || largest1 == array[k] )) && largest1 >= largest2 && x>=0 && x<=10000;
   {
     assert((array[x]<=largest1));
     x := x + 1;
   }
   x := 0;
   while ((x<100000))
-  invariant (forall k : int :: (0<=k && k < 10000) ==> (largest2 >= array[k] || largest1 == array[k] )) && largest1 >= largest2;
+  //invariant (forall k : int :: (0<=k && k < 10000) ==> (largest2 >= array[k] || largest1 == array[k] )) && largest1 >= largest2;
   {
     assert(((array[x]<=largest2)||(array[x]==largest1)));
     x := x + 1;

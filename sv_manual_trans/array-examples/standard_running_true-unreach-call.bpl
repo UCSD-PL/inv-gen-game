@@ -6,7 +6,7 @@ procedure main() returns (__RET: int)
   var f: bool;
   i := 0;
   while ((i<100000))
-  invariant (forall k : int :: (0 <= k && k < i) ==> ((b[k] && a[k] >= 0) || (!b[k] && a[k] < 0)));
+  //invariant (forall k : int :: (0 <= k && k < i) ==> ((b[k] && a[k] >= 0) || (!b[k] && a[k] < 0)));
   {
     if ((a[i]>=0))
     {
@@ -21,7 +21,7 @@ procedure main() returns (__RET: int)
   f := true;
   i := 0;
   while ((i<100000))
-  invariant (forall k : int :: (0 <= k && k < i) ==> ((b[k] && a[k] >= 0) || (!b[k] && a[k] < 0))) && f;
+  //invariant (forall k : int :: (0 <= k && k < i) ==> ((b[k] && a[k] >= 0) || (!b[k] && a[k] < 0))) && f;
   {
     if (((a[i]>=0)&&!(b[i])))
     {

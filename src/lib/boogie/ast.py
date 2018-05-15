@@ -38,8 +38,12 @@ class AstId(AstExpr):
     def __str__(s) -> str: return str(s.name)
 
 class AstMapIndex(AstExpr):
-    def __init__(s, map: AstId, index: AstExpr) -> None:  AstExpr.__init__(s, map, index)
+    def __init__(s, map: AstExpr, index: AstExpr) -> None:  AstExpr.__init__(s, map, index)
     def __str__(s) -> str: return "{}[{}]".format(str(s.map), str(s.index))
+
+class AstMapUpdate(AstExpr):
+    def __init__(s, map: AstExpr, index: AstExpr, newVal: AstExpr) -> None:  AstExpr.__init__(s, map, index, newVal)
+    def __str__(s) -> str: return "{}[{}:={}]".format(str(s.map), str(s.index), str(s.newVal))
 
 class AstUnExpr(AstExpr):
     def __init__(s, op: str, expr: AstExpr) -> None:  AstExpr.__init__(s, op, expr)
@@ -51,12 +55,12 @@ class AstBinExpr(AstExpr):
         return "(" + str(s.lhs) + " " + str(s.op) + " " + str(s.rhs) + ")"
 
 class AstBinding(AstNode):
-    def __init__(s, names: Iterable[str], typ: AstType) -> None:  AstNode.__init__(s, names, typ)
+    def __init__(s, names: Iterable[str], typ: AstType) -> None:  AstNode.__init__(s, tuple(names), typ)
     def __str__(s) -> str: return ",".join(map(str, s.names)) + " : " + str(s.typ)
 
 
 class AstForallExpr(AstExpr):
-    def __init__(s, bindings: List[AstBinding], expr: AstExpr) -> None:  AstExpr.__init__(s, bindings, expr)
+    def __init__(s, bindings: List[AstBinding], expr: AstExpr) -> None:  AstExpr.__init__(s, tuple(bindings), expr)
     def __str__(s) -> str:
         return "(forall " + ",".join([str(x) for x in s.bindings]) + " :: " + \
                str(s.expr) + ")"
@@ -92,7 +96,7 @@ class AstAssume(AstOneExprStmt):
     def __str__(s) -> str: return "assume (" + str(s.expr) + ");";
 
 class AstAssignment(AstStmt):
-    def __init__(s, lhs: AstId, rhs: AstExpr) -> None:  AstNode.__init__(s, lhs, rhs)
+    def __init__(s, lhs: Union[AstId, AstMapIndex], rhs: AstExpr) -> None:  AstNode.__init__(s, lhs, rhs)
     def __str__(s) -> str: return str(s.lhs) + " := " + str(s.rhs) + ";"
 
 class AstHavoc(AstStmt):
@@ -222,7 +226,7 @@ class AstBuilder(BoogieParser[AstNode]):
     if toks[0] == 'int':
       return [ AstIntType() ];
     elif toks[0] == 'bool':
-      return [ AstIntType() ];
+      return [ AstBoolType() ];
     else:
       raise Exception("NYI type: {}".format(toks[0]))
   def onMapType(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
@@ -242,13 +246,13 @@ class AstBuilder(BoogieParser[AstNode]):
     attrs = toks[0]
     assert(len(attrs) == 0)
     name = str(toks[1])
-    sig = toks[2]
+    signature = toks[2]
+    assert len(signature) == 3
+    type_args, parameters, returns = signature
     # For now ignore anything other than the argument list
-    assert len(sig) == 3 and len(sig[0]) == 0,\
-      "Unexpected signature: {}".format(sig)
-    signature = None; #sig[1]
+    assert len(type_args) == 0, "NYI: Imeplementation type args: {}".format(type_args)
     body = toks[3][0]
-    return [ AstImplementation(name, signature, body) ]
+    return [ AstImplementation(name, (parameters, returns), body) ]
   def onLabeledStatement(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
     label = str(toks[0])
     stmt = toks[1]
@@ -258,16 +262,25 @@ class AstBuilder(BoogieParser[AstNode]):
   def onMapIndex(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
     mapE = toks[0]
     indexE = toks[1]
-    assert isinstance(mapE, AstId) and isinstance(indexE, AstExpr)
+    assert isinstance(mapE, AstExpr) and isinstance(indexE, AstExpr)
     return [AstMapIndex(mapE, indexE)]
+  def onMapUpdate(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
+    mapE = toks[0]
+    indexE = toks[1]
+    newValE = toks[2]
+    assert isinstance(mapE, AstExpr) and isinstance(indexE, AstExpr) and isinstance(newValE, AstExpr)
+    return [AstMapUpdate(mapE, indexE, newValE)]
   def onQuantified(s, prod: PE, st: str, loc: int, toks: PR) -> Iterable[AstNode]:
     assert len(toks) == 3, "NYI TypeArgs on quantified expressions"
     quantifier = str(toks[0])
-    bindigns = toks[1]
+    bindings = []  # type: List[AstBinding]
+    for node in toks[1]:
+        assert isinstance(node, AstBinding)
+        bindings.append(node)
     expr = toks[2]
     assert quantifier == "forall", "Existential quantification NYI"
     assert isinstance(expr, AstExpr)
-    return [AstForallExpr(bindigns, expr)]
+    return [AstForallExpr(bindings, expr)]
 
 astBuilder = AstBuilder();
 
@@ -305,6 +318,8 @@ def expr_read(ast: AstNode) -> Set[str]:
         return expr_read(ast.expr).difference(quantified_ids)
     elif isinstance(ast, AstMapIndex):
         return expr_read(ast.map).union(expr_read(ast.index))
+    elif isinstance(ast, AstMapUpdate):
+        return expr_read(ast.map).union(expr_read(ast.index)).union(expr_read(ast.newVal))
     else:
         raise Exception("Unknown expression type " + str(ast))
 
@@ -315,6 +330,8 @@ def stmt_read(ast: AstStmt_T) -> Set[str]:
     if isinstance(ast, AstAssume) or isinstance(ast, AstAssert):
         return expr_read(ast.expr)
     elif isinstance(ast, AstAssignment):
+        # Map assignments should be re-written using MapUpdate syntax
+        assert isinstance(ast.lhs, AstId)
         return expr_read(ast.rhs)
     elif isinstance(ast, AstHavoc):
         return set()
@@ -326,7 +343,9 @@ def stmt_changed(ast: AstStmt_T) -> Set[str]:
         ast = ast.stmt
 
     if isinstance(ast, AstAssignment):
-        return expr_read(ast.lhs)
+        # Map assignments should be re-written using MapUpdate syntax
+        assert isinstance(ast.lhs, AstId), "Bad lhs: {}".format(ast.lhs)
+        return set([ast.lhs.name])
     elif isinstance(ast, AstHavoc):
         return set([x.name for x in ast.ids])
     elif isinstance(ast, AstAssume) or isinstance(ast, AstAssert):

@@ -16,7 +16,6 @@ implementation main() returns (__RET: int)
     goto anon15_LoopHead;
 
   anon15_LoopHead:
-    assert (forall k: int :: 0 <= k && k < i ==> a2[k] == a1[k]) && i <= 100000;
     goto anon15_LoopDone, anon15_LoopBody;
 
   anon15_LoopBody:
@@ -31,8 +30,6 @@ implementation main() returns (__RET: int)
     goto anon16_LoopHead;
 
   anon16_LoopHead:
-    assert (forall k: int :: 0 <= k && k < 100000 ==> a1[k] == a2[k]);
-    assert (forall k: int :: 0 <= k && k < i ==> a2[k] == a3[k]) && i <= 100000;
     goto anon16_LoopDone, anon16_LoopBody;
 
   anon16_LoopBody:
@@ -47,9 +44,6 @@ implementation main() returns (__RET: int)
     goto anon17_LoopHead;
 
   anon17_LoopHead:
-    assert (forall k: int :: 0 <= k && k < 100000 ==> a1[k] == a2[k]);
-    assert (forall k: int :: 0 <= k && k < 100000 ==> a2[k] == a3[k]);
-    assert (forall k: int :: 0 <= k && k < i ==> a3[k] == a4[k]) && i <= 100000;
     goto anon17_LoopDone, anon17_LoopBody;
 
   anon17_LoopBody:
@@ -64,10 +58,6 @@ implementation main() returns (__RET: int)
     goto anon18_LoopHead;
 
   anon18_LoopHead:
-    assert (forall k: int :: 0 <= k && k < 100000 ==> a1[k] == a2[k]);
-    assert (forall k: int :: 0 <= k && k < 100000 ==> a2[k] == a3[k]);
-    assert (forall k: int :: 0 <= k && k < 100000 ==> a3[k] == a4[k]);
-    assert (forall k: int :: 0 <= k && k < i ==> a5[k] == a4[k]) && i <= 100000;
     goto anon18_LoopDone, anon18_LoopBody;
 
   anon18_LoopBody:
@@ -82,11 +72,6 @@ implementation main() returns (__RET: int)
     goto anon19_LoopHead;
 
   anon19_LoopHead:
-    assert (forall k: int :: 0 <= k && k < 100000 ==> a1[k] == a2[k]);
-    assert (forall k: int :: 0 <= k && k < 100000 ==> a2[k] == a3[k]);
-    assert (forall k: int :: 0 <= k && k < 100000 ==> a3[k] == a4[k]);
-    assert (forall k: int :: 0 <= k && k < 100000 ==> a5[k] == a4[k]);
-    assert (forall k: int :: 0 <= k && k < i ==> a5[k] == a6[k]) && i <= 100000;
     goto anon19_LoopDone, anon19_LoopBody;
 
   anon19_LoopBody:
@@ -101,12 +86,6 @@ implementation main() returns (__RET: int)
     goto anon20_LoopHead;
 
   anon20_LoopHead:
-    assert (forall k: int :: 0 <= k && k < 100000 ==> a1[k] == a2[k]);
-    assert (forall k: int :: 0 <= k && k < 100000 ==> a2[k] == a3[k]);
-    assert (forall k: int :: 0 <= k && k < 100000 ==> a3[k] == a4[k]);
-    assert (forall k: int :: 0 <= k && k < 100000 ==> a5[k] == a4[k]);
-    assert (forall k: int :: 0 <= k && k < 100000 ==> a5[k] == a6[k]);
-    assert (forall k: int :: 0 <= k && k < i ==> a7[k] == a6[k]) && i <= 100000;
     goto anon20_LoopDone, anon20_LoopBody;
 
   anon20_LoopBody:
@@ -121,7 +100,6 @@ implementation main() returns (__RET: int)
     goto anon21_LoopHead;
 
   anon21_LoopHead:
-    assert (forall k: int :: 0 <= k && k < 100000 ==> a1[k] == a7[k]);
     goto anon21_LoopDone, anon21_LoopBody;
 
   anon21_LoopBody:

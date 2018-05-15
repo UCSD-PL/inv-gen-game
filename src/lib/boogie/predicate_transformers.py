@@ -39,7 +39,7 @@ def sp_stmt(stmt: AstStmt, pred: z3.ExprRef, typeEnv: TypeEnv_T) -> z3.ExprRef:
         # Should already be SSA-ed
         assert(assignee not in expr_read(stmt.rhs) and \
               (assignee not in list(map(str, ids(pred)))))
-        lhs = typeEnv[stmt.lhs](assignee)
+        lhs = expr_to_z3(stmt.lhs, typeEnv)
         rhs = expr_to_z3(stmt.rhs, typeEnv)
         return And(lhs == rhs, pred)
     elif (isinstance(stmt, AstAssert)):

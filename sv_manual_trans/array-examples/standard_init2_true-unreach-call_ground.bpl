@@ -5,7 +5,7 @@ procedure main() returns (__RET: int)
   var x: int;
   i := 0;
   while ((i<100000))
-  invariant (forall k : int :: (0 <= k && k < i) ==> a[k] == 42);
+  //invariant (forall k : int :: (0 <= k && k < i) ==> a[k] == 42);
   {
     a[i] := 42;
     i := (i+1);
@@ -13,7 +13,7 @@ procedure main() returns (__RET: int)
 
   i := 0;
   while ((i<100000))
-  invariant (forall k : int :: (0 <= k && k < i) ==> a[k] == 43);
+  //invariant (forall k : int :: (0 <= k && k < i) ==> a[k] == 43);
   {
     a[i] := 43;
     i := (i+1);
@@ -21,7 +21,7 @@ procedure main() returns (__RET: int)
 
   x := 0;
   while ((x<100000))
-  invariant true;
+  //invariant true;
   {
     assert((a[x]==43));
     x := x + 1;

@@ -2,7 +2,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-	"esprima": ["."]
+      "esprima": ["."]
     },
     "declaration": false,
     "module": "amd",
@@ -13,7 +13,9 @@
     "removeComments": true,
     "rootDir": ".",
     "suppressImplicitAnyIndexErrors": true,
-    "target": "es6"
+    "target": "es6",
+    "typeRoots": ["../../node_modules/@types", "../../node_modules", "../../node_modules/@orange-games/"],
+    "types": ["phaser-ce", "esprima", "estree", "jquery", "jquery-jsonrpcclient", "jqueryui", "phaser-input"]
   },
   "formatCodeOptions": {
     "indentSize": 2,
@@ -50,6 +52,13 @@
     "ts/util.ts",
     "ts/main.ts",
     "ts/types.ts",
+    "ts/new_game.ts",
+    "ts/tutorial_game.ts",
+    "ts/boogie.ts",
+    "ts/graph.ts",
+    "ts/game_graph.ts",
+    "ts/invgraph_game.ts",
+    "ts/texticon.ts",
     "ts/tutorial.ts"
   ],
   "atom": {
