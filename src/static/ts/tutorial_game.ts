@@ -59,7 +59,7 @@ class TutorialGame extends InvGraphGame {
   create(): void {
     super.create();
     this.forEachUserNode((nd: UserNode) => {
-      this.textSprites[nd.id].onChanged.add((gameEl: TextIcon, newLines: string[]) => {
+      this.textSprites[nd.id].onSubmitted.add((gameEl: TextIcon, newLines: string[]) => {
         assert(newLines.length >= nd.sound.length)
         let soundLines = newLines.slice(newLines.length - nd.sound.length);
         let unknownLines = newLines.slice(0, newLines.length - nd.sound.length);

@@ -21,8 +21,8 @@ export class TextIcon extends Phaser.Group {
     protected _focused: number;
     protected _inputBox: JQuery;
 
+    public onSubmitted: Phaser.Signal;
     public onChanged: Phaser.Signal;
-    public onTyped: Phaser.Signal;
 
     constructor(game: Phaser.Game, icon: Phaser.Sprite, text: (string|string[]), name?: string, x?: number, y?:number, startShown?: boolean) {
         super(game, undefined, name, undefined, undefined, undefined);
@@ -30,8 +30,8 @@ export class TextIcon extends Phaser.Group {
         if (y == undefined) y = 0;
         if (startShown == undefined) startShown = true;
 
+        this.onSubmitted = new Phaser.Signal();
         this.onChanged = new Phaser.Signal();
-        this.onTyped = new Phaser.Signal();
         this._game = game;
         this._icon = icon;
         this._icon.x = -this._icon.width/2;
@@ -103,8 +103,15 @@ export class TextIcon extends Phaser.Group {
                     this._lines[lineIdx] = input.val();
                     this._lineOpts[lineIdx].editingNow = false;
                     this._render();
-                    this.onChanged.dispatch(this, this._lines);
+                    this.onSubmitted.dispatch(this, this._lines);
                 })(idx))
+                let oldVal: string = input.val();
+                input.keyup(() => {
+                    if (input.val() != oldVal) {
+                        this.onChanged.dispatch(this, input.val());
+                        oldVal = input.val();
+                    }
+                })
                 this._inputBox = input;
                 container.append(this._inputBox)
                 this._inputBox.focus();
@@ -145,7 +152,6 @@ export class TextIcon extends Phaser.Group {
         // Offset Phaser.Text entries vertically
         this._text = lineGrp;
         this._text.y = -relY/2;
-        console.log("Height: ", relY)
         this._text.x = this._icon.width/2 + 5;
 
         // Pass 2: Compute absolute positions of textboxes
@@ -163,7 +169,6 @@ export class TextIcon extends Phaser.Group {
                 let line: JQuery = lineElts[i] as JQuery;
                 // TODO: Very brittle hacky code - the 26 constant comes from the padding/margins of divs around
                 // the canvas.
-                console.log("icon world y", this._icon.world.y, "icon y", this._icon.y, "text y", this._text.y, "rely", relY);
                 line.css("left", this._icon.world.x - this._icon.x + this._text.x + 26)
                 line.css("top", this._icon.world.y - this._icon.y + this._text.y + relY + 26)
             }
@@ -198,6 +203,15 @@ export class TextIcon extends Phaser.Group {
             this._lineOpts.push(shallowCopy((i in newOpts ? newOpts[i] : this._defaultOpts)));
         }
         this._render();
+    }
+
+    public setEditedString(s: string) {
+        assert(this._inputBox != null);
+        this._inputBox.val(s);
+    }
+
+    public getEditedString(): string {
+        return this._inputBox.val();
     }
 
     public hideText(): void {
