@@ -17,6 +17,7 @@ class SimpleGame extends InvGraphGame {
   public onNodeFocused: Phaser.Signal;
   public onNodeUnfocused: Phaser.Signal;
   public onFoundInv: Phaser.Signal;
+  public onTriedInv: Phaser.Signal;
   public focusedNode: UserNode;
   public onUserTypedInv: Phaser.Signal;
 
@@ -25,6 +26,7 @@ class SimpleGame extends InvGraphGame {
     this.onNodeFocused = new Phaser.Signal();
     this.onNodeUnfocused = new Phaser.Signal();
     this.onFoundInv = new Phaser.Signal();
+    this.onTriedInv = new Phaser.Signal();
     this.onUserTypedInv = new Phaser.Signal();
     this.focusedNode = null;
   }
@@ -35,30 +37,11 @@ class SimpleGame extends InvGraphGame {
       this.textSprites[nd.id].onChildInputDown.add(() => {
         this.onNodeFocused.dispatch(nd);
       })
-      this.textSprites[nd.id].onChanged.add((gameEl: TextIcon, newLines: string[])=> {
-        assert (newLines.length >= nd.sound.length)
-        let soundLines = newLines.slice(newLines.length-nd.sound.length);
-        let unknownLines = newLines.slice(0, newLines.length-nd.sound.length);
-        // newLines must have nd.unsound as its suffix (since those are immutable)
-        assert(structEq(soundLines, nd.sound))
-
-        unknownLines = unknownLines.filter((ln: string) => ln.trim().length != 0);
-
-        for (let i = 0; i < unknownLines.length; i++) {
-          try {
-            parse(unknownLines[i]);
-          } catch (err) {
-            // Couldn't parse i-th line
-            console.log("Error parsing: " + err);
-            gameEl.edit(i);
-            return;
-          }
-        }
-        nd.sound = soundLines; 
-        nd.unsound = unknownLines;
-
-        let invNet: InvNetwork = this.getInvNetwork();
-        this.checkInvs(invNet, ()=> {});
+      this.textSprites[nd.id].onChanged.add((gameEl: TextIcon, newVal: string) => {
+        this.onUserTypedInv.dispatch(gameEl, newVal);
+      })
+      this.textSprites[nd.id].onSubmitted.add((gameEl: TextIcon, newLines: string[])=> {
+        this.onTriedInv.dispatch(gameEl, gameEl.getEditedString());
       })
     })
   }
@@ -172,8 +155,14 @@ $(document).ready(function() {
       $("#progress").hide();
     })
     game.onFoundInv.add((nd: UserNode, inv: string[]) => {
-      console.log(nd, inv)
       $("#progress").append("<br>" + inv.join("<br>"));
+    })
+    game.onUserTypedInv.add((nd: TextIcon, inv: string) => {
+      tracesW.setExp(inv);
+    });
+    game.onTriedInv.add((nd: TextIcon, inv: string) => {
+      tracesW.setExp(inv);
+      userInput(true);
     })
 
     function userInput(commit: boolean): void {
