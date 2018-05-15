@@ -183,6 +183,11 @@ class TutorialGame extends InvGraphGame {
       sprite.getY() + deltay);
   }
 
+  addHighlightNextToInputBox(elmt: Node, str: (string | string[])) {
+    let input_box_width = this.getTextIcon(elmt).getInputBoxWidth();
+    return this.addHighlight(elmt, str, input_box_width);
+  }
+
   addText(elmt: Node | TextIcon, str: (string | string[])) {
     let sprite = elmt instanceof TextIcon ? elmt : this.textSprites[elmt.id];
     return new TutorialText(this, str, sprite.getX() + sprite.getWidth(), sprite.getY());
@@ -270,7 +275,7 @@ class TutorialGame extends InvGraphGame {
   //     onClick();
   //   });
   // }
-  onNodeChanged(n: Node): Phaser.Signal {
+  onNodeSubmitted(n: Node): Phaser.Signal {
     return this.textSprites[n.id].onSubmitted;
   }
 
@@ -520,7 +525,7 @@ $(document).ready(function () {
   tutorial_steps_3 = [{
     setup: function (cs) {
       text = game.addHighlight(assert,
-        ["This a gate that absorbs orbs.",
+        ["This gate absorbs orbs.",
         "[press space]"]);
       cs.nextStepOnKeyClickOrTimeout(0, () => 0, 32);
     }    
@@ -592,8 +597,8 @@ $(document).ready(function () {
   }, {
     setup: function (cs) {
       text.destroy();
-      text = game.addHighlight(assert, ["Change text to 'n>2'","and press enter"]);
-      game.onNodeChanged(assert).addOnce((gameEl: TextIcon, newLines: string[]) =>  {
+      text = game.addHighlightNextToInputBox(assert, ["Change text to 'n>2'","and press enter"]);
+      game.onNodeSubmitted(assert).addOnce((gameEl: TextIcon, newLines: string[]) =>  {
         if (newLines[0].replace(/\s+/gm,'') === "n>2") {
           cs.nextStep();
         } else {
@@ -640,7 +645,7 @@ $(document).ready(function () {
       setTimeout(function() {
         text.destroy();
         text = game.addHighlight(assert,
-          ["n = 2 makes n > 3 false, so again the",
+          ["n = 2 makes n > 2 false, so again the",
           "orb cannot be absorbed [press space]"]);
           cs.nextStepOnKeyClickOrTimeout(0, () => 0, 32);
       },1200);
@@ -661,8 +666,8 @@ $(document).ready(function () {
   }, {
     setup: function (cs) {
       text.destroy();
-      text = game.addHighlight(assert, ["Change text to 'n>1'","and press enter"]);
-      game.onNodeChanged(assert).addOnce((gameEl: TextIcon, newLines: string[]) =>  {
+      text = game.addHighlightNextToInputBox(assert, ["Change text to 'n>1'","and press enter"]);
+      game.onNodeSubmitted(assert).addOnce((gameEl: TextIcon, newLines: string[]) =>  {
         if (newLines[0].replace(/\s+/gm,'') === "n>1") {
           cs.nextStep();
         } else {
@@ -723,7 +728,7 @@ $(document).ready(function () {
   tutorial_steps_4 = [{
     setup: function (cs) {
       text = game.addHighlight(usernode,
-        ["This a gate that both absorbs and",
+        ["This gate both absorbs and",
         "generates orbs. [press space]"]);
       cs.nextStepOnKeyClickOrTimeout(0, () => 0, 32);
     }    
@@ -777,8 +782,8 @@ $(document).ready(function () {
   }, {
     setup: function (cs) {
       text.destroy();
-      text = game.addHighlight(usernode, ["Change text to 'n==0'","and press enter"]);
-      game.onNodeChanged(usernode).addOnce((gameEl: TextIcon, newLines: string[]) =>  {
+      text = game.addHighlightNextToInputBox(usernode, ["Change text to 'n==0'","and press enter"]);
+      game.onNodeSubmitted(usernode).addOnce((gameEl: TextIcon, newLines: string[]) =>  {
         if (newLines[0].replace(/\s+/gm,'') === "n==0") {
           cs.nextStep();
         } else {
@@ -853,8 +858,8 @@ $(document).ready(function () {
   }, {
     setup: function (cs) {
       text.destroy();
-      text = game.addHighlight(usernode, ["Change text to 'n>=0'","and press enter"]);
-      game.onNodeChanged(usernode).addOnce((gameEl: TextIcon, newLines: string[]) =>  {
+      text = game.addHighlightNextToInputBox(usernode, ["Change text to 'n>=0'","and press enter"]);
+      game.onNodeSubmitted(usernode).addOnce((gameEl: TextIcon, newLines: string[]) =>  {
         if (newLines[0].replace(/\s+/gm,'') === "n>=0") {
           cs.nextStep();
         } else {
@@ -932,11 +937,11 @@ $(document).ready(function () {
   }, {
     setup: function (cs) {
       text.destroy();
-      text = game.addHighlight(usernode,
+      text = game.addHighlightNextToInputBox(usernode,
         ["Change text to 'n<=10'",
         "(which won't produce 11)",
         "and press enter"]);
-      game.onNodeChanged(usernode).addOnce((gameEl: TextIcon, newLines: string[]) =>  {
+      game.onNodeSubmitted(usernode).addOnce((gameEl: TextIcon, newLines: string[]) =>  {
         if (newLines[0].replace(/\s+/gm,'') === "n<=10") {
           cs.nextStep();
         } else {

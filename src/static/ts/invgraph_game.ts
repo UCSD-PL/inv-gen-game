@@ -856,18 +856,6 @@ export class InvGraphGame {
 
     // Position sprites
     this.updateLayout(oldLayout, newLayout, ()=> this.onFirstUpdate());
-    let up: Phaser.Key = this.game.input.keyboard.addKey(38);
-    let down: Phaser.Key = this.game.input.keyboard.addKey(40);
-    up.onDown.add(() => {
-      if (this.selectedViolation != null && !this.stepPlaying) {
-        this.stepBackwards();
-      }
-    })
-    down.onDown.add(() => {
-      if (this.selectedViolation != null && !this.stepPlaying) {
-        this.stepForward();
-      }
-    })
   }
 
   create(): void {

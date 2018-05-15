@@ -215,6 +215,10 @@ export class TextIcon extends Phaser.Group {
         return this._inputBox.val();
     }
 
+    public getInputBoxWidth() {
+        return this._inputBox.width();
+    }
+
     public hideText(): void {
         this._lineOpts.forEach((opt)=> {opt.visible = false});
         this._render();
