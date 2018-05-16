@@ -241,6 +241,13 @@ class TutorialGame extends InvGraphGame {
   }
 
   updateGraph(container: string, graph: Node, n: NodeMap, lvlId: string): void {
+    // Clear old
+    if (this.nodeSprites != null) {
+      for (let ndId in this.nodeSprites) {
+        let nd: TextIcon = this.nodeSprites[ndId];
+        nd.destroy(true);
+      }
+    }
     this.width = 800;
     this.height = 600;
     // this.game = new Phaser.Game(this.width, this.height, Phaser.AUTO, container,
