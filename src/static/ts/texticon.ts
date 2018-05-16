@@ -1,5 +1,4 @@
 import * as Phaser from "phaser-ce";
-import * as PhaserInput from "phaser-input";
 import {Point} from "phaser-ce";
 import {assert, shallowCopy, structEq} from "./util"
 

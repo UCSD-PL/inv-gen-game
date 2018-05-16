@@ -39,7 +39,7 @@ class TutorialGame extends InvGraphGame {
   protected backwardsCount: number;
 
   constructor(container: string, graph: Node, n: NodeMap, lvlId: string, steps: IStep[]) {
-    super(container, graph, n, lvlId);
+    super(container, 800, 600, graph, n, lvlId);
     this.forwardCount = 0;
     this.backwardsCount = 0;
   }

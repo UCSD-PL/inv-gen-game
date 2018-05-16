@@ -28,16 +28,11 @@ requirejs.config({
     "texticon": "build/ts/texticon",
     "invgraph_game": "build/ts/invgraph_game",
     "tutorial_game": "build/ts/tutorial_game",
-    "phaser-ce": "./phaser",
-    "phaser-input": "./phaser-input",
+    "phaser-ce": "./phaser"
   },
   shim: {
     'phaser-ce': {
       exports: 'Phaser'
-    },
-    'phaser-input': {
-      exports: 'PhaserInput',
-      deps: ['phaser-ce']
     }
   },
   waitSeconds: 0,

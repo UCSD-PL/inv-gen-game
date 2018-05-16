@@ -4,7 +4,6 @@ import {parse} from "esprima"
 import {Node as ESNode} from "estree";
 import {invariantT} from "./types"
 import * as Phaser from "phaser-ce"
-import * as PhaserInput from "phaser-input"
 import {Point} from "phaser-ce";
 import {topo_sort, bfs, path} from "./graph";
 import {Expr_T} from "./boogie";
@@ -262,9 +261,9 @@ export class InvGraphGame {
   protected stepPlaying: boolean;
   game: Phaser.Game;
 
-  constructor(container: string, graph: Node, n: NodeMap, lvlId: string) {
-    this.width = 800;
-    this.height = 600;
+  constructor(container: string, width: number, height: number, graph: Node, n: NodeMap, lvlId: string) {
+    this.width = width;
+    this.height = height;
     this.game = new Phaser.Game(this.width, this.height, Phaser.AUTO, container,
       { preload: ()=>{this.preload()},
         create: ()=>{this.create()},
@@ -860,7 +859,6 @@ export class InvGraphGame {
 
   create(): void {
     this.graphics = this.game.add.graphics(0, 0);
-    this.game.add.plugin(PhaserInput.Plugin);
     this.create_core();
     let up: Phaser.Key = this.game.input.keyboard.addKey(38);
     let down: Phaser.Key = this.game.input.keyboard.addKey(40);

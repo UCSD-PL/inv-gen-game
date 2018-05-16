@@ -22,7 +22,7 @@ class SimpleGame extends InvGraphGame {
   public onUserTypedInv: Phaser.Signal;
 
   constructor(container: string, graph: Node, n: NodeMap, lvlId: string) {
-    super(container, graph, n, lvlId);
+    super(container, 600, 400, graph, n, lvlId);
     this.onNodeFocused = new Phaser.Signal();
     this.onNodeUnfocused = new Phaser.Signal();
     this.onFoundInv = new Phaser.Signal();
@@ -148,6 +148,7 @@ $(document).ready(function() {
       tracesW.setVariables(oldLvl);
       tracesW.addData(oldLvl.data);
       $(tracesW.parent).show();
+      $("#progress").show();
     })
     game.onNodeUnfocused.add((nd: UserNode) => {
       let [vars, trace] = [[], []];
@@ -156,8 +157,8 @@ $(document).ready(function() {
       tracesW.addData(oldLvl.data);
       $("#progress").hide();
     })
-    game.onFoundInv.add((nd: UserNode, inv: string[]) => {
-      $("#progress").append("<br>" + inv.join("<br>"));
+    game.onFoundInv.add((nd: UserNode, inv: string) => {
+      $("#progress").append("<span class='good'>" + inv + "</span>")
       game.onNodeUnfocused.dispatch(nd);
       game.focusedNode = null;
       $(tracesW.parent).hide();
