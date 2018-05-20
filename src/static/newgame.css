@@ -15,3 +15,31 @@
 .absPos {
   position: absolute;
 }
+
+.container {
+  display: grid;
+  grid-template-columns:  [first] auto [separator] 40% [final];
+  grid-template-rows: [top] 350px [middle] 200px [bottom];
+}
+
+#graph_abs_parent {
+  grid-row-start: top;
+  grid-row-end: bottom;
+  grid-column-start: first;
+  grid-column-end: separator;
+}
+
+#traces {
+  grid-row-start: top;
+  grid-row-end: middle;
+  grid-column-start: separator;
+  grid-column-end: final;
+  overflow: scroll;
+}
+
+#progress {
+  grid-row-start: middle;
+  grid-row-end: bottom;
+  grid-column-start: separator;
+  grid-column-end: final;
+}
