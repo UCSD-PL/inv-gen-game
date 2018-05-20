@@ -1,3 +1,43 @@
+### Installation instructions.
+
+The following instructions help to setup and get the game running locally on your machine.
+
+- Use apt-get to install core system dependencies (Ubuntu)
+
+`
+$ sudo apt-get install build-essential gcc npm mono-devel mono-complete make python3-pip python3-venv
+`
+
+- To set up your local development environment, first clone the repository to your local machine:
+`
+git clone https://github.com/UCSD-PL/inv-gen-game
+`
+
+- cd into inv-gen-game and run -
+`
+$./setup.sh env/ 2>&1 1>log.txt
+`
+
+- source the directory -
+`$source env/bin/activate
+`
+
+- Build it.
+`$./build.sh
+`
+
+##### Testing the local website
+
+Once you've run the above setup commands, you should be all set to start testing your local website. First, run the command to start the Flask webserver and serve up the local website.
+
+`
+$ cp node_modules/phaser-ce/build/phaser.js src/static/ && python src/new_server.py --local --port 8080 --lvlset lvlsets/tmp.gcl.lvlset --ename foo --db foo.db
+`
+
+Now, in your web browser, go to localhost:8080/new_game.html to get to the game interface.
+
+### Tour of the code.
+
 1. Overview
 
 The goal of the game is to find sufficient invariants to verify programs
