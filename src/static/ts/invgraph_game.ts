@@ -133,7 +133,7 @@ export class InputOutputIcon extends TextIcon {
       this.icon().events.onInputDown.add(() => {
         if (this.unsound.length == 0) {
           this.unsound.push("");
-          this.setInvariants(nd.sound, nd.unsound);
+          this.setInvariants(this.sound, this.unsound);
         }
         this._lineOpts[0].editingNow = true;
         this._render();
