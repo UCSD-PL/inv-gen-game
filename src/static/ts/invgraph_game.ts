@@ -455,7 +455,7 @@ export class InvGraphGame {
     let [dummy, startPoint, startText] = traceLayout[0];
     let orb = this.getSprite("orb", 0, 0);
     orb.scale.setTo(0.3);
-    let err = new TextIcon(this.game, orb, "", "cur_trace_bug", 0, 0, true);
+    let err = new TextIcon(this.game, orb, "", "cur_trace_bug", 0, 0, true, true);
     this.selectedViolation = [err, 0, trace, traceLayout];
     this.positionBug(0);
     let icon = err.icon();

@@ -1,6 +1,6 @@
 import * as Phaser from "phaser-ce";
 import {Point} from "phaser-ce";
-import {assert, shallowCopy, structEq} from "./util"
+import {assert, shallowCopy, structEq, max} from "./util"
 
 export type LineOptions = {
     style: object,
@@ -12,6 +12,7 @@ export type LineOptions = {
 
 export class TextIcon extends Phaser.Group {
     protected _icon: Phaser.Sprite;
+    protected _border: Phaser.Sprite;
     protected _text: Phaser.Group;
     protected _lines: string[];
     protected _game: Phaser.Game;
@@ -19,15 +20,17 @@ export class TextIcon extends Phaser.Group {
     protected _lineOpts: LineOptions[];
     protected _focused: number;
     protected _inputBox: JQuery;
+    protected _hasBorder: boolean;
 
     public onSubmitted: Phaser.Signal;
     public onChanged: Phaser.Signal;
 
-    constructor(game: Phaser.Game, icon: Phaser.Sprite, text: (string|string[]), name?: string, x?: number, y?:number, startShown?: boolean) {
+    constructor(game: Phaser.Game, icon: Phaser.Sprite, text: (string|string[]), name?: string, x?: number, y?:number, startShown?: boolean, border?: boolean) {
         super(game, undefined, name, undefined, undefined, undefined);
         if (x == undefined) x = 0;
         if (y == undefined) y = 0;
         if (startShown == undefined) startShown = true;
+        if (border == undefined) border = false;
 
         this.onSubmitted = new Phaser.Signal();
         this.onChanged = new Phaser.Signal();
@@ -36,7 +39,7 @@ export class TextIcon extends Phaser.Group {
         this._icon.x = Math.round(-this._icon.width/2);
         this._icon.y =  Math.round(-this._icon.height/2);
         this._defaultOpts = {
-            style: { font: "15px Courier New, Courier, monospace", align: "center", fill: "#000000", backgroundColor: "#ffffff" },
+            style: { font: "15px Courier New, Courier, monospace", align: "center", fill: "#000000", },
             removable: false,
             editable: false,
             editingNow: false,
@@ -48,6 +51,7 @@ export class TextIcon extends Phaser.Group {
         super.add(this._icon);
         super.add(this._text);
         super.x = x; super.y = y;
+        this._hasBorder = border;
     }
 
     private _textMatch(): boolean {
@@ -171,6 +175,31 @@ export class TextIcon extends Phaser.Group {
                 // the canvas.
                 line.css("left", this._icon.world.x - this._icon.x + this._text.x + 26)
                 line.css("top", this._icon.world.y - this._icon.y + this._text.y + relY + 26)
+            }
+        }
+
+        if (this._hasBorder) {
+            let padding = 2;
+            let width = this._icon.width + this._text.width + 2*padding;
+            let height = max([this._icon.height, this._text.height]) + 2*padding;
+
+            if (this._border != null) {
+                if (this._border.width < width || this._border.height < height) {
+                    this.remove(this._border, true, true);
+                    this._border = null;
+                }
+            }
+
+            if (this._border == null) {
+                let g = this.game.add.graphics(0, 0);
+                g.clear();
+                g.lineStyle(2, 0x000000, 1);
+                g.beginFill(0xffffff);
+                g.drawRoundedRect(0, 0, width, height, 4);
+                g.endFill();
+                let border = g.generateTexture();
+                g.destroy();
+                this._border = this.create(-20, -border.height/2, border, 0, true, 0);
             }
         }
     }
