@@ -43,3 +43,12 @@
   grid-column-start: separator;
   grid-column-end: final;
 }
+
+div#formula-entry {
+  min-width: 90px;
+  border-style: solid;
+  border-width: 1px;
+  border-radius: 4px;
+  padding-left: 5px;
+  border-color: grey;
+}

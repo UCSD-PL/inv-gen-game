@@ -35,15 +35,18 @@ export abstract class BaseTracesWindow implements ITracesWindow {
   data: dataT = [ [], [], [] ];
   dataMap:  [ any[], any[], any[] ] = [ [], [], [] ];
   errorTimer: number;
+  editable: boolean;
 
   changedCb: () => void;
   commitCb: () => void;
   moreExCb: (typ: string) => void;
 
-  constructor (public parent: HTMLElement) {
+  constructor (public parent: HTMLElement, editable?: boolean) {
+    if (editable == undefined)  editable = true;
     $(this.parent).addClass("positioned");
     $(this.parent).addClass("box");
     $(this.parent).addClass("tracesWindow");
+    this.editable = editable;
   }
 
   immediateError(msg: string): void {
@@ -77,7 +80,12 @@ export abstract class BaseTracesWindow implements ITracesWindow {
     for (let i in lvl.variables) {
       hstr += "<th>" + lvl.variables[i] + "</th>";
     }
-    hstr += '<th><input id="formula-entry" tabindex="-1" type="text"><span id="errormsg"><div>&nbsp;</div></span></th>';
+    if (this.editable) {
+      hstr += '<th><input id="formula-entry" tabindex="-1" type="text"/>';
+    } else {
+      hstr += '<th><div id="formula-entry">&nbsp;</div>';
+    }
+    hstr += '<span id="errormsg"><div>&nbsp;</div></span></th>';
     hstr += '</tr></thead><tbody></tbody></table>';
     $(this.parent).html(hstr)
     $('#formula-entry').focus();
@@ -101,12 +109,22 @@ export abstract class BaseTracesWindow implements ITracesWindow {
   abstract evalResult(res: resT): void;
 
   curExp(): string {
-   let v = $("#formula-entry").val();
+   let v: string;
+   if (this.editable) {
+     v = $("#formula-entry").val();
+   } else {
+     v = $("#formula-entry").text();
+   }
    return (v === undefined ? "" : v);
   }
 
   setExp(exp: string) {
-    $("#formula-entry").val(exp);
+    if (this.editable) {
+      $("#formula-entry").val(exp);
+    } else {
+      if (exp == "") exp = "&nbsp";
+      $("#formula-entry").html(exp);
+    }
     this.changedCb();
   }
 

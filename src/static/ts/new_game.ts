@@ -76,7 +76,7 @@ class SimpleGame extends InvGraphGame {
             un.unsound = [];
           }
           let spriteNode = this.nodeSprites[un.id] as InputOutputIcon;
-          spriteNode.setInvariants(un.sound, un.unsound);
+          spriteNode.setInvariants([], []);
         })
       }, () => {
         this.setViolations(res, onDone);
@@ -129,7 +129,7 @@ $(document).ready(function() {
     [graph_entry, mapping] = removeEmptyNodes(graph_entry, mapping, true);
     console.log("After cleanup of empty nodes:", graph_entry);
     let game = new SimpleGame("graph", graph_entry, mapping, lvlName);
-    let tracesW = new PositiveTracesWindow($('#traces').get()[0]);
+    let tracesW = new PositiveTracesWindow($('#traces').get()[0], false);
 
     let nodes: Set<Node> = graph_entry.reachable();
     let userNodes: UserNode[] = [];

@@ -194,7 +194,7 @@ export class TextIcon extends Phaser.Group {
                 let g = this.game.add.graphics(0, 0);
                 g.clear();
                 g.lineStyle(2, 0x000000, 1);
-                g.beginFill(0xffffff);
+                g.beginFill(0xbfbfbf);
                 g.drawRoundedRect(0, 0, width, height, 4);
                 g.endFill();
                 let border = g.generateTexture();
