@@ -4,7 +4,7 @@ import {invariantT, templateT, dataT} from "./types";
 import {esprimaToStr} from "./eval";
 import {parse} from "esprima";
 import {Node as ESNode} from "estree";
-
+import { JsonRpcClient } from "../js/jquery.jsonrpcclient"
 
 export let rpc: JsonRpcClient = new $.JsonRpcClient({ ajaxUrl: "/api" });
 
@@ -44,7 +44,7 @@ export function rpc_loadLvlDynamic(lvlSet: string, id: string, cb:(res: loadLvlD
 }
 
 export function rpc_loadNextLvlDynamic(workerkId: string, cb:(res: loadNextLvlDynamicRes) => void) {
-  rpc.call("App.loadNextLvl", [workerkId, mturkId(), Args.get_individual_mode()], (data:any) => cb(<loadNextLvlDynamicRes>data), log);
+  rpc.call("App.loadNextLvlFacebook", [workerkId, mturkId(), Args.get_individual_mode()], (data:any) => cb(<loadNextLvlDynamicRes>data), log);
 }
 
 function rpc_genNextLvlDynamic(workerkId: string, lvlSet:string, lvlId: string, invs: invariantT[], cb:(res: loadNextLvlDynamicRes) => void) {
@@ -88,10 +88,12 @@ export function rpc_instantiate(templates: templateT[],
   rpc.call("App.instantiate", [uniq_templates, lvlVars, data, mturkId()], cb, log);
 }
 
-export function rpc_logEvent(workerId: string, name: string, data: any): any {
-  return rpc.call("App.logEvent", [workerId, name, data, mturkId()], (res) => { }, log);
+export function rpc_logEvent(workerId: string, name: string, data: any, cb?: (res: any) => void): any {
+    if (cb === undefined)
+        cb = (res) => { }
+  return rpc.call("App.logEvent", [workerId, name, data, mturkId()], cb, log);
 }
 
-export function logEvent(name: string, data: any): any {
-  return rpc_logEvent(Args.get_worker_id(), name, data);
+export function logEvent(name: string, data: any, cb?: (res: any) => void): any {
+  return rpc_logEvent(Args.get_worker_id(), name, data, cb);
 }

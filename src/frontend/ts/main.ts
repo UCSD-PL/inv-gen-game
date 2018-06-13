@@ -235,7 +235,8 @@ $(document).ready(function () {
         numLvlPassed = numLvlPassed + 1;
         function plural(n, s) { return n == 1 ? s : s + "s" }
         if (numLvlPassed >= 2) {
-            let s = "You can continue or quit.<br>Each additional level you pass will give you a new $0.50 bonus!";
+            //let s = "You can continue or quit.<br>Each additional level you pass will give you a new $0.50 bonus!";
+            let s = "You can continue or quit.";
             $("#next-or-quit-additional-text").html("<h2>" + s + "</h2>");
             $("#quit-overlay").show();
         } else {
@@ -380,6 +381,14 @@ $(document).ready(function () {
         $("#problem_input").val("");
     });
 
+     rpc.call('App.getTutorialDone', [Args.get_worker_id()],
+         function(res) {
+             if (res === false) {
+                 console.log("Tutarial not done redirecting...");
+                 window.location.href = 'tutorial.html?noifs';
+             }
+         }, log);
+    
     nextLvl();
 
     gameLogic.onLvlLoaded(function () {

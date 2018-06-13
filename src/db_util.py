@@ -176,6 +176,13 @@ def levelSolved(session, lvlset, lvlid, workerId=None):
   # VerifyAttempt
   return len(solved_events) > 0
 
+def tutorialDoneBy(session,  userId):
+  finishLevels = session.query(Event)\
+                    .filter(Event.type == "TutorialDone")\
+                    .filter(Event.src == userId).all()
+  return len(finishLevels) > 0
+
+
 def levelFinishedBy(session, lvlset, lvlid, userId):
   finishLevels = session.query(Event)\
                     .filter(Event.type == "FinishLevel")\

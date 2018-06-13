@@ -26,7 +26,7 @@ from time import time
 from datetime import datetime
 from models import open_sqlite_db, open_mysql_db, Event
 from db_util import addEvent, allInvs, levelSolved, levelFinishedBy,\
-        levelSkipCount, levelsPlayedInSession
+        levelSkipCount, levelsPlayedInSession, tutorialDoneBy
 from mturk_util import send_notification
 from atexit import register
 from server_common import openLog, log, log_d, pp_exc
@@ -108,18 +108,10 @@ def getTutorialDone(workerId):
         mturk_landing.html """
     if workerId == "":
         return False
-    return isfile(join(ROOT_DIR, 'logs', args.ename, "tut-done-" + workerId))
+    session = sessionF()
+    return tutorialDoneBy(session, workerId)
+    
 
-@api.method("App.setTutorialDone")
-@pp_exc
-@log_d(str)
-def setTutorialDone(workerId):
-    """ Specify that a given user has done the tutorial. Called form
-        tutorial.html. TODO(Dimo): This should user the database instead
-        of tut-done-ID marker files """
-    if workerId != "":
-        marker = join(ROOT_DIR, 'logs', args.ename, "tut-done-" + workerId)
-        open(marker, "w").close()
 
 @api.method("App.loadLvl")
 @pp_exc
@@ -297,6 +289,23 @@ def loadNextLvl(workerId, mturkId, individualMode):
             workerId=(workerId if individualMode else None)) or \
            (not args.replay and workerId != "" and \
             levelFinishedBy(session, curLevelSetName, lvlId, workerId)):
+            continue
+        result = loadLvl(curLevelSetName, lvlId, mturkId, individualMode)
+        return result
+
+@api.method("App.loadNextLvlFacebook")
+@pp_exc
+@log_d(str, pp_mturkId, bool, pp_BoogieLvl)
+def loadNextLvl(workerId, mturkId, individualMode):
+    """ Return the next level. """
+    assignmentId = mturkId[2]
+    session = sessionF()
+
+
+    level_names = list(traces[curLevelSetName].keys())
+    
+    for lvlId in level_names :
+        if levelFinishedBy(session, curLevelSetName, lvlId, workerId):
             continue
         result = loadLvl(curLevelSetName, lvlId, mturkId, individualMode)
         return result

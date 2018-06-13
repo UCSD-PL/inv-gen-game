@@ -819,8 +819,7 @@ var conclusionScript = [
     },
     {
         setup: function (cs) {
-            rpc.call('App.setTutorialDone', [Args.get_worker_id()], function (res) {
-                logEvent("TutorialDone", null);
+            logEvent("TutorialDone", null, function (res) {
                 $('#next-lvl').html("Start Playing");
                 $('#next-lvl').off("click");
                 $('#next-lvl').click(function () {
@@ -834,7 +833,7 @@ var conclusionScript = [
                     curL = label({ of: $("#next-lvl"), at: "left center" },
                         "Proceed to the game!", "right");
                 });
-            }, log);
+            });
         }
     },
 ];
