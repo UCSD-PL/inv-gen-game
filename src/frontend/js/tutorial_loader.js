@@ -34,7 +34,8 @@ requirejs.config({
         "bootstrap": { deps:["jquery"] },
         "jquery_ui": { deps: ["jquery"] },
         "jquery_color": { deps: ["jquery"] },
-        "jsonrpcclient": { deps: ["jquery"] }
+        "jsonrpcclient": { deps: ["jquery"] },
+        "rpc": { deps: [ "jsonrpcclient" ] }
     },
     onNodeCreated: function (node, config, module, path) {
         // Here's  alist of differet integrities for different scripts
