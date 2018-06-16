@@ -208,7 +208,7 @@ function facebookLoginDone() {
 
 $(document).ready(function () {
     console.log("About to start");
-    
+
     if (Args.get_assignment_id() == "ASSIGNMENT_ID_NOT_AVAILABLE") {
         let s = "This is just a preview of the HIT. The work you do here will have to be redone when you accept the HIT.";
         $("#hit-preview-warning").html("<p class='lead'><b>" + s + "</b></p>");
