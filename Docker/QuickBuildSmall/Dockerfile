@@ -6,6 +6,8 @@ ENV YARN_VERSION 1.5.1
 LABEL project="invgen"
 ENV SSH_PASSWD "root:Docker!"
 
+#RUN echo "nameserver 8.8.8.8" | tee /etc/resolv.conf > /dev/null
+
 RUN groupadd --gid 1000 node \
   && useradd --uid 1000 --gid node --shell /bin/bash --create-home node \
   && apt-get update && apt-get install -y gpg dirmngr curl --no-install-recommends \
@@ -112,7 +114,7 @@ RUN git pull \
     esac \
     && set -x \
     && apt-get update \
-    && apt-get upgrade \
+    && apt-get upgrade -y \
     && apt-get install -y $buildDeps libc6 libgcc1 libstdc++6 libgomp1 --no-install-recommends \
     && chmod u+x /app/init.sh \ 
     && bash ./setupServer.sh 
