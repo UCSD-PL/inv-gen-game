@@ -222,7 +222,7 @@ export class Label {
 
     let div = $("<div class='absolute'><div class=" + clazz +
       " style='" + arrow_pos + "'></div><div style='" + text_pos +
-      "position: relative; text-align: center;'>" + txt + "</div></div>");
+      "position: relative; text-align: center;background-color: #efefef;'>" + txt + "</div></div>");
 
     $("body").append(div);
 

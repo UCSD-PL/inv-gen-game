@@ -124,7 +124,7 @@ RUN git pull \
 COPY init.sh /app
 RUN     chmod u+x /app/init.sh 
 
-LABEL version="v0.0.6-beta"
+LABEL version="v0.0.7-beta"
 
 RUN git pull \
     && chmod u+x /app/init.sh \ 
