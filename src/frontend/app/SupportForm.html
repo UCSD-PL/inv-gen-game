@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Invariant Generation Game</title>
+    <title>PatNum: an Invariant Generation Game</title>
     <!-- bootstrap stylesheet -->
     <link rel="stylesheet"
           href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
@@ -20,71 +20,15 @@
     <link rel="stylesheet" href="../css/arrow.css">
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap"></script>
 </head>
-<!--
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-
-    <script src="jquery-1.12.0.min.js"></script>
-    <script src="jquery.jsonrpcclient.js"></script>
-    <script src="jquery.color-2.1.2.min.js"></script>
-    <script src="jquery-ui-1.11.4/jquery-ui.js"></script>
-    <script src="esprima.js"></script>
-    <link rel="stylesheet" href="bootstrap.min.css">
-    <link rel="stylesheet" href="bootstrap-theme.min.css">
-    <script src="bootstrap.min.js"></script>
-
-    <link rel="stylesheet" href="inv.css">
-    <link rel="stylesheet" href="arrow.css">
-    <script src="build/ts/container.js"></script>
-    <script src="build/ts/stickyWindow.js"></script>
-    <script src="build/ts/progressWindow.js"></script>
-    <script src="build/ts/scoreWindow.js"></script>
-    <script src="build/ts/logic.js"></script>
-    <script src="build/ts/traceWindow.js"></script>
-    <script src="build/ts/gameLogic.js"></script>
-    <script src="build/ts/level.js"></script>
-    <script src="build/ts/eval.js"></script>
-    <script src="build/ts/pp.js"></script>
-    <script src="build/ts/util.js"></script>
-    <script src="build/ts/powerups.js"></script>
-
-
-    <script>
-
-        // Given the ID of the assignmentId form field element, populate it
-        // with the assignmentId parameter from the URL.  If no assignment ID
-        // is present, inform the worker that the HIT is being previewed.
-
-        function init() {
-            console.log(Args.get_hit_id());
-            console.log(Args.get_worker_id());
-            console.log(Args.get_assignment_id());
-            console.log(Args.get_turk_submit_to());
-            var turk_submit_to = Args.get_turk_submit_to();
-            var assignment_id = Args.get_assignment_id();
-            if (assignment_id == "ASSIGNMENT_ID_NOT_AVAILABLE") {
-                document.getElementById("main").innerHTML =
-                    "<p><b>You are previewing this HIT.</b>  To perform this HIT, please accept it.</p>";
-                return;
-            }
-            if (assignment_id !== undefined) {
-                document.getElementById("assignment_id_field").value = assignment_id;
-            }
-            if (turk_submit_to !== undefined) {
-                document.getElementById("form").action = turk_submit_to + "/mturk/externalSubmit";
-            }
-        }
-
-    </script>
-
-</head>
--->
-<body onload="init()">
+<body>
+<div id="fb-root"></div>
 <div class="container" id="main">
-    <div id="problem_screen" class="overlay" style="display:block">
+    <dl class="dl-horizontal">
+        <dt>User ID</dt>
+        <dd><span id='user-id'></span></dd>
+    </dl>
+    <div id="problem_screen" class="overlay" style="display: block">
         <div class="container text-center">
             <h1 class="good">Report a Problem</h1>
             <form id="problem_form" action="">
@@ -103,11 +47,11 @@
             </form>
         </div>
     </div>
-  </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.5/require.js"
         integrity="sha256-uvn41VNPQ8aVNA6aS1Zjc2FUPkKq7ZgA6SzFiHkVgxs="
-        crossorigin="anonymous" data-main="../js/loader.js"></script>
+        crossorigin="anonymous" data-main="../js/loader_report.js"></script>
 
 <script>
 
@@ -130,7 +74,7 @@
             document.getElementById("form").action = turk_submit_to + "/mturk/externalSubmit";
         }
 
-        $("#problem_send").click(function () {
+        $("#problem_send").click(function() {
             var errorMessage = $("#problem_form_error");
             var desc = $("#problem_input").val();
 
@@ -141,17 +85,19 @@
                 return;
             }
 
-            rpc.call("App.reportProblem", [mturkId(), curLvlId, desc],
-                function (res) {
+            rpc.call("App.reportProblem",
+                [mturkId(), curLvlId, desc],
+                function(res) {
                     $("#problem_screen").fadeOut(1000);
-                }, function () {
+                },
+                function() {
                     errorMessage
                         .text("An error occurred. Please try again.")
                         .show();
                 });
         });
 
-        $("#problem_close").click(function () {
+        $("#problem_close").click(function() {
             $("#problem_screen").fadeOut(1000);
             $("#problem_input").val("");
         });

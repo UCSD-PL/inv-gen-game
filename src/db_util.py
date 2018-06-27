@@ -113,6 +113,8 @@ def addEvent(sourceName, typ, time, ename,  addr, data, session, mturkId):
     pass
   elif (typ == "TutorialDone"):
     pass
+  elif (typ == "SupportForm"):
+    payl["message"] = data
   elif (typ == "StartLevel" or
         typ == "FinishLevel" or
         typ == "SkipToNextLevel"):

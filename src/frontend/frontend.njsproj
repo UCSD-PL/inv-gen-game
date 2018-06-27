@@ -73,6 +73,7 @@
     <TypeScriptCompile Include="ts\gameLogic.ts" />
     <TypeScriptCompile Include="ts\level.ts" />
     <TypeScriptCompile Include="ts\logic.ts" />
+    <TypeScriptCompile Include="ts\report.ts" />
     <TypeScriptCompile Include="ts\main.ts" />
     <TypeScriptCompile Include="ts\powerups.ts" />
     <TypeScriptCompile Include="ts\pp.ts" />
@@ -98,7 +99,7 @@
     <Compile Include="js\end.js" />
     <Compile Include="js\esprima.js" />
     <Compile Include="js\jquery.jsonrpcclient.js" />
-    <Compile Include="js\loader - Copy.js" />
+    <Compile Include="js\loader_report.js" />
     <Compile Include="js\loader.js" />
     <Compile Include="js\tutorial_loader.js" />
   </ItemGroup>

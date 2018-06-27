@@ -96,11 +96,11 @@ function loadLvlSet(lvlset) {
 
 function doneScreen(alldone) {
     let assignment_id = Args.get_assignment_id();
-    if (assignment_id == "ASSIGNMENT_ID_NOT_AVAILABLE") {
-        $("#done-screen").html("<h2 class='text-center'><b>You are previewing the HIT. To perform this HIT, please accept it.</b></h2>");
-        $("#done-screen").fadeIn(1000);
-        return;
-    }
+    //if (assignment_id == "ASSIGNMENT_ID_NOT_AVAILABLE") {
+    //    $("#done-screen").html("<h2 class='text-center'><b>You are previewing the HIT. To perform this HIT, please accept it.</b></h2>");
+    //    $("#done-screen").fadeIn(1000);
+    //    return;
+    //}
     if (assignment_id !== undefined) {
         let form_elem1 = $("#assignment-id-in-form")[0];
         let form_elem = document.getElementById("assignment-id-in-form");
@@ -134,13 +134,15 @@ function doneScreen(alldone) {
         }
 
         if (missing) {
-            $('#turk-form-error').html("Please answer the required questions (highlighted in red)");
+            $('#turk-form-error').html("Please answer the required questions (highlighted in red) or Skip the survey.");
             evt.preventDefault();
         }
     });
-    let msg = "Good job! You finished " + numLvlPassed + " level(s)! Your score is: " + gameLogic.score + "!";
+    let msg = "Good job!"; //" You finished " + numLvlPassed + " level(s)! Your score is: " + gameLogic.score + "!";
     if (alldone) {
         msg = "There are no more levels to play at this moment.<br>" + msg;
+    } else {
+        msg += "  We would like for you to answer a few simple questions to help our research project.<br>";
     }
     $("#done-screen").prepend("<h2 class='good text-center'>" + msg + "</h2>");
     logEvent("GameDone", [numLvlPassed]);
@@ -199,12 +201,30 @@ function facebookLoginAsk() {
     fbReq = true;
     $('#facebook-login').show();
 }
+
+function checkOnTutorial() {
+    rpc.call('App.getTutorialDone',
+        [Args.get_worker_id()],
+        function(res) {
+            if (res === false) {
+                console.log("Tutarial not done redirecting...");
+                window.location.href = 'tutorial.html?noifs';
+            }
+        },
+        log);
+}
+
 function facebookLoginDone() {
     if (!fbReq) return;
     fbReq = false;
+    if (check_on_tutorial) checkOnTutorial();
+    if (get_next_level) nextLvl();
     $('#facebook-login').hide();
-    curScript.redoStep();
+    //curScript.redoStep();
 }
+
+let check_on_tutorial = false;
+let get_next_level = false;
 
 $(document).ready(function () {
     console.log("About to start");
@@ -381,15 +401,6 @@ $(document).ready(function () {
         $("#problem_input").val("");
     });
 
-     rpc.call('App.getTutorialDone', [Args.get_worker_id()],
-         function(res) {
-             if (res === false) {
-                 console.log("Tutarial not done redirecting...");
-                 window.location.href = 'tutorial.html?noifs';
-             }
-         }, log);
-    
-    nextLvl();
 
     gameLogic.onLvlLoaded(function () {
         curScript = new Script(tutorialScript);
@@ -419,7 +430,11 @@ $(document).ready(function () {
         });
 
     user_id_element.textContent = facebook_info.userId;
-    if (facebook_info.status !== "connected") {
+    if (facebook_info.status === "connected") {
+        checkOnTutorial();
+        nextLvl();
+    } else {
+        check_on_tutorial = true;
         facebookLoginAsk();
     }
 });

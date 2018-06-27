@@ -109,7 +109,7 @@ function inner(arg: JQuery): HTMLElement {
 var mainScript = [
     {
         setup: function (cs) {
-            $('.overlay').html("<h1>Welcome to the <span class='good'>InvGen</span> Tutorial!<br> You can press spacebar or click anywhere<br>to proceed to the next step.</h1>");
+            $('.overlay').html("<h1>Welcome to the <span class='good'>PatNum</span> Tutorial!<br> You can press spacebar or click anywhere<br>to proceed to the next step.</h1>");
             if (Args.get_assignment_id() == "ASSIGNMENT_ID_NOT_AVAILABLE") {
                 $('.overlay').append("<h1><b>This is a preview, which only shows you the tutorial</b></h1>" +
                     "<h1><b>NOTE: Please DON'T accept more than one HIT from us at a time! <br> First finish your current HIT, before accepting another! </b></h1>" +
@@ -892,7 +892,7 @@ function facebookLoginDone() {
     if (!fbReq) return;
     fbReq = false;
     $('.overlay').hide();
-    curScript.redoStep();
+    //curScript.redoStep();
 }
 
 $(document).ready(function () {
@@ -902,10 +902,10 @@ $(document).ready(function () {
     //}
 
     let di_div: HTMLDivElement = $('#discovered-invariants-div').get()[0] as HTMLDivElement;
-    //progW = new ProgressWindow(di_div);
+    progW = new ProgressWindow(di_div);
     //$('#discovered-invariants-div').hide();
     //$('.ignoreWindow').hide();
-    //scoreW = new ScoreWindow($('#score-div').get()[0]);
+    scoreW = new ScoreWindow($('#score-div').get()[0]);
     //$('#score-div-row').hide();
     //$('#next-lvl').hide();
     //$('#overlay').hide();
