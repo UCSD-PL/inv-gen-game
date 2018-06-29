@@ -26,7 +26,7 @@ from time import time
 from datetime import datetime
 from models import open_sqlite_db, open_mysql_db, Event
 from db_util import addEvent, allInvs, levelSolved, levelFinishedBy,\
-        levelSkipCount, levelsPlayedInSession, tutorialDoneBy
+        levelSkipCount, levelsPlayedInSession, tutorialDoneBy, questionaireDoneBy
 from mturk_util import send_notification
 from atexit import register
 from server_common import openLog, log, log_d, pp_exc
@@ -308,6 +308,8 @@ def loadNextLvl(workerId, mturkId, individualMode):
             continue
         result = loadLvl(curLevelSetName, lvlId, mturkId, individualMode)
         result['LevelNumber'] = i 
+        if i>2 and (not questionaireDoneBy(session, curLevelSetName, lvlId, workerId)):
+            result['ShowQuestionaire'] = True
         return result
     #result = {'LevelNumber' : -1}
     #return result

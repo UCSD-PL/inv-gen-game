@@ -487,9 +487,9 @@ var mainScript = [
             pwups[1].highlight(() => 0);
             scoreW.add(4);
             addSuccessfulInvariant(inv, "j%2=0");
-            curL = label({ of: $("#score-div-row"), at: "right center" },
-                "Hurray! <br> You learned to use %!", "left");
-            cs.nextStepOnKeyClickOrTimeout(-1, labelRemover(curL), 13);
+            curL = label({ of: $("#discovered-invariants-div"), at: "center bottom" },
+                "Hurray! <br> You learned to use %!", "up");
+            cs.nextStepOnKeyClickOrTimeout(-1, labelRemover(curL));
         }
     },
     // Tutorial Levels for UI-----------------------------------------------

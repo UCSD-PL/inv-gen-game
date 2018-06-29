@@ -27,8 +27,9 @@ interface loadLvlDynamicRes extends loadLvlBasicRes {
 }
 
 interface loadNextLvlDynamicRes extends loadLvlDynamicRes {
-  id: string;
-  lvlSet: string;
+    id: string;
+    lvlSet: string;
+    ShowQuestionaire: boolean;
 }
 
 export function mturkId(): [string, string, string] {

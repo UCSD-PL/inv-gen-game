@@ -59,6 +59,7 @@
     <Content Include="app\tutorial_twop.html" />
     <Content Include="images\knife-down.gif" />
     <Content Include="images\knife-up.gif" />
+    <Content Include="images\loading.gif" />
     <Content Include="Makefile" />
     <Content Include="tsconfig.json" />
     <Content Include="package.json" />

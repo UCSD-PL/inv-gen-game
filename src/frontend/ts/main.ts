@@ -1,5 +1,4 @@
 import { info as facebook_info } from "./facebook";
-
 import { Args, disableBackspaceNav, Script, assert, queryAppend, label, removeLabel, log } from './util';
 import { StickyWindow } from "./stickyWindow";
 import { CounterexGameLogic } from "./ctrexGameLogic";
@@ -31,11 +30,13 @@ var numLvlPassed = 0;
 disableBackspaceNav();
 
 function loadTrace(res) {
+    $("#loading-screen").hide();
     if (res === null)
         doneScreen(true);
     else {
         setCurLvlSet(res[0]);
         let lvl = res[1];
+        let showQuestionaire: boolean = res[2]; 
         curLvlId = lvl.id;
         console.log("Just loaded " + curLvlSet() + "." + curLvlId);
         gameLogic.loadLvl(lvl);
@@ -68,6 +69,10 @@ function loadTrace(res) {
                 }
             }
         }
+        if (showQuestionaire) {
+            doneScreen(false);
+        }
+        $("#main-game-screen").show();
     }
 }
 
@@ -106,6 +111,11 @@ function doneScreen(alldone) {
         let form_elem = document.getElementById("assignment-id-in-form");
         (form_elem as HTMLInputElement).value = assignment_id;
     }
+    if (facebook_info.userId !== undefined) {
+        let form_elem1 = $("#facebook-id-in-form")[0];
+        let form_elem = document.getElementById("facebook-id-in-form");
+        (form_elem as HTMLInputElement).value = facebook_info.userId;
+    }
     let turk_submit_to = Args.get_turk_submit_to();
     let form = document.getElementById("turk-form");
     if (turk_submit_to !== undefined) {
@@ -118,6 +128,13 @@ function doneScreen(alldone) {
         return $('#turk-form input[name=' + category + ']:checked');
     }
 
+    $("#final-skip").click(function (evt) {
+        $("#done-screen").fadeOut(1000);
+        if (alldone) {
+            $("#game_done-screen").show();
+            logEvent("GameDone", [numLvlPassed]);
+        }
+    });
     $("#final-submit").click(function (evt) {
         $("label").removeClass("highlight");
         $('#turk-form-error').html("");
@@ -136,6 +153,21 @@ function doneScreen(alldone) {
         if (missing) {
             $('#turk-form-error').html("Please answer the required questions (highlighted in red) or Skip the survey.");
             evt.preventDefault();
+        } else {
+            var args = {}
+            let query = $('#turk-form').serialize().split("&");
+            for (let i = 0; i < query.length; i++) {
+                if (query[i] === "") // check for trailing & with no param
+                    continue;
+                let param = query[i].split("=");
+                args[decodeURIComponent(param[0])] = decodeURIComponent(param[1] || "");
+            }
+            logEvent("QuestionaireSubmit", args);
+            $("#done-screen").fadeOut(1000);
+            if (alldone) {
+                $("#game_done-screen").show();
+                logEvent("GameDone", [numLvlPassed]);
+            }
         }
     });
     let msg = "Good job!"; //" You finished " + numLvlPassed + " level(s)! Your score is: " + gameLogic.score + "!";
@@ -145,8 +177,7 @@ function doneScreen(alldone) {
         msg += "  We would like for you to answer a few simple questions to help our research project.<br>";
     }
     $("#done-screen").prepend("<h2 class='good text-center'>" + msg + "</h2>");
-    logEvent("GameDone", [numLvlPassed]);
-
+   
     $("#done-screen").fadeIn(1000);
     //$("#done-screen").click(function() {
     //  window.location.replace('survey.html' + window.location.search);
@@ -203,6 +234,8 @@ function facebookLoginAsk() {
 }
 
 function checkOnTutorial() {
+    if (!check_on_tutorial) return;
+    check_on_tutorial = false;
     rpc.call('App.getTutorialDone',
         [Args.get_worker_id()],
         function(res) {
@@ -217,14 +250,17 @@ function checkOnTutorial() {
 function facebookLoginDone() {
     if (!fbReq) return;
     fbReq = false;
-    if (check_on_tutorial) checkOnTutorial();
-    if (get_next_level) nextLvl();
+    checkOnTutorial();
+    if (get_next_level) {
+        get_next_level = false;
+        nextLvl();
+    }
     $('#facebook-login').hide();
     //curScript.redoStep();
 }
 
-let check_on_tutorial = false;
-let get_next_level = false;
+let check_on_tutorial = true;
+let get_next_level = true;
 
 $(document).ready(function () {
     console.log("About to start");
@@ -252,21 +288,21 @@ $(document).ready(function () {
     }
 
     gameLogic.onLvlPassed(function () {
-        numLvlPassed = numLvlPassed + 1;
-        function plural(n, s) { return n == 1 ? s : s + "s" }
-        if (numLvlPassed >= 2) {
-            //let s = "You can continue or quit.<br>Each additional level you pass will give you a new $0.50 bonus!";
-            let s = "You can continue or quit.";
-            $("#next-or-quit-additional-text").html("<h2>" + s + "</h2>");
-            $("#quit-overlay").show();
-        } else {
-            let left = 2 - numLvlPassed;
-            let s = "Please try to finish at least " + left + plural(left, " more level") + "!";
-            $("#next-or-quit-additional-text").html("<h2>" + s + "</h2>");
-            $("#quit-overlay").hide();
-        }
-        $("#next-or-quit-screen").fadeIn(1000);
-
+        //numLvlPassed = numLvlPassed + 1;
+        //function plural(n, s) { return n == 1 ? s : s + "s" }
+        //if (numLvlPassed >= 2) {
+        //    //let s = "You can continue or quit.<br>Each additional level you pass will give you a new $0.50 bonus!";
+        //    let s = "You can continue or quit.";
+        //    //$("#next-or-quit-additional-text").html("<h2>" + s + "</h2>");
+        //    //$("#quit-overlay").show();
+        //} else {
+        //    let left = 2 - numLvlPassed;
+        //    let s = "Please try to finish at least " + left + plural(left, " more level") + "!";
+        //    //$("#next-or-quit-additional-text").html("<h2>" + s + "</h2>");
+        //    //$("#quit-overlay").hide();
+        //}
+        //$("#next-or-quit-screen").fadeIn(1000);
+        nextLvl();
     });
 
     $('#next-level-overlay').click(function () {
@@ -351,7 +387,9 @@ $(document).ready(function () {
         $("#impl_ex").hide();
     }
 
-    $('#quit').click(function () { doneScreen(false) });
+    $('#quit').click(function() {
+       //doneScreen(false)
+    });
     $('#skip-to-next-lvl').click(function () {
         $('#skip-to-next-lvl').prop("disable", true);
         $('#skip-to-next-lvl').hide();
@@ -432,10 +470,11 @@ $(document).ready(function () {
     user_id_element.textContent = facebook_info.userId;
     if (facebook_info.status === "connected") {
         checkOnTutorial();
-        nextLvl();
+        if (get_next_level) {
+            get_next_level = false;
+            nextLvl();
+        }
     } else {
-        check_on_tutorial = true;
         facebookLoginAsk();
     }
 });
-

@@ -40,13 +40,17 @@ export class DynamicLevel extends Level{
     });
   }
 
-  static loadNext(cb: (res: [string, Level])=>void) {
+  static loadNext(cb: (res: [string, Level, boolean])=>void) {
     rpc_loadNextLvlDynamic(Args.get_worker_id(), function(data) {
       if (data === null)
         cb(null);
       else {
         let lvl = new DynamicLevel(data.id, data.variables, data.data, data.goal, data.hint, data.colSwap, data.startingInvs, data.exploration_state);
-        cb([data.lvlSet, lvl]);
+          if (data.ShowQuestionaire === true) {
+              cb([data.lvlSet, lvl, true]);
+          } else {
+              cb([data.lvlSet, lvl, false]);
+          }
       }
     });
   }
