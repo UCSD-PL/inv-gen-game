@@ -463,22 +463,20 @@ export function disableBackspaceNav() {
     let doPrevent = false;
     if (event.keyCode === 8) {
       let d = /*event.srcElement ||*/ event.target;
-      if (d.tagName.toUpperCase() === "INPUT") {
-        let di = <HTMLInputElement>d;
-        if (di.type.toUpperCase() === "TEXT" ||
-          di.type.toUpperCase() === "PASSWORD" ||
-          di.type.toUpperCase() === "FILE" ||
-          di.type.toUpperCase() === "SEARCH" ||
-          di.type.toUpperCase() === "EMAIL" ||
-          di.type.toUpperCase() === "NUMBER" ||
-          di.type.toUpperCase() === "DATE") {
-          doPrevent = di.readOnly || di.disabled;
+      if (d instanceof HTMLInputElement) {
+        if (d.type.toUpperCase() === "TEXT" ||
+          d.type.toUpperCase() === "PASSWORD" ||
+          d.type.toUpperCase() === "FILE" ||
+          d.type.toUpperCase() === "SEARCH" ||
+          d.type.toUpperCase() === "EMAIL" ||
+          d.type.toUpperCase() === "NUMBER" ||
+          d.type.toUpperCase() === "DATE") {
+          doPrevent = d.readOnly || d.disabled;
         } else {
           doPrevent = true;
         }
-      } else if (d.tagName.toUpperCase() === "TEXTAREA") {
-        let dta = <HTMLTextAreaElement>d;
-        doPrevent = dta.readOnly || dta.disabled;
+      } else if (d instanceof HTMLTextAreaElement) {
+        doPrevent = d.readOnly || d.disabled;
       } else {
         doPrevent = true;
       }
