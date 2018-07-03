@@ -295,8 +295,8 @@ define(["require", "exports"], function (require, exports) {
                     $("body").off("keypress");
                     $("body").off("click");
                     destructor();
+                    //ev.stopPropagation();
                     s.nextStep();
-                    ev.stopPropagation();
                     return false;
                 }
             });
@@ -307,7 +307,9 @@ define(["require", "exports"], function (require, exports) {
                 $("body").off("keypress");
                 $("body").off("click");
                 destructor();
+                //ev.stopPropagation();
                 s.nextStep();
+                return false;
             });
             $("body").focus();
         }

@@ -595,9 +595,11 @@ export class PatternGameLogic extends BaseGameLogic {
               this.foundJSInv.map((x)=>x.rawUserInp),
               this.foundJSInv.map((x)=>x.canonForm),
               this.curLvl.colSwap,
-              this.curLvl.isReplay()]);
-    this.lvlPassedF = true;
-    this.lvlPassedCb();
+              this.curLvl.isReplay()], (res)=>
+             {
+                 this.lvlPassedF = true;
+                 this.lvlPassedCb();
+              });
   }
 }
 

@@ -26,7 +26,7 @@ from time import time
 from datetime import datetime
 from models import open_sqlite_db, open_mysql_db, Event
 from db_util import addEvent, allInvs, levelSolved, levelFinishedBy,\
-        levelSkipCount, levelsPlayedInSession, tutorialDoneBy
+        levelSkipCount, levelsPlayedInSession, tutorialDoneBy, questionaireDoneBy
 from mturk_util import send_notification
 from atexit import register
 from server_common import openLog, log, log_d, pp_exc
@@ -300,15 +300,19 @@ def loadNextLvl(workerId, mturkId, individualMode):
     """ Return the next level. """
     assignmentId = mturkId[2]
     session = sessionF()
-
-
     level_names = list(traces[curLevelSetName].keys())
-    
+    i=0
     for lvlId in level_names :
+        i += 1
         if levelFinishedBy(session, curLevelSetName, lvlId, workerId):
             continue
         result = loadLvl(curLevelSetName, lvlId, mturkId, individualMode)
+        result['LevelNumber'] = i 
+        if i>2 and (not questionaireDoneBy(session, curLevelSetName, lvlId, workerId)):
+            result['ShowQuestionaire'] = True
         return result
+    #result = {'LevelNumber' : -1}
+    #return result
 
 @api.method("App.instantiate")
 @pp_exc
@@ -688,19 +692,23 @@ def reportProblem(mturkId, lvl, desc):
   """ Accept a problem report from a player and send it to the current
       notification e-mail address.
   """
-  lines = []
-  lines.append("A problem report has been submitted.")
-  lines.append("")
-  lines.append("Time: %s" % datetime.now().strftime("%a, %d %b %Y %H:%M:%S %Z"))
-  lines.append("HIT: %s" % mturkId[1])
-  lines.append("Worker: %s" % mturkId[0])
-  lines.append("Experiment: %s" % args.ename)
-  lines.append("Level: %s" % lvl)
-  lines.append("Problem description:")
-  lines.append("")
-  lines.append(desc)
+  #lines = []
+  #lines.append("A problem report has been submitted.")
+  #lines.append("")
+  #lines.append("Time: %s" % datetime.now().strftime("%a, %d %b %Y %H:%M:%S %Z"))
+  #lines.append("HIT: %s" % mturkId[1])
+  #lines.append("Worker: %s" % mturkId[0])
+  #lines.append("Experiment: %s" % args.ename)
+  #lines.append("Level: %s" % lvl)
+  #lines.append("Problem description:")
+  #lines.append("")
+  #lines.append(desc)
 
-  send_notification(args.email, "Inv-Game Problem Report", "\n".join(lines))
+  session = sessionF()
+  addEvent(mturkId[0], "SupportForm", time(), args.ename, request.remote_addr, \
+           desc, session, mturkId)
+  return None
+  #send_notification(args.email, "Inv-Game Problem Report", "\n".join(lines))
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description="invariant gen game server")

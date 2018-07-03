@@ -113,6 +113,8 @@ def addEvent(sourceName, typ, time, ename,  addr, data, session, mturkId):
     pass
   elif (typ == "TutorialDone"):
     pass
+  elif (typ == "SupportForm"):
+    payl["message"] = data
   elif (typ == "StartLevel" or
         typ == "FinishLevel" or
         typ == "SkipToNextLevel"):
@@ -182,7 +184,6 @@ def tutorialDoneBy(session,  userId):
                     .filter(Event.src == userId).all()
   return len(finishLevels) > 0
 
-
 def levelFinishedBy(session, lvlset, lvlid, userId):
   finishLevels = session.query(Event)\
                     .filter(Event.type == "FinishLevel")\
@@ -191,6 +192,14 @@ def levelFinishedBy(session, lvlset, lvlid, userId):
   finishLevelPayls = [ x for x in finishLevelPayls\
                          if x["lvlset"] == lvlset and x["lvlid"] == lvlid]
   return len(finishLevelPayls) > 0
+
+
+def questionaireDoneBy(session, lvlset, lvlid, userId):
+  submittedQuestionaires = session.query(Event)\
+                    .filter(Event.type == "QuestionaireSubmit")\
+                    .filter(Event.src == userId).all()
+  return len(submittedQuestionaires) > 0
+
 
 def levelsPlayedInSession(session, assignmentId):
   q = session.query(Event.id).filter(Event.type == "FinishLevel")

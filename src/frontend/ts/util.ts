@@ -233,7 +233,11 @@ export class Label {
 
       let aPosOff : posArr = [ "left", - aPos.left + arr_off[0], "top", - aPos.top + arr_off[1] ];
       this.pos.my = _strPos(aPosOff);
-      $(div).position(this.pos);
+      try {
+          $(div).position(this.pos);
+      } catch (e) {
+
+      }
       this.pos.using = (css, dummy) => $(div).animate(css, pulse / 2);
 
     let ctr = 0;
@@ -242,7 +246,11 @@ export class Label {
     this.timer = setInterval(function () {
       let v: posArr = (ctr % 2 == 0 ? aPosOff : [ aPosOff[0], aPosOff[1] + vec[0], aPosOff[2], aPosOff[3] + vec[1]]);
         lbl.pos.my = _strPos(v);
-      $(div).position(lbl.pos);
+        try {
+            $(div).position(lbl.pos);
+        } catch (e) {
+
+        }
         ctr ++;
     }, this.pulse / 2);
       this.elem = div;

@@ -28,7 +28,7 @@ def log(action, *pps):
         if (len(pps) == 0):
           print(dumps(action) + "\n");
         else:
-          assert(len(action['kwargs']) == 0);
+          assert('kwargs' not in action or len(action['kwargs']) == 0);
           assert(len(pps) >= len(action['args']));
           ppArgs = [pps[ind](arg) for (ind, arg) in enumerate(action["args"])]
           # See if one of the ppArgs is a mturkId

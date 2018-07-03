@@ -74,7 +74,7 @@ def open_sqlite_db(path):
     return Session;
 
 def open_mysql_db(url):
-    engine = create_engine(url, echo=False);
+    engine = create_engine(url, echo=False, pool_pre_ping=True);
     Session = sessionmaker(bind=engine)
     Base.metadata.create_all(engine);
     return Session;

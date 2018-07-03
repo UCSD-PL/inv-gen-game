@@ -54,7 +54,7 @@ function updateUI() {
         log("Error parsing  " + desugared + ":" + err);
     }
 
-    if (inv.length == 0) {
+    if (inv.length === 0) {
         tracesW.evalResult({ clear: true });
         return;
     }
@@ -109,7 +109,7 @@ function inner(arg: JQuery): HTMLElement {
 var mainScript = [
     {
         setup: function (cs) {
-            $('.overlay').html("<h1>Welcome to the <span class='good'>InvGen</span> Tutorial!<br> You can press spacebar or click anywhere<br>to proceed to the next step.</h1>");
+            $('.overlay').html("<h1>Welcome to the <span class='good'>PatNum</span> Tutorial!<br> You can press spacebar or click anywhere<br>to proceed to the next step.</h1>");
             if (Args.get_assignment_id() == "ASSIGNMENT_ID_NOT_AVAILABLE") {
                 $('.overlay').append("<h1><b>This is a preview, which only shows you the tutorial</b></h1>" +
                     "<h1><b>NOTE: Please DON'T accept more than one HIT from us at a time! <br> First finish your current HIT, before accepting another! </b></h1>" +
@@ -122,7 +122,7 @@ var mainScript = [
                     "<b>$0.75 bonus for each non-tutorial level you pass beyond two</b></h3>");
             }
             $('.overlay').fadeIn(fadeDelay, function () {
-                cs.nextStepOnKeyClickOrTimeout(stepTimeout, () => 0, 32);
+                cs.nextStepOnKeyClickOrTimeout(-1, () => 0, 32);
             });
         }
     },
@@ -145,6 +145,7 @@ var mainScript = [
 
                 curLvl = lvl;
                 tracesW = new PositiveTracesWindow(inner($('#data-display')));
+                //console.log("before setVar");
                 tracesW.setVariables(lvl);
                 tracesW.onChanged(function () {
                     if (errorTimer) {
@@ -156,18 +157,21 @@ var mainScript = [
                 tracesW.addData(lvl.data);
                 $('#hint').html(lvl.hint);
                 updateUI();
+                //console.log("before nextStep");
                 cs.nextStep();
             });
         }
     },
     {
         setup: function (cs) {
+            //console.log("start 3+4");
             curL = label($('#formula-entry'), "Type the text '3+4' here!", "left");
             nextStepOnInvariant(cs, "3+4", labelRemover(curL));
         }
     },
     {
         setup: function (cs) {
+            //console.log("start 3+4=7");
             curL = label({ of: "#2 .temp_expr_eval", at: "left+10 bottom" },
                 "3+4=7! (Press spacebar or click anywhere...)", "up");
             cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32);
@@ -483,9 +487,9 @@ var mainScript = [
             pwups[1].highlight(() => 0);
             scoreW.add(4);
             addSuccessfulInvariant(inv, "j%2=0");
-            curL = label({ of: $("#score-div-row"), at: "right center" },
-                "Hurray! <br> You learned to use %!", "left");
-            cs.nextStepOnKeyClickOrTimeout(-1, labelRemover(curL), 13);
+            curL = label({ of: $("#discovered-invariants-div"), at: "center bottom" },
+                "Hurray! <br> You learned to use %!", "up");
+            cs.nextStepOnKeyClickOrTimeout(-1, labelRemover(curL));
         }
     },
     // Tutorial Levels for UI-----------------------------------------------
@@ -888,7 +892,7 @@ function facebookLoginDone() {
     if (!fbReq) return;
     fbReq = false;
     $('.overlay').hide();
-    curScript.redoStep();
+    //curScript.redoStep();
 }
 
 $(document).ready(function () {
@@ -899,27 +903,26 @@ $(document).ready(function () {
 
     let di_div: HTMLDivElement = $('#discovered-invariants-div').get()[0] as HTMLDivElement;
     progW = new ProgressWindow(di_div);
-    $('#discovered-invariants-div').hide();
-    $('.ignoreWindow').hide();
+    //$('#discovered-invariants-div').hide();
+    //$('.ignoreWindow').hide();
     scoreW = new ScoreWindow($('#score-div').get()[0]);
-    $('#score-div-row').hide();
-    $('#next-lvl').hide();
-    $('#overlay').hide();
+    //$('#score-div-row').hide();
+    //$('#next-lvl').hide();
+    //$('#overlay').hide();
 
-    curScript = new Script(tutorialScript);
-
-    $('#next-lvl').click(function () {
-        $('#next-lvl').hide();
-        if (curL != null)
-            removeLabel(curL);
-        curScript.nextStep();
-    });
 
     let user_id_element: HTMLSpanElement = $('#user-id').get()[0] as HTMLSpanElement;
     facebook_info.setLoginEvents(
         () => {
             user_id_element.textContent = facebook_info.userId;
             facebookLoginDone();
+            curScript = new Script(tutorialScript);
+            $('#next-lvl').click(function () {
+                $('#next-lvl').hide();
+                if (curL != null)
+                    removeLabel(curL);
+                curScript.nextStep();
+            });
         },
         () => {
             user_id_element.textContent = "";

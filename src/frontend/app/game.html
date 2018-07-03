@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Invariant Generation Game</title>
+    <title>PatNum: an Invariant Generation Game</title>
     <!-- bootstrap stylesheet -->
     <link rel="stylesheet"
           href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
@@ -22,12 +22,17 @@
 
 </head>
 <body>
-    <div id="fb-root"></div>
-<div class='container-fluid'>
-    <dl class="dl-horizontal">
-        <dt>User ID</dt>
-        <dd><span id='user-id'></span></dd>
-    </dl>
+<div id="fb-root"></div>
+<div id="loading-screen">
+    <h1 class='good text-center'><br /><img src="../images/loading.gif" /><br /><br />Loading...</h1>
+</div>
+<div class='container-fluid' id="main-game-screen" style="display:none">
+    <div style="display: none">
+        <dl class="dl-horizontal">
+            <dt>User ID</dt>
+            <dd><span id='user-id'></span></dd>
+        </dl>
+    </div>
     <div class='row' id='hit-preview-warning'>
     </div>
     <div class='row' id='hint-row'>
@@ -201,7 +206,7 @@
             <div class='row good centered positioned' id='discovered-invariants-div'>
             </div>
             <div class='row ' id='quit-div'>
-                <button id='quit' class='btn-quit'>Quit</button>
+                <button id='quit' class='btn-quit' style='display: none;'>Quit</button>
                 <button id='skip-to-next-lvl' class='btn-next' style='display: none;'>Next Lvl</button>
             </div>
         </div>
@@ -238,111 +243,181 @@
 
     <div class='overlay text-center' style='display: none;' id='facebook-login'>
         <h1> Please login to Facebook!</h1>
-        <div id='next-or-quit-additional-text'></div>
-        <button id='next-level-overlay' class='btn-next'>Next Level</button>
-        <button id='quit-overlay' class='btn-next'>Quit</button>
     </div>
 
     <div class='overlay text-center' style='display: none;' id='next-or-quit-screen'>
         <h1 class='good'> Good job, you finished another level!</h1>
-        <button id='quit-overlay' class='btn-next'>Quit</button>
+        <div id='next-or-quit-additional-text' style='display: none;'></div>
+        <button id='next-level-overlay' class='btn-next'>Next Level</button>
+        <button id='quit-overlay' class='btn-next' style='display: none;'>Quit</button>
     </div>
-    <div class='overlay' style='display: none;overflow-y: auto' id='done-screen'>
-        <form  action="" id="turk-form">
-            <fieldset class="form-group">
-                <label>This game was fun to play. Select the option that is closest to your feelings:</label>
-                <div class="radio">
-                    <label>
-                        <input type="radio" name="fun" value="5">
-                        Strongly Agree
-                    </label>
-                </div>
-                <div class="radio">
-                    <label>
-                        <input type="radio" name="fun" value="4">
-                        Agree
-                    </label>
-                </div>
-                <div class="radio">
-                    <label>
-                        <input type="radio" name="fun" value="3">
-                        Neutral
-                    </label>
-                </div>
-                <div class="radio">
-                    <label>
-                        <input type="radio" name="fun" value="2">
-                        Disagree
-                    </label>
-                </div>
-                <div class="radio">
-                    <label>
-                        <input type="radio" name="fun" value="1">
-                        Strongly Disagree
-                    </label>
-                </div>
-            </fieldset>
-            <fieldset class="form-group">
-                <label>The game was challenging. Select the option that is closest to your feelings:</label>
-                <div class="radio">
-                    <label>
-                        <input type="radio" name="challenging" value="5">
-                        Strongly Agree
-                    </label>
-                </div>
-                <div class="radio">
-                    <label>
-                        <input type="radio" name="challenging" value="4">
-                        Agree
-                    </label>
-                </div>
-                <div class="radio">
-                    <label>
-                        <input type="radio" name="challenging" value="3">
-                        Neutral
-                    </label>
-                </div>
-                <div class="radio">
-                    <label>
-                        <input type="radio" name="challenging" value="2">
-                        Disagree
-                    </label>
-                </div>
-                <div class="radio">
-                    <label>
-                        <input type="radio" name="challenging" value="1">
-                        Strongly Disagree
-                    </label>
-                </div>
-            </fieldset>
+    <div class='overlay' style='display: none;overflow-y: auto' id='game_done-screen'>
+        <h2 class='good text-center'><br />PatNum<br /><br />Game Over!</h2>
+    </div>
+    <div class='overlay' style='display: none; overflow-y: auto' id='done-screen'>
+        <div class="container">
+            <form action="" id="turk-form">
+                <fieldset class="form-group">
+                    <label class="fun">This game was fun to play. Select the option that is closest to your feelings:</label>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="fun" value="5">
+                            Strongly Agree
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="fun" value="4">
+                            Agree
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="fun" value="3">
+                            Neutral
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="fun" value="2">
+                            Disagree
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="fun" value="1">
+                            Strongly Disagree
+                        </label>
+                    </div>
+                </fieldset>
+                <fieldset class="form-group">
+                    <label class="challenging">The game was challenging. Select the option that is closest to your feelings:</label>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="challenging" value="5">
+                            Strongly Agree
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="challenging" value="4">
+                            Agree
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="challenging" value="3">
+                            Neutral
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="challenging" value="2">
+                            Disagree
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="challenging" value="1">
+                            Strongly Disagree
+                        </label>
+                    </div>
+                </fieldset>
+                <fieldset class="form-group">
+                    <label class="prog_experience">What is your level of expertise in programming?</label>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="prog_experience" value="5">
+                            Professional
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="prog_experience" value="4">
+                            Advanced
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="prog_experience" value="3">
+                            Intermediate
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="prog_experience" value="2">
+                            Novice
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="prog_experience" value="1">
+                            None
+                        </label>
+                    </div>
+                </fieldset>
+                <fieldset class="form-group">
+                    <label class="math_experience">What is the highest education level, at which you took a math course?</label>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="math_experience" value="5">
+                            PhD
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="math_experience" value="4">
+                            Masters
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="math_experience" value="3">
+                            Bachelors
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="math_experience" value="2">
+                            High-school (class 9-12)
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="math_experience" value="1">
+                            Middle-school or less (class &lt;9)
+                        </label>
+                    </div>
+                </fieldset>
 
-            <div class="form-group">
-                <label for="likes_input">What did you like about the game?</label>
-                <textarea name="likes" class="form-control" rows="2" id="likes_input"></textarea>
-            </div>
+                <div class="form-group">
+                    <label for="likes_input">What did you like about the game?</label>
+                    <textarea name="likes" class="form-control" rows="2" id="likes_input"></textarea>
+                </div>
 
-            <div class="form-group">
-                <label for="dislikes_input">What did you find confusing about the game?</label>
-                <textarea name="dislikes" class="form-control" rows="2" id="dislikes_input"></textarea>
-            </div>
-            <div class="form-group">
-                <label for="suggestions_input">Do have any suggestions on how to improve the game? If so, what are they?</label>
-                <textarea name="suggestions" class="form-control" rows="2" id="suggestions_input"></textarea>
-            </div>
-            <div class="form-group">
-                <label for="experience_input">
-                    So we can calibrate our results, please describe what programming experience you've had,
-                    in particular what programming languages you've used and for how long. If no programming experience, just say None.
-                </label>
-                <textarea name="experience" class="form-control" rows="2" id="experience_input"></textarea>
-            </div>
-            <input type="hidden" name="assignmentId" id="assignment-id-in-form" value="">
-            <input type="hidden" name="facebookId" id="facebook-id-in-form" value="">
-            <button type="submit" class="btn btn-primary">Submit</button>
-            <a class="btn btn-default" href="game.html" role="button">Skip</a>
-
-        </form>
-     
+                <div class="form-group">
+                    <label for="dislikes_input">What did you find confusing about the game?</label>
+                    <textarea name="dislikes" class="form-control" rows="2" id="dislikes_input"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="suggestions_input">Do have any suggestions on how to improve the game? If so, what are they?</label>
+                    <textarea name="suggestions" class="form-control" rows="2" id="suggestions_input"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="experience_input">
+                        So we can calibrate our results, please describe what programming experience you've had,
+                        in particular what programming languages you've used and for how long. If no programming experience, just say None.
+                    </label>
+                    <textarea name="experience" class="form-control" rows="2" id="experience_input"></textarea>
+                </div>
+                <div class='highlight' id='turk-form-error'> </div>
+                <input type="hidden" name="assignmentId" id="assignment-id-in-form" value="">
+                <input type="hidden" name="facebookId" id="facebook-id-in-form" value="">
+                <button type="button" id="final-submit" class="btn btn-primary">Submit</button>
+                <button type="button" id="final-skip" class="btn btn-defasult">Skip</button>
+            </form>
+            <br />
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.5/require.js"
