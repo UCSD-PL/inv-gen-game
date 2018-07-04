@@ -892,7 +892,13 @@ function facebookLoginDone() {
     if (!fbReq) return;
     fbReq = false;
     $('.overlay').hide();
-    //curScript.redoStep();
+    curScript = new Script(tutorialScript);
+    $('#next-lvl').click(function () {
+        $('#next-lvl').hide();
+        if (curL != null)
+            removeLabel(curL);
+        curScript.nextStep();
+    });
 }
 
 $(document).ready(function () {
@@ -916,13 +922,6 @@ $(document).ready(function () {
         () => {
             user_id_element.textContent = facebook_info.userId;
             facebookLoginDone();
-            curScript = new Script(tutorialScript);
-            $('#next-lvl').click(function () {
-                $('#next-lvl').hide();
-                if (curL != null)
-                    removeLabel(curL);
-                curScript.nextStep();
-            });
         },
         () => {
             user_id_element.textContent = "";
