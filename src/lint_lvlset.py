@@ -161,3 +161,5 @@ for lvl_name, lvl in lvls.items():
       if not evalPred(p, env):
         print("Level", lvl_name, " predicate ", p, \
               "doesn't hold for trace row: ", env)
+
+print("Done.");

@@ -9,6 +9,8 @@ procedure main() {
  y := 0;
  while(*)
  //invariant (x>=1 ==> y >= 100);
+ // simpler inv:
+ //invariant (x>=0 && y>=0 && y>=x)
  {
    if(*){
       x := x + 1;
