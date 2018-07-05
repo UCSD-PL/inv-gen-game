@@ -7,7 +7,7 @@ from flask import Flask
 from flask_jsonrpc import JSONRPC as rpc
 from os.path import join, dirname, abspath, realpath
 from js import boogieToEsprimaExpr
-from lib.boogie.ast import parseExprAst
+from pyboogie.ast import parseExprAst
 from lib.common.util import randomToken
 from levels import loadBoogieLvlSet
 

@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 from argparse import ArgumentParser
 from levels import loadBoogieLvlSet
-from lib.boogie.ast import parseExprAst, AstTrue, AstAssert, AstAssume
-from lib.boogie.eval import evalPred
+from pyboogie.ast import parseExprAst, AstTrue, AstAssert, AstAssume
+from pyboogie.eval import evalPred
 
 p = ArgumentParser(description="Playground for trace selection");
 p.add_argument('--lvlset', type=str, help='Path to levelset used in experiment', required=True);

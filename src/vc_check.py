@@ -1,11 +1,11 @@
-from lib.boogie.ast import ast_and, replace, AstBinExpr, AstTrue, \
+from pyboogie.ast import ast_and, replace, AstBinExpr, AstTrue, \
         AstNumber, AstId
 from lib.common.util import nonempty, powerset, flattenSet
-from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, Unknown, \
+from pyboogie.z3_embed import expr_to_z3, AllIntTypeEnv, Unknown, \
         And, tautology
-from lib.boogie.analysis import propagate_sp
-from lib.boogie.bb import bbEntry
-from lib.boogie.inv_networks import checkInvNetwork, filterCandidateInvariants
+from pyboogie.analysis import propagate_sp
+from pyboogie.bb import bbEntry
+from pyboogie.inv_networks import checkInvNetwork, filterCandidateInvariants
 
 def conservative_tautology(q):
   try:

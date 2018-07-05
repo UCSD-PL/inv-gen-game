@@ -1,10 +1,10 @@
-from lib.boogie.paths import is_nd_bb_path_possible
-from lib.boogie.ast import AstAssume, ast_or, AstTrue, parseExprAst, AstAssume
-#from lib.boogie.z3_embed import *
-from lib.boogie.bb import BB, get_bbs, bbEntry
-from lib.boogie.paths import get_path_vars
-#from lib.boogie.ssa import *
-from lib.boogie.eval import env_to_expr
+from pyboogie.paths import is_nd_bb_path_possible
+from pyboogie.ast import AstAssume, ast_or, AstTrue, parseExprAst, AstAssume
+#from pyboogie.z3_embed import *
+from pyboogie.bb import BB, get_bbs, bbEntry
+from pyboogie.paths import get_path_vars
+#from pyboogie.ssa import *
+from pyboogie.eval import env_to_expr
 from collections import namedtuple
 from lib.common.util import unique
 

@@ -2,9 +2,9 @@ from slimit.parser import Parser
 from slimit.visitors.nodevisitor import ASTVisitor
 from slimit.visitors import nodevisitor
 from slimit import ast as jsast
-from lib.boogie.ast import AstUnExpr, AstBinExpr, AstId, AstTrue, \
+from pyboogie.ast import AstUnExpr, AstBinExpr, AstId, AstTrue, \
         AstFalse, AstNumber, normalize
-from lib.boogie.z3_embed import Int, And, Or, Not, Implies, BoolVal, IntVal
+from pyboogie.z3_embed import Int, And, Or, Not, Implies, BoolVal, IntVal
 
 def addAllIntEnv(inv, env = None):
   if (env == None):

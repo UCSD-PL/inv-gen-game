@@ -6,8 +6,8 @@ import argparse
 from os.path import exists
 from os import listdir
 from vc_check import tryAndVerifyLvl
-import lib.boogie.ast as bast
-from lib.boogie.eval import evalPred
+import pyboogie.ast as bast
+from pyboogie.eval import evalPred
 import sys
 
 if (__name__ == "__main__"):

@@ -5,8 +5,8 @@ from js import esprimaToBoogie
 from mturk_util import connect, mkParser, get_event_log_fname, get_lvlset_dir
 from experiments import load_experiment_or_die, BONUS_PER_LEVEL, \
         BONUS_FOR_TUTORIAL, HIT_REWARD, REQUIRED_LEVELS_PER_HIT
-import lib.boogie.ast as ast
-from lib.boogie.z3_embed import expr_to_z3, getSolver, AllIntTypeEnv, Not
+import pyboogie.ast as ast
+from pyboogie.z3_embed import expr_to_z3, getSolver, AllIntTypeEnv, Not
 from z3 import unsat
 import os
 import time

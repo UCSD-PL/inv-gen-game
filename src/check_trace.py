@@ -3,12 +3,12 @@ import argparse
 import levels
 from boogie_loops import loops
 from lib.common.util import fatal, unique
-from lib.boogie.bb import get_bbs, BB
-from lib.boogie.ast import AstAssignment, AstAssert, AstId, AstNumber, AstBinExpr
-from lib.boogie.paths import nd_bb_path_to_ssa, ssa_path_to_z3
-from lib.boogie.z3_embed import Unknown, satisfiable
-from lib.boogie.ssa import SSAEnv
-from lib.boogie.eval import evalPred
+from pyboogie.bb import get_bbs, BB
+from pyboogie.ast import AstAssignment, AstAssert, AstId, AstNumber, AstBinExpr
+from pyboogie.paths import nd_bb_path_to_ssa, ssa_path_to_z3
+from pyboogie.z3_embed import Unknown, satisfiable
+from pyboogie.ssa import SSAEnv
+from pyboogie.eval import evalPred
 
 uid = 0
 

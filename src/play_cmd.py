@@ -4,10 +4,10 @@ from models import open_sqlite_db, Event
 from argparse import ArgumentParser
 from levels import loadBoogieLvlSet
 from lib.common.util import error, fatal
-from lib.boogie.analysis import propagate_sp
-from lib.boogie.ast import parseExprAst, expr_read
-from lib.boogie.z3_embed import Unknown, tautology, expr_to_z3, AllIntTypeEnv
-from lib.boogie.eval import evalPred
+from pyboogie.analysis import propagate_sp
+from pyboogie.ast import parseExprAst, expr_read
+from pyboogie.z3_embed import Unknown, tautology, expr_to_z3, AllIntTypeEnv
+from pyboogie.eval import evalPred
 from vc_check import tryAndVerifyLvl, loopInvSafetyCtrex
 from readline import parse_and_bind, set_history_length
 import csv

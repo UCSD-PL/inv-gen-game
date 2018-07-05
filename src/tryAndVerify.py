@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-from lib.boogie.ast import parseExprAst
+from pyboogie.ast import parseExprAst
 from lib.common.util import error
 from vc_check import tryAndVerifyLvl
 from levels import loadBoogieLvlSet

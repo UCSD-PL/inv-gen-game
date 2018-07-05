@@ -5,14 +5,14 @@ from flask_jsonrpc import JSONRPC as rpc
 from os.path import dirname, abspath, realpath, join, isfile
 from js import esprimaToZ3, esprimaToBoogie, boogieToEsprima, \
         boogieToEsprimaExpr
-from lib.boogie.ast import AstBinExpr, AstTrue, ast_and, AstId, AstNumber, \
+from pyboogie.ast import AstBinExpr, AstTrue, ast_and, AstId, AstNumber, \
         parseExprAst
 from lib.common.util import powerset, split, nonempty, nodups, \
         randomToken
-from lib.boogie.eval import instantiateAndEval, _to_dict
-from lib.boogie.z3_embed import expr_to_z3, AllIntTypeEnv, z3_expr_to_boogie,\
+from pyboogie.eval import instantiateAndEval, _to_dict
+from pyboogie.z3_embed import expr_to_z3, AllIntTypeEnv, z3_expr_to_boogie,\
         Unknown, simplify, implies, equivalent, tautology
-from lib.boogie.analysis import propagate_sp
+from pyboogie.analysis import propagate_sp
 from vc_check import _from_dict, tryAndVerifyLvl, loopInvSafetyCtrex
 
 from levels import _tryUnroll, findNegatingTrace, loadBoogieLvlSet

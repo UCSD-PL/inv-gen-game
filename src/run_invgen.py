@@ -3,7 +3,7 @@ from levels import loadBoogieLvlSet
 import argparse
 from vc_check import tryAndVerifyLvl
 from lib.invgen import runInvGen, convertCppFileForInvGen
-from lib.boogie.ast import parseExprAst
+from pyboogie.ast import parseExprAst
 from lib.common.util import error
 from os.path import exists
 import re

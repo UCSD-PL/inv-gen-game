@@ -13,8 +13,8 @@ import time
 
 from db_util import allInvs, filterEvents, open_db
 from levels import loadBoogieFile, loadBoogieLvlSet
-from lib.boogie.ast import parseExprAst
-from lib.boogie.z3_embed import AllIntTypeEnv, Unknown, expr_to_z3, tautology
+from pyboogie.ast import parseExprAst
+from pyboogie.z3_embed import AllIntTypeEnv, Unknown, expr_to_z3, tautology
 from models import Event, VerifyData
 from vc_check import tryAndVerifyLvl
 

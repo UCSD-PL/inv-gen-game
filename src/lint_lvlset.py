@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 import argparse
 import levels
-from lib.boogie.eval import evalPred
-import lib.boogie.ast as bast
-from lib.boogie.z3_embed import Unknown, unsatisfiable, expr_to_z3, \
+from pyboogie.eval import evalPred
+import pyboogie.ast as bast
+from pyboogie.z3_embed import Unknown, unsatisfiable, expr_to_z3, \
         AllIntTypeEnv, env_to_expr
 from vc_check import tryAndVerifyLvl
 #from boogie_loops import *

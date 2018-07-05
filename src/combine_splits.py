@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import argparse
 import levels
-import lib.boogie.ast as bast
-from lib.boogie.analysis import propagate_sp
+import pyboogie.ast as bast
+from pyboogie.analysis import propagate_sp
 from lib.common.util import error
 from vc_check import tryAndVerifyLvl
 from re import compile as reComp

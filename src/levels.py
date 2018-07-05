@@ -1,9 +1,9 @@
-from lib.boogie.ast import parseExprAst, ast_or, ast_and
-from lib.boogie.bb import get_bbs, ensureSingleExit, bbEntry
+from pyboogie.ast import parseExprAst, ast_or, ast_and
+from pyboogie.bb import get_bbs, ensureSingleExit, bbEntry
 from boogie_loops import loops, get_loop_header_values
 from lib.common.util import unique, powerset, average, error
-from lib.boogie.analysis import livevars
-from lib.boogie.eval import instantiateAndEval, evalPred, _to_dict, execute
+from pyboogie.analysis import livevars
+from pyboogie.eval import instantiateAndEval, evalPred, _to_dict, execute
 from collections import OrderedDict
 from os import listdir
 from os.path import dirname, join, abspath, realpath

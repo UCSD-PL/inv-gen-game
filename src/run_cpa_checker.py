@@ -3,7 +3,7 @@ import argparse
 from levels import loadBoogieLvlSet
 from vc_check import tryAndVerifyLvl
 from lib.cpa_checker import runCPAChecker, convertCppFileForCPAChecker
-from lib.boogie.z3_embed import to_smt2, z3_expr_to_boogie, Unknown
+from pyboogie.z3_embed import to_smt2, z3_expr_to_boogie, Unknown
 from lib.common.util import error
 from shutil import move
 #from signal import signal , SIGALRM,  alarm

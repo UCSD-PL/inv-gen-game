@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
-#import lib.boogie.ast
+#import pyboogie.ast
 import json
 import levels
 import math
@@ -11,11 +11,11 @@ import tabulate
 import pdb
 import itertools
 import re
-from lib.boogie.interp import trace_n_from_start, finished
-from lib.boogie.analysis import livevars
-from lib.boogie.ast import parseExprAst
-from lib.boogie.eval import evalPred
-from lib.boogie.bb import bbEntry
+from pyboogie.interp import trace_n_from_start, finished
+from pyboogie.analysis import livevars
+from pyboogie.ast import parseExprAst
+from pyboogie.eval import evalPred
+from pyboogie.bb import bbEntry
 
 p = argparse.ArgumentParser(description="improved trace dumper")
 p.add_argument("--lvlset", type=str, default="lvlsets/sorin.lvlset",
