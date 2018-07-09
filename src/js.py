@@ -3,8 +3,9 @@ from slimit.visitors.nodevisitor import ASTVisitor
 from slimit.visitors import nodevisitor
 from slimit import ast as jsast
 from pyboogie.ast import AstUnExpr, AstBinExpr, AstId, AstTrue, \
-        AstFalse, AstNumber, normalize
+        AstFalse, AstNumber, normalize, parseType
 from pyboogie.z3_embed import Int, And, Or, Not, Implies, BoolVal, IntVal
+from pyboogie.bb import TypeEnv, Any
 
 def addAllIntEnv(inv, env = None):
   if (env == None):
@@ -248,6 +249,9 @@ def boogieToEsprima(inv):
            "sourceType": "script",
            "body": [ { "type": "ExpressionStatement",
                        "expression": boogieToEsprimaExpr(inv) } ] }
+
+def jsonToTypeEnv(json: Any) -> TypeEnv:
+  return { varName: parseType(typ) for (varName, typ) in json.items() }
 
 if __name__ == "__main__":
   tmpP = Parser()

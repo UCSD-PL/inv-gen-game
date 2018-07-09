@@ -4,18 +4,18 @@ from flask import request, redirect, url_for, send_from_directory
 from flask_jsonrpc import JSONRPC as rpc
 from os.path import dirname, abspath, realpath, join, isfile
 from js import esprimaToZ3, esprimaToBoogie, boogieToEsprima, \
-        boogieToEsprimaExpr
+        boogieToEsprimaExpr, jsonToTypeEnv
 from pyboogie.ast import AstBinExpr, AstTrue, ast_and, AstId, AstNumber, \
         parseExprAst
 from lib.common.util import powerset, split, nonempty, nodups, \
         randomToken
 from pyboogie.eval import instantiateAndEval, _to_dict
-from pyboogie.z3_embed import expr_to_z3, AllIntTypeEnv, z3_expr_to_boogie,\
-        Unknown, simplify, implies, equivalent, tautology
+from pyboogie.z3_embed import expr_to_z3, z3_expr_to_boogie,\
+        Unknown, simplify, implies, equivalent, tautology, boogieToZ3TypeEnv
 from pyboogie.analysis import propagate_sp
 from vc_check import _from_dict, tryAndVerifyLvl, loopInvSafetyCtrex
 
-from levels import _tryUnroll, findNegatingTrace, loadBoogieLvlSet
+from levels import loadBoogieLvlSet
 
 import argparse
 import sys
@@ -30,6 +30,8 @@ from db_util import addEvent, allInvs, levelSolved, levelFinishedBy,\
 from mturk_util import send_notification
 from atexit import register
 from server_common import openLog, log, log_d, pp_exc
+
+from typing import Dict, Any
 
 class Server(Flask):
     def get_send_file_max_age(self, name):
@@ -257,42 +259,6 @@ def genNextLvl(workerId, mturkId, levelSet, levelId, invs, individualMode):
         # Else give them the actual next level
         return loadNextLvl(workerId, mturkId, individualMode)
 
-@api.method("App.loadNextLvl")
-@pp_exc
-@log_d(str, pp_mturkId, bool, pp_BoogieLvl)
-def loadNextLvl(workerId, mturkId, individualMode):
-    """ Return the unsolved level seen by the fewest users. """
-    assignmentId = mturkId[2]
-    session = sessionF()
-
-    if args.maxlvls is not None:
-      # It's inefficient to look through all the levels twice.  This can
-      # probably be combined with the logic below with some effort.
-      if levelsPlayedInSession(session, assignmentId) >= args.maxlvls:
-        return
-
-    level_names = list(traces[curLevelSetName].keys())
-    sort_keys = [len(allInvs(session, enames=[args.ename],
-      lvlsets=[curLevelSetName], lvls=[x])) for x in level_names]
-    if individualMode:
-      sort_keys = list(zip([len(allInvs(session, enames=[args.ename],
-        lvlsets=[curLevelSetName], lvls=[x], workers=[workerId]))
-        for x in level_names], sort_keys))
-    sort_keys = list(zip([levelSkipCount(session, args.ename, curLevelSetName, x,
-      workerId, assignmentId) for x in level_names], sort_keys))
-    key_and_level = list(zip(sort_keys, level_names))
-    # Stable sort on key only to preserve lvlset order
-    key_and_level.sort(key=lambda x: x[0])
-
-    for _, lvlId in key_and_level:
-        if levelSolved(session, curLevelSetName, lvlId,
-            workerId=(workerId if individualMode else None)) or \
-           (not args.replay and workerId != "" and \
-            levelFinishedBy(session, curLevelSetName, lvlId, workerId)):
-            continue
-        result = loadLvl(curLevelSetName, lvlId, mturkId, individualMode)
-        return result
-
 @api.method("App.loadNextLvlFacebook")
 @pp_exc
 @log_d(str, pp_mturkId, bool, pp_BoogieLvl)
@@ -314,124 +280,21 @@ def loadNextLvl(workerId, mturkId, individualMode):
     #result = {'LevelNumber' : -1}
     #return result
 
-@api.method("App.instantiate")
-@pp_exc
-@log_d(pp_EsprimaInvs, str, str, pp_mturkId, pp_EsprimaInvs)
-def instantiate(invs, traceVars, trace, mturkId): #pylint: disable=unused-argument
-    """ 
-        Given a set of invariant templates inv, a set of variables traceVars
-        and concrete values for these variables trace, return a set of concrete
-        instances of the invariant templates, that hold for the given traces. A
-        concrete instatnce of a template is an invariant with the same shape, with 
-        variables and constants substituted in the appropriate places.
-
-        Not currently in use.
-    """ 
-    res = []
-    z3Invs = []
-    templates = [ (esprimaToBoogie(x[0], {}), x[1], x[2]) for x in invs]
-    vals = [_to_dict(traceVars, x) for x in trace]
-
-    for (bInv, symConsts, symVars) in templates:
-        for instInv in instantiateAndEval(bInv, vals, symVars, symConsts):
-            instZ3Inv = expr_to_z3(instInv, AllIntTypeEnv())
-            implied = False
-            z3Inv = None
-
-            for z3Inv in z3Invs:
-                if implies(z3Inv, instZ3Inv):
-                    implied = True
-                    break
-
-            if (implied):
-                continue
-
-            res.append(instInv)
-            z3Invs.append(instZ3Inv)
-
-    return list(map(boogieToEsprima, res))
-
-@api.method("App.getPositiveExamples")
-@pp_exc
-@log_d()
-def getPositiveExamples(levelSet, levelId, cur_expl_state, overfittedInvs, num):
-    """ 
-        Given a level (levelSet, levelId), and some overfitted invriants
-        overfittedInvs, return a set of green rows that rebuke the overfitted
-        invariants.
-
-        Not currently in use.
-    """ 
-    if (levelSet not in traces):
-        raise Exception("Unkonwn level set " + str(levelSet))
-
-    if (levelId not in traces[levelSet]):
-        raise Exception("Unkonwn trace " + str(levelId) + \
-                        " in levels " + str(levelSet))
-
-    lvl = traces[levelSet][levelId]
-
-    if ('program' not in lvl):
-      # Not a boogie level - error
-      raise Exception("Level " + str(levelId) + " " + \
-                      str(levelSet) + " not a dynamic boogie level.")
-
-    bbs = lvl['program']
-    loop = lvl["loop"]
-    found = []
-    need = num
-    overfitBoogieInvs = [esprimaToBoogie(x, {}) for x in overfittedInvs]
-    negatedVals, _ = findNegatingTrace(loop, bbs, num, overfitBoogieInvs)
-
-    if (negatedVals):
-        newExpState = (_from_dict(lvl['variables'], negatedVals[0]), 0, False)
-        cur_expl_state.insert(0, newExpState)
-
-    for (ind, (loop_head, nunrolls, is_finished)) in enumerate(cur_expl_state):
-        if is_finished:
-            continue
-        if need <= 0:
-            break
-
-        good_env = _to_dict(lvl['variables'], loop_head)
-        # Lets first try to find terminating executions:
-        new_vals, terminating = _tryUnroll(loop, bbs, nunrolls + 1, \
-                                           nunrolls + 1 + need, None, good_env)
-        new_vals = new_vals[nunrolls + 1:]
-        cur_expl_state[ind] = (loop_head, nunrolls + len(new_vals), terminating)
-
-        found.extend(new_vals)
-        need -= len(new_vals)
-
-    while need > 0:
-        bad_envs = [ _to_dict(lvl['variables'], row)
-                        for (row,_,_) in cur_expl_state ]
-        new_vals, terminating = _tryUnroll(loop, bbs, 0, need, bad_envs, None)
-        found.extend(new_vals)
-        need -= len(new_vals)
-        if (len(new_vals) == 0):
-            break
-        newExpState = (_from_dict(lvl['variables'], new_vals[0]), \
-                       len(new_vals) - 1, \
-                       terminating)
-        cur_expl_state.append(newExpState)
-
-    # De-z3-ify the numbers
-    js_found = [ _from_dict(lvl["variables"], env) for env in found]
-    return (copy(cur_expl_state), js_found)
 
 @api.method("App.equivalentPairs")
 @pp_exc
-@log_d(pp_EsprimaInvs, pp_EsprimaInvs, pp_mturkId, pp_EsprimaInvPairs)
-def equivalentPairs(invL1, invL2, mturkId): #pylint: disable=unused-argument
+@log_d(pp_EsprimaInvs, pp_EsprimaInvs, str, pp_mturkId, pp_EsprimaInvPairs)
+def equivalentPairs(invL1, invL2, typeEnv, mturkId): #pylint: disable=unused-argument
     """ 
         Given lists of invariants invL1, invL2, return all pairs (I1, I2)
         where I1 <==> I2, I1 \in invL1, I2 \in invL2 
 
         Not currently in use.
     """ 
-    z3InvL1 = [esprimaToZ3(x, {}) for x in invL1]
-    z3InvL2 = [esprimaToZ3(x, {}) for x in invL2]
+    boogieEnv = jsonToTypeEnv(typeEnv)
+    z3Env = boogieToZ3TypeEnv(boogieEnv)
+    z3InvL1 = [esprimaToZ3(x, z3Env) for x in invL1]
+    z3InvL2 = [esprimaToZ3(x, z3Env) for x in invL2]
 
     res = []
     for x in z3InvL1:
@@ -450,16 +313,18 @@ def equivalentPairs(invL1, invL2, mturkId): #pylint: disable=unused-argument
 
 @api.method("App.impliedPairs")
 @pp_exc
-@log_d(pp_EsprimaInvs, pp_EsprimaInvs, pp_mturkId, pp_EsprimaInvPairs)
-def impliedPairs(invL1, invL2, mturkId): #pylint: disable=unused-argument
+@log_d(pp_EsprimaInvs, pp_EsprimaInvs, str, pp_mturkId, pp_EsprimaInvPairs)
+def impliedPairs(invL1, invL2, typeEnv, mturkId): #pylint: disable=unused-argument
     """ 
         Given lists of invariants invL1, invL2, return all pairs (I1, I2)
         where I1 ==> I2, I1 \in invL1, I2 \in invL2 
 
         Used by game.html
     """ 
-    z3InvL1 = [esprimaToZ3(x, {}) for x in invL1]
-    z3InvL2 = [esprimaToZ3(x, {}) for x in invL2]
+    boogieEnv = jsonToTypeEnv(typeEnv)
+    z3Env = boogieToZ3TypeEnv(boogieEnv)
+    z3InvL1 = [esprimaToZ3(x, z3Env) for x in invL1]
+    z3InvL2 = [esprimaToZ3(x, z3Env) for x in invL2]
 
     res = []
     for x in z3InvL1:
@@ -479,13 +344,16 @@ def impliedPairs(invL1, invL2, mturkId): #pylint: disable=unused-argument
 @api.method("App.isTautology")
 @pp_exc
 @log_d(pp_EsprimaInv, pp_mturkId, str)
-def isTautology(inv, mturkId): #pylint: disable=unused-argument
+def isTautology(inv, typeEnv, mturkId): #pylint: disable=unused-argument
     """ 
         Check whether the invariant inv is a tautology.
         Used by game.html
     """ 
+    boogieEnv = jsonToTypeEnv(typeEnv)
+    z3Env = boogieToZ3TypeEnv(boogieEnv)
+
     try:
-      res = (tautology(esprimaToZ3(inv, {})))
+      res = (tautology(esprimaToZ3(inv, z3Env)))
       return res
     except Unknown:
       return False # Conservative assumption
@@ -531,7 +399,6 @@ def tryAndVerify(levelSet, levelId, invs, mturkId, individualMode):
                       str(levelSet) + " not a dynamic boogie level.")
 
     workerId, _, _ = mturkId
-    print(repr(set))
     userInvs = set([ esprimaToBoogie(x, {}) for x in invs ])
     otherInvs = set([])
     lastVer = getLastVerResult(levelSet, levelId, s,
@@ -585,15 +452,17 @@ def tryAndVerify(levelSet, levelId, invs, mturkId, individualMode):
 
 @api.method("App.simplifyInv")
 @pp_exc
-@log_d(pp_EsprimaInv, pp_mturkId, pp_EsprimaInv)
-def simplifyInv(inv, mturkId): #pylint: disable=unused-argument
+@log_d(pp_EsprimaInv, str, pp_mturkId, pp_EsprimaInv)
+def simplifyInv(inv, typeEnv, mturkId): #pylint: disable=unused-argument
     """ Given an invariant inv return its 'simplified' version. We
         treat that as the canonical version of an invariant. Simplification
         is performed by z3 """
+    boogieEnv = jsonToTypeEnv(typeEnv)
+    z3Env = boogieToZ3TypeEnv(boogieEnv)
+
     boogieInv = esprimaToBoogie(inv, {})
     noDivBoogie = divisionToMul(boogieInv)
-    z3_inv = expr_to_z3(noDivBoogie, AllIntTypeEnv())
-    print(z3_inv, boogieInv)
+    z3_inv = expr_to_z3(noDivBoogie, z3Env)
     simpl_z3_inv = simplify(z3_inv, arith_lhs=True)
     simpl_boogie_inv = z3_expr_to_boogie(simpl_z3_inv)
     return boogieToEsprima(simpl_boogie_inv)
@@ -604,7 +473,7 @@ def simplifyInv(inv, mturkId): #pylint: disable=unused-argument
 def getRandomCode():
     return randomToken(5)
 
-kvStore = { }
+kvStore : Dict[Any, Any] = { }
 
 @api.method("App.get")
 @pp_exc
