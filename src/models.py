@@ -2,11 +2,14 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, ForeignKey, \
         create_engine, DateTime, Sequence
-from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.orm import relationship, sessionmaker, Session as SessionT
+from lib.common.util import ccast
 import json
 import re
 
-Base = declarative_base();
+from typing import Any, List
+
+Base: Any = declarative_base();
 
 local_sources = [ "server" ]
 workerIDhashRE = re.compile("^[A-Z0-9]{5,}$")
@@ -27,8 +30,8 @@ class Event(Base):
   time = Column(DateTime)
   payload = Column(String(16536))
 
-  def payl(s):
-    return json.loads(s.payload)
+  def payl(s) -> Any:
+    return json.loads(str(s.payload))
 
 
 class LvlData(Base):
@@ -66,39 +69,39 @@ class SurveyData(Base):
   payload = Column(String(16536), nullable=False)
 
 
-def open_sqlite_db(path):
+def open_sqlite_db(path: str) -> SessionT:
     engine = create_engine("sqlite:///" + path, echo=False,
       connect_args={'check_same_thread':False});
-    Session = sessionmaker(bind=engine)
+    Session: SessionT = ccast(sessionmaker(bind=engine), SessionT)
     Base.metadata.create_all(engine);
     return Session;
 
-def open_mysql_db(url):
+def open_mysql_db(url: str) -> SessionT:
     engine = create_engine(url, echo=False, pool_pre_ping=True);
-    Session = sessionmaker(bind=engine)
+    Session: SessionT = ccast(sessionmaker(bind=engine), SessionT)
     Base.metadata.create_all(engine);
     return Session;
 
-def workers(s):
+def workers(s: SessionT) -> List[Source]:
     return [x for x in s.query(Source).all() if workerIDhashRE.match(x.name)]
 
-def _has_evt_type(src, evttype):
+def _has_evt_type(src: Source, evttype: str) -> bool:
     return len([x for x in src.events if x.type == evttype]) > 0
 
-def done_tutorial(src):
+def done_tutorial(src: Source) -> bool:
     return _has_evt_type(src, "TutorialDone")
 
-def started_tutorial(src):
+def started_tutorial(src: Source) -> bool:
     return _has_evt_type(src, "TutorialStarted")
 
-def finished_levels(src):
+def finished_levels(src: Source) -> List[Any]:
     return [ e.payl() for e in src.events if e.type == "FinishLevel"]
 
-def started_levels(src):
+def started_levels(src: Source) -> List[Any]:
     return [ e.payl() for e in src.events if e.type == "StartLevel"]
 
-def found_invs(src):
+def found_invs(src: Source) -> List[Any]:
     return [ e.payl() for e in src.events if e.type == "FoundInvariant"]
 
-def experiments(src):
+def experiments(src: Source):
     return list(set([e.experiment for e in src.events]))

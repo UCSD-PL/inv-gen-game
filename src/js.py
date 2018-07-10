@@ -1,71 +1,24 @@
-from slimit.parser import Parser
-from slimit.visitors.nodevisitor import ASTVisitor
-from slimit.visitors import nodevisitor
-from slimit import ast as jsast
 from pyboogie.ast import AstUnExpr, AstBinExpr, AstId, AstTrue, \
-        AstFalse, AstNumber, normalize, parseType
-from pyboogie.z3_embed import Int, And, Or, Not, Implies, BoolVal, IntVal
-from pyboogie.bb import TypeEnv, Any
+        AstFalse, AstNumber, normalize, parseType, AstExpr
+from pyboogie.z3_embed import Int, And, Or, Not, Implies, BoolVal, IntVal, Z3TypeEnv
+import z3
+from lib.common.util import ccast
+from pyboogie.bb import TypeEnv, Any, Optional, TypeEnv as BoogieTypeEnv
 
-def addAllIntEnv(inv, env = None):
-  if (env == None):
-    env = {}
-  p = Parser()
-  t = p.parse(inv)
+from typing import Optional, Dict, Any, Callable, cast
 
-  for node in nodevisitor.visit(t):
-    if isinstance(node, jsast.Identifier):
-      env[node.value] = Int
+# TODO: When typings for slimit are available, remove all 'Any' typings in this file.
+binOpFactoryT = Callable[[z3.ExprRef, z3.ExprRef], z3.ExprRef]
+EsprimaNode = Dict[str, Any]
 
-  return env
-
-def invJSToZ3(inv, typeEnv):
-  p = Parser()
-  t = p.parse(inv)
-
-  assert(isinstance(t, jsast.Program))
-  assert(len(t.children()) == 1)
-  assert(isinstance(t.children()[0], jsast.ExprStatement))
-  return jsToZ3Expr(t.children()[0].expr, typeEnv)
-
-def jsNumToZ3(strN):
+def jsNumToZ3(strN: str) -> z3.IntNumRef:
   try:
     intV = int(strN)
     return IntVal(intV)
   except Exception:
     raise Exception("Dont' currently support floats");
 
-def jsToZ3Expr(astn, typeEnv):
-  if (isinstance(astn, jsast.BinOp)):
-    ln,rn = [jsToZ3Expr(x, typeEnv) for x in astn.children()]
-
-    try:
-      return {
-        '&&': And,
-        '||': Or,
-        '==': lambda x,y: x == y,
-        '!=': lambda x,y: x != y,
-        '<': lambda x,y: x < y,
-        '>': lambda x,y: x > y,
-        '<=': lambda x,y: x <= y,
-        '>=': lambda x,y: x >= y,
-        '+': lambda x,y: x + y,
-        '-': lambda x,y: x - y,
-        '*': lambda x,y: x * y,
-        '/': lambda x,y: x / y,
-        '%': lambda x,y: x % y,
-      }[astn.op](ln, rn)
-    except KeyError:
-      raise Exception("Don't know how to parse " + astn.to_ecma())
-  elif (isinstance(astn, jsast.Identifier)):
-    name = astn.value
-    return typeEnv[name](name);
-  if (isinstance(astn, jsast.Number)):
-    return jsNumToZ3(astn.value)
-  else:
-    raise Exception("Don't know how to parse " + astn.to_ecma())
-
-def esprimaToZ3Expr(astn, typeEnv):
+def esprimaToZ3Expr(astn: EsprimaNode, typeEnv: Z3TypeEnv) -> z3.ExprRef:
   if (astn["type"] == "UnaryExpression"):
     arg = esprimaToZ3Expr(astn["argument"], typeEnv)
     try:
@@ -102,8 +55,8 @@ def esprimaToZ3Expr(astn, typeEnv):
     rn = esprimaToZ3Expr(astn["right"], typeEnv)
     try:
       return {
-        '&&': And,
-        '||': Or,
+        '&&': cast(binOpFactoryT, And),
+        '||': cast(binOpFactoryT, Or),
         '->': Implies,
       }[astn["operator"]](ln, rn)
     except KeyError:
@@ -118,7 +71,7 @@ def esprimaToZ3Expr(astn, typeEnv):
   else:
     raise Exception("Don't know how to parse " + str(astn))
 
-def _esprimaToBoogieExprAst(astn, typeEnv):
+def _esprimaToBoogieExprAst(astn: EsprimaNode, typeEnv: BoogieTypeEnv) -> AstExpr:
   if (astn["type"] == "UnaryExpression"):
     arg = _esprimaToBoogieExprAst(astn["argument"], typeEnv)
     try:
@@ -176,10 +129,10 @@ def _esprimaToBoogieExprAst(astn, typeEnv):
   else:
     raise Exception("Don't know how to parse " + str(astn))
 
-def esprimaToBoogieExprAst(n, typeEnv):
-  return normalize(_esprimaToBoogieExprAst(n, typeEnv))
+def esprimaToBoogieExprAst(n: EsprimaNode, typeEnv: BoogieTypeEnv) -> AstExpr:
+  return ccast(normalize(_esprimaToBoogieExprAst(n, typeEnv)), AstExpr)
 
-def esprimaToZ3(inv, typeEnv):
+def esprimaToZ3(inv: EsprimaNode, typeEnv: Z3TypeEnv) -> z3.ExprRef:
   if (inv["type"] != "Program" or "body" not in inv or \
     len(inv["body"]) != 1 or
     inv["body"][0]["type"] != "ExpressionStatement" or \
@@ -187,7 +140,7 @@ def esprimaToZ3(inv, typeEnv):
     raise Exception("Bad struct")
   return esprimaToZ3Expr(inv["body"][0]["expression"], typeEnv)
 
-def esprimaToBoogie(inv, typeEnv):
+def esprimaToBoogie(inv: EsprimaNode, typeEnv: BoogieTypeEnv) -> AstExpr:
   if (inv["type"] != "Program" or "body" not in inv or \
     len(inv["body"]) != 1 or
     inv["body"][0]["type"] != "ExpressionStatement" or \
@@ -195,7 +148,7 @@ def esprimaToBoogie(inv, typeEnv):
     raise Exception("Bad struct")
   return esprimaToBoogieExprAst(inv["body"][0]["expression"], typeEnv)
 
-def boogieToEsprimaExpr(expr):
+def boogieToEsprimaExpr(expr: AstExpr) -> EsprimaNode:
     if isinstance(expr, AstNumber):
         return { "type": "Literal", "value": expr.num, "raw": str(expr.num) }
     elif isinstance(expr, AstId):
@@ -244,7 +197,7 @@ def boogieToEsprimaExpr(expr):
     else:
         raise Exception("Unknown expression " + str(expr))
 
-def boogieToEsprima(inv):
+def boogieToEsprima(inv: AstExpr) -> EsprimaNode:
   return { "type":"Program",
            "sourceType": "script",
            "body": [ { "type": "ExpressionStatement",
@@ -252,9 +205,3 @@ def boogieToEsprima(inv):
 
 def jsonToTypeEnv(json: Any) -> TypeEnv:
   return { varName: parseType(typ) for (varName, typ) in json.items() }
-
-if __name__ == "__main__":
-  tmpP = Parser()
-  tmpT = tmpP.parse("  i == 4 && b == 44")
-  print(invJSToZ3("i == 4", { "i" : Int }))
-  print(invJSToZ3("  i == 4 && b == 44", { "i" : Int, "b" : Int }))

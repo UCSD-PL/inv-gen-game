@@ -1,59 +1,61 @@
-from pyboogie.ast import parseExprAst, ast_or, ast_and
-from pyboogie.bb import get_bbs, ensureSingleExit, bbEntry
-from boogie_loops import loops, get_loop_header_values
-from lib.common.util import unique, powerset, average, error
+from pyboogie.ast import parseExprAst, ast_and
+from pyboogie.bb import Function, BB
+from pyboogie.interp import Store, Trace, eval_quick
 from pyboogie.analysis import livevars
-from pyboogie.eval import instantiateAndEval, evalPred, _to_dict
+from lib.common.util import unique, error
+from pyboogie.eval import _to_dict
 from collections import OrderedDict
 from os import listdir
 from os.path import dirname, join, abspath, realpath
 from json import load, dumps
-from vc_check import loopInvOverfittedCtrex
-from functools import reduce
 
-def readTrace(fname):
-    trace = open(fname, "r").read();
+from typing import Dict, Any, List, Tuple
+
+ValTrace=List[Store]
+
+def readTrace(fname: str) -> Tuple[List[str], ValTrace]:
+    trace = open(fname, "r").read()
     lines = [x for x in [x.strip() for x in trace.split('\n')] if len(x) != 0]
     vs = [x for x in lines[0].split(' ') if len(x) != 0]
     header_vals = [ ]
     for l in lines[1:]:
         if (l[0] == '#'):
-            continue;
+            continue
 
-        env = { }
+        env : Store = { }
         for (var,val) in zip(vs, [x for x in l.split(' ') if len(x) != 0]):
-            env[var] = val
-        header_vals.append(env);
+            env[var] = int(val)
+        header_vals.append(env)
     return (vs, header_vals)
 
-def writeTrace(fname, header_vals):
-    f = open(fname, "w");
+def writeTrace(fname: str, header_vals: ValTrace) -> None:
+    f = open(fname, "w")
 
     if (len(header_vals) != 0):
-      vs = list(header_vals[0].keys());
-      f.write(" ".join(vs) + "\n");
+      vs = list(header_vals[0].keys())
+      f.write(" ".join(vs) + "\n")
       for env in header_vals:
         f.write(" ".join([str(env[v]) for v in vs]) + "\n")
 
-    f.close();
+    f.close()
 
-#TODO: Remove multiround. Its crud.
-def loadBoogieFile(fname, multiround):
-    bbs = get_bbs(fname)
-    ensureSingleExit(bbs);
-    loop = unique(loops(bbs),
-                  "Cannot handle program with multiple loops:" + fname)
+BoogieTraceLvl=Dict[str, Any]
+def loadBoogieFile(fname: str) -> BoogieTraceLvl:
+    """ Load a boogie file, asserting it contains a single function with a single loop.
+    """
+    fun: Function = unique(list(Function.load(fname)))
+    hdr: BB = unique(fun.loopHeaders())
 
     # The variables to trace are all live variables at the loop header
-    vs = list(livevars(bbs)[loop.loop_paths[0][0]])
+    vs = list(livevars(fun)[(hdr, 0)])
 
     # Make sure variable names are different modulo case
     assert len(vs) == len(set([var.lower() for var in vs]))
 
     # See if there is a .trace or a .hint file
     hint = None
-    header_vals = None;
-    terminates = False;
+    header_vals = None
+    terminates = False
     try:
         (vs, header_vals) = readTrace(fname[:-4] + '.trace')
         hint = load(open(fname[:-4] + '.hint'))
@@ -73,52 +75,11 @@ def loadBoogieFile(fname, multiround):
              'support_pos_ex' : True,
              'support_neg_ex' : True,
              'support_ind_ex' : True,
-             'multiround'     : multiround,
-             'program' : bbs,
-             'loop' : loop
+             'program' : fun,
+             'loop' : hdr
     }
 
-def readTraceOnlyLvl(fname):
-    rows = []
-    first = True
-    for l in open(fname):
-        l = l.strip();
-        if (l == ''):
-            continue
-        row = {}
-        for (n,v) in [x.split('=') for x in l.split(' ')]:
-            row[n] = v
-
-        if (first):
-          vs = [x.split('=')[0] for x in l.split(' ')]
-          first = False;
-        rows.append(row)
-
-    hint = None
-    goal = None
-    try:
-        goal = load(open(fname[:-4] + '.goal'))
-        hint = open(fname[:-4] + '.hint').read()
-    except Exception:
-        pass
-
-    return { 'variables': vs,
-             'data': [[[ row.get(n, None) for n in vs  ]  for row in rows ],
-                      [],
-                      []],
-             'hint': hint,
-             'goal' : goal,
-             'support_pos_ex' : False,
-             'support_neg_ex' : False,
-             'support_ind_ex' : False,
-             'multiround'     : False,
-    }
-
-def loadTraces(dirN):
-    return { name[:-4] : readTraceOnlyLvl(dirN + '/' + name)
-             for name in listdir(dirN) if name.endswith('.out') }
-
-def loadBoogieLvlSet(lvlSetFile):
+def loadBoogieLvlSet(lvlSetFile: str) -> Tuple[str, Dict[str, BoogieTraceLvl]]:
     # Small helper funct to make sure we didn't
     # accidentally give two levels the same name
     def assertUniqueKeys(kvs):
@@ -128,8 +89,8 @@ def loadBoogieLvlSet(lvlSetFile):
 
     lvlSet = load(open(lvlSetFile, "r"), object_pairs_hook=assertUniqueKeys)
     lvlSetDir = dirname(abspath(realpath(lvlSetFile)))
-    error("Loading level set " + lvlSet["name"] + " from " + lvlSetFile);
-    lvls = OrderedDict()
+    error("Loading level set " + lvlSet["name"] + " from " + lvlSetFile)
+    lvls: Dict[str, BoogieTraceLvl] = OrderedDict()
     for t in lvlSet["levels"]:
         lvlName = t[0]
         lvlPath = t[1]
@@ -138,7 +99,7 @@ def loadBoogieLvlSet(lvlSetFile):
           lvlPath[i] = join(lvlSetDir, lvlPath[i])
             
         error("Loading level: ", lvlPath[0])
-        lvl = loadBoogieFile(lvlPath[0], False)
+        lvl = loadBoogieFile(lvlPath[0])
         lvl["path"] = lvlPath
 
         if (len(t) > 2):
@@ -146,7 +107,7 @@ def loadBoogieLvlSet(lvlSetFile):
           splitterPred = ast_and(splitterPreds)
           remainderInv = parseExprAst(t[3])
 
-          lvl['data'][0] = [row for row in lvl['data'][0] if evalPred(splitterPred, _to_dict(lvl['variables'], row))];
+          lvl['data'][0] = [row for row in lvl['data'][0] if eval_quick(splitterPred, { k: v for k,v in zip(lvl['variables'], row)})]
 
           if (len(lvl['data'][0]) == 0):
             error("SKIPPING : ", lvlName, " due to no filtered rows.")
@@ -155,6 +116,6 @@ def loadBoogieLvlSet(lvlSetFile):
           lvl['partialInv'] = remainderInv
           lvl['splitterPreds'] = splitterPreds
 
-        lvls[lvlName] = lvl;
+        lvls[lvlName] = lvl
 
     return (lvlSet["name"], lvls)

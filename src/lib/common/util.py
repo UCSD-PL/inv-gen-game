@@ -1,4 +1,4 @@
-from typing import Any, TypeVar, Iterable, Callable, Set, Union, List, Tuple, Sized
+from typing import Any, TypeVar, Iterable, Callable, Set, Union, List, Tuple, Sized, Type
 import traceback
 from itertools import chain, combinations
 from sys import exc_info, stderr
@@ -8,6 +8,12 @@ from functools import reduce
 T = TypeVar("T")
 TSized = TypeVar("TSized", bound=Sized)
 SizedIterable=Union[List[T], Set[T]]
+
+C = TypeVar("C")
+def ccast(a: Any, t: Type[C]) -> C:
+    """ Checked cast down to the type t """
+    assert(isinstance(a, t))
+    return a
 
 def error(*args: Any) -> None:
   if (len(args) > 0 and str(args[0]) and '%' in args[0]):

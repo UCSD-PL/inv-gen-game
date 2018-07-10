@@ -27,7 +27,6 @@ from datetime import datetime
 from models import open_sqlite_db, open_mysql_db, Event
 from db_util import addEvent, allInvs, levelSolved, levelFinishedBy,\
         levelSkipCount, levelsPlayedInSession, tutorialDoneBy, questionaireDoneBy
-from mturk_util import send_notification
 from atexit import register
 from server_common import openLog, log, log_d, pp_exc
 
@@ -577,7 +576,6 @@ def reportProblem(mturkId, lvl, desc):
   addEvent(mturkId[0], "SupportForm", time(), args.ename, request.remote_addr, \
            desc, session, mturkId)
   return None
-  #send_notification(args.email, "Inv-Game Problem Report", "\n".join(lines))
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description="invariant gen game server")
