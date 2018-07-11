@@ -5,7 +5,7 @@ from js import esprimaToBoogie
 from sqlalchemy import func
 from sqlalchemy.orm import Session, Query, sessionmaker
 
-from typing import Set, Optional, Iterable, Dict, Tuple, Any
+from typing import Set, Optional, Iterable, Dict, Tuple, Any, List
 
 # TODO: Move somewhere more appropriate
 MturkIdT = Tuple[str, str, str]
@@ -61,7 +61,7 @@ def allInvs(
   lvlsetSet: Optional[Set[str]] =None,
   workerSet: Optional[Set[str]] =None,
   assignmentSet: Optional[Set[str]] =None,
-  colSwaps: Optional[Dict[str, int]] =None
+  colSwaps: Optional[List[int]] =None
   ) -> Set[Tuple[str, str]]:
   q = session.query(
       Event.experiment,

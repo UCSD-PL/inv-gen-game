@@ -202,6 +202,7 @@ def boogieToEsprima(inv: AstExpr) -> EsprimaNode:
            "sourceType": "script",
            "body": [ { "type": "ExpressionStatement",
                        "expression": boogieToEsprimaExpr(inv) } ] }
-
+                       
+JSONTypeEnv = Dict[str, str]
 def jsonToTypeEnv(json: Any) -> TypeEnv:
   return { varName: parseType(typ) for (varName, typ) in json.items() }

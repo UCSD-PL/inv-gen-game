@@ -12,31 +12,36 @@ from flask import Flask
 from flask import request, redirect, url_for, send_from_directory
 from flask_jsonrpc import JSONRPC as rpc
 from sqlalchemy.orm import Session
+import z3
 
 # Pyboogie includes
 from pyboogie.ast import AstBinExpr, AstTrue, ast_and, AstId, AstNumber, \
         parseExprAst, AstExpr
+from pyboogie.bb import TypeEnv as BoogieTypeEnv, Function
 from pyboogie.eval import instantiateAndEval, _to_dict
 from pyboogie.z3_embed import expr_to_z3, z3_expr_to_boogie,\
-        Unknown, simplify, implies, equivalent, tautology, boogieToZ3TypeEnv
+        Unknown, simplify, implies, equivalent, tautology, boogieToZ3TypeEnv,\
+        Z3TypeEnv
 from pyboogie.analysis import propagateUnmodifiedPreds 
+from pyboogie.interp import BoogieVal
 
 # Local repo includes
 from lib.common.util import powerset, split, nonempty, nodups, \
-        randomToken
+        randomToken, ccast
 from js import esprimaToZ3, esprimaToBoogie, boogieToEsprima, \
-        boogieToEsprimaExpr, jsonToTypeEnv
+        boogieToEsprimaExpr, jsonToTypeEnv, JSONTypeEnv, EsprimaNode
 from vc_check import _from_dict, tryAndVerifyLvl, loopInvSafetyCtrex
-from levels import loadBoogieLvlSet
+from levels import loadBoogieLvlSet, BoogieTraceLvl
 from pp import pp_BoogieLvl, pp_EsprimaInv, pp_EsprimaInvs, pp_CheckInvsRes, \
         pp_tryAndVerifyRes, pp_mturkId, pp_EsprimaInvPairs
 from models import open_sqlite_db, open_mysql_db, Event
 from db_util import addEvent, allInvs, levelSolved, levelFinishedBy,\
-        levelSkipCount, levelsPlayedInSession, tutorialDoneBy, questionaireDoneBy
+        levelSkipCount, levelsPlayedInSession, tutorialDoneBy, questionaireDoneBy,\
+        MturkIdT
 from server_common import openLog, log, log_d, pp_exc
 
 # Typing includes
-from typing import Dict, Any, Optional, TypeVar, List
+from typing import Dict, Any, Optional, TypeVar, List, Tuple, Set
 T = TypeVar("T")
 
 ### Flask code to initialize server
@@ -113,12 +118,12 @@ def logEvent(workerId: str, name: str, data: Any, mturkId: Any):
 @api.method("App.getTutorialDone")
 @pp_exc
 @log_d(str, str)
-def getTutorialDone(workerId):
+def getTutorialDone(workerId: str) -> bool:
     """ Return whether a given user has done the tutorial. Called from
         mturk_landing.html """
     if workerId == "":
         return False
-    session = sessionF()
+    session: Session = sessionF()
     return tutorialDoneBy(session, workerId)
     
 
@@ -126,7 +131,7 @@ def getTutorialDone(workerId):
 @api.method("App.loadLvl")
 @pp_exc
 @log_d(str, str, pp_mturkId, str, pp_BoogieLvl)
-def loadLvl(levelSet, lvlId, mturkId, individualMode=False): #pylint: disable=unused-argument
+def loadLvl(levelSet: str, lvlId: str, mturkId: MturkIdT, individualMode:bool = False) -> BoogieTraceLvl:
     """ Load a given level. """
     if (levelSet not in traces):
         raise Exception("Unkonwn level set " + levelSet)
@@ -135,22 +140,13 @@ def loadLvl(levelSet, lvlId, mturkId, individualMode=False): #pylint: disable=un
         raise Exception("Unkonwn trace " + lvlId + " in levels " + levelSet)
 
     lvl = traces[levelSet][lvlId]
-    if ('program' in lvl):
-      # This is a boogie level - don't return the program/loop and other book
-      # keeping
-      lvl = {
-             'lvlSet': levelSet,
-             'id': lvlId,
-             'variables': lvl['variables'],
-             'data': lvl['data'],
-             'exploration_state': lvl['exploration_state'],
-             'hint': lvl['hint'],
-             'goal' : lvl['goal'],
-             'support_pos_ex' : lvl['support_pos_ex'],
-             'support_neg_ex' : lvl['support_neg_ex'],
-             'support_ind_ex' : lvl['support_ind_ex'],
-             'multiround'     : lvl['multiround'],
-      }
+    assert 'program' in lvl
+    lvl = {
+            'lvlSet': levelSet,
+            'id': lvlId,
+            'variables': lvl['variables'],
+            'data': lvl['data'],
+    }
 
     if args.colSwap:
       nCols = len(lvl["variables"])
@@ -161,20 +157,18 @@ def loadLvl(levelSet, lvlId, mturkId, individualMode=False): #pylint: disable=un
 
       session = sessionF()
 
-      colSwaps = [0] * nSwaps
-      allInvs(session, enames=[args.ename], lvlsets=[curLevelSetName],
-        lvls=[lvlId], colSwaps=colSwaps)
-      sortKeys = colSwaps
+      colSwaps: List[int] = [0] * nSwaps
       if individualMode:
         workerId = mturkId[0]
-        colSwaps = [0] * nSwaps
         allInvs(session, enames=[args.ename], lvlsets=[curLevelSetName],
           lvls=[lvlId], workers=[workerId], colSwaps=colSwaps)
-        sortKeys = list(zip(colSwaps, sortKeys))
+      else:
+        allInvs(session, enames=[args.ename], lvlsets=[curLevelSetName],
+          lvls=[lvlId], colSwaps=colSwaps)
+      sortKeys = colSwaps
 
       nSwap = sorted(zip(sortKeys, list(range(nSwaps))), key=lambda x: x[0])[0][1]
       lvl["colSwap"] = nSwap
-
       lvl["variables"] = swapColumns(lvl["variables"], nSwap)
       lvl["data"] = [[swapColumns(row, nSwap) for row in rows]
         for rows in lvl["data"]]
@@ -194,7 +188,7 @@ def loadLvl(levelSet, lvlId, mturkId, individualMode=False): #pylint: disable=un
 @api.method("App.loadNextLvlFacebook")
 @pp_exc
 @log_d(str, pp_mturkId, str, pp_BoogieLvl)
-def loadNextLvl(workerId, mturkId, individualMode):
+def loadNextLvl(workerId: str, mturkId: MturkIdT, individualMode: bool) -> Optional[BoogieTraceLvl]:
     """ Return the next level. """
     assignmentId = mturkId[2]
     session = sessionF()
@@ -209,22 +203,25 @@ def loadNextLvl(workerId, mturkId, individualMode):
         if i>2 and (not questionaireDoneBy(session, curLevelSetName, lvlId, workerId)):
             result['ShowQuestionaire'] = True
         return result
-    #result = {'LevelNumber' : -1}
-    #return result
-
+    return None
 
 @api.method("App.equivalentPairs")
 @pp_exc
 @log_d(pp_EsprimaInvs, pp_EsprimaInvs, str, pp_mturkId, pp_EsprimaInvPairs)
-def equivalentPairs(invL1, invL2, typeEnv, mturkId): #pylint: disable=unused-argument
+def equivalentPairs(
+  invL1: List[EsprimaNode],
+  invL2: List[EsprimaNode],
+  typeEnv: JSONTypeEnv,
+  mturkId: MturkIdT
+  ) -> List[Tuple[EsprimaNode, EsprimaNode]]: #pylint: disable=unused-argument
     """ 
         Given lists of invariants invL1, invL2, return all pairs (I1, I2)
         where I1 <==> I2, I1 \in invL1, I2 \in invL2 
 
         Not currently in use.
     """ 
-    boogieEnv = jsonToTypeEnv(typeEnv)
-    z3Env = boogieToZ3TypeEnv(boogieEnv)
+    boogieEnv: BoogieTypeEnv = jsonToTypeEnv(typeEnv)
+    z3Env : Z3TypeEnv = boogieToZ3TypeEnv(boogieEnv)
     z3InvL1 = [esprimaToZ3(x, z3Env) for x in invL1]
     z3InvL2 = [esprimaToZ3(x, z3Env) for x in invL2]
 
@@ -239,14 +236,18 @@ def equivalentPairs(invL1, invL2, typeEnv, mturkId): #pylint: disable=unused-arg
         if (equiv):
           res.append((x,y))
 
-    res = [(boogieToEsprima(z3_expr_to_boogie(x)),
+    return [(boogieToEsprima(z3_expr_to_boogie(x)),
             boogieToEsprima(z3_expr_to_boogie(y))) for (x,y) in res]
-    return res
 
 @api.method("App.impliedPairs")
 @pp_exc
 @log_d(pp_EsprimaInvs, pp_EsprimaInvs, str, pp_mturkId, pp_EsprimaInvPairs)
-def impliedPairs(invL1, invL2, typeEnv, mturkId): #pylint: disable=unused-argument
+def impliedPairs(
+  invL1: List[EsprimaNode],
+  invL2: List[EsprimaNode],
+  typeEnv: JSONTypeEnv,
+  mturkId: MturkIdT
+  ) -> List[Tuple[EsprimaNode, EsprimaNode]]: #pylint: disable=unused-argument
     """ 
         Given lists of invariants invL1, invL2, return all pairs (I1, I2)
         where I1 ==> I2, I1 \in invL1, I2 \in invL2 
@@ -269,14 +270,13 @@ def impliedPairs(invL1, invL2, typeEnv, mturkId): #pylint: disable=unused-argume
         if (impl):
           res.append((x,y))
 
-    res = [(boogieToEsprima(z3_expr_to_boogie(x)),
+    return [(boogieToEsprima(z3_expr_to_boogie(x)),
             boogieToEsprima(z3_expr_to_boogie(y))) for (x,y) in res]
-    return res
 
 @api.method("App.isTautology")
 @pp_exc
 @log_d(pp_EsprimaInv, pp_mturkId, str)
-def isTautology(inv, typeEnv, mturkId): #pylint: disable=unused-argument
+def isTautology(inv: EsprimaNode, typeEnv: JSONTypeEnv, mturkId: MturkIdT): #pylint: disable=unused-argument
     """ 
         Check whether the invariant inv is a tautology.
         Used by game.html
@@ -289,10 +289,22 @@ def isTautology(inv, typeEnv, mturkId): #pylint: disable=unused-argument
       return res
     except Unknown:
       return False # Conservative assumption
+
+StoreArr = List[BoogieVal]
 @api.method("App.tryAndVerify")
 @pp_exc
 @log_d(str, str, pp_EsprimaInvs, pp_mturkId, str, pp_tryAndVerifyRes)
-def tryAndVerify(levelSet, levelId, invs, mturkId, individualMode):
+def tryAndVerify(
+  levelSet: str,
+  levelId: str,
+  invs: List[EsprimaNode],
+  mturkId: MturkIdT,
+  individualMode: bool
+  ) -> Tuple[List[Tuple[EsprimaNode, StoreArr]],\
+             List[Tuple[EsprimaNode, Tuple[StoreArr, StoreArr]]],\
+             List[EsprimaNode],\
+             List[StoreArr],
+             List[StoreArr]]:
     """ 
         Given a level (levelSet, levelId) and a set of invaraints invs do:
         1) Find all invariants OldI that were not DEFINITELY false from the
@@ -323,16 +335,12 @@ def tryAndVerify(levelSet, levelId, invs, mturkId, individualMode):
     if (len(invs) == 0):
         raise Exception("No invariants given")
 
-    lvl = traces[levelSet][levelId]
+    lvl: BoogieTraceLvl = traces[levelSet][levelId]
 
-    if ('program' not in lvl):
-      # Not a boogie level - error
-      raise Exception("Level " + str(levelId) + " " + \
-                      str(levelSet) + " not a dynamic boogie level.")
-
+    assert 'program' in lvl
     workerId, _, _ = mturkId
     userInvs = set([ esprimaToBoogie(x, {}) for x in invs ])
-    otherInvs = set([])
+    otherInvs: Set[AstExpr] = set([])
     lastVer = getLastVerResult(levelSet, levelId, s,
       workerId=(workerId if individualMode else None))
 
@@ -346,36 +354,35 @@ def tryAndVerify(levelSet, levelId, invs, mturkId, individualMode):
     # See if the level is solved
     solved = len(violations) == 0
     fix = lambda x: _from_dict(lvl['variables'], x, 0)
-
+    # TODO: Why is this shit needed?
     if (not solved):
-        bbs = lvl["program"]
-        loop = lvl["loop"]
-        direct_ctrexs = loopInvSafetyCtrex(loop, otherInvs.union(userInvs),\
-                                           bbs, args.timeout)
+        fun: Function = lvl["program"]
+        direct_ctrexs = loopInvSafetyCtrex(fun, otherInvs.union(userInvs),\
+                                           args.timeout)
     else:
         direct_ctrexs = []
 
     # Convert all invariants from Boogie to esprima expressions, and
     # counterexamples to arrays
     # from dictionaries
-    overfitted = [ (boogieToEsprima(inv), fix(v.endEnv()))
+    overfittedEsp = [ (boogieToEsprima(inv), fix(v.endEnv()))
       for (inv, v) in overfitted ]
-    nonind = [ (boogieToEsprima(inv), (fix(v.startEnv()), fix(v.endEnv())))
+    nonindEsp = [ (boogieToEsprima(inv), (fix(v.startEnv()), fix(v.endEnv())))
       for (inv, v) in nonind ]
-    sound = [ boogieToEsprima(inv) for inv in sound ]
-    safety_ctrexs = [ fix(v.startEnv()) for v in violations ]
-    direct_ctrexs = [ fix(v) for v in direct_ctrexs ]
+    soundEsp = [ boogieToEsprima(inv) for inv in sound ]
+    safetyCtrexsArr = [ fix(v.startEnv()) for v in violations ]
+    directCtrexsArr = [ fix(v) for v in direct_ctrexs ]
+    res = (overfittedEsp, nonindEsp, soundEsp, safetyCtrexsArr, directCtrexsArr)
 
-
-    res = (overfitted, nonind, sound, safety_ctrexs, direct_ctrexs)
+    # Log verification result in Db (storing invariants as boogie strings)
     payl = {
       "lvlset": levelSet,
       "lvlid": levelId,
-      "overfitted":nodups([str(esprimaToBoogie(x[0], {})) for x in overfitted]),
-      "nonind":nodups([str(esprimaToBoogie(inv, {})) for (inv,_) in nonind]),
-      "sound":nodups([str(esprimaToBoogie(inv, {})) for inv in sound]),
-      "post_ctrex":safety_ctrexs,
-      "direct_ctrex": direct_ctrexs
+      "overfitted":nodups([str(inv) for (inv, _) in overfitted]),
+      "nonind":nodups([str(inv) for (inv,_) in nonind]),
+      "sound":nodups([str(inv) for inv in sound]),
+      "post_ctrex":safetyCtrexsArr,
+      "direct_ctrex": directCtrexsArr
     }
     addEvent("verifier", "VerifyAttempt", time(), args.ename, \
              "localhost", payl, s, mturkId)
@@ -385,7 +392,7 @@ def tryAndVerify(levelSet, levelId, invs, mturkId, individualMode):
 @api.method("App.simplifyInv")
 @pp_exc
 @log_d(pp_EsprimaInv, str, pp_mturkId, pp_EsprimaInv)
-def simplifyInv(inv, typeEnv, mturkId): #pylint: disable=unused-argument
+def simplifyInv(inv: EsprimaNode, typeEnv: JSONTypeEnv, mturkId: MturkIdT) -> EsprimaNode: #pylint: disable=unused-argument
     """ Given an invariant inv return its 'simplified' version. We
         treat that as the canonical version of an invariant. Simplification
         is performed by z3 """
@@ -395,22 +402,22 @@ def simplifyInv(inv, typeEnv, mturkId): #pylint: disable=unused-argument
     boogieInv = esprimaToBoogie(inv, {})
     noDivBoogie = divisionToMul(boogieInv)
     z3_inv = expr_to_z3(noDivBoogie, z3Env)
-    simpl_z3_inv = simplify(z3_inv, arith_lhs=True)
+    simpl_z3_inv = ccast(simplify(z3_inv, arith_lhs=True), z3.ExprRef)
     simpl_boogie_inv = z3_expr_to_boogie(simpl_z3_inv)
     return boogieToEsprima(simpl_boogie_inv)
 
 @api.method("App.getRandomCode")
 @pp_exc
 @log_d(str)
-def getRandomCode():
+def getRandomCode() -> str:
     return randomToken(5)
 
-kvStore : Dict[Any, Any] = { }
+kvStore : Dict[str, Tuple[int, Any]] = { }
 
 @api.method("App.get")
 @pp_exc
 @log_d(str)
-def getVal(key):
+def getVal(key: str) -> Any:
     """ Generic Key/Value store get() used by two-player gameplay for
         synchronizing shared state. 
     """
@@ -422,7 +429,7 @@ def getVal(key):
 @api.method("App.set")
 @pp_exc
 @log_d(str, str, str)
-def setVal(key, val, expectedGen):
+def setVal(key: str, val: Any, expectedGen: int) -> Tuple[int, Any]:
     """ Generic Key/Value store set() used by two-player gameplay for
         synchronizing shared state. 
     """
@@ -442,54 +449,10 @@ def setVal(key, val, expectedGen):
       kvStore[key] = (expectedGen + 1, val)
       return (expectedGen + 1, val)
 
-    return kvStore[key]
-
-# Admin Calls:
-@api.method("App.getLogs")
-@pp_exc
-@log_d(str, str, str)
-def getLogs(inputToken, afterTimestamp, afterId):
-  """ Get the current logs (optionally only logs after a given afterTimestamp
-      or afterId if specified). This is only used by admin interface.
-  """
-  if inputToken != adminToken:
-    raise Exception(str(inputToken) + " not a valid token.")
-
-  s = sessionF()
-  if (afterTimestamp != None):
-    afterT = datetime.strptime(afterTimestamp, "%a, %d %b %Y %H:%M:%S %Z")
-    evts = s.query(Event).filter(Event.time > afterT).all()
-  elif (afterId != None):
-    evts = s.query(Event).filter(Event.id > afterId).all()
-  else:
-    evts = s.query(Event).all()
-
-  return [ { "id": e.id,
-             "type": e.type,
-             "experiment": e.experiment,
-             "src": e.src,
-             "addr": e.addr,
-             "time": str(e.time),
-             "payload": e.payl() } for e in evts ]
-
-@api.method("App.getSolutions")
-@pp_exc
-@log_d()
-def getSolutions(): # Lvlset is assumed to be current by default
-  """ Return all solutions for a levelset. Only used by admin interface.
-  """
-  res = { }
-  for lvlId in lvls:
-    solnFile = lvls[lvlId]["path"][0][:-len(".bpl")] + ".sol"
-    soln = open(solnFile).read().strip()
-    boogieSoln = parseExprAst(soln)
-    res[curLevelSetName + "," + lvlId] = [boogieToEsprimaExpr(boogieSoln)]
-  return res
-
 @api.method("App.reportProblem")
 @pp_exc
 @log_d(pp_mturkId, str, str, str)
-def reportProblem(mturkId, lvl, desc):
+def reportProblem(mturkId: MturkIdT, lvl: str, desc: str) -> None:
   """ Accept a problem report from a player and send it to the current
       notification e-mail address.
   """
@@ -551,13 +514,13 @@ if __name__ == "__main__":
     if args.log:
         openLog(args.log)
 
-    MYDIR = dirname(abspath(realpath(__file__)))
-    ROOT_DIR = dirname(MYDIR)
+    MYDIR: str = dirname(abspath(realpath(__file__)))
+    ROOT_DIR: str = dirname(MYDIR)
 
     if args.local:
       #host = '127.0.0.1'
-      host = '0.0.0.0'
-      sslContext = None
+      host: str = '0.0.0.0'
+      sslContext: Optional[Tuple[str, str]] = None
     else:
       host = '0.0.0.0'
       sslContext = None # MYDIR + '/cert.pem', MYDIR + '/privkey.pem'

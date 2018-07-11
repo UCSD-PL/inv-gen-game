@@ -21,8 +21,8 @@ def conservative_tautology(q: z3.ExprRef) -> bool:
 def _from_dict(
   vs: List[str],
   vals: Store,
-  missing: Optional[BoogieVal] = None
-  ) -> List[Optional[BoogieVal]]:
+  missing: BoogieVal
+  ) -> List[BoogieVal]:
     return [ (vals[vs[i]] if vs[i] in vals else missing) \
               for i in range(0, len(vs)) ]
 
@@ -85,8 +85,15 @@ def tryAndVerify(
                                            partialInvs, \
                                            timeout)
 
-def tryAndVerifyLvl(lvl, userInvs, otherInvs, timeout = None, \
-        useSplitters = True, addSPs = True, generalizeUserInvs = False):
+def tryAndVerifyLvl(
+  lvl: BoogieTraceLvl,
+  userInvs: Iterable[AstExpr],
+  otherInvs: Set[AstExpr],
+  timeout: Optional[int] = None, \
+  useSplitters: bool = True,
+  addSPs: bool = True,
+  generalizeUserInvs: bool = False
+  ) -> TryAndVerifyResult:
     """ Try and verify a given Lvl.
 
           lvl - level to verify
@@ -109,24 +116,24 @@ def tryAndVerifyLvl(lvl, userInvs, otherInvs, timeout = None, \
                    For example if in the level always n=4, and the user
                    entered i<=4, the generalizaition would also try i<=n.
     """
-    bbs = lvl['program']
-    loop = lvl['loop']
-    partialInvs = [ lvl['partialInv'] ] \
+    fun: Function = lvl['program']
+    loopHdr: BB = unique(fun.loopHeaders())
+    partialInvs: List[AstExpr] = [ lvl['partialInv'] ] \
             if ('partialInv' in lvl) and useSplitters else []
-    splitterPreds = lvl['splitterPreds'] \
+    splitterPreds: List[AstExpr] = lvl['splitterPreds'] \
             if ('splitterPreds' in lvl) and useSplitters else [ ]
     if (generalizeUserInvs):
-      replMaps = generalizeConstTraceVars(lvl);
+      replMaps: List[ReplMap_T] = generalizeConstTraceVars(lvl);
     else:
       replMaps = []
 
     # Push any SPs that are syntactically unmodified
     if (addSPs):
-      loop_header = loop.loop_paths[0][0]
-      sps = propagate_sp(bbs)[loop_header]
-      otherInvs = otherInvs.union(sps)
+      sps = propagateUnmodifiedPreds(fun)[(loopHdr, 0)]
+      if (sps is not None):
+        otherInvs = otherInvs.union(set(sps))
 
-    return tryAndVerify(bbs, loop, splitterPreds, partialInvs, \
+    return tryAndVerify(fun, splitterPreds, partialInvs, \
                         userInvs, otherInvs, replMaps, timeout);
 
 def tryAndVerify_impl(
