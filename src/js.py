@@ -206,3 +206,6 @@ def boogieToEsprima(inv: AstExpr) -> EsprimaNode:
 JSONTypeEnv = Dict[str, str]
 def jsonToTypeEnv(json: Any) -> TypeEnv:
   return { varName: parseType(typ) for (varName, typ) in json.items() }
+
+def typeEnvToJson(typeEnv: TypeEnv) -> JSONTypeEnv:
+  return { varName: str(typ) for (varName, typ) in typeEnv.items() }

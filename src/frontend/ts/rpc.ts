@@ -1,6 +1,6 @@
 /* This file defines the RPC interface between server and client */
 import {Args, log, unique} from "./util";
-import {invariantT, templateT, dataT} from "./types";
+import {invariantT, templateT, dataT, TypeEnv} from "./types";
 import {esprimaToStr} from "./eval";
 import {parse} from "esprima";
 import {Node as ESNode} from "estree";
@@ -8,66 +8,47 @@ import { JsonRpcClient } from "../js/jquery.jsonrpcclient"
 
 export let rpc: JsonRpcClient = new $.JsonRpcClient({ ajaxUrl: "/api" });
 
-interface loadLvlBasicRes {
+interface loadLvlRes {
   id: string;
   variables: string[];
   data: dataT;
-  goal: any;
   hint: any;
   colSwap: any;
+  goal: any;
+  typeEnv: TypeEnv
   startingInvs: [string, invariantT][];
-}
-
-interface loadLvlDynamicRes extends loadLvlBasicRes {
-  exploration_state: any;
-  support_pos_ex: any;
-  support_neg_ex: any;
-  support_ind_ex: any;
-  multiround: any;
-}
-
-interface loadNextLvlDynamicRes extends loadLvlDynamicRes {
-    id: string;
-    lvlSet: string;
-    ShowQuestionaire: boolean;
+  lvlSet: string;
+  ShowQuestionaire: boolean;
 }
 
 export function mturkId(): [string, string, string] {
   return [Args.get_worker_id(), Args.get_hit_id(), Args.get_assignment_id()];
 }
 
-export function rpc_loadLvlBasic(lvlSet: string, id: string, cb:(res: loadLvlBasicRes) => void) {
-  rpc.call("App.loadLvl", [lvlSet, id, mturkId()], (data:any) => cb(<loadLvlBasicRes>data), log);
+export function rpc_loadLvl(lvlSet: string, id: string, cb:(res: loadLvlRes) => void) {
+  rpc.call("App.loadLvl", [lvlSet, id, mturkId()], (data:any) => cb(<loadLvlRes>data), log);
 }
 
-export function rpc_loadLvlDynamic(lvlSet: string, id: string, cb:(res: loadLvlDynamicRes) => void) {
-  rpc.call("App.loadLvl", [lvlSet, id, mturkId()], (data:any) => cb(<loadLvlDynamicRes>data), log);
+export function rpc_loadNextLvl(workerkId: string, cb:(res: loadLvlRes) => void) {
+  rpc.call("App.loadNextLvlFacebook", [workerkId, mturkId(), Args.get_individual_mode()], (data:any) => cb(<loadLvlRes>data), log);
 }
 
-export function rpc_loadNextLvlDynamic(workerkId: string, cb:(res: loadNextLvlDynamicRes) => void) {
-  rpc.call("App.loadNextLvlFacebook", [workerkId, mturkId(), Args.get_individual_mode()], (data:any) => cb(<loadNextLvlDynamicRes>data), log);
-}
-
-function rpc_genNextLvlDynamic(workerkId: string, lvlSet:string, lvlId: string, invs: invariantT[], cb:(res: loadNextLvlDynamicRes) => void) {
-  rpc.call("App.genNextLvl", [workerkId, mturkId(), lvlSet, lvlId, invs, Args.get_individual_mode()], (data:any) => cb(<loadNextLvlDynamicRes>data), log);
-}
-
-export function rpc_equivalentPairs(invL1: invariantT[], invL2: invariantT[],
+export function rpc_equivalentPairs(invL1: invariantT[], invL2: invariantT[], typeEnv: TypeEnv,
                              cb: (arg:[ESNode, ESNode][])=>void): void {
-  rpc.call("App.equivalentPairs", [ invL1, invL2, mturkId() ], cb, log);
+  rpc.call("App.equivalentPairs", [ invL1, invL2, typeEnv, mturkId() ], cb, log);
 }
 
-export function rpc_impliedPairs(invL1: invariantT[], invL2: invariantT[],
+export function rpc_impliedPairs(invL1: invariantT[], invL2: invariantT[], typeEnv: TypeEnv,
                              cb: (arg:[ESNode, ESNode][])=>void): void {
-  rpc.call("App.impliedPairs", [ invL1, invL2, mturkId() ], cb, log);
+  rpc.call("App.impliedPairs", [ invL1, invL2, typeEnv, mturkId() ], cb, log);
 }
 
-export function rpc_isTautology(inv: invariantT, cb:(res:boolean)=>void): void {
-  rpc.call("App.isTautology", [ inv, mturkId() ], cb, log);
+export function rpc_isTautology(inv: invariantT, typeEnv: TypeEnv, cb:(res:boolean)=>void): void {
+  rpc.call("App.isTautology", [ inv, typeEnv, mturkId() ], cb, log);
 }
 
-export function rpc_simplify(inv:string, cb:(res:ESNode)=>void): void {
-  rpc.call("App.simplifyInv", [ parse(inv), mturkId() ], cb, log);
+export function rpc_simplify(inv:string, typeEnv: TypeEnv, cb:(res:ESNode)=>void): void {
+  rpc.call("App.simplifyInv", [ parse(inv), typeEnv, mturkId() ], cb, log);
 }
 
 export function rpc_tryAndVerify(lvlSet: string, lvlId: string, invs: invariantT[],
@@ -77,16 +58,6 @@ export function rpc_tryAndVerify(lvlSet: string, lvlId: string, invs: invariantT
                                      any[],// Post cond. counterexample to sound invariants
                                      any[]]) => void) {  // Post-cond counterexample to all invariants
   rpc.call("App.tryAndVerify", [ lvlSet, lvlId, invs, mturkId(), Args.get_individual_mode() ], cb, log);
-}
-
-export function rpc_instantiate(templates: templateT[],
-                     lvlVars: string[], // TODO: Should eventually not need this argument. Convert
-                     data: [ any[] ],   //       data to a dictionary containing variable names.
-                     cb: (invs: invariantT)=>void): void {
-  let uniq_templates = unique(templates, (x)=> esprimaToStr(x[0]));
-    console.log("Instantiating " + templates.length + " templates " +
-              uniq_templates.length + " unique ones.");
-  rpc.call("App.instantiate", [uniq_templates, lvlVars, data, mturkId()], cb, log);
 }
 
 export function rpc_logEvent(workerId: string, name: string, data: any, cb?: (res: any) => void): any {

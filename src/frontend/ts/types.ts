@@ -10,3 +10,5 @@ export type dataT = [any[][], [ any[], any[] ][], any[][] ]
 export type resDataT = { data: [ any[], [any, any][], any[] ]}
 export type resClearT = { clear: any }
 export type resT = resDataT | resClearT
+
+export type TypeEnv = { [varname: string]: string }

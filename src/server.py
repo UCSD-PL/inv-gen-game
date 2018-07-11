@@ -18,7 +18,6 @@ import z3
 from pyboogie.ast import AstBinExpr, AstTrue, ast_and, AstId, AstNumber, \
         parseExprAst, AstExpr
 from pyboogie.bb import TypeEnv as BoogieTypeEnv, Function
-from pyboogie.eval import instantiateAndEval, _to_dict
 from pyboogie.z3_embed import expr_to_z3, z3_expr_to_boogie,\
         Unknown, simplify, implies, equivalent, tautology, boogieToZ3TypeEnv,\
         Z3TypeEnv
@@ -29,7 +28,8 @@ from pyboogie.interp import BoogieVal
 from lib.common.util import powerset, split, nonempty, nodups, \
         randomToken, ccast
 from js import esprimaToZ3, esprimaToBoogie, boogieToEsprima, \
-        boogieToEsprimaExpr, jsonToTypeEnv, JSONTypeEnv, EsprimaNode
+        boogieToEsprimaExpr, jsonToTypeEnv, JSONTypeEnv, EsprimaNode, \
+        typeEnvToJson
 from vc_check import _from_dict, tryAndVerifyLvl, loopInvSafetyCtrex
 from levels import loadBoogieLvlSet, BoogieTraceLvl
 from pp import pp_BoogieLvl, pp_EsprimaInv, pp_EsprimaInvs, pp_CheckInvsRes, \
@@ -140,12 +140,14 @@ def loadLvl(levelSet: str, lvlId: str, mturkId: MturkIdT, individualMode:bool = 
         raise Exception("Unkonwn trace " + lvlId + " in levels " + levelSet)
 
     lvl = traces[levelSet][lvlId]
-    assert 'program' in lvl
+    fun: Function = lvl['program']
     lvl = {
             'lvlSet': levelSet,
             'id': lvlId,
             'variables': lvl['variables'],
             'data': lvl['data'],
+            'typeEnv': typeEnvToJson(fun.getTypeEnv()),
+            'goal': 'verify'
     }
 
     if args.colSwap:
