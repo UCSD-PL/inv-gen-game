@@ -69,16 +69,16 @@ class SurveyData(Base):
   payload = Column(String(16536), nullable=False)
 
 
-def open_sqlite_db(path: str) -> SessionT:
+def open_sqlite_db(path: str) -> sessionmaker:
     engine = create_engine("sqlite:///" + path, echo=False,
       connect_args={'check_same_thread':False});
-    Session: SessionT = ccast(sessionmaker(bind=engine), SessionT)
+    Session: sessionmaker = sessionmaker(bind=engine)
     Base.metadata.create_all(engine);
     return Session;
 
-def open_mysql_db(url: str) -> SessionT:
+def open_mysql_db(url: str) -> sessionmaker:
     engine = create_engine(url, echo=False, pool_pre_ping=True);
-    Session: SessionT = ccast(sessionmaker(bind=engine), SessionT)
+    Session: sessionmaker = sessionmaker(bind=engine)
     Base.metadata.create_all(engine);
     return Session;
 
