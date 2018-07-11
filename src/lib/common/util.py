@@ -35,7 +35,7 @@ def unique(iterable: Iterable[T], msg: str ="") -> T:
   assert len(l) == 1, msg
   return l[0]
 
-def powerset(s: SizedIterable) -> Iterable[Set[T]]:
+def powerset(s: List[T]) -> Iterable[Set[T]]:
   """ Return the powerset of a set s """
   it = chain.from_iterable(combinations(s, l) for l in range(len(s) + 1))
   for subS in it:
