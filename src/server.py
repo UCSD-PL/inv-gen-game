@@ -1,37 +1,45 @@
 #!  /usr/bin/env python
-from flask import Flask
-from flask import request, redirect, url_for, send_from_directory
-from flask_jsonrpc import JSONRPC as rpc
-from os.path import dirname, abspath, realpath, join, isfile
-from js import esprimaToZ3, esprimaToBoogie, boogieToEsprima, \
-        boogieToEsprimaExpr, jsonToTypeEnv
-from pyboogie.ast import AstBinExpr, AstTrue, ast_and, AstId, AstNumber, \
-        parseExprAst
-from lib.common.util import powerset, split, nonempty, nodups, \
-        randomToken
-from pyboogie.eval import instantiateAndEval, _to_dict
-from pyboogie.z3_embed import expr_to_z3, z3_expr_to_boogie,\
-        Unknown, simplify, implies, equivalent, tautology, boogieToZ3TypeEnv
-from pyboogie.analysis import propagate_sp
-from vc_check import _from_dict, tryAndVerifyLvl, loopInvSafetyCtrex
-
-from levels import loadBoogieLvlSet
-
+# Builtin includes
 import argparse
 import sys
-from pp import pp_BoogieLvl, pp_EsprimaInv, pp_EsprimaInvs, pp_CheckInvsRes, \
-        pp_tryAndVerifyRes, pp_mturkId, pp_EsprimaInvPairs
 from copy import copy
 from time import time
 from datetime import datetime
+from atexit import register
+from os.path import dirname, abspath, realpath, join, isfile
+# Third-party library includes
+from flask import Flask
+from flask import request, redirect, url_for, send_from_directory
+from flask_jsonrpc import JSONRPC as rpc
+from sqlalchemy.orm import Session
+
+# Pyboogie includes
+from pyboogie.ast import AstBinExpr, AstTrue, ast_and, AstId, AstNumber, \
+        parseExprAst, AstExpr
+from pyboogie.eval import instantiateAndEval, _to_dict
+from pyboogie.z3_embed import expr_to_z3, z3_expr_to_boogie,\
+        Unknown, simplify, implies, equivalent, tautology, boogieToZ3TypeEnv
+from pyboogie.analysis import propagateUnmodifiedPreds 
+
+# Local repo includes
+from lib.common.util import powerset, split, nonempty, nodups, \
+        randomToken
+from js import esprimaToZ3, esprimaToBoogie, boogieToEsprima, \
+        boogieToEsprimaExpr, jsonToTypeEnv
+from vc_check import _from_dict, tryAndVerifyLvl, loopInvSafetyCtrex
+from levels import loadBoogieLvlSet
+from pp import pp_BoogieLvl, pp_EsprimaInv, pp_EsprimaInvs, pp_CheckInvsRes, \
+        pp_tryAndVerifyRes, pp_mturkId, pp_EsprimaInvPairs
 from models import open_sqlite_db, open_mysql_db, Event
 from db_util import addEvent, allInvs, levelSolved, levelFinishedBy,\
         levelSkipCount, levelsPlayedInSession, tutorialDoneBy, questionaireDoneBy
-from atexit import register
 from server_common import openLog, log, log_d, pp_exc
 
-from typing import Dict, Any
+# Typing includes
+from typing import Dict, Any, Optional, TypeVar, List
+T = TypeVar("T")
 
+### Flask code to initialize server
 class Server(Flask):
     def get_send_file_max_age(self, name):
         if (name in ['jquery-1.12.0.min.js', \
@@ -52,7 +60,7 @@ def index():
     return redirect(url_for('static', filename='app/start.html'))
 
 ## Utility functions #################################################
-def getLastVerResult(lvlset, lvlid, session, workerId=None):
+def getLastVerResult(lvlset: str, lvlid: str, session: Session, workerId=None) -> Optional[Dict[str, Any]]:
     events = session.query(Event)
     verifyAttempts = events.filter(Event.type == "VerifyAttempt").all()
     verifyAttempts = [x for x in verifyAttempts if x.payl()["lvlset"] == lvlset and x.payl()["lvlid"] == lvlid and (workerId is None or x.payl()["workerId"] == workerId)]
@@ -61,7 +69,8 @@ def getLastVerResult(lvlset, lvlid, session, workerId=None):
     else:
       return None
 
-def divisionToMul(inv):
+#TODO: This is very hacky. Either delete or make more robust
+def divisionToMul(inv: AstExpr) -> AstExpr:
     if isinstance(inv, AstBinExpr) and \
        inv.op in ['==', '<', '>', '<=', '>=', '!==']:
         if (isinstance(inv.lhs, AstBinExpr) and inv.lhs.op == 'div' and \
@@ -86,17 +95,17 @@ columnSwaps = {
       [3, 1, 4, 2, 0]]
 }
 
-def swapColumns(row, nSwap):
+def swapColumns(row: List[T], nSwap: int) -> List[T]:
   return [row[i] for i in columnSwaps[len(row)][nSwap]]
 
 ## API Entry Points ##################################################
 @api.method("App.logEvent")
 @pp_exc
 @log_d(str,str,str,pp_mturkId, str)
-def logEvent(workerId, name, data, mturkId):
+def logEvent(workerId: str, name: str, data: Any, mturkId: Any):
     """ Log an event from either the frontend or backend. Event appears
         as JSON in both the textual log, as well as in the database """
-    session = sessionF()
+    session: Session = sessionF()
     addEvent(workerId, name, time(), args.ename, request.remote_addr, \
              data, session, mturkId)
     return None
@@ -116,7 +125,7 @@ def getTutorialDone(workerId):
 
 @api.method("App.loadLvl")
 @pp_exc
-@log_d(str, str, pp_mturkId, bool, pp_BoogieLvl)
+@log_d(str, str, pp_mturkId, str, pp_BoogieLvl)
 def loadLvl(levelSet, lvlId, mturkId, individualMode=False): #pylint: disable=unused-argument
     """ Load a given level. """
     if (levelSet not in traces):
@@ -184,7 +193,7 @@ def loadLvl(levelSet, lvlId, mturkId, individualMode=False): #pylint: disable=un
 
 @api.method("App.loadNextLvlFacebook")
 @pp_exc
-@log_d(str, pp_mturkId, bool, pp_BoogieLvl)
+@log_d(str, pp_mturkId, str, pp_BoogieLvl)
 def loadNextLvl(workerId, mturkId, individualMode):
     """ Return the next level. """
     assignmentId = mturkId[2]
@@ -282,7 +291,7 @@ def isTautology(inv, typeEnv, mturkId): #pylint: disable=unused-argument
       return False # Conservative assumption
 @api.method("App.tryAndVerify")
 @pp_exc
-@log_d(str, str, pp_EsprimaInvs, pp_mturkId, bool, pp_tryAndVerifyRes)
+@log_d(str, str, pp_EsprimaInvs, pp_mturkId, str, pp_tryAndVerifyRes)
 def tryAndVerify(levelSet, levelId, invs, mturkId, individualMode):
     """ 
         Given a level (levelSet, levelId) and a set of invaraints invs do:
