@@ -71,10 +71,6 @@ def loadBoogieFile(fname: str) -> BoogieTraceLvl:
                                        len(header_vals),
                                        terminates ) ],
              'hint': hint,
-             'goal' : { "verify" : True },
-             'support_pos_ex' : True,
-             'support_neg_ex' : True,
-             'support_ind_ex' : True,
              'program' : fun,
              'loop' : hdr
     }
