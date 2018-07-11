@@ -10,15 +10,18 @@ from cProfile import Profile
 from io import StringIO
 from pstats import Stats
 
+from typing import Dict, Any, Callable, TypeVar, cast
+T=TypeVar("T")
+
 colorama_init();
 
 # Logging stuff
 logF = None;
-def openLog(fname):
+def openLog(fname: str) -> None:
     global logF;
     logF = open(fname, 'w');
 
-def log(action, *pps):
+def log(action: Dict[str, Any], *pps: Callable[..., str]) -> None:
     action['time'] = time()
     action['ip'] = request.remote_addr;
     if (logF):
@@ -39,7 +42,7 @@ def log(action, *pps):
               workerId, hitId, assignmentId = action["args"][i]
               mturkArgInd = i
 
-          if (mturkArgInd != None):
+          if (mturkArgInd is not None):
             ppArgs.pop(mturkArgInd)
 
           reset = Style.RESET_ALL
@@ -63,7 +66,7 @@ def log(action, *pps):
           print(prompt + call);
         stdout.flush();
 
-def pp_exc(f):
+def pp_exc(f: Callable) -> Callable:
     """ Wrap a function to catch, pretty print the exception and re-raise it.
     """
     def decorated(*args):
@@ -74,8 +77,8 @@ def pp_exc(f):
             raise
     return decorated
 
-def log_d(*pps):
-    def decorator(f):
+def log_d(*pps: Callable[..., str]) -> Callable[[T], T]:
+    def decorator(f: T) -> T:
         def decorated(*pargs):
             try:
                 res = f(*pargs)
@@ -87,11 +90,11 @@ def log_d(*pps):
                 log({ "method": f.__name__, "args": pargs,
                       "exception": strTrace})
                 raise
-        return decorated
+        return cast(T, decorated)
     return decorator
 
 # Profiling stuff
-def prof_d(f):
+def prof_d(f: T) -> T:
     def decorated(*pargs, **kwargs):
         try:
             pr = Profile()
@@ -107,5 +110,5 @@ def prof_d(f):
             ps = Stats(pr, stream=s).sort_stats('cumulative')
             ps.print_stats()
             print(s.getvalue())
-    return decorated
+    return cast(T, decorated)
 
