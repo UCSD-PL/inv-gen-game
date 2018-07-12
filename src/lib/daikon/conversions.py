@@ -1,7 +1,8 @@
-import lib.daikon.inv_ast as dast;
+from . import inv_ast as dast;
+from lib.common.util import ccast
 import pyboogie.ast as bast;
 
-def daikonToBoogieExpr(astn):
+def daikonToBoogieExpr(astn: dast.AstExpr) -> bast.AstExpr:
   if (isinstance(astn, dast.AstUnExpr)):
     cn = daikonToBoogieExpr(astn.expr)
     try:
@@ -77,7 +78,7 @@ def daikonToBoogieExpr(astn):
   elif (isinstance(astn, dast.AstIsConstMod)):
     expr = daikonToBoogieExpr(astn.expr)
     remainder = daikonToBoogieExpr(astn.remainder)
-    modulo = daikonToBoogieExpr(astn.modulo);
+    modulo = ccast(daikonToBoogieExpr(astn.modulo), bast.AstNumber);
 
     assert modulo.num != 0;
 

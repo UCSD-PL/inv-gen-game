@@ -1,14 +1,20 @@
 #pylint: disable=no-self-argument
 from pyparsing import delimitedList,nums, ParserElement, operatorPrecedence, \
-        opAssoc, StringEnd, OneOrMore
+        opAssoc, StringEnd, OneOrMore, ParseResults
 from pyparsing import Keyword as K, Suppress as S, Literal as L, Regex as R, \
         Word as W
 from ..common.parser import InfixExprParser
+from typing import TypeVar, Iterable
 
 ParserElement.enablePackrat()
 csl = delimitedList
 
-class DaikonInvParser(InfixExprParser):
+T=TypeVar("T")
+class DaikonInvParser(InfixExprParser[T]):
+  def onTernaryOp(s, prod: "ParserElement[T]", st: str, loc: int, toks: "ParseResults[T]") -> "Iterable[T]":
+      raise Exception("NYI")
+  def onVariaryOp(s, prod: "ParserElement[T]", st: str, loc: int, toks: "ParseResults[T]") -> "Iterable[T]":
+      raise Exception("NYI")
   def __init__(s):
     s.LT = L("<")
     s.GT = L(">")
@@ -113,5 +119,5 @@ class DaikonInvParser(InfixExprParser):
                 s.JustInv | s.JustInv
     s.OneLine = s.WarnInv + StringEnd();
 
-  def parse(s, st):
+  def parse(s, st: str) -> T:
     return s.OneLine.parseString(st)[0]

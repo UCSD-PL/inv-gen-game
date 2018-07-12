@@ -1,14 +1,19 @@
 #! /usr/bin/env python
-from levels import loadBoogieLvlSet
-from lib.daikon import toDaikonTrace, runDaikon
-from conversions import daikonToBoogieExpr
 import argparse
 from os.path import exists
 from os import listdir
-from vc_check import tryAndVerifyLvl
-import pyboogie.ast as bast
-from pyboogie.eval import evalPred
 import sys
+
+import pyboogie.ast as bast
+from pyboogie.interp import eval_quick, Store 
+
+from levels import loadBoogieLvlSet, BoogieTraceLvl
+from vc_check import tryAndVerifyLvl
+
+from lib.daikon import toDaikonTrace, runDaikon
+from lib.daikon.conversions import daikonToBoogieExpr
+
+from typing import Tuple
 
 if (__name__ == "__main__"):
   p = argparse.ArgumentParser(description="run daikon on a levelset")
@@ -28,7 +33,7 @@ if (__name__ == "__main__"):
           help='Timeout in seconds for each z3 query')
   args = p.parse_args();
 
-  name,lvls = loadBoogieLvlSet(args.lvlset)
+  name, lvls= loadBoogieLvlSet(args.lvlset)
 
   if (args.csv_table):
     if (args.check_solved):
@@ -40,7 +45,7 @@ if (__name__ == "__main__"):
 
   for lvlName, lvl in lvls.items():
     (vs, header_vals) = (lvl["variables"], lvl["data"][0])
-    fuzz_path = lvl["path"][0][:-len(".bpl")] + ".fuzz_traces"
+    fuzz_path: str = lvl["path"][0][:-len(".bpl")] + ".fuzz_traces"
     if (exists(fuzz_path)):
       for f in listdir(fuzz_path):
         t = eval(open(fuzz_path + "/" + f).read());
@@ -49,7 +54,7 @@ if (__name__ == "__main__"):
         if ("splitterPreds" in lvl):
           splitterPred = bast.ast_and(lvl["splitterPreds"])
           t_loop_headers = \
-                  [row for row in t_loop_headers if evalPred(splitterPred, row[1][0])]
+                  [row for row in t_loop_headers if eval_quick(splitterPred, row[1][0])]
 
         t_header_vals = [ [ row[1][0][v] for v in vs ] \
                           for row in t_loop_headers ]
