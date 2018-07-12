@@ -55,12 +55,14 @@ if [ ! -e $DIR/bin/z3 ]; then
   popd
 fi
 
+DAIKONVER="5.6.6"
+DAIKONTAR=daikon-$DIAKONVER.tar.gz
 if [ ! -e $DIR/third_party/daikon ]; then
   pushd $DIR/third_party
   mkdir daikon
   cd daikon
-  wget https://plse.cs.washington.edu/daikon/download/daikon-5.6.0.tar.gz
-  tar zxf daikon-5.6.0.tar.gz
+  wget http://plse.cs.washington.edu/daikon/download/$DAIKONTAR
+  tar zxf $DAIKONTAR
   popd
 fi
 
@@ -106,7 +108,7 @@ fi
 
 npm install
 
-echo "export DAIKONDIR=$DIR/third_party/daikon/daikon-5.5.6" >> $DIR/bin/activate
+echo "export DAIKONDIR=$DIR/third_party/daikon/daikon-$DAIKONVER" >> $DIR/bin/activate
 echo "export JAVA_HOME=\${JAVA_HOME:-\$(dirname \$(dirname \$(dirname \$(readlink -f \$(/usr/bin/which java)))))}" >> $DIR/bin/activate
 echo "source \$DAIKONDIR/scripts/daikon.bashrc" >> $DIR/bin/activate
 echo "export PATH=\$PATH:$MYDIR/node_modules/.bin/" >> $DIR/bin/activate
