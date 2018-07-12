@@ -6,7 +6,6 @@ import sys
 import traceback
 from os.path import dirname, abspath, realpath
 from pyboogie.bb import get_bbs
-from boogie_loops import loops
 from mturk_util import error
 from argparse import ArgumentParser
 
