@@ -88,11 +88,11 @@ class AstBinExpr(AstExpr):
     def __str__(s) -> str:
         return "(" + str(s.lhs) + " " + s.op + " " + str(s.rhs) + ")"
 
-class AstBuilder(DaikonInvParser[AstExpr]):
-  def onAtom(s, prod: ParserElement, st: str, loc: int, toks: ParseResults[Any]) -> List[AstExpr]:
+class AstBuilder(DaikonInvParser):
+  def onAtom(s, prod: ParserElement, st: str, loc: int, toks: "ParseResults[Any]") -> List[AstExpr]:
     return [ s.atomM[prod](*toks) ]
 
-  def onUnaryOp(s, prod: ParserElement, st: str, loc: int, toks: ParseResults[Any]) -> List[AstExpr]:
+  def onUnaryOp(s, prod: ParserElement, st: str, loc: int, toks: "ParseResults[Any]") -> List[AstExpr]:
     if (prod == s.IsPow2):
       return [ AstIsPow2(toks[0]) ]
     elif (prod == s.IsBoolean):
@@ -102,7 +102,7 @@ class AstBuilder(DaikonInvParser[AstExpr]):
     else:
       return [ AstUnExpr(*toks) ]
 
-  def onLABinOp(s, prod: ParserElement, st: str, loc: int, toks: ParseResults[Any]) -> List[AstExpr]:
+  def onLABinOp(s, prod: ParserElement, st: str, loc: int, toks: "ParseResults[Any]") -> List[AstExpr]:
     if (len(toks) == 3):
       return [ AstBinExpr(*toks) ]
     else:
@@ -113,7 +113,7 @@ class AstBuilder(DaikonInvParser[AstExpr]):
                       rest,
                       base) ]
 
-  def onRABinOp(s, prod: ParserElement, st: str, loc: int, toks: ParseResults[Any]) -> List[AstExpr]:
+  def onRABinOp(s, prod: ParserElement, st: str, loc: int, toks: "ParseResults[Any]") -> List[AstExpr]:
     if (len(toks) == 3):
       return [ AstBinExpr(*toks) ]
     else:
@@ -124,7 +124,7 @@ class AstBuilder(DaikonInvParser[AstExpr]):
                       revToks[3:],
                       base) ]
 
-  def onNABinOp(s, prod: ParserElement, st: str, loc: int, toks: ParseResults[Any]) -> List[AstExpr]:
+  def onNABinOp(s, prod: ParserElement, st: str, loc: int, toks: "ParseResults[Any]") -> List[AstExpr]:
     if (prod == s.IsInRange):
       return [ AstInRange(toks[0], toks[1], toks[2]) ]
     elif (prod == s.IsOneOf):
@@ -133,14 +133,14 @@ class AstBuilder(DaikonInvParser[AstExpr]):
       assert (len(toks) == 3);
       return [ AstBinExpr(*toks) ]
 
-  def onTernaryOp(s, prod: ParserElement, st: str, loc: int, toks: ParseResults[Any]) -> List[AstExpr]:
+  def onTernaryOp(s, prod: ParserElement, st: str, loc: int, toks: "ParseResults[Any]") -> List[AstExpr]:
     if (prod == s.IsConstMod):
       assert(len(toks) == 3)
       return [ AstIsConstMod(toks[0], toks[1], toks[2]) ]
     else:
       raise Exception("Unknown ternary operator: ", prod);
 
-  def onVariaryOp(s, prod: ParserElement, st: str, loc: int, toks: ParseResults[Any]) -> List[AstExpr]:
+  def onVariaryOp(s, prod: ParserElement, st: str, loc: int, toks: "ParseResults[Any]") -> List[AstExpr]:
     if (prod == s.HasValues):
       assert(len(toks) > 1)
       return [ AstHasValues(toks[0], toks[1:]) ]

@@ -4,13 +4,13 @@ from pyparsing import delimitedList,nums, ParserElement, operatorPrecedence, \
 from pyparsing import Keyword as K, Suppress as S, Literal as L, Regex as R, \
         Word as W
 from ..common.parser import InfixExprParser
-from typing import TypeVar, Iterable
+from typing import TypeVar, Iterable, Generic
 
 ParserElement.enablePackrat()
 csl = delimitedList
 
 T=TypeVar("T")
-class DaikonInvParser(InfixExprParser[T]):
+class DaikonInvParser(Generic[T], InfixExprParser[T]):
   def onTernaryOp(s, prod: "ParserElement[T]", st: str, loc: int, toks: "ParseResults[T]") -> "Iterable[T]":
       raise Exception("NYI")
   def onVariaryOp(s, prod: "ParserElement[T]", st: str, loc: int, toks: "ParseResults[T]") -> "Iterable[T]":
