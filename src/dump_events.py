@@ -3,8 +3,8 @@
 from argparse import ArgumentParser
 from sqlalchemy import func
 
-from models import Event
-from db_util import open_db
+from lib.invgame_server.models import Event
+from lib.invgame_server.db_util import open_db
 
 if __name__ == "__main__":
   p = ArgumentParser(description="Build graphs from database")

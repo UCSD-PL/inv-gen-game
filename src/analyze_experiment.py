@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 from datetime import timedelta
-from models import open_sqlite_db, Event
+from lib.invgame_server.models import open_sqlite_db, Event
 from argparse import ArgumentParser
 from levels import loadBoogieLvlSet
 from lib.common.util import error, fatal

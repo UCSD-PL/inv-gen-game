@@ -6,8 +6,8 @@ from sqlalchemy.orm import relationship, sessionmaker
 from json import loads, dumps
 from js import esprimaToBoogie
 from datetime import datetime
-from models import open_sqlite_db, Source, Event
-from db_util import addEvent
+from lib.invgame_server.models import open_sqlite_db, Source, Event
+from lib.invgame_server.db_util import addEvent
 
 import json
 import sys;

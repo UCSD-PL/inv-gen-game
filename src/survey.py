@@ -7,7 +7,7 @@ from datetime import datetime
 from sqlalchemy import func
 import json
 
-from models import Event, SurveyData, open_sqlite_db, open_mysql_db
+from lib.invgame_server.models import Event, SurveyData, open_sqlite_db, open_mysql_db
 import mturk_util
 
 def getSurveyData(session, mc, hit):

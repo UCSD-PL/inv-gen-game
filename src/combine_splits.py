@@ -6,7 +6,7 @@ from pyboogie.analysis import propagate_sp
 from lib.common.util import error
 from vc_check import tryAndVerifyLvl
 from re import compile as reComp
-from models import open_sqlite_db, Event
+from lib.invgame_server.models import open_sqlite_db, Event
 from datetime import datetime, timedelta
 from functools import reduce
 

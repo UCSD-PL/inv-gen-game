@@ -34,8 +34,8 @@ from vc_check import _from_dict, tryAndVerifyLvl, loopInvSafetyCtrex
 from levels import loadBoogieLvlSet, BoogieTraceLvl
 from pp import pp_BoogieLvl, pp_EsprimaInv, pp_EsprimaInvs, pp_CheckInvsRes, \
         pp_tryAndVerifyRes, pp_mturkId, pp_EsprimaInvPairs
-from models import open_sqlite_db, open_mysql_db, Event
-from db_util import addEvent, allInvs, levelSolved, levelFinishedBy,\
+from lib.invgame_server.models import open_sqlite_db, open_mysql_db, Event
+from lib.invgame_server.db_util import addEvent, allInvs, levelSolved, levelFinishedBy,\
         levelSkipCount, levelsPlayedInSession, tutorialDoneBy, questionaireDoneBy,\
         MturkIdT
 from server_common import openLog, log, log_d, pp_exc

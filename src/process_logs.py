@@ -11,7 +11,7 @@ from z3 import unsat
 import os
 import time
 from abc import ABCMeta, abstractmethod
-from colors import color, bold
+from lib.invgame_server.colors import color, bold
 
 def equiv(boogie1, boogie2):
     [p1,p2] = [expr_to_z3(pred, AllIntTypeEnv()) for pred in [boogie1, boogie2]]

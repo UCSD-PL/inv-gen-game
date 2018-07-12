@@ -2,7 +2,7 @@
 from json import loads, dumps
 from js import esprimaToBoogie
 from datetime import datetime
-from models import open_sqlite_db, Source, Event, workers, done_tutorial,\
+from lib.invgame_server.models import open_sqlite_db, Source, Event, workers, done_tutorial,\
     finished_levels, found_invs, experiments
 from experiments import Experiment, load_experiment_or_die, ServerRun
 from argparse import ArgumentParser

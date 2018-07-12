@@ -1,4 +1,4 @@
-from models import Source, Event, SurveyData, open_sqlite_db, open_mysql_db
+from .models import Source, Event, SurveyData, open_sqlite_db, open_mysql_db
 from json import loads,dumps
 from datetime import datetime
 from js import esprimaToBoogie

@@ -1,6 +1,6 @@
 from js import esprimaToZ3, EsprimaNode
 from typing import List, TypeVar, Callable, Tuple, Any
-from db_util import MturkIdT
+from lib.invgame_server.db_util import MturkIdT
 
 T=TypeVar("T")
 
