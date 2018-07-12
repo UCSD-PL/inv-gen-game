@@ -6,7 +6,6 @@ import pyboogie.ast as bast
 from pyboogie.z3_embed import Unknown, unsatisfiable, expr_to_z3, \
         AllIntTypeEnv, env_to_expr
 from vc_check import tryAndVerifyLvl
-#from boogie_loops import *
 from re import compile as reComp
 from lib.common.util import unique
 from os.path import exists
