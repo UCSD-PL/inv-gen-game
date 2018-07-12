@@ -147,6 +147,7 @@ def loadLvl(levelSet: str, lvlId: str, mturkId: MturkIdT, individualMode:bool = 
             'variables': lvl['variables'],
             'data': lvl['data'],
             'typeEnv': typeEnvToJson(fun.getTypeEnv()),
+            'hint': lvl['hint'],
             'goal': 'verify'
     }
 
@@ -277,7 +278,7 @@ def impliedPairs(
 
 @api.method("App.isTautology")
 @pp_exc
-@log_d(pp_EsprimaInv, pp_mturkId, str)
+@log_d(pp_EsprimaInv, str, pp_mturkId, str)
 def isTautology(inv: EsprimaNode, typeEnv: JSONTypeEnv, mturkId: MturkIdT): #pylint: disable=unused-argument
     """ 
         Check whether the invariant inv is a tautology.

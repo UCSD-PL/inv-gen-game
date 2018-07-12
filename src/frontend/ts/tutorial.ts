@@ -507,9 +507,9 @@ var mainScript = [
                 var lvl = new Level("tutorial_lvl_1",
                     ["j", "n"],
                     [[[0, 3], [1, 3], [2, 3], [3, 3]], [], []],
-                    { atleast: 1 },
                     "What can you say about j and n?",
                     false,
+                    { atleast: 1 },
                     {j: 'int', n: 'int'},
                     []);
                 gameLogic.loadLvl(lvl);
@@ -546,8 +546,8 @@ var mainScript = [
             //removeLabel(curL);
             var lvl = new Level("tutorial_lvl_2",
                 ["k", "l"],
-                [[[1, 2], [2, 3], [3, 4]], [], []],
-                { atleast: 1 }, "", false, {k: 'int', l: 'int'}, []);
+                [[[1, 2], [2, 3], [3, 4]], [], []], "", false,
+                { atleast: 1 }, {k: 'int', l: 'int'}, []);
             gameLogic.loadLvl(lvl);
         }
     },
@@ -557,8 +557,8 @@ var mainScript = [
             //$('#next-lvl').hide();
             var lvl = new Level("tutorial_lvl_3",
                 ["k", "l"],
-                [[[1, 3], [2, 6], [3, 9]], [], []],
-                { atleast: 1 }, "", false, {k: 'int', l: 'int'}, []);
+                [[[1, 3], [2, 6], [3, 9]], [], []], "", false,
+                { atleast: 1 }, {k: 'int', l: 'int'}, []);
             gameLogic.loadLvl(lvl);
         }
     },
@@ -596,8 +596,8 @@ var conditionalsScript = [
 
             var lvl = new Level("tutorial_lvl_4",
                 ["i", "x", "y"],
-                [[[1, 4, 5], [2, 5, 6], [3, 7, 7], [4, 8, 8], [5, 9, 9]], [], []],
-                { atleast: 2 }, "", false, {i: 'int', x: 'int', y: 'int'}, []);
+                [[[1, 4, 5], [2, 5, 6], [3, 7, 7], [4, 8, 8], [5, 9, 9]], [], []], "", false,
+                { atleast: 2 }, {i: 'int', x: 'int', y: 'int'}, []);
             gameLogic.loadLvl(lvl);
             tracesW.highlightRect(1, 2, 2, 3, 'solid 3px blue', "lightcyan");
             curL = label($('#3_2'), "See how x = y here (space/click to continue)", "left", 0, 0);

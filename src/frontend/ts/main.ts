@@ -15,7 +15,7 @@ let scoreW: ScoreWindow = null;
 let progW: ProgressWindow = null;
 
 var mode = Args.get_mode();
-assert(mode == "pattern")
+assert(mode == "patterns")
 var curLvl = null;
 var curLvlId;
 var curL = null;

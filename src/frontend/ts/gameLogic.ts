@@ -271,7 +271,7 @@ export class StaticGameLogic extends BaseGameLogic implements IGameLogic {
                 return;
             }
 
-            impliedBy(gl.foundJSInv.map(x=>x.canonForm), ui.canonForm, this.curLvl.typeEnv, function (x: ESNode[]) {
+            impliedBy(gl.foundJSInv.map(x=>x.canonForm), ui.canonForm, gl.curLvl.typeEnv, function (x: ESNode[]) {
               if (x.length > 0) {
                 gl.progressW.markInvariant(esprimaToStr(x[0]), "implies");
                   gl.tracesW.immediateError("This is weaker than a found expression!");
@@ -463,7 +463,7 @@ export class PatternGameLogic extends BaseGameLogic {
 
             let allCandidates = gl.foundJSInv.map((x)=>x.canonForm);
 
-            impliedBy(allCandidates, ui.canonForm, this.curLvl.typeEnv, function (x: ESNode[]) {
+            impliedBy(allCandidates, ui.canonForm, gl.curLvl.typeEnv, function (x: ESNode[]) {
               if (x.length > 0) {
                 gl.progressW.markInvariant(esprimaToStr(x[0]), "implies");
                   gl.tracesW.immediateError("This is weaker than a found expression!");

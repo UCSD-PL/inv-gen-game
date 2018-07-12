@@ -3,7 +3,6 @@ from pyboogie.bb import Function, BB
 from pyboogie.interp import Store, Trace, eval_quick
 from pyboogie.analysis import livevars
 from lib.common.util import unique, error
-from pyboogie.eval import _to_dict
 from collections import OrderedDict
 from os import listdir
 from os.path import dirname, join, abspath, realpath
