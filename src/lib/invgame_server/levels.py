@@ -1,5 +1,5 @@
 from pyboogie.ast import parseExprAst, ast_and
-from pyboogie.bb import Function, BB
+from pyboogie.bb import Function, BB, TypeEnv
 from pyboogie.interp import Store, Trace, eval_quick
 from pyboogie.analysis import livevars
 from lib.common.util import unique, error
@@ -12,7 +12,7 @@ from typing import Dict, Any, List, Tuple
 
 ValTrace=List[Store]
 
-def readTrace(fname: str) -> Tuple[List[str], ValTrace]:
+def readTrace(fname: str, typeEnv: TypeEnv) -> Tuple[List[str], ValTrace]:
     trace = open(fname, "r").read()
     lines = [x for x in [x.strip() for x in trace.split('\n')] if len(x) != 0]
     vs = [x for x in lines[0].split(' ') if len(x) != 0]
@@ -56,19 +56,16 @@ def loadBoogieFile(fname: str) -> BoogieTraceLvl:
     header_vals = None
     terminates = False
     try:
-        (vs, header_vals) = readTrace(fname[:-4] + '.trace')
+        (vs, header_vals) = readTrace(fname[:-4] + '.trace', fun.getTypeEnv())
         hint = load(open(fname[:-4] + '.hint'))
     except Exception: #TODO (Dimo) IOError here instead?
         pass
 
     assert (header_vals is not None)
     return { 'variables': vs,
-             'data': [ [[ str(row[v]) for v in vs  ] for row in header_vals],
+             'data': [ [[ row[v] for v in vs  ] for row in header_vals],
                        [],
                        [] ],
-             'exploration_state' : [ ( [str(header_vals[0][v]) for v in vs],
-                                       len(header_vals),
-                                       terminates ) ],
              'hint': hint,
              'program' : fun,
              'loop' : hdr

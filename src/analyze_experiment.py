@@ -4,31 +4,32 @@ from lib.invgame_server.models import open_sqlite_db, Event
 from argparse import ArgumentParser
 from lib.invgame_server.levels import loadBoogieLvlSet
 from lib.common.util import error, fatal
-from pyboogie.analysis import propagate_sp
 from pyboogie.ast import parseExprAst
-from pyboogie.z3_embed import Unknown, tautology, expr_to_z3, AllIntTypeEnv
+from pyboogie.bb import Function
+from pyboogie.z3_embed import Unknown, tautology, expr_to_z3, boogieToZ3TypeEnv
 from lib.invgame_server.vc_check import tryAndVerifyLvl
 import csv
 from functools import reduce
+from typing import Dict, Any, Optional
 
-p = ArgumentParser(description="Compute stats over an experiment");
-p.add_argument('--ename', type=str, help='Name for experiment', required=True);
-p.add_argument('--lvlStats', action="store_const", const=True, default=False,
+argp = ArgumentParser(description="Compute stats over an experiment");
+argp.add_argument('--ename', type=str, help='Name for experiment', required=True);
+argp.add_argument('--lvlStats', action="store_const", const=True, default=False,
                help='If set print lvl stats');
-p.add_argument('--usrStats', action="store_const", const=True, default=False,
+argp.add_argument('--usrStats', action="store_const", const=True, default=False,
                help='If set print user stats');
-p.add_argument('--lvlset', type=str,
+argp.add_argument('--lvlset', type=str,
                help='Path to levelset used in experiment', required=True);
-p.add_argument('--timeout', type=int, default=10,
+argp.add_argument('--timeout', type=int, default=10,
                help='Timeout in seconds for z3 queries.')
-p.add_argument('--additionalInvs', type=str,
+argp.add_argument('--additionalInvs', type=str,
                help='Path to a .csv file with additional invariants.')
 
 def isSrcUser(srcId):
     return srcId != 'verifier'
 
 if __name__ == "__main__":
-    args = p.parse_args();
+    args = argp.parse_args();
 
     s = open_sqlite_db("../logs/" + args.ename + "/events.db")()
     lvlsetName, lvls = loadBoogieLvlSet(args.lvlset)
@@ -38,12 +39,14 @@ if __name__ == "__main__":
       with open(args.additionalInvs) as f:
         r = csv.reader(f, delimiter=",");
         for row in r:
-          (lvl, invs) = row
+          (lvlName, invs) = row
+          fun: Function = lvls[lvlName]
+          typeEnv = boogieToZ3TypeEnv(fun.getTypeEnv())
           bInvs = []
           for inv in [x for x in invs.split(";") if len(x.strip()) != 0]:
             try:
               bInv = parseExprAst(inv)
-              if (tautology(expr_to_z3(bInv, AllIntTypeEnv()))):
+              if (tautology(expr_to_z3(bInv, typeEnv))):
                   continue
               bInvs.append(bInv)
             except RuntimeError:
@@ -52,9 +55,9 @@ if __name__ == "__main__":
             except Unknown:
               bInvs.append(bInv)
 
-          otherInvs[lvl]=bInvs
+          otherInvs[lvlName]=bInvs
 
-    lvlStats = { lvlN: {
+    lvlStats: Dict[str, Dict[str, Any]] = { lvlN: {
           "usersStarted": set(),\
           "nusersStarted": 0,\
           "usersFinished": set(),\
@@ -68,7 +71,7 @@ if __name__ == "__main__":
           "skipped": 0,\
           "totalTime": timedelta(),\
         } for lvlN in lvls }
-    usrStats = { }
+    usrStats: Dict[str, Any] = { }
     startTimes = { }
 
     for e in s.query(Event).all():
@@ -90,12 +93,12 @@ if __name__ == "__main__":
 
       if (lvlId):
         lvl = lvls[lvlId]
-        lvlS = lvlStats[lvlId]
+        lvlS: Optional[Dict[str, Any]] = lvlStats[lvlId]
       else:
         lvl = None
         lvlS = None
 
-      usrS = usrStats.get(src, {
+      usrS: Dict[str, Any] = usrStats.get(src, {
         "gamesDone": 0,\
         "lvlsStarted": 0,\
         "levelsFinished": 0,\
@@ -120,6 +123,7 @@ if __name__ == "__main__":
       """
 
       if (typ == "StartLevel"):
+        assert lvlS is not None
         usrS["lvlsStarted"] += 1
         lvlS['nusersStarted'] += 1
         lvlS['usersStarted'].add(src);
@@ -129,6 +133,7 @@ if __name__ == "__main__":
       elif (typ == "TutorialDone"):
         usrS["tutorialFinished"] += 1
       elif (typ == "TriedInvariant"):
+        assert lvlS is not None
         usrS["nInvariantsTried"] += 1
         lvlS["nInvariantsTried"] += 1
         usrS["invariantsTried"].add((p['raw'], p['canonical']))
@@ -139,6 +144,7 @@ if __name__ == "__main__":
         usrS['sumPowerupMultipliers'] += \
                 reduce(lambda x,y: x*y, [z[1] for z in p['powerups']], 1)
       elif (typ == "FoundInvariant"):
+        assert lvlS is not None
         usrS["nInvariantsFound"] += 1
         lvlS["nInvariantsFound"] += 1
         usrS["invariantsFound"].add((p['raw'], p['canonical']))
@@ -146,9 +152,11 @@ if __name__ == "__main__":
       elif (typ == "VerifyAttempt"):
         pass
       elif (typ == "SkipToNextLevel"):
+        assert lvlS is not None
         usrS['skipped'] += 1
         lvlS['skipped'] += 1
       elif (typ == "FinishLevel"):
+        assert lvlS is not None
         usrS['levelsFinished'] += 1
         lvlS['nusersFinished'] += 1
         lvlS['usersFinished'].add(src);
@@ -209,11 +217,11 @@ if __name__ == "__main__":
           str(lvlS["nusersStarted"]),\
           str(lvlS["nusersFinished"]),\
           str(lvlS["totalTime"]),\
-          str(lvlS["totalTime"] / lvlS["nusersFinished"]),\
+          (str(lvlS["totalTime"] / lvlS["nusersFinished"]) if lvlS["nusersFinished"] != 0 else "-"),\
           str(lvlS["nInvariantsTried"]),\
-          str(lvlS["nInvariantsTried"]/(lvlS["nusersFinished"]*1.0)),\
+          (str(lvlS["nInvariantsTried"]/(lvlS["nusersFinished"]*1.0)) if lvlS["nusersFinished"] != 0 else "-"),\
           str(lvlS["nInvariantsFound"]),\
-          str(lvlS["nInvariantsFound"]/(lvlS["nusersFinished"]*1.0)),\
+          (str(lvlS["nInvariantsFound"]/(lvlS["nusersFinished"]*1.0)) if lvlS["nusersFinished"] != 0 else "-"),\
           str(len(lvlS["sound"])),\
           ";".join(lvlS["sound"]),\
           str(len(lvlS["overfitted"])),\
@@ -221,5 +229,5 @@ if __name__ == "__main__":
           str(len(lvlS["nonind"])),\
           ";".join(lvlS["nonind"])]));
 
-    if (args.userStats):
+    if (args.usrStats):
         raise Exception("NYI!");
