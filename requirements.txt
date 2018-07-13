@@ -32,4 +32,4 @@ tabulate==0.8.2
 Werkzeug==0.14.1
 PyMySQL==0.8.0
 mypy
-git+https://github.com/d1m0/pyboogie.git#egg=pyboogie
+-e git+https://github.com/d1m0/pyboogie.git#egg=pyboogie
