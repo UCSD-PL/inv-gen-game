@@ -1,16 +1,13 @@
 import { info as facebook_info } from "./facebook";
 import { Args, disableBackspaceNav, Script, assert, queryAppend, label, removeLabel, log } from './util';
 import { StickyWindow } from "./stickyWindow";
-import { CounterexGameLogic } from "./ctrexGameLogic";
-import { RoundsGameLogic } from "./roundsGameLogic"
 import { PatternGameLogic, curLvlSet, setCurLvlSet } from "./gameLogic"
 import { invEval, evalResultBool } from "./eval"
 import { BaseTracesWindow, PositiveTracesWindow } from "./traceWindow";
 import { ScoreWindow } from "./scoreWindow";
 import { ProgressWindow } from "./progressWindow";
 import { mturkId, rpc, logEvent } from "./rpc";
-import { CounterexTracesWindow } from "./ctrexTracesWindow"
-import { DynamicLevel } from "./level";
+import { Level } from "./level";
 
 let traceW: BaseTracesWindow = null;
 let stickyW: StickyWindow = null;
