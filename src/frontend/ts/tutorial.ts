@@ -3,16 +3,13 @@ import { info as facebook_info } from "./facebook";
 import { Args, disableBackspaceNav, Script, assert, queryAppend, label, removeLabel, log, zip } from "./util";
 import { logEvent } from "./rpc"
 import { StickyWindow } from "./stickyWindow";
-import { CounterexGameLogic } from "./ctrexGameLogic";
-import { RoundsGameLogic } from "./roundsGameLogic"
-import { PatternGameLogic, StaticGameLogic } from "./gameLogic"
+import { StaticGameLogic } from "./gameLogic"
 import { invEval, evalResultBool, invToJS, interpretError } from "./eval"
 import { BaseTracesWindow, PositiveTracesWindow } from "./traceWindow";
 import { ScoreWindow } from "./scoreWindow";
 import { ProgressWindow } from "./progressWindow";
 import { mturkId, rpc } from "./rpc";
-import { CounterexTracesWindow } from "./ctrexTracesWindow"
-import { DynamicLevel, Level } from "./level";
+import { Level } from "./level";
 import { parse } from 'esprima';
 import { Node as ESNode } from 'estree';
 import { invPP } from "./pp";
@@ -510,9 +507,10 @@ var mainScript = [
                 var lvl = new Level("tutorial_lvl_1",
                     ["j", "n"],
                     [[[0, 3], [1, 3], [2, 3], [3, 3]], [], []],
-                    { atleast: 1 },
                     "What can you say about j and n?",
                     false,
+                    { atleast: 1 },
+                    {j: 'int', n: 'int'},
                     []);
                 gameLogic.loadLvl(lvl);
                 tracesW.disable();
@@ -548,8 +546,8 @@ var mainScript = [
             //removeLabel(curL);
             var lvl = new Level("tutorial_lvl_2",
                 ["k", "l"],
-                [[[1, 2], [2, 3], [3, 4]], [], []],
-                { atleast: 1 }, "", false, []);
+                [[[1, 2], [2, 3], [3, 4]], [], []], "", false,
+                { atleast: 1 }, {k: 'int', l: 'int'}, []);
             gameLogic.loadLvl(lvl);
         }
     },
@@ -559,101 +557,9 @@ var mainScript = [
             //$('#next-lvl').hide();
             var lvl = new Level("tutorial_lvl_3",
                 ["k", "l"],
-                [[[1, 3], [2, 6], [3, 9]], [], []],
-                { atleast: 1 }, "", false, []);
+                [[[1, 3], [2, 6], [3, 9]], [], []], "", false,
+                { atleast: 1 }, {k: 'int', l: 'int'}, []);
             gameLogic.loadLvl(lvl);
-        }
-    },
-];
-
-var negativeScript = [
-    {
-        setup: function (cs) {
-            $('.overlay').html("<h2>Sometimes you will see levels with 'red' rows.<br>" +
-                "You need an expression the evaluates to false on those rows.<br>" +
-                "Let's see an example! (space/click to continue)</h2>");
-            $('.overlay').fadeIn(fadeDelay, function () {
-                cs.nextStepOnKeyClickOrTimeout(stepTimeout, () => { }, 32);
-            });
-        }
-    },
-    {
-        setup: function (cs) {
-            $(".overlay").fadeOut(fadeDelay, function () { });
-            //$('#next-lvl').hide();
-
-            // gameLogic can be null here because we allow tutorial re-runs to begin with conditionals
-            //  $('#score-div-row').fadeIn(fadeDelay, function() {});
-            tracesW = new CounterexTracesWindow($('#data-display').get()[0]);
-            $('#sticky').addClass("box stickyWindow");
-            stickyW = new StickyWindow($('#sticky').get()[0]);
-            gameLogic = new StaticGameLogic(tracesW, progW, scoreW, stickyW, 3);
-            gameLogic.onLvlPassed(() =>
-                $('#next-lvl').fadeIn(fadeDelay, () => {
-                    curL = label({ of: $('#next-lvl'), at: "right center" },
-                        "Click Here!", "left");
-                }));
-
-            var lvl = new Level("tutorial_lvl_4",
-                ["i", "j"],
-                [[[1, 2], [2, 3], [3, 4], [4, 5]], [], [[6, 6]]],
-                { atleast: 2 }, "", false, []);
-            gameLogic.loadLvl(lvl);
-            curL = label($('#0_1.false'), "Notice the red row when i=j (space/click to continue)", "left", 0, 0);
-            cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32);
-        }
-    },
-    {
-        setup: function (cs) {
-            curL = label($('#formula-entry'), "Type 'i&lt=j'", "left");
-            gameLogic.onUserInput(function (inv) {
-                if (tempCb != null)
-                    tempCb(inv.replace(/\s/g, ""));
-            });
-            nextStepOnInvariant(cs, "i<=j", labelRemover(curL));
-        }
-    },
-    {
-        setup: function (cs) {
-            removeLabel(curL);
-            curL = label($('#neg_0'), "This row is not all red!<br> (space/click to continue)", "left", 0, 0);
-            gameLogic.onUserInput(function (inv) {
-                if (tempCb != null)
-                    tempCb(inv.replace(/\s/g, ""));
-            });
-            cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32);
-        }
-    },
-    {
-        setup: function (cs) {
-            curL = label($('#formula-entry'), "Type 'i&ltj' now", "left");
-            gameLogic.onUserInput(function (inv) {
-                if (tempCb != null)
-                    tempCb(inv.replace(/\s/g, ""));
-            });
-            nextStepOnInvariant(cs, "i<j", labelRemover(curL));
-        }
-    },
-    {
-        setup: function (cs) {
-            removeLabel(curL);
-            curL = label($('#neg_0'), "Now row is all red! (space/click to continue)", "left", 0, 0);
-            gameLogic.onUserInput(function (inv) {
-                if (tempCb != null)
-                    tempCb(inv.replace(/\s/g, ""));
-            });
-            cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32);
-        }
-    },
-    {
-        setup: function (cs) {
-            removeLabel(curL);
-            curL = label($('#neg_0'), "Press Enter", "left", 0, 0);
-            gameLogic.onUserInput(function (inv) {
-                if (tempCb != null)
-                    tempCb(inv.replace(/\s/g, ""));
-            });
-            cs.nextStepOnKeyClickOrTimeout(-1, labelRemover(curL), 13);
         }
     },
 ];
@@ -690,8 +596,8 @@ var conditionalsScript = [
 
             var lvl = new Level("tutorial_lvl_4",
                 ["i", "x", "y"],
-                [[[1, 4, 5], [2, 5, 6], [3, 7, 7], [4, 8, 8], [5, 9, 9]], [], []],
-                { atleast: 2 }, "", false, []);
+                [[[1, 4, 5], [2, 5, 6], [3, 7, 7], [4, 8, 8], [5, 9, 9]], [], []], "", false,
+                { atleast: 2 }, {i: 'int', x: 'int', y: 'int'}, []);
             gameLogic.loadLvl(lvl);
             tracesW.highlightRect(1, 2, 2, 3, 'solid 3px blue', "lightcyan");
             curL = label($('#3_2'), "See how x = y here (space/click to continue)", "left", 0, 0);
@@ -842,11 +748,6 @@ var conclusionScript = [
     },
 ];
 
-if (Args.get_mode() === "rounds") {
-    // Add negative steps to tutorial
-    mainScript = mainScript.concat(negativeScript);
-}
-
 let tutorialScript: any[];
 
 if (Args.get_tutorial_action() === "redo-cond") {
@@ -858,27 +759,6 @@ if (Args.get_tutorial_action() === "redo-cond") {
 }
 
 var curScript;
-
-//function facebook_login(response) {
-//    console.log(response);
-//    if (response.status === 'connected') {
-//        // the user is logged in and has authenticated your
-//        // app, and response.authResponse supplies
-//        // the user's ID, a valid access token, a signed
-//        // request, and the time the access token 
-//        // and signed request each expire
-//        uid = response.authResponse.userID;
-//        accessToken = response.authResponse.accessToken;
-//        curScript.nextStep();
-//    } else if (response.status === 'not_authorized') {
-//        // the user is logged in to Facebook, 
-//        // but has not authenticated your app
-//        FB.login(facebook_login, { scope: "user_education_history", return_scopes: true });
-//    } else {
-//        // the user isn't logged in to Facebook.
-//        FB.login(facebook_login, { scope: "user_education_history", return_scopes: true });
-//    }
-//}
 
 const fbSnippet = '<h1>You need to authenticate with Facebook first!</h1><div class="fb - login - button" data-max-rows="1" data-size="large" data-button-type="login_with" data-show-faces="false" data-auto-logout-link="false" data-use-continue-as="false"></div>';
 let fbReq: boolean = false;
@@ -903,9 +783,9 @@ function facebookLoginDone() {
 
 $(document).ready(function () {
 
-    //if (Args.get_assignment_id() == "ASSIGNMENT_ID_NOT_AVAILABLE") {
-    //    $("#hit-preview-warning").html("<p class='lead'><b>This is just a preview of the HIT. The work you do here will have to be redone when you accept the HIT.</b></p>");
-    //}
+    if (Args.get_assignment_id() == "ASSIGNMENT_ID_NOT_AVAILABLE") {
+        $("#hit-preview-warning").html("<p class='lead'><b>This is just a preview of the HIT. The work you do here will have to be redone when you accept the HIT.</b></p>");
+    }
 
     let di_div: HTMLDivElement = $('#discovered-invariants-div').get()[0] as HTMLDivElement;
     progW = new ProgressWindow(di_div);

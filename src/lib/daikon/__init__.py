@@ -1,10 +1,13 @@
 from tempfile import NamedTemporaryFile
 from subprocess import call, check_output
-from lib.daikon.inv_ast import parseExprAst
+from lib.daikon.inv_ast import parseExprAst, AstExpr
 from lib.common.util import flattenList, error
 from os.path import basename
+from pyboogie.interp import BoogieVal
 
-def toDaikonTrace(varz, trace):
+from typing import List
+
+def toDaikonTrace(varz: List[str], trace: List[List[BoogieVal]]) -> str:
   r = "decl-version 2.0\n"
   r += "ppt LoopEntry:::\n"
   r += "ppt-type point\n"
@@ -20,7 +23,7 @@ def toDaikonTrace(varz, trace):
     for (var,val) in zip(varz, row):
       r += var + "\n" + str(val) + "\n1\n"
     r += "\n"
-  return r;
+  return r
 
 inv_enable_opts = [
   "daikon.inv.binary.sequenceScalar.Member.enabled",
@@ -193,8 +196,8 @@ filter_opts = [
   "daikon.inv.filter.UnjustifiedFilter.enabled",
 ]
 
-def runDaikon(varz, trace, nosuppress=False):
-  with NamedTemporaryFile(suffix=".dtrace", delete=False) as dtraceF:
+def runDaikon(varz: List[str], trace: List[List[BoogieVal]], nosuppress: bool=False) -> List[AstExpr]:
+  with NamedTemporaryFile(suffix=".dtrace", delete=False, mode="w") as dtraceF:
     dtraceF.write(toDaikonTrace(varz,trace));
     dtraceF.flush();
     args = ["java", "daikon.Daikon"]
@@ -206,7 +209,7 @@ def runDaikon(varz, trace, nosuppress=False):
         flattenList([[ "--config_option", x + "=true" ] \
                         for x in inv_enable_opts])
     args.append(dtraceF.name)
-    raw = check_output(args)
+    raw = check_output(args).decode()
     call(["rm", basename(dtraceF.name)[:-len(".dtrace")]+".inv.gz"])
     start = raw.index("LoopEntry:::") + len("LoopEntry:::")
     end = raw.index("Exiting Daikon.", start)

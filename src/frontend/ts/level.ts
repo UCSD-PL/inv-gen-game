@@ -1,51 +1,29 @@
-import {rpc_loadLvlBasic, rpc_loadLvlDynamic, rpc_loadNextLvlDynamic} from "./rpc";
+import {rpc_loadLvl, rpc_loadNextLvl} from "./rpc";
 import {Args} from "./util";
-import {dataT, invariantT} from "./types";
+import {dataT, invariantT, TypeEnv} from "./types";
 
 export class Level {
   constructor(public id: string,
     public variables: string[],
     public data: dataT,
-    public goal: any,
     public hint: any,
     public colSwap: any,
+    public goal: any,
+    public typeEnv: TypeEnv,
     public startingInvs: [string, invariantT][]) {
   }
   static load(lvlSet: string, id: string, cb: (lvl: Level) => void) {
-    rpc_loadLvlBasic(lvlSet, id, function(data) {
-      cb(new Level(id, data.variables, data.data, data.goal, data.hint, data.colSwap, data.startingInvs));
-    });
-  }
-
-  isReplay(): boolean {
-    return this.startingInvs.length > 0;
-  }
-}
-
-export class DynamicLevel extends Level{
-  constructor(public id: string,
-    public variables: string[],
-    public data:  dataT,
-    public goal:  any,
-    public hint:  any,
-    public colSwap: any,
-    public startingInvs: [string, invariantT][],
-    public exploration_state: any) {
-    super(id, variables, data, goal, hint, colSwap, startingInvs);
-  }
-
-  static load(lvlSet: string, id: string, cb: (lvl: Level)=>void) {
-    rpc_loadLvlDynamic(lvlSet, id, function(data) {
-      cb(new DynamicLevel(id, data.variables, data.data, data.goal, data.hint, data.colSwap, data.startingInvs, data.exploration_state));
+    rpc_loadLvl(lvlSet, id, function(data) {
+      cb(new Level(id, data.variables, data.data, data.hint, data.colSwap, data.goal, data.typeEnv, data.startingInvs));
     });
   }
 
   static loadNext(cb: (res: [string, Level, boolean])=>void) {
-    rpc_loadNextLvlDynamic(Args.get_worker_id(), function(data) {
+    rpc_loadNextLvl(Args.get_worker_id(), function(data) {
       if (data === null)
         cb(null);
       else {
-        let lvl = new DynamicLevel(data.id, data.variables, data.data, data.goal, data.hint, data.colSwap, data.startingInvs, data.exploration_state);
+        let lvl = new Level(data.id, data.variables, data.data, data.hint, data.colSwap, data.goal, data.typeEnv, data.startingInvs);
           if (data.ShowQuestionaire === true) {
               cb([data.lvlSet, lvl, true]);
           } else {
@@ -53,5 +31,9 @@ export class DynamicLevel extends Level{
           }
       }
     });
+  }
+
+  isReplay(): boolean {
+    return this.startingInvs.length > 0;
   }
 }

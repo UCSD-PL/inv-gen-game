@@ -1,17 +1,17 @@
 #! /usr/bin/env python
 import json
 from pprint import pprint
-from js import esprimaToBoogie
-from mturk_util import connect, mkParser, get_event_log_fname, get_lvlset_dir
-from experiments import load_experiment_or_die, BONUS_PER_LEVEL, \
+from lib.invgame_server.js import esprimaToBoogie
+from lib.invgame_server.mturk_util import connect, mkParser, get_event_log_fname, get_lvlset_dir
+from lib.invgame_server.experiments import load_experiment_or_die, BONUS_PER_LEVEL, \
         BONUS_FOR_TUTORIAL, HIT_REWARD, REQUIRED_LEVELS_PER_HIT
-import lib.boogie.ast as ast
-from lib.boogie.z3_embed import expr_to_z3, getSolver, AllIntTypeEnv, Not
+import pyboogie.ast as ast
+from pyboogie.z3_embed import expr_to_z3, getSolver, AllIntTypeEnv, Not
 from z3 import unsat
 import os
 import time
 from abc import ABCMeta, abstractmethod
-from colors import color, bold
+from lib.invgame_server.colors import color, bold
 
 def equiv(boogie1, boogie2):
     [p1,p2] = [expr_to_z3(pred, AllIntTypeEnv()) for pred in [boogie1, boogie2]]

@@ -1,11 +1,11 @@
 #! /usr/bin/env python
 from traceback import print_exc
-from mturk_util import error, connect, mkParser
+from lib.invgame_server.mturk_util import error, connect, mkParser
 
 
 p = mkParser("Dispose of a HIT")
 p.add_argument('--hitids', nargs='+', type=str,
-        help='IDs of the HITs to dispose.')
+        help='IDs of the HITs to dispose.', required=True)
 args = p.parse_args()
 
 try:

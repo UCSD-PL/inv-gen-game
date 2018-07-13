@@ -1,14 +1,13 @@
 import {equivalentPairs, impliedBy, isTautology, simplify, tryAndVerify} from "./logic";
 import {error, toStrset, isEmpty, difference, any_mem, assert} from "./util"
-import {TwoPlayerPowerupSuggestionFullHistory, IPowerupSuggestion, IPowerup, PowerupSuggestionAll, MultiplierPowerup, PowerupSuggestionFullHistory} from "./powerups"
+import {IPowerupSuggestion, IPowerup, PowerupSuggestionAll, MultiplierPowerup, PowerupSuggestionFullHistory} from "./powerups"
 import {invPP} from "./pp";
-import {Level, DynamicLevel} from "./level";
+import {Level} from "./level";
 import {ITracesWindow} from "./traceWindow";
 import {IProgressWindow} from "./progressWindow";
-import {StickyWindow, TwoPlayerStickyWindow} from "./stickyWindow";
+import {StickyWindow} from "./stickyWindow";
 import {esprimaToStr, invToJS, invEval, evalResultBool, interpretError, fixVariableCase, identifiers, ImmediateErrorException, generalizeInv} from "./eval";
-import {getAllPlayer1Inv, getAllPlayer2Inv, getBonus} from "./bonus";
-import {ScoreWindow, TwoPlayerScoreWindow} from "./scoreWindow"
+import {ScoreWindow} from "./scoreWindow"
 import {dataT, voidCb, boolCb, invSoundnessResT, invariantT, templateT} from "./types"
 import {logEvent} from "./rpc"
 import {parse} from "esprima";
@@ -182,13 +181,13 @@ export class StaticGameLogic extends BaseGameLogic implements IGameLogic {
     let goal = this.curLvl.goal;
     if (goal == null) {
       cb(true);
-    } else  if (goal.equivalent) {
+    } else if (goal.equivalent) {
       assert(goal.equivalent.length > 0);
       let eq_exp:(string[]|ESNode[]) = goal.equivalent;
         if (typeof(eq_exp[0]) == "string") {
         eq_exp = (<string[]>eq_exp).map(parseF);
       }
-      equivalentPairs(<ESNode[]>eq_exp, this.foundJSInv.map((x)=>x.canonForm), function(pairs) {
+      equivalentPairs(<ESNode[]>eq_exp, this.foundJSInv.map((x)=>x.canonForm), this.curLvl.typeEnv, function(pairs) {
         var numFound = 0;
         var equiv = [];
           for (var i=0; i < pairs.length; i++) {
@@ -242,7 +241,7 @@ export class StaticGameLogic extends BaseGameLogic implements IGameLogic {
       if (!evalResultBool(res))
         return;
 
-      simplify(jsInv, (simplInv: ESNode) => { 
+      simplify(jsInv, this.curLvl.typeEnv, (simplInv: ESNode) => { 
         let ui: UserInvariant = new UserInvariant(inv, jsInv, simplInv);
 
           let redundant = this.progressW.contains(ui.id);
@@ -266,13 +265,13 @@ export class StaticGameLogic extends BaseGameLogic implements IGameLogic {
           }
 
           let gl = this;
-          isTautology(ui.canonForm, function(res) {
+          isTautology(ui.canonForm, this.curLvl.typeEnv, function(res) {
             if (res) {
               gl.tracesW.error("This is always true...");
                 return;
             }
 
-            impliedBy(gl.foundJSInv.map(x=>x.canonForm), ui.canonForm, function (x: ESNode[]) {
+            impliedBy(gl.foundJSInv.map(x=>x.canonForm), ui.canonForm, gl.curLvl.typeEnv, function (x: ESNode[]) {
               if (x.length > 0) {
                 gl.progressW.markInvariant(esprimaToStr(x[0]), "implies");
                   gl.tracesW.immediateError("This is weaker than a found expression!");
@@ -427,7 +426,7 @@ export class PatternGameLogic extends BaseGameLogic {
           if (!evalResultBool(res))
         return;
 
-      simplify(jsInv, (simplInv: ESNode) => { 
+      simplify(jsInv, this.curLvl.typeEnv, (simplInv: ESNode) => { 
         let ui: UserInvariant = new UserInvariant(inv, jsInv, simplInv);
           logEvent("TriedInvariant",
                  [curLvlSet(),
@@ -456,7 +455,7 @@ export class PatternGameLogic extends BaseGameLogic {
             return;
           }
 
-          isTautology(ui.rawInv, function(res) {
+          isTautology(ui.rawInv, this.curLvl.typeEnv, function(res) {
             if (res) {
               gl.tracesW.error("This is always true...");
                 return;
@@ -464,7 +463,7 @@ export class PatternGameLogic extends BaseGameLogic {
 
             let allCandidates = gl.foundJSInv.map((x)=>x.canonForm);
 
-            impliedBy(allCandidates, ui.canonForm, function (x: ESNode[]) {
+            impliedBy(allCandidates, ui.canonForm, gl.curLvl.typeEnv, function (x: ESNode[]) {
               if (x.length > 0) {
                 gl.progressW.markInvariant(esprimaToStr(x[0]), "implies");
                   gl.tracesW.immediateError("This is weaker than a found expression!");
@@ -551,7 +550,7 @@ export class PatternGameLogic extends BaseGameLogic {
     }
   }
 
-  loadLvl(lvl: DynamicLevel): void {
+  loadLvl(lvl: Level): void {
     let loadedCb = this.lvlLoadedCb;
     this.lvlLoadedCb = null;
     super.loadLvl(lvl);
@@ -602,376 +601,3 @@ export class PatternGameLogic extends BaseGameLogic {
               });
   }
 }
-
-abstract class TwoPlayerBaseGameLogic implements IGameLogic {
-  curLvl: Level = null;
-  lvlPassedCb: voidCb = null;
-  lvlLoadedCb: voidCb = null;
-  userInputCb: (inv: string) => void = null;
-  commitCb: voidCb = null;
-  pwupSuggestion: IPowerupSuggestion = null;
-  score: number = 0;
-  player: number = null;
-
-  constructor(public playerNum: number,
-    public tracesW: ITracesWindow,
-    public progressW: IProgressWindow,
-    public scoreW: TwoPlayerScoreWindow,
-    public stickyW: TwoPlayerStickyWindow) {
-    this.clear();
-    this.player = playerNum;
-    let gl = this;
-    this.tracesW.onChanged(function() {
-      gl.userInput(false);
-    });
-
-    this.tracesW.onCommit(function() {
-      gl.tracesW.msg("Trying out...");
-      gl.tracesW.disable();
-      gl.userInput(true);
-      gl.tracesW.enable();
-    });
-
-    this.onUserInput(() => { });
-    this.onLvlLoaded(() => { });
-    this.onLvlPassed(() => { });
-    this.onUserInput((x) => { });
-  }
-
-  clear(): void {
-    this.tracesW.clearError();
-    this.progressW.clear();
-    this.stickyW.clear();
-    // Leave score intact - don't clear score window
-    this.curLvl = null;
-  }
-
-  loadLvl(lvl: Level): void {
-    this.clear();
-    this.curLvl = lvl;
-    this.tracesW.setVariables(lvl);
-    this.tracesW.addData(lvl.data);
-    this.pwupSuggestion.clear(lvl);
-    this.setPowerups(this.pwupSuggestion.getPwups());
-    if (this.lvlLoadedCb)
-      this.lvlLoadedCb();
-  }
-
-  protected computeScore(inv: invariantT, s: number): number {
-    let pwups = this.pwupSuggestion.getPwups();
-    let hold = pwups.filter((pwup) => pwup.holds(inv));
-    let newScore = hold.reduce((score, pwup) => pwup.transform(score), s);
-    hold.forEach((pwup) => pwup.highlight(() => 0));
-    return newScore;
-  }
-
-  protected setPowerups(new_pwups: IPowerup[]): void {
-    let pwups = {};
-    for (let i in new_pwups) {
-      pwups[new_pwups[i].id] = new_pwups[i];
-    }
-
-    this.stickyW.setPowerups(new_pwups);
-  }
-
-  abstract userInput(commit: boolean): void;
-
-    abstract goalSatisfied(cb: (sat: boolean, feedback: any) => void): void;
-  onUserInput(cb: (inv: string) => void): void { this.userInputCb = cb; };
-  onLvlPassed(cb: () => void): void { this.lvlPassedCb = cb; };
-  onLvlLoaded(cb: () => void): void { this.lvlLoadedCb = cb; };
-  onCommit(cb: () => void): void { this.commitCb = cb; };
-  skipToNextLvl() : void { }
-}
-
-class TwoPlayerGameLogic extends TwoPlayerBaseGameLogic implements IGameLogic {
-  foundJSInv: string[] = [];
-  foundInv: string[] = [];
-  lvlPassedF: boolean = false;
-
-  constructor(public playerNum: number,
-    public tracesW: ITracesWindow,
-    public progressW: IProgressWindow,
-    public scoreW: TwoPlayerScoreWindow,
-    public stickyW: TwoPlayerStickyWindow) {
-    super(playerNum, tracesW, progressW, scoreW, stickyW);
-    this.pwupSuggestion = new TwoPlayerPowerupSuggestionFullHistory(playerNum, 5, "lfu");
-    // this.tracesW = tracesW;
-  }
-
-  clear(): void {
-    super.clear();
-    this.foundJSInv = [];
-    this.foundInv = [];
-    this.lvlPassedF = false;
-  }
-
-  showNext(lvl): boolean {
-    let goal = lvl.goal;
-    if (goal == null) {
-      return true;
-    }
-    else if (goal.manual) {
-      return true;
-    }
-    return false;
-  }
-
-  goalSatisfied(cb: (sat: boolean, feedback?: any) => void): void {
-    let goal = this.curLvl.goal;
-
-    let player1Invs: string[] = getAllPlayer1Inv();
-    let player2Invs: string[] = getAllPlayer2Inv();
-
-    let allInvs = player1Invs.concat(player2Invs);
-
-    if (goal == null) {
-      cb(true);
-    } else if (goal.manual) {
-      cb(false);
-    } else if (goal.find) {
-      let numFound = 0;
-      for (let i = 0; i < goal.find.length; i++) {
-        let found = false;
-        for (let j = 0; j < goal.find[i].length; j++) {
-          // check for the union of both players' invariants
-          // if ($.inArray(goal.find[i][j], this.foundJSInv) !== -1) {
-          if ($.inArray(goal.find[i][j], allInvs) !== -1) {
-            found = true;
-            break;
-          }
-        }
-
-        if (found)
-          numFound++;
-
-      }
-
-      cb(numFound === goal.find.length,
-        { "find": { "found": numFound, "total": goal.find.length } });
-    } else if (goal.equivalent) {
-      // check for the union of both players' invariants
-      // equivalentPairs(goal.equivalent, this.foundJSInv, function(pairs) {
-      equivalentPairs(goal.equivalent.map(parseF), allInvs.map(parseF), function(pairs) {
-        let numFound = 0;
-        let equiv = [];
-        for (let i = 0; i < pairs.length; i++) {
-          if (-1 === $.inArray(pairs[i][0], equiv))
-            equiv.push(pairs[i][0]);
-        }
-
-        cb(equiv.length === goal.equivalent.length,
-          { "equivalent": { "found": equiv.length, "total": goal.equivalent.length } });
-      });
-    } else if (goal.max_score) {
-      cb(true, { "max_score": { "found": this.foundJSInv.length } });
-    } else if (goal.none) {
-      cb(false);
-    } else if (goal.hasOwnProperty("atleast")) {
-      // check for the union of both players' invariants
-      // cb(this.foundJSInv.length >= goal.atleast);
-      cb(allInvs.length >= goal.atleast);
-    } else {
-      error("Unknown goal " + JSON.stringify(goal));
-    }
-  }
-
-  userInput(commit: boolean): void {
-    this.tracesW.disableSubmit();
-    this.tracesW.clearError();
-    this.progressW.clearMarks();
-
-    traceW.clearError();
-    traceW2.clearError();
-
-    progW.clearMarks();
-    progW2.clearMarks();
-
-    let inv = invPP(this.tracesW.curExp().trim());
-    let desugaredInv = invToJS(inv);
-    let parsedInv: ESNode = null;
-
-    this.userInputCb(inv);
-
-    try {
-      parsedInv = parse(desugaredInv);
-    } catch (err) {
-      this.tracesW.delayedError(inv + " is not a valid expression.");
-      return;
-    }
-
-    if (inv.length === 0) {
-      this.tracesW.evalResult({ clear: true });
-      return;
-    }
-
-    let jsInv = esprimaToStr(parsedInv);
-
-      try {
-      let doProceed = true;
-      let pos_res = invEval(parsedInv, this.curLvl.variables, this.curLvl.data[0]);
-      let res: [any[], [any, any][], any[]] = [pos_res, [], []];
-      this.tracesW.evalResult({ data: res });
-
-      if (!evalResultBool(res))
-        return;
-
-      let redundant = this.progressW.contains(inv);
-      if (redundant) {
-        this.progressW.markInvariant(inv, "duplicate");
-        this.tracesW.immediateError("Duplicate Invariant!");
-        doProceed = false;
-        return;
-      }
-
-
-      if (this.player === 1) {
-        if (progW2.contains(inv)) {
-          progW2.markInvariant(inv, "duplicate");
-          traceW.immediateError("Duplicate Invariant!");
-          doProceed = false;
-          return;
-        }
-
-        let player2Invs: string[] = getAllPlayer2Inv();
-
-        if (player2Invs.length !== 0) {
-          equivalentPairs([parseF(jsInv)], player2Invs.map(parseF), function(x: any) {
-            if (x != null && typeof player2Invs[x] !== "undefined") {
-              // console.log(jsInv + " <=> " + player2Invs[x]);
-              progW2.markInvariant(player2Invs[x], "duplicate");
-              traceW.immediateError("Duplicate Invariant!");
-              traceW.disableSubmit();
-              doProceed = false;
-              return;
-            }
-            else {
-              impliedBy(player2Invs.map(parseF), parseF(jsInv), function(x: any) {
-                if (x !== null) {
-                  // console.log(player2Invs[x] + " ==> " + jsInv);
-                  progW2.markInvariant(player2Invs[x], "implies");
-                  traceW.immediateError("Implied by opponent's invariant!");
-                  traceW.disableSubmit();
-                  doProceed = false;
-                  return;
-                }
-              });
-            }
-
-          });
-        }
-      }
-
-      else if (this.player === 2) {
-        if (progW.contains(inv)) {
-          progW.markInvariant(inv, "duplicate");
-          traceW2.immediateError("Duplicate Invariant!");
-          doProceed = false;
-          return;
-        }
-
-        let player1Invs: string[] = getAllPlayer1Inv();
-
-        if (player1Invs.length !== 0) {
-
-          equivalentPairs([parseF(jsInv)], player1Invs.map(parseF), function(x) {
-            if (x != null && typeof player1Invs[x] !== "undefined") {
-              // console.log(jsInv + " <=> " + player1Invs[x]);
-              progW.markInvariant(player1Invs[x], "duplicate");
-              traceW2.immediateError("Duplicate Invariant!");
-              traceW2.disableSubmit();
-              doProceed = false;
-              return;
-            }
-
-            else {
-              impliedBy(player1Invs.map(parseF), parseF(jsInv), function(x: invariantT[]) {
-                if (x !== null && x.length > 0) {
-                  // console.log(player1Invs[x] + " ==> " + jsInv);
-                  progW.markInvariant(esprimaToStr(x[0]), "implies");
-                  traceW2.immediateError("Implied by opponent's invariant!");
-                  traceW2.disableSubmit();
-                  doProceed = false;
-                  return;
-                }
-              });
-            }
-          });
-        }
-      }
-
-
-      let all = pos_res.length;
-      let hold = pos_res.filter(function(x) { return x; }).length;
-
-      if (hold < all) {
-        this.tracesW.error("Holds for " + hold + "/" + all + " cases.");
-        doProceed = false;
-      }
-      else {
-        let gl = this;
-        isTautology(parse(jsInv), function(res) {
-          if (res) {
-            gl.tracesW.error("This is always true...");
-            gl.tracesW.disableSubmit();
-            doProceed = false;
-            return;
-          }
-
-          let jsInvEs = parse(jsInv);
-
-          impliedBy(gl.foundJSInv.map(parseF), jsInvEs, function(invs: invariantT[]) {
-            if (invs !== null && invs.length > 0) {
-              var x: number = gl.foundJSInv.indexOf(esprimaToStr(invs[0]));
-              gl.progressW.markInvariant(gl.foundInv[x], "implies");
-              gl.tracesW.immediateError("Implied by existing invariant!");
-              // console.log(gl.foundInv[x] + " ==> " + jsInv);
-              doProceed = false;
-            }
-            else {
-              if (doProceed === true) {
-                gl.tracesW.enableSubmit();
-                if (!commit) {
-                  gl.tracesW.msg("Press Enter...");
-                  return;
-                }
-
-                let addScore = gl.computeScore(jsInvEs, 1);
-
-                gl.pwupSuggestion.invariantTried(jsInvEs);
-                setTimeout(() => gl.setPowerups(gl.pwupSuggestion.getPwups()), 1000); // TODO: Remove hack
-
-                gl.score += addScore;
-                gl.scoreW.add(addScore);
-                gl.foundInv.push(inv);
-                gl.foundJSInv.push(jsInv);
-                gl.progressW.addInvariant(inv, jsInvEs);
-                gl.tracesW.setExp("");
-
-                if (allowBonus) {
-                  getBonus(this.player, function(pt) {
-                    gl.scoreW.add(pt);
-                  });
-                }
-              }
-
-              if (!gl.lvlPassedF) {
-                gl.goalSatisfied((sat, feedback) => {
-                  let lvl = gl.curLvl;
-                  if (sat) {
-                    gl.lvlPassedF = true;
-                    gl.lvlPassedCb();
-                  }
-                });
-              }
-            }
-          });
-        });
-      }
-
-    } catch (err) {
-      this.tracesW.delayedError(<string>interpretError(err));
-    }
-  }
-}
-
