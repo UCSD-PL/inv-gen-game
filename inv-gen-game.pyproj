@@ -15,7 +15,7 @@
     <WebBrowserUrl>http://localhost</WebBrowserUrl>
     <PythonWsgiHandler>{StartupModule}.wsgi_app</PythonWsgiHandler>
     <UseIISExpress>true</UseIISExpress>
-    <CommandLineArguments>--log useractions.log --lvlset ../lvlsets/unsolved-leftover-split.lvlset --db mysql+pymysql://mmenarini@invgame:sdljsd$903@invgame.mysql.database.azure.com/game --adminToken fuzzy --timeout 60</CommandLineArguments>
+    <CommandLineArguments>--log useractions.log --lvlset ../lvlsets/unsolved-leftover-split.lvlset --db mysql+pymysql://mmenarini@invgame:sdljsd$903@invgame.mysql.database.azure.com/game --timeout 60</CommandLineArguments>
     <IsWindowsApplication>False</IsWindowsApplication>
     <WebBrowserPort>5000</WebBrowserPort>
   </PropertyGroup>
