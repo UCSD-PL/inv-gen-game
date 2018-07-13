@@ -1,39 +1,41 @@
-import {rpc_loadLvlBasic, rpc_loadLvlDynamic, rpc_loadNextLvlDynamic, rpc_equivalentPairs, rpc_impliedPairs, rpc_isTautology, rpc_simplify, rpc_tryAndVerify, rpc_instantiate} from "./rpc";
-import {dataT, invariantT, templateT} from "./types";
+import {rpc_equivalentPairs, rpc_impliedPairs, rpc_isTautology, rpc_simplify, rpc_tryAndVerify} from "./rpc";
+import {dataT, invariantT, templateT, TypeEnv} from "./types";
 import {Node as ESNode} from "estree";
 
 /* Requires Epsrima.js */
 type cbT = (result: any) => void
 
-export function equivalentPairs(invL1: invariantT[], invL2: invariantT[], cb: cbT): void {
-  rpc_equivalentPairs(invL1, invL2, cb);
+export function equivalentPairs(invL1: invariantT[], invL2: invariantT[], typeEnv: TypeEnv, cb: cbT): void {
+  rpc_equivalentPairs(invL1, invL2, typeEnv, cb);
 }
 
-function equivalent(inv1:invariantT, inv2:invariantT, cb:(res:boolean)=>void): void {
-  equivalentPairs([inv1], [inv2], function (res) { cb(res.length > 0) });
+function equivalent(inv1:invariantT, inv2:invariantT, typeEnv: TypeEnv, cb:(res:boolean)=>void): void {
+  equivalentPairs([inv1], [inv2], typeEnv, function (res) { cb(res.length > 0) });
 }
 
-export function impliedPairs(invL1:invariantT[], invL2:invariantT[],
+export function impliedPairs(invL1:invariantT[], invL2:invariantT[], typeEnv: TypeEnv,
                       cb:(arg:[ESNode, ESNode][])=>void): void {
-  rpc_impliedPairs(invL1, invL2, cb);
+  rpc_impliedPairs(invL1, invL2, typeEnv, cb);
 }
 
-function implied(invL1:invariantT[], inv:invariantT , cb:(res:boolean)=>void): void {
-  impliedPairs(invL1, [inv], function (res) { cb(res.length > 0) });
+function implied(invL1:invariantT[], inv:invariantT, typeEnv: TypeEnv,
+                      cb:(res:boolean)=>void): void {
+  impliedPairs(invL1, [inv], typeEnv, function (res) { cb(res.length > 0) });
 }
 
-export function impliedBy(invL1:invariantT[], inv:invariantT, cb:(res:ESNode[])=>void): void {
-  impliedPairs(invL1, [inv], function (res) {
+export function impliedBy(invL1:invariantT[], inv:invariantT, typeEnv: TypeEnv,
+                      cb:(res:ESNode[])=>void): void {
+  impliedPairs(invL1, [inv], typeEnv, function (res) {
     cb(res.map((([inv1,inv2])=>inv1)));
   });
 }
 
-export function isTautology(inv:invariantT, cb:(res:boolean)=>void): void {
-  rpc_isTautology(inv, cb);
+export function isTautology(inv:invariantT, typeEnv: TypeEnv, cb:(res:boolean)=>void): void {
+  rpc_isTautology(inv, typeEnv, cb);
 }
 
-export function simplify(inv:string, cb:(res:ESNode)=>void): void {
-  rpc_simplify(inv, cb);
+export function simplify(inv:string, typeEnv: TypeEnv, cb:(res:ESNode)=>void): void {
+  rpc_simplify(inv, typeEnv, cb);
 }
 
 /*
@@ -52,11 +54,4 @@ export function tryAndVerify(lvlSet: string, lvlId: string, invs: invariantT[],
                                      any[],// Post cond. counterexample to sound invariants
                                      any[]]) => void) { // Post cond. counterex to all invariants
   rpc_tryAndVerify(lvlSet, lvlId, invs, cb);
-}
-
-function instantiate(templates: templateT[],
-                     lvlVars: string[], // TODO: Should eventually not need this argument. Convert 
-                     data: [ any[] ],   //       data to a dictionary containing variable names.
-                     cb: (invs: invariantT)=>void): void {
-  rpc_instantiate(templates, lvlVars, data, cb);
 }

@@ -7,8 +7,8 @@ from datetime import datetime
 from sqlalchemy import func
 import json
 
-from models import Event, SurveyData, open_sqlite_db, open_mysql_db
-import mturk_util
+from lib.invgame_server.models import Event, SurveyData, open_sqlite_db, open_mysql_db
+import lib.invgame_server.mturk_util
 
 def getSurveyData(session, mc, hit):
   """ Return survey information for the given HIT (with database caching)

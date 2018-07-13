@@ -1,16 +1,9 @@
 #! /usr/bin/env bash
 
-if [[ $# -ne 2 ]] ; then
-  echo "Usage $0 <target-directory> <python-version>"
-  exit -1
-fi
+PY="$(which python3)"
 
-if [[ "$2" -eq "2" ]] ; then
-  PY="$(which python)"
-elif [[ "$2" -eq "3" ]] ; then
-  PY="$(which python3)"
-else
-  echo "$2 is not a valid python version. Enter 2 or 3"
+if [[ $# -ne 1 ]] ; then
+  echo "Usage $0 <target-directory>"
   exit -1
 fi
 
@@ -25,37 +18,27 @@ DIR="$( cd $1 && pwd )"
 $PY -m venv $DIR
 
 source $DIR/bin/activate
-
-if [[ "$2" -eq "2" ]] ; then
-  PY="$(which python)"
-else
-  PY="$(which python3)"
-fi
-
-$PY -m pip install wheel
-$PY -m pip install flask
-$PY -m pip install flask-jsonrpc
-$PY -m pip install slimit
-$PY -m pip install pyparsing
-$PY -m pip install boto
-$PY -m pip install pyOpenSSL
-$PY -m pip install colorama
-$PY -m pip install sqlalchemy
-$PY -m pip install tabulate
-$PY -m pip install Pyro4
-$PY -m pip install pydot
-$PY -m pip install frozendict
-$PY -m pip install infinite
+pip install wheel
+pip install flask
+pip install flask-jsonrpc
+pip install slimit
+pip install pyparsing
+pip install boto
+pip install pyOpenSSL
+pip install colorama
+pip install sqlalchemy
+pip install tabulate
+pip install Pyro4
+pip install pydot
+pip install frozendict
+pip install infinite
 # TODO: Need to find a Python3 compatible replacement for this
-$PY -m pip install mysql-python
-$PY -m pip install infinite
-$PY -m pip install mysql-python
-$PY -m pip install pycparser
-$PY -m pip install mypy
-
-if [ "$2" == "3" ] ; then
-  $PY -m pip install mypy
-fi
+pip install mysql-python
+pip install infinite
+pip install mysql-python
+pip install pycparser
+pip install mypy
+pip install -e git+git@github.com:d1m0/pyboogie.git#egg=pyboogie
 
 if [ ! -d $DIR/third_party ] ; then
   mkdir $DIR/third_party
@@ -72,12 +55,14 @@ if [ ! -e $DIR/bin/z3 ]; then
   popd
 fi
 
+DAIKONVER="5.6.6"
+DAIKONTAR=daikon-$DIAKONVER.tar.gz
 if [ ! -e $DIR/third_party/daikon ]; then
   pushd $DIR/third_party
   mkdir daikon
   cd daikon
-  wget https://plse.cs.washington.edu/daikon/download/daikon-5.6.0.tar.gz
-  tar zxf daikon-5.6.0.tar.gz
+  wget http://plse.cs.washington.edu/daikon/download/$DAIKONTAR
+  tar zxf $DAIKONTAR
   popd
 fi
 
@@ -123,7 +108,7 @@ fi
 
 npm install
 
-echo "export DAIKONDIR=$DIR/third_party/daikon/daikon-5.5.6" >> $DIR/bin/activate
+echo "export DAIKONDIR=$DIR/third_party/daikon/daikon-$DAIKONVER" >> $DIR/bin/activate
 echo "export JAVA_HOME=\${JAVA_HOME:-\$(dirname \$(dirname \$(dirname \$(readlink -f \$(/usr/bin/which java)))))}" >> $DIR/bin/activate
 echo "source \$DAIKONDIR/scripts/daikon.bashrc" >> $DIR/bin/activate
 echo "export PATH=\$PATH:$MYDIR/node_modules/.bin/" >> $DIR/bin/activate

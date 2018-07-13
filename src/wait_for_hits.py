@@ -1,6 +1,6 @@
 #! /usr/bin/env python
-from mturk_util import connect, hit_status, mkParser, send_notification
-from experiments import load_experiment_or_die
+from lib.invgame_server.mturk_util import connect, hit_status, mkParser, send_notification
+from lib.invgame_server.experiments import load_experiment_or_die
 import time
 import datetime
 

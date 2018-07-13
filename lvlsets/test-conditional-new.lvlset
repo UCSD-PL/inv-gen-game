@@ -1,9 +1,0 @@
-{
-  "name" : "test",
-  "levels": [
-    [ "1", "../test-conditional/01.bpl" ],
-    [ "2", "../new_summer_benchmarks/sum1.boogie.desugared.bpl" ],
-    [ "3", "../test-conditional/019.boogie.desugared.bpl" ],
-    [ "4", "../new_summer_benchmarks/fig1.boogie.desugared.bpl" ]
-  ]
-}

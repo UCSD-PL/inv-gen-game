@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
 import argparse
-#import lib.boogie.ast
+#import pyboogie.ast
 import json
-import levels
+import lib.invgame_server.levels
 import math
 import os
 from random import randint, choice
@@ -11,11 +11,11 @@ import tabulate
 import pdb
 import itertools
 import re
-from lib.boogie.interp import trace_n_from_start, finished
-from lib.boogie.analysis import livevars
-from lib.boogie.ast import parseExprAst
-from lib.boogie.eval import evalPred
-from lib.boogie.bb import bbEntry
+from pyboogie.interp import trace_n_from_start, finished
+from pyboogie.analysis import livevars
+from pyboogie.ast import parseExprAst
+from pyboogie.eval import evalPred
+from pyboogie.bb import bbEntry
 
 p = argparse.ArgumentParser(description="improved trace dumper")
 p.add_argument("--lvlset", type=str, default="lvlsets/sorin.lvlset",
@@ -130,9 +130,6 @@ def run_lvl(lvl_name):
   loopHdr = loop.loop_paths[0][0]
 
   store_gen = levels.varproduct({v: gen(v,liveVars) for v in liveVars})
-  # tracegen = levels.getEnsamble(loop=loop, bbs=bbs, exec_limit=args.limit,
-  #                               tryFind=args.length, include_bbhit=True,
-  #                               vargens={v: gen(v,liveVars) for v in liveVars})
 
   target_len = 7
 

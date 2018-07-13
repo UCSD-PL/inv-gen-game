@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 from traceback import print_exc
-from mturk_util import error, connect, mkParser
+from lib.invgame_server.mturk_util import error, connect, mkParser
 from json import loads
-from experiments import Experiment, get_event_log_fname
+from lib.invgame_server.experiments import Experiment, get_event_log_fname
 
 p = mkParser("Process qualification requests")
 p.add_argument("qualtype", type=str, help="Qualification Type Identifier");

@@ -1,16 +1,13 @@
 import { info as facebook_info } from "./facebook";
 import { Args, disableBackspaceNav, Script, assert, queryAppend, label, removeLabel, log } from './util';
 import { StickyWindow } from "./stickyWindow";
-import { CounterexGameLogic } from "./ctrexGameLogic";
-import { RoundsGameLogic } from "./roundsGameLogic"
 import { PatternGameLogic, curLvlSet, setCurLvlSet } from "./gameLogic"
 import { invEval, evalResultBool } from "./eval"
 import { BaseTracesWindow, PositiveTracesWindow } from "./traceWindow";
 import { ScoreWindow } from "./scoreWindow";
 import { ProgressWindow } from "./progressWindow";
 import { mturkId, rpc, logEvent } from "./rpc";
-import { CounterexTracesWindow } from "./ctrexTracesWindow"
-import { DynamicLevel } from "./level";
+import { Level } from "./level";
 
 let traceW: BaseTracesWindow = null;
 let stickyW: StickyWindow = null;
@@ -18,6 +15,7 @@ let scoreW: ScoreWindow = null;
 let progW: ProgressWindow = null;
 
 var mode = Args.get_mode();
+assert(mode == "patterns")
 var curLvl = null;
 var curLvlId;
 var curL = null;
@@ -77,13 +75,7 @@ function loadTrace(res) {
 }
 
 function loadNextTrace() {
-    if (mode == "rounds" && gameLogic.curLvl && !gameLogic.lvlSolvedF) {
-        gameLogic.curLvl.genNext(curLvlSet(),
-            gameLogic.foundJSInv.map(function (x) { return x.canonForm }),
-            loadTrace);
-    } else {
-        DynamicLevel.loadNext(loadTrace);
-    }
+    Level.loadNext(loadTrace);
 }
 
 function nextLvl() {
@@ -273,19 +265,9 @@ $(document).ready(function () {
     let prog_div = $('#discovered-invariants-div').get()[0];
     progW = new ProgressWindow(prog_div as HTMLDivElement);
     scoreW = new ScoreWindow($('#score-div').get()[0]);
-    if (mode == "ctrex" || mode == "rounds") {
-        traceW = new CounterexTracesWindow($('#data-display').get()[0]);
-    } else {
-        traceW = new PositiveTracesWindow($('#data-display').get()[0]);
-    }
+    traceW = new PositiveTracesWindow($('#data-display').get()[0]);
     stickyW = new StickyWindow($('#sticky').get()[0]);
-    if (mode == "ctrex") {
-        gameLogic = new CounterexGameLogic(traceW, progW, scoreW, stickyW);
-    } else if (mode == "rounds") {
-        gameLogic = new RoundsGameLogic(traceW, progW, scoreW, stickyW);
-    } else {
-        gameLogic = new PatternGameLogic(traceW, progW, scoreW, stickyW);
-    }
+    gameLogic = new PatternGameLogic(traceW, progW, scoreW, stickyW);
 
     gameLogic.onLvlPassed(function () {
         //numLvlPassed = numLvlPassed + 1;

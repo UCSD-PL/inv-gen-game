@@ -7,8 +7,8 @@ from boto.mturk.qualification import Qualifications, \
         NumberHitsApprovedRequirement, \
         PercentAssignmentsApprovedRequirement, Requirement
 from datetime import timedelta
-from mturk_util import connect, mkParser, error
-from experiments import Experiment, get_unused_port, start_server, \
+from lib.invgame_server.mturk_util import connect, mkParser, error
+from lib.invgame_server.experiments import Experiment, get_unused_port, start_server, \
         HIT_REWARD, ServerRun
 
 def publish_hit(credentials, isSandbox, ename, num_hits, lvlset, adminToken,
