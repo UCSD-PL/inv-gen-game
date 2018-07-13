@@ -5,7 +5,6 @@ import re
 import sys
 import traceback
 from os.path import dirname, abspath, realpath
-from pyboogie.bb import get_bbs
 from lib.invgame_server.mturk_util import error
 from argparse import ArgumentParser
 
