@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 from argparse import ArgumentParser
 from boto.mturk.connection import MTurkRequestError
 from collections import OrderedDict
