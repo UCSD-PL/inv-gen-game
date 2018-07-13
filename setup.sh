@@ -21,7 +21,6 @@ source $DIR/bin/activate
 pip install wheel
 pip install flask
 pip install flask-jsonrpc
-pip install slimit
 pip install pyparsing
 pip install boto
 pip install pyOpenSSL
@@ -33,7 +32,6 @@ pip install pydot
 pip install frozendict
 pip install infinite
 # TODO: Need to find a Python3 compatible replacement for this
-pip install mysql-python
 pip install infinite
 pip install mysql-python
 pip install pycparser
@@ -42,17 +40,6 @@ pip install -e git+git@github.com:d1m0/pyboogie.git#egg=pyboogie
 
 if [ ! -d $DIR/third_party ] ; then
   mkdir $DIR/third_party
-fi
-
-if [ ! -e $DIR/bin/z3 ]; then
-  pushd $DIR/third_party
-  git clone https://github.com/Z3Prover/z3.git z3
-  cd z3
-  python scripts/mk_make.py --prefix=$DIR --python
-  cd build
-  make -j 8
-  make install
-  popd
 fi
 
 DAIKONVER="5.6.6"
