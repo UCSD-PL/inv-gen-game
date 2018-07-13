@@ -457,6 +457,9 @@ $(document).ready(function () {
     });
 
     let user_id_element: HTMLSpanElement = $('#user-id').get()[0] as HTMLSpanElement;
+
+    
+
     facebook_info.setLoginEvents(
         () => {
             user_id_element.textContent = facebook_info.userId;
@@ -468,6 +471,7 @@ $(document).ready(function () {
         });
 
     facebook_info.getStatus();
+
     //user_id_element.textContent = facebook_info.userId;
     //if (facebook_info.status === "connected") {
     //    checkOnTutorial();
