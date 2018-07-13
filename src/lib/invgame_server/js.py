@@ -7,7 +7,7 @@ from pyboogie.bb import TypeEnv, Any, Optional, TypeEnv as BoogieTypeEnv
 
 from typing import Optional, Dict, Any, Callable, cast
 
-# TODO: When typings for slimit are available, remove all 'Any' typings in this file.
+# TODO: When typings for esprima nodes are available, remove all 'Any' typings in this file.
 binOpFactoryT = Callable[[z3.ExprRef, z3.ExprRef], z3.ExprRef]
 EsprimaNode = Dict[str, Any]
 
