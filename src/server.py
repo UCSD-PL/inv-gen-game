@@ -478,8 +478,6 @@ def reportProblem(mturkId: MturkIdT, lvl: str, desc: str) -> None:
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description="invariant gen game server")
-    p.add_argument('--local', action='store_true',
-            help='Run without SSL for local testing')
     p.add_argument('--log', type=str,
             help='an optional log file to store all user actions. ' + 'Entries are stored in JSON format.')
     p.add_argument('--port', type=int, help='an optional port number')
@@ -501,6 +499,10 @@ if __name__ == "__main__":
             help='Maximum number of levels that can be played per HIT')
     p.add_argument('--replay', action='store_true',
             help='Enable replaying levels')
+    p.add_argument('--ssl-key', type=str,
+            help='Path to ssl .key file')
+    p.add_argument('--ssl-cert', type=str,
+            help='Path to ssl .cert file')
 
     args = p.parse_args()
     if ('mysql+pymysql://' in args.db):
@@ -520,14 +522,13 @@ if __name__ == "__main__":
     MYDIR: str = dirname(abspath(realpath(__file__)))
     ROOT_DIR: str = dirname(MYDIR)
 
-    if args.local:
-      #host = '127.0.0.1'
-      host: str = '0.0.0.0'
-      sslContext: Optional[Tuple[str, str]] = None
+    if args.ssl_key is not None or args.ssl_cert is not None:
+        assert args.ssl_key is not None and args.ssl_cert is not None
+        sslContext: Optional[Tuple[str, str]] = (args.ssl_key, args.ssl_cert)
     else:
-      host = '0.0.0.0'
-      sslContext = None # MYDIR + '/cert.pem', MYDIR + '/privkey.pem'
+        sslContext = None
 
+    host: str = '0.0.0.0'
     curLevelSetName, lvls = loadBoogieLvlSet(args.lvlset)
     traces = { curLevelSetName: lvls }
 
