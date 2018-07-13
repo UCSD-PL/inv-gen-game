@@ -1,0 +1,428 @@
+﻿<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>PatNum: an Invariant Generation Game</title>
+    <link rel="icon" href="../images/logo.png">
+    <!-- bootstrap stylesheet -->
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+          integrity="sha256-7s5uDGW3AHqw6xtJmNNtr+OBRJUlgkNJEo78P4b0yRw="
+          crossorigin="anonymous">
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css"
+          integrity="sha256-o8bM0Z5cFvrvvvQp0EJFi4LICvBA9FCx7iCNuojVsN8="
+          crossorigin="anonymous">
+
+    <!-- our code -->
+    <link rel="stylesheet" href="../css/inv.css">
+    <link rel="stylesheet" href="../css/arrow.css">
+
+</head>
+<body>
+<div id="fb-root"></div>
+<div id="loading-screen">
+    <h1 class='good text-center'><br /><img src="../images/loading.gif" /><br /><br />Loading...</h1>
+</div>
+<div class='container-fluid' id="main-game-screen" style="display:none">
+    <div style="display: none">
+        <dl class="dl-horizontal">
+            <dt>User ID</dt>
+            <dd><span id='user-id'></span></dd>
+        </dl>
+    </div>
+    <div class='row' id='hit-preview-warning'>
+    </div>
+    <div class='row' id='hint-row'>
+    </div>
+    <div class='row'>
+        <div class='col-xs-1 col-sm-1 col-md-1 col-lg-1' id='dummy'></div>
+        <div class='col-xs-1 col-sm-1 col-md-1 col-lg-1 box stickyWindow' style="width: 85px;" id='sticky'></div>
+
+        <div class='col-xs-6 col-sm-6 col-md-6 col-lg-6' id='middle'>
+            <div class='row' id='data-display' style="font-family: monospace;"></div>
+            <div class='row box' id='help_row'>
+                <span class='centered'> <h4>Click below for Help on Operators or to Replay tutorials:</h4></span>
+                <div id='ops'>
+                    <table class='opTable'>
+                        <tr>
+                            <td class="centered"><a id='plus_op'>+</a></td>
+                            <td class="centered"><a id='minus_op'>-</a></td>
+                            <td class="centered"><a id='mul_op'>*</a></td>
+                            <td class="centered"><a id='div_op'>/</a></td>
+                            <td class="centered"><a id='mod_op'>%</a></td>
+                            <td class="centered"><a id='eq_op'>=</a></td>
+                            <td class="centered"><a id='neq_op'>!=</a></td>
+                            <td class="centered"><a id='lt_op'>&lt</a></td>
+                            <td class="centered"><a id='lte_op'>&lt=</a></td>
+                            <td class="centered"><a id='gt_op'>&gt</a></td>
+                            <td class="centered"><a id='gte_op'> &gt=</a></td>
+                            <td class="centered"><a id='not_op'>!</a></td>
+                            <td class="centered"><a id='and_op'>&amp;&amp;</a></td>
+                            <td class="centered"><a id='or_op'>||</a></td>
+                            <td class="centered"><a id='impl_op'>if</a></td>
+                            <td class="centered"><a id='tutorials'>Tutorials</a></td>
+                            <!--
+                            <td class="centered"><a id='equiv_op'>&lt=&gt</a></td>
+                            -->
+                        </tr>
+                    </table>
+
+                    <h5>
+                        <div id="plus_ex" style='display: none'>
+                            Addition: X + Y returns the sum of X and Y. <br> Examples:
+                            <span class='bold'>3+4</span> ;
+                            <span class='bold'>i+1</span> ;
+                            <span class='bold'>i=j+1</span>
+                        </div>
+                        <div id="minus_ex" style='display: none'>
+                            Subtraction: X - Y returns the difference of X and Y. <br> Examples:
+                            <span class='bold'>5-4</span> ;
+                            <span class='bold'>i-1</span> ;
+                            <span class='bold'>i-j=5</span>
+                        </div>
+                        <div id="mul_ex" style='display: none'>
+                            Multiplication: X * Y returns X and Y. <br> Examples:
+                            <span class='bold'>5*4</span> ;
+                            <span class='bold'>5*j=20</span> ;
+                            <span class='bold'>5*j=20</span>
+                        </div>
+                        <div id="div_ex" style='display: none'>
+                            Division: X / Y returns X divived by Y. <br> Examples:
+                            <span class='bold'>10/2</span> ;
+                            <span class='bold'>i/3</span> ;
+                            <span class='bold'>i/2=5</span>
+                        </div>
+                        <div id="mod_ex" style='display: none'>
+                            Modulo: X % Y returns the remainder of division of X by Y. <br> Examples:
+                            <span class='bold'>5 % 3 = 2</span> ;
+                            <span class='bold'>i % 3</span>
+                        </div>
+                        <div id="eq_ex" style='display: none'>
+                            Equality: X = Y is true if X is equal to Y. <br> Examples:
+                            <span class='bold'>n = 5</span>;
+                            <span class='bold'>!(5 = 4)</span>;
+                            <span class='bold'>i = a+b</span>
+                        </div>
+                        <div id="neq_ex" style='display: none'>
+                            Not-equal: X != Y is true if X is not equal to Y. <br> Examples:
+                            <span class='bold'>5 != 4</span> ;
+                            <span class='bold'>a != b+c</span>
+                        </div>
+                        <div id="lt_ex" style='display: none'>
+                            Less than: X &lt; Y is true if X is less than Y. <br> Examples:
+                            <span class='bold'>4 &lt; 5</span> ;
+                            <span class='bold'>i &lt; 5</span> ;
+                            <span class='bold'>i &lt; j</span>
+                        </div>
+                        <div id="lte_ex" style='display: none'>
+                            Less than or equal: X &lt;= Y is true if X is less than or equal to Y. <br> Examples:
+                            <span class='bold'>4 &lt; 5</span>,
+                            <span class='bold'>5 &lt; 5</span>,
+                            <span class='bold'>i &lt;= 5</span>,
+                            <span class='bold'>i &lt;= j</span>
+                        </div>
+                        <div id="gt_ex" style='display: none'>
+                            Greater than: X &gt; Y is true if X is greater than Y. <br> Examples:
+                            <span class='bold'>5 &gt; 4</span>,
+                            <span class='bold'>i &gt; 3</span>
+                        </div>
+                        <div id="gte_ex" style='display: none'>
+                            Greater than or equal: X &gt;= Y is true if X is greater than or equal to Y. <br>Examples:
+                            <span class='bold'>5 &gt;= 4</span>,
+                            <span class='bold'>4 &gt;= 4</span>,
+                            <span class='bold'>i &gt;= 3</span>
+                        </div>
+                        <div id="not_ex" style='display: none'>
+                            Logical Not: !B is true if B is false. <br> Examples:
+                            <span class='bold'>!false</span>,
+                            <span class='bold'>!(3=4)</span>,
+                            <span class='bold'>!(i &gt;= 3)</span>
+                        </div>
+                        <div id="and_ex" style='display: none'>
+                            Logical And: A &amp;&amp; B is true if both A and B are true. <br>Examples:
+                            <span class='bold'>true &amp;&amp; true</span>,
+                            <span class='bold'>(3 &gt; 0) &amp;&amp; (4 &lt;= 5) </span>,
+                            <span class='bold'>(i=2) &amp;&amp; (j &gt; 0 )</span>
+                        </div>
+                        <div id="or_ex" style='display: none'>
+                            Logical Or: A || B is true if A is true or B is true. <br> Examples:
+                            <span class='bold'>true || false</span>,
+                            <span class='bold'>(3 &gt; 0) || (4 &lt;= 5) </span>,
+                            <span class='bold'>(i=2) || (j &gt; 0)</span>
+                        </div>
+                        <div id="impl_ex" style='display: none'>
+                            <p>
+                                If operator: "A if B" is true if A is true whenever B is true. <br> Examples:
+                                <span class='bold'>i=j if i < n</span> ;
+                                <span class='bold'>i=k if i >= n</span>
+                            </p>
+                            <button id='see-conditional-tutorial-1'>Video of "if" Tutorial</button>
+                            <button id='replay-tutorial-cond-1'>Replay "if" Tutorial</button>
+                        </div>
+                        <div id="tutorials_info" style='display: none'>
+                            <button id='see-conditional-tutorial-2'>Video of "if" Tutorial</button>
+                            <button id='replay-tutorial-cond-2'>Replay "if" Tutorial</button>
+                            <button id='replay-tutorial-all'>Replay Entire Tutorial</button>
+                        </div>
+                        <div id="equiv_ex" style='display: none'>The equivalence operator. Example: i &lt;=&gt; j checks if i is logically equivalent to j</div>
+
+                    </h5>
+                </div>
+                <div id="report_problem_row" class="centered">
+                    <a id="report_problem" href="#">Report a Problem</a>
+                </div>
+            </div>
+            <div class='col-xs-6 col-sm-6 col-md-6 col-lg-6'>
+
+                <div class='col-xs-8 col-sm-8 col-md-8 col-lg-8' id='hint-col'>
+                </div>
+
+                <!-- <div class='row'> -->
+                <!--   <div class='col-md-6 gap'> -->
+                <!--     <img id='help' src="help-icon.png" class='help-icon' data-toggle="tooltip" title="Click to toggle help options"/> -->
+                <!--     <div id='help-content' class='helpContentWindow box'> -->
+                <!--       <span id='replay' class='helpContent' data-toggle="tooltip" title="Click to play the tutorial again">Replay tutorial</span> -->
+                <!--       <br> -->
+                <!--       <span id='arrows' class='helpContent' data-toggle="tooltip" title="Click to view the layout introduction">Understand screen layout</span> -->
+                <!--       <br> -->
+                <!--     </div> -->
+                <!--   </div> -->
+                <!-- </div> -->
+
+            </div>
+        </div>
+
+        <div class='col-xs-3 col-sm-3 col-md-3 col-lg-3'>
+            <div id='score-div-row' class='row positioned box progressWindow'>
+                <div class='col-xs-2 col-sm-2 col-md-2 col-lg-2' style='height: 60px; line-height: 60px;'>
+                    <span style="display: inline-block; vertical-align: middle; line-height: normal;">Score:</span>
+                </div>
+                <div id='score-div' class='col-xs-7 col-sm-7 col-md-7 col-lg-7 col-xs-offset-3 col-sm-offset-3 col-md-offset-3 col-lg-offset-3'>
+                </div>
+            </div>
+            <div class='row good centered positioned' id='discovered-invariants-div'>
+            </div>
+            <div class='row ' id='quit-div'>
+                <button id='quit' class='btn-quit' style='display: none;'>Quit</button>
+                <button id='skip-to-next-lvl' class='btn-next' style='display: none;'>Next Lvl</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <div id="problem_screen" class="overlay" style="display:none">
+        <div class="container text-center">
+            <h1 class="good">Report a Problem</h1>
+            <form id="problem_form" action="">
+                <fieldset class="form-group">
+                    <label for="problem_input">
+                        Please enter a description of the problem
+                        and click send. We'll look into it as soon as possible.
+                    </label>
+                    <textarea id="problem_input" name="problem_input"
+                              class="form-control" rows="2"></textarea>
+                </fieldset>
+                <div id="problem_form_error" class="highlight"></div>
+                <button id="problem_send" class="btn-next">Send</button>
+                <button id="problem_close" class="btn-next">Cancel</button>
+            </form>
+        </div>
+    </div>
+    <div class='overlay text-center' style='display: none;' id='tutorial-video'>
+        <center>
+            <video width="75%" controls>
+                <source src="http://cseweb.ucsd.edu/~lerner/if-tutorial.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </center>
+        <button id='tutorial-video-done' class='btn-next'>Return to Game</button>
+    </div>
+
+    <div class='overlay text-center' style='display: none;' id='facebook-login'>
+        <h1> Please login to Facebook!</h1>
+    </div>
+
+    <div class='overlay text-center' style='display: none;' id='next-or-quit-screen'>
+        <h1 class='good'> Good job, you finished another level!</h1>
+        <div id='next-or-quit-additional-text' style='display: none;'></div>
+        <button id='next-level-overlay' class='btn-next'>Next Level</button>
+        <button id='quit-overlay' class='btn-next' style='display: none;'>Quit</button>
+    </div>
+    <div class='overlay' style='display: none;overflow-y: auto' id='game_done-screen'>
+        <h2 class='good text-center'><br />PatNum<br /><br />Game Over!</h2>
+    </div>
+    <div class='overlay' style='display: none; overflow-y: auto' id='done-screen'>
+        <div class="container">
+            <form action="" id="turk-form">
+                <fieldset class="form-group">
+                    <label class="fun">This game was fun to play. Select the option that is closest to your feelings:</label>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="fun" value="5">
+                            Strongly Agree
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="fun" value="4">
+                            Agree
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="fun" value="3">
+                            Neutral
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="fun" value="2">
+                            Disagree
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="fun" value="1">
+                            Strongly Disagree
+                        </label>
+                    </div>
+                </fieldset>
+                <fieldset class="form-group">
+                    <label class="challenging">The game was challenging. Select the option that is closest to your feelings:</label>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="challenging" value="5">
+                            Strongly Agree
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="challenging" value="4">
+                            Agree
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="challenging" value="3">
+                            Neutral
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="challenging" value="2">
+                            Disagree
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="challenging" value="1">
+                            Strongly Disagree
+                        </label>
+                    </div>
+                </fieldset>
+                <fieldset class="form-group">
+                    <label class="prog_experience">What is your level of expertise in programming?</label>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="prog_experience" value="5">
+                            Professional
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="prog_experience" value="4">
+                            Advanced
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="prog_experience" value="3">
+                            Intermediate
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="prog_experience" value="2">
+                            Novice
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="prog_experience" value="1">
+                            None
+                        </label>
+                    </div>
+                </fieldset>
+                <fieldset class="form-group">
+                    <label class="math_experience">What is the highest education level, at which you took a math course?</label>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="math_experience" value="5">
+                            PhD
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="math_experience" value="4">
+                            Masters
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="math_experience" value="3">
+                            Bachelors
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="math_experience" value="2">
+                            High-school (class 9-12)
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="math_experience" value="1">
+                            Middle-school or less (class &lt;9)
+                        </label>
+                    </div>
+                </fieldset>
+
+                <div class="form-group">
+                    <label for="likes_input">What did you like about the game?</label>
+                    <textarea name="likes" class="form-control" rows="2" id="likes_input"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="dislikes_input">What did you find confusing about the game?</label>
+                    <textarea name="dislikes" class="form-control" rows="2" id="dislikes_input"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="suggestions_input">Do have any suggestions on how to improve the game? If so, what are they?</label>
+                    <textarea name="suggestions" class="form-control" rows="2" id="suggestions_input"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="experience_input">
+                        So we can calibrate our results, please describe what programming experience you've had,
+                        in particular what programming languages you've used and for how long. If no programming experience, just say None.
+                    </label>
+                    <textarea name="experience" class="form-control" rows="2" id="experience_input"></textarea>
+                </div>
+                <div class='highlight' id='turk-form-error'> </div>
+                <input type="hidden" name="assignmentId" id="assignment-id-in-form" value="">
+                <input type="hidden" name="facebookId" id="facebook-id-in-form" value="">
+                <button type="button" id="final-submit" class="btn btn-primary">Submit</button>
+                <button type="button" id="final-skip" class="btn btn-defasult">Skip</button>
+            </form>
+            <br />
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.5/require.js"
+            integrity="sha256-uvn41VNPQ8aVNA6aS1Zjc2FUPkKq7ZgA6SzFiHkVgxs="
+            crossorigin="anonymous" data-main="../js/loader.js"></script>
+</body>
+</html>

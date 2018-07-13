@@ -1,5 +1,7 @@
 #! /usr/bin/env bash
 
+PY="$(which python3)"
+
 if [[ $# -ne 1 ]] ; then
   echo "Usage $0 <target-directory>"
   exit -1
@@ -17,50 +19,38 @@ PY=python3
 $PY -m venv $DIR
 
 source $DIR/bin/activate
-
-$PY -m pip install wheel
-$PY -m pip install flask
-$PY -m pip install flask-jsonrpc
-$PY -m pip install slimit
-$PY -m pip install pyparsing
-$PY -m pip install boto
-$PY -m pip install pyOpenSSL
-$PY -m pip install colorama
-$PY -m pip install sqlalchemy
-$PY -m pip install tabulate
-$PY -m pip install Pyro4
-$PY -m pip install pydot
-$PY -m pip install frozendict
-$PY -m pip install infinite
+pip install wheel
+pip install flask
+pip install flask-jsonrpc
+pip install pyparsing
+pip install boto
+pip install pyOpenSSL
+pip install colorama
+pip install sqlalchemy
+pip install tabulate
+pip install Pyro4
+pip install pydot
+pip install frozendict
+pip install infinite
 # TODO: Need to find a Python3 compatible replacement for this
-$PY -m pip install mysql-python
-$PY -m pip install infinite
-$PY -m pip install mysql-python
-$PY -m pip install pycparser
-$PY -m pip install mypy
-$PY -m pip install mypy
+pip install infinite
+pip install mysql-python
+pip install pycparser
+pip install mypy
+pip install -e git+git@github.com:d1m0/pyboogie.git#egg=pyboogie
 
 if [ ! -d $DIR/third_party ] ; then
   mkdir $DIR/third_party
 fi
 
-if [ ! -e $DIR/bin/z3 ]; then
-  pushd $DIR/third_party
-  git clone https://github.com/Z3Prover/z3.git z3
-  cd z3
-  python scripts/mk_make.py --prefix=$DIR --python
-  cd build
-  make -j 8
-  make install
-  popd
-fi
-
+DAIKONVER="5.6.6"
+DAIKONTAR=daikon-$DIAKONVER.tar.gz
 if [ ! -e $DIR/third_party/daikon ]; then
   pushd $DIR/third_party
   mkdir daikon
   cd daikon
-  wget https://plse.cs.washington.edu/daikon/download/daikon-5.6.0.tar.gz
-  tar zxf daikon-5.6.0.tar.gz
+  wget http://plse.cs.washington.edu/daikon/download/$DAIKONTAR
+  tar zxf $DAIKONTAR
   popd
 fi
 
@@ -106,7 +96,7 @@ fi
 
 npm install
 
-echo "export DAIKONDIR=$DIR/third_party/daikon/daikon-5.5.6" >> $DIR/bin/activate
+echo "export DAIKONDIR=$DIR/third_party/daikon/daikon-$DAIKONVER" >> $DIR/bin/activate
 echo "export JAVA_HOME=\${JAVA_HOME:-\$(dirname \$(dirname \$(dirname \$(readlink -f \$(/usr/bin/which java)))))}" >> $DIR/bin/activate
 echo "source \$DAIKONDIR/scripts/daikon.bashrc" >> $DIR/bin/activate
 echo "export PATH=\$PATH:$MYDIR/node_modules/.bin/" >> $DIR/bin/activate

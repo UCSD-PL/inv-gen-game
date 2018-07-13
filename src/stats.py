@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 from argparse import ArgumentParser
 from boto.mturk.connection import MTurkRequestError
 from collections import OrderedDict
@@ -6,12 +6,11 @@ from datetime import datetime
 from sqlalchemy import func
 import json
 
-from levels import loadBoogieFile, loadBoogieLvlSet
-from models import Event, SurveyData, VerifyData
-from db_util import open_db, filterEvents, filterSurveys
-from lib.boogie.ast import parseExprAst
-from vc_check import tryAndVerifyLvl
-import mturk_util
+from lib.invgame_server.levels import loadBoogieFile, loadBoogieLvlSet
+from lib.invgame_server.models import Event, SurveyData, VerifyData
+from lib.invgame_server.db_util import open_db, filterEvents, filterSurveys
+from pyboogie.ast import parseExprAst
+from lib.invgame_server.vc_check import tryAndVerifyLvl
 from functools import reduce
 
 def _add(m, k, v):

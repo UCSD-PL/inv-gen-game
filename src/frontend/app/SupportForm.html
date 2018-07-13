@@ -1,0 +1,108 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>PatNum: an Invariant Generation Game</title>
+    <!-- bootstrap stylesheet -->
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+          integrity="sha256-7s5uDGW3AHqw6xtJmNNtr+OBRJUlgkNJEo78P4b0yRw="
+          crossorigin="anonymous">
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css"
+          integrity="sha256-o8bM0Z5cFvrvvvQp0EJFi4LICvBA9FCx7iCNuojVsN8="
+          crossorigin="anonymous">
+
+    <!-- our code -->
+    <link rel="stylesheet" href="../css/inv.css">
+    <link rel="stylesheet" href="../css/arrow.css">
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap"></script>
+</head>
+
+<body>
+<div id="fb-root"></div>
+<div class="container" id="main">
+    <dl class="dl-horizontal">
+        <dt>User ID</dt>
+        <dd><span id='user-id'></span></dd>
+    </dl>
+    <div id="problem_screen" class="overlay" style="display: block">
+        <div class="container text-center">
+            <h1 class="good">Report a Problem</h1>
+            <form id="problem_form" action="">
+                <fieldset class="form-group">
+                    <label for="problem_input">
+                        Please enter a description of the problem
+                        and click send. We'll look into it as soon as possible.
+                    </label>
+                    <textarea id="problem_input" name="problem_input"
+                              class="form-control" rows="2"></textarea>
+                </fieldset>
+                <input type="hidden" name="assignmentId" id="assignment_id_field" value="">
+                <div id="problem_form_error" class="highlight"></div>
+                <button id="problem_send" class="btn-next">Send</button>
+                <button id="problem_close" class="btn-next">Cancel</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.5/require.js"
+        integrity="sha256-uvn41VNPQ8aVNA6aS1Zjc2FUPkKq7ZgA6SzFiHkVgxs="
+        crossorigin="anonymous" data-main="../js/loader_report.js"></script>
+
+<script>
+
+    // Given the ID of the assignmentId form field element, populate it
+    // with the assignmentId parameter from the URL.  If no assignment ID
+    // is present, inform the worker that the HIT is being previewed.
+
+    function init() {
+        console.log(Args.get_hit_id());
+        console.log(Args.get_worker_id());
+        console.log(Args.get_assignment_id());
+        console.log(Args.get_turk_submit_to());
+        var turk_submit_to = Args.get_turk_submit_to();
+        var assignment_id = Args.get_assignment_id();
+
+        if (assignment_id !== undefined) {
+            document.getElementById("assignment_id_field").value = assignment_id;
+        }
+        if (turk_submit_to !== undefined) {
+            document.getElementById("form").action = turk_submit_to + "/mturk/externalSubmit";
+        }
+
+        $("#problem_send").click(function() {
+            var errorMessage = $("#problem_form_error");
+            var desc = $("#problem_input").val();
+
+            if (desc === "") {
+                errorMessage
+                    .text("Please enter a description of the problem.")
+                    .show();
+                return;
+            }
+
+            rpc.call("App.reportProblem",
+                [mturkId(), curLvlId, desc],
+                function(res) {
+                    $("#problem_screen").fadeOut(1000);
+                },
+                function() {
+                    errorMessage
+                        .text("An error occurred. Please try again.")
+                        .show();
+                });
+        });
+
+        $("#problem_close").click(function() {
+            $("#problem_screen").fadeOut(1000);
+            $("#problem_input").val("");
+        });
+    }
+
+</script>
+</body>
+</html>

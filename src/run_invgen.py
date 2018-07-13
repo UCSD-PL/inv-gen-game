@@ -1,9 +1,9 @@
 #! /usr/bin/env python
-from levels import loadBoogieLvlSet
+from lib.invgame_server.levels import loadBoogieLvlSet
 import argparse
-from vc_check import tryAndVerifyLvl
+from lib.invgame_server.vc_check import tryAndVerifyLvl
 from lib.invgen import runInvGen, convertCppFileForInvGen
-from lib.boogie.ast import parseExprAst
+from pyboogie.ast import parseExprAst
 from lib.common.util import error
 from os.path import exists
 import re

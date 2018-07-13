@@ -1,9 +1,9 @@
 #! /usr/bin/env python
 import argparse
-from levels import loadBoogieLvlSet
-from vc_check import tryAndVerifyLvl
+from lib.invgame_server.levels import loadBoogieLvlSet
+from lib.invgame_server.vc_check import tryAndVerifyLvl
 from lib.ice import runICE
-from lib.boogie.z3_embed import to_smt2, z3_expr_to_boogie, Unknown
+from pyboogie.z3_embed import to_smt2, z3_expr_to_boogie, Unknown
 from lib.common.util import error
 from shutil import move
 #from signal import signal , SIGALRM,  alarm

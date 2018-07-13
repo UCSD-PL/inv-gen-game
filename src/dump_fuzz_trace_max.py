@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
 import argparse
-#import lib.boogie.ast
+#import pyboogie.ast
 import json
-import levels
+import lib.invgame_server.levels
 import math
 import os
 import random

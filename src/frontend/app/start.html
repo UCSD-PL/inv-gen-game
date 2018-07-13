@@ -1,0 +1,99 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>PatNum: an Invariant Generation Game</title>
+    <link rel="icon" href="../images/logo.png">
+    <!-- bootstrap stylesheet -->
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+          integrity="sha256-7s5uDGW3AHqw6xtJmNNtr+OBRJUlgkNJEo78P4b0yRw="
+          crossorigin="anonymous">
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css"
+          integrity="sha256-o8bM0Z5cFvrvvvQp0EJFi4LICvBA9FCx7iCNuojVsN8="
+          crossorigin="anonymous">
+
+    <!-- our code -->
+    <link rel="stylesheet" href="../css/inv.css">
+    <link rel="stylesheet" href="../css/arrow.css">
+</head>
+<body>
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+    var js, fjs = d.getElementsByTagName(s)[0];
+    if (d.getElementById(id)) return;
+    js = d.createElement(s); js.id = id;
+    js.src = 'https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v3.0&appId=158511131519028&autoLogAppEvents=1';
+    fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+<div class='container'>
+    <div id='done-screen'>
+        
+            <span> &nbsp; </span>
+            <h1 class='text-center'>Welcome to PatNum!</h1>
+            <span> &nbsp; </span>
+            <img class="img-responsive center-block" style="width: 30%" src="../images/logo-big.png" />
+            <p>
+                <h2 class='text-center'>
+                    PatNum is a prototype game aiming to assist software verification!<br />For more info please check out our <a href='http://cseweb.ucsd.edu/~dbounov/papers/invgen.pdf'>paper</a>.
+                </h2>
+            </p>
+            <span> &nbsp; </span>
+            <div id="play-screen" style='display: none'>
+                <p class="centered">
+                    <a type="button" class="btn btn-success btn-lg" href='game.html?noifs'>
+                        <span class="glyphicon glyphicon-play" aria-hidden="true"></span> Play
+                    </a>
+                </p>
+            </div>
+            <span> &nbsp; </span>
+            <div id="logout-screen" class="centered" style='display: none'>
+                <div>
+                    <table style="width: fit-content; margin-left: auto; margin-right: auto;">
+                        <tr>
+                            <td>
+                                <img id='user-picture' />
+                            </td>
+                            <td style="width:10px;"></td>
+                            <td>
+                                <h4>
+                                    <span id='user-name'></span><br />ID: <span id='user-id'></span>
+                                </h4>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div id="login-screen" style='display: none'>
+                <p>
+                    <h4 class='text-center'>
+                        You need to login with Facebook to play this game
+                    </h4>
+                </p>
+            </div>
+            <div class="centered">
+                <div class="fb-login-button"
+                     data-max-rows="1"
+                     data-size="large"
+                     data-button-type="login_with"
+                     data-show-faces="false"
+                     data-auto-logout-link="true"
+                     data-use-continue-as="false">
+                </div>
+            </div>
+       
+        <br />
+        <span> &nbsp; </span>
+        <div class='text-center'><a href="TermOfService.html">Term of Service</a> and <a href="Privacy.html">Privacy</a> notice</div>
+    </div>
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.5/require.js"
+        integrity="sha256-uvn41VNPQ8aVNA6aS1Zjc2FUPkKq7ZgA6SzFiHkVgxs="
+        crossorigin="anonymous" data-main="../js/start_loader.js"></script>
+</body>
+</html>
