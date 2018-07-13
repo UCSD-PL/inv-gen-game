@@ -43,7 +43,10 @@ class Server(Flask):
 app = Server(__name__, static_folder='frontend/', static_url_path='/game')
 api = rpc(app, '/api')
 
-@app.route('/game/app/start', methods=['GET', 'POST'])
+@app.route('/game/app/start', methods=['POST'])
+def gameFB():  # pragma: no cover
+    return send_from_directory('frontend/app', 'startFB.html', mimetype="text/html")
+@app.route('/game/app/start', methods=['GET'])
 def game():  # pragma: no cover
     return send_from_directory('frontend/app', 'start.html', mimetype="text/html")
 @app.route('/')

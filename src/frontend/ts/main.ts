@@ -467,14 +467,15 @@ $(document).ready(function () {
             facebookLoginAsk();
         });
 
-    user_id_element.textContent = facebook_info.userId;
-    if (facebook_info.status === "connected") {
-        checkOnTutorial();
-        if (get_next_level) {
-            get_next_level = false;
-            nextLvl();
-        }
-    } else {
-        facebookLoginAsk();
-    }
+    facebook_info.getStatus();
+    //user_id_element.textContent = facebook_info.userId;
+    //if (facebook_info.status === "connected") {
+    //    checkOnTutorial();
+    //    if (get_next_level) {
+    //        get_next_level = false;
+    //        nextLvl();
+    //    }
+    //} else {
+    //    facebookLoginAsk();
+    //}
 });

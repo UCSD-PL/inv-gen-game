@@ -40,6 +40,7 @@
     <Content Include="app\facebook-test.html">
       <SubType>Code</SubType>
     </Content>
+    <Content Include="app\startFB.html" />
     <Content Include="app\SupportForm.html" />
     <Content Include="app\TermOfService.html" />
     <Content Include="app\Privacy.html" />
@@ -60,6 +61,8 @@
     <Content Include="images\knife-down.gif" />
     <Content Include="images\knife-up.gif" />
     <Content Include="images\loading.gif" />
+    <Content Include="images\logo-big.png" />
+    <Content Include="images\logo.png" />
     <Content Include="Makefile" />
     <Content Include="tsconfig.json" />
     <Content Include="package.json" />
@@ -74,6 +77,7 @@
     <TypeScriptCompile Include="ts\gameLogic.ts" />
     <TypeScriptCompile Include="ts\level.ts" />
     <TypeScriptCompile Include="ts\logic.ts" />
+    <TypeScriptCompile Include="ts\start.ts" />
     <TypeScriptCompile Include="ts\report.ts" />
     <TypeScriptCompile Include="ts\main.ts" />
     <TypeScriptCompile Include="ts\powerups.ts" />
@@ -100,6 +104,7 @@
     <Compile Include="js\end.js" />
     <Compile Include="js\esprima.js" />
     <Compile Include="js\jquery.jsonrpcclient.js" />
+    <Compile Include="js\start_loader.js" />
     <Compile Include="js\loader_report.js" />
     <Compile Include="js\loader.js" />
     <Compile Include="js\tutorial_loader.js" />

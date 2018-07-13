@@ -4,7 +4,8 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Invariant Generation Game</title>
+    <title>PatNum: an Invariant Generation Game</title>
+    <link rel="icon" href="../images/logo.png">
     <!-- bootstrap stylesheet -->
     <link rel="stylesheet"
           href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
@@ -20,42 +21,77 @@
     <link rel="stylesheet" href="../css/arrow.css">
 </head>
 <body>
-    <div class='container'>
-    </div>
-    <div class='overlay' style='display: none;' id='done-screen'>
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+    var js, fjs = d.getElementsByTagName(s)[0];
+    if (d.getElementById(id)) return;
+    js = d.createElement(s); js.id = id;
+    js.src = 'https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v3.0&appId=158511131519028&autoLogAppEvents=1';
+    fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+<div class='container'>
+
+    <div id='done-screen'>
         <div class="container">
+            <span> &nbsp; </span>
             <h1 class='text-center'>Welcome to PatNum!</h1>
             <span> &nbsp; </span>
+            <img class="img-responsive center-block" style="width: 30%" src="../images/logo-big.png" />
             <p>
                 <h2 class='text-center'>
-                    InvGen is a prototype game aiming to assist software verification! For more info please check out our <a href='http://cseweb.ucsd.edu/~dbounov/papers/invgen.pdf'>paper</a>.
+                    PatNum is a prototype game aiming to assist software verification!<br />For more info please check out our <a href='http://cseweb.ucsd.edu/~dbounov/papers/invgen.pdf'>paper</a>.
                 </h2>
             </p>
             <span> &nbsp; </span>
-            <p>
-                <h2 class='text-center'>
-                    You can look at the game <b><a href='tutorial.html?noifs'> tutorial </a></b> or jump straight to the actual <b><a href='game.html?noifs'> game</a></b>!
-                </h2>
-            </p>
+            <div id="play-screen" style='display: none'>
+                <p class="centered">
+                    <a type="button" class="btn btn-success btn-lg" href='game.html?noifs'>
+                        <span class="glyphicon glyphicon-play" aria-hidden="true"></span> Play
+                    </a>
+                </p>
+            </div>
+            <span> &nbsp; </span>
+            <div id="logout-screen" class="centered" style='display: none'>
+                <div>
+                    <table style="width: fit-content; margin-left: auto; margin-right: auto;">
+                        <tr>
+                            <td>
+                                <img id='user-picture' />
+                            </td>
+                            <td style="width:10px;"></td>
+                            <td>
+                                <h4>
+                                    <span id='user-name'></span><br />ID: <span id='user-id'></span>
+                                </h4>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div id="login-screen" style='display: none'>
+                <p>
+                    <h4 class='text-center'>
+                        You need to login with Facebook to play this game
+                    </h4>
+                </p>
+            </div>
+            <div class="centered">
+                <div class="fb-login-button"
+                     data-max-rows="1"
+                     data-size="large"
+                     data-button-type="login_with"
+                     data-show-faces="false"
+                     data-auto-logout-link="true"
+                     data-use-continue-as="false">
+                </div>
+            </div>
         </div>
     </div>
+</div>
 
-    <!-- third party libraries -->
-    <script src="https://code.jquery.com/jquery-1.12.0.min.js"
-            integrity="sha256-Xxq2X+KtazgaGuA2cWR1v3jJsuMJUozyIXDB3e793L8=" crossorigin="anonymous"></script>
-    <script src="../js/jquery.jsonrpcclient.js"></script>
-    <script src="https://code.jquery.com/color/jquery.color-2.1.2.min.js"
-            integrity="sha256-H28SdxWrZ387Ldn0qogCzFiUDDxfPiNIyJX7BECQkDE=" crossorigin="anonymous"></script>
-    <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"
-            integrity="sha256-xNjb53/rY+WmG+4L6tTl9m6PpqknWZvRt0rO1SRnJzw=" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
-            integrity="sha256-pS96pU17yq+gVu4KBQJi38VpSuKN7otMrDQprzf/DWY=" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"
-            integrity="sha256-KXn5puMvxCw+dAYznun+drMdG1IFl3agK0p/pqT9KAo=" crossorigin="anonymous"></script>
-    <script>
-        $(document).ready(function () {
-            $("#done-screen").fadeIn(1000);
-        })
-    </script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.5/require.js"
+        integrity="sha256-uvn41VNPQ8aVNA6aS1Zjc2FUPkKq7ZgA6SzFiHkVgxs="
+        crossorigin="anonymous" data-main="../js/start_loader.js"></script>
 </body>
 </html>

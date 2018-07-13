@@ -928,9 +928,10 @@ $(document).ready(function () {
             facebookLoginAsk();
         });
 
-    user_id_element.textContent = facebook_info.userId;
-    if (facebook_info.status !== "connected") {
-        facebookLoginAsk();
-    }
+    facebook_info.getStatus();
+    //user_id_element.textContent = facebook_info.userId;
+    //if (facebook_info.status !== "connected") {
+    //    facebookLoginAsk();
+    //}
 
 });
