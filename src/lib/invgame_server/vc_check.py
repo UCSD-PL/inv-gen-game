@@ -1,14 +1,15 @@
+from lib.common.util import nonempty, powerset, flattenSet, ccast, unique
+import z3
+
 from pyboogie.ast import ast_and, replace, AstBinExpr, AstTrue, \
         AstNumber, AstId, ReplMap_T, AstExpr
-from lib.common.util import nonempty, powerset, flattenSet, ccast, unique
 from pyboogie.z3_embed import expr_to_z3, Unknown, \
         And, tautology, boogieToZ3TypeEnv
-import z3
 from pyboogie.analysis import propagateUnmodifiedPreds
 from pyboogie.bb import Function, BB
 from pyboogie.inv_networks import checkInvNetwork, filterCandidateInvariants, Violation, InvNetwork
 from pyboogie.interp import Store, BoogieVal
-from levels import BoogieTraceLvl
+from .levels import BoogieTraceLvl
 
 from typing import List, Tuple, Union, Optional, Any, Set, Iterable
 

@@ -2,12 +2,12 @@
 from datetime import timedelta
 from lib.invgame_server.models import open_sqlite_db, Event
 from argparse import ArgumentParser
-from levels import loadBoogieLvlSet
+from lib.invgame_server.levels import loadBoogieLvlSet
 from lib.common.util import error, fatal
 from pyboogie.analysis import propagate_sp
 from pyboogie.ast import parseExprAst
 from pyboogie.z3_embed import Unknown, tautology, expr_to_z3, AllIntTypeEnv
-from vc_check import tryAndVerifyLvl
+from lib.invgame_server.vc_check import tryAndVerifyLvl
 import csv
 from functools import reduce
 

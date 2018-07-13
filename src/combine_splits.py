@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 import argparse
-import levels
+import lib.invgame_server.levels
 import pyboogie.ast as bast
 from pyboogie.analysis import propagate_sp
 from lib.common.util import error
-from vc_check import tryAndVerifyLvl
+from lib.invgame_server.vc_check import tryAndVerifyLvl
 from re import compile as reComp
 from lib.invgame_server.models import open_sqlite_db, Event
 from datetime import datetime, timedelta

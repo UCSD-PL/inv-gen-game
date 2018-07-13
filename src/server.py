@@ -27,18 +27,18 @@ from pyboogie.interp import BoogieVal
 # Local repo includes
 from lib.common.util import powerset, split, nonempty, nodups, \
         randomToken, ccast
-from js import esprimaToZ3, esprimaToBoogie, boogieToEsprima, \
+from lib.invgame_server.js import esprimaToZ3, esprimaToBoogie, boogieToEsprima, \
         boogieToEsprimaExpr, jsonToTypeEnv, JSONTypeEnv, EsprimaNode, \
         typeEnvToJson
-from vc_check import _from_dict, tryAndVerifyLvl, loopInvSafetyCtrex
-from levels import loadBoogieLvlSet, BoogieTraceLvl
-from pp import pp_BoogieLvl, pp_EsprimaInv, pp_EsprimaInvs, pp_CheckInvsRes, \
+from lib.invgame_server.vc_check import _from_dict, tryAndVerifyLvl, loopInvSafetyCtrex
+from lib.invgame_server.levels import loadBoogieLvlSet, BoogieTraceLvl
+from lib.invgame_server.pp import pp_BoogieLvl, pp_EsprimaInv, pp_EsprimaInvs, pp_CheckInvsRes, \
         pp_tryAndVerifyRes, pp_mturkId, pp_EsprimaInvPairs
 from lib.invgame_server.models import open_sqlite_db, open_mysql_db, Event
 from lib.invgame_server.db_util import addEvent, allInvs, levelSolved, levelFinishedBy,\
         levelSkipCount, levelsPlayedInSession, tutorialDoneBy, questionaireDoneBy,\
         MturkIdT
-from server_common import openLog, log, log_d, pp_exc
+from lib.invgame_server.server_common import openLog, log, log_d, pp_exc
 
 # Typing includes
 from typing import Dict, Any, Optional, TypeVar, List, Tuple, Set

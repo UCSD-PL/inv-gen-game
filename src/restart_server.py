@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 from argparse import ArgumentParser
-from experiments import load_experiment_or_die, start_server, ServerRun
+from lib.invgame_server.experiments import load_experiment_or_die, start_server, ServerRun
 from lib.common.util import randomToken
 import os
 import signal

@@ -3,7 +3,7 @@ from traceback import *
 import sys
 from boto.mturk.connection import *
 from argparse import *
-from experiments import *
+from .experiments import *
 import smtplib
 from email.mime.text import MIMEText
 import os

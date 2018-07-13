@@ -6,8 +6,8 @@ from traceback import print_exc
 #from boto.mturk.qualification import *
 #from boto.mturk.connection import *
 #from datetime import *
-from mturk_util import mkParser, connect
-from experiments import Experiment, get_unused_port, start_server, ServerRun
+from lib.invgame_server.mturk_util import mkParser, connect
+from lib.invgame_server.experiments import Experiment, get_unused_port, start_server, ServerRun
 from lib.common.util import error
 
 p = mkParser("Run experiment", True)

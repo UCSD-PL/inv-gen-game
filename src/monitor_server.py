@@ -10,13 +10,13 @@ from flask import Flask
 from flask_jsonrpc import JSONRPC as rpc
 from sqlalchemy import case, func
 
-import mturk_util
-from experiments import Experiment
-from levels import loadBoogieLvlSet
+import lib.invgame_server.mturk_util
+from lib.invgame_server.experiments import Experiment
+from lib.invgame_server.levels import loadBoogieLvlSet
 from lib.common.util import randomToken
 from lib.invgame_server.models import open_sqlite_db, open_mysql_db, Event, LvlData
 from publish_hits import publish_hit
-from server_common import openLog, log_d, pp_exc
+from lib.invgame_server.server_common import openLog, log_d, pp_exc
 from survey import getSurveyData
 
 class Server(Flask):

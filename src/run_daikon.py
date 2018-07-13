@@ -7,8 +7,8 @@ import sys
 import pyboogie.ast as bast
 from pyboogie.interp import eval_quick, Store 
 
-from levels import loadBoogieLvlSet, BoogieTraceLvl
-from vc_check import tryAndVerifyLvl
+from lib.invgame_server.levels import loadBoogieLvlSet, BoogieTraceLvl
+from lib.invgame_server.vc_check import tryAndVerifyLvl
 
 from lib.daikon import toDaikonTrace, runDaikon
 from lib.daikon.conversions import daikonToBoogieExpr

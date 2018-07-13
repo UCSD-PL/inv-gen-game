@@ -3,7 +3,7 @@
 import argparse
 #import pyboogie.ast
 import json
-import levels
+import lib.invgame_server.levels
 import math
 import os
 import random

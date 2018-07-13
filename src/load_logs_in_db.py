@@ -4,7 +4,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, \
         create_engine, DateTime, Sequence
 from sqlalchemy.orm import relationship, sessionmaker
 from json import loads, dumps
-from js import esprimaToBoogie
+from lib.invgame_server.js import esprimaToBoogie
 from datetime import datetime
 from lib.invgame_server.models import open_sqlite_db, Source, Event
 from lib.invgame_server.db_util import addEvent

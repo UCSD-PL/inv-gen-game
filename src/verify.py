@@ -11,12 +11,12 @@ import multiprocessing.pool
 import os.path
 import time
 
-from levels import loadBoogieFile, loadBoogieLvlSet
+from lib.invgame_server.levels import loadBoogieFile, loadBoogieLvlSet
 from pyboogie.ast import parseExprAst
 from pyboogie.z3_embed import AllIntTypeEnv, Unknown, expr_to_z3, tautology
 from lib.invgame_server.models import Event, VerifyData
 from lib.invgame_server.db_util import allInvs, filterEvents, open_db
-from vc_check import tryAndVerifyLvl
+from lib.invgame_server.vc_check import tryAndVerifyLvl
 
 class NoDaemonProcess(multiprocessing.Process):
   def _get_daemon(self):

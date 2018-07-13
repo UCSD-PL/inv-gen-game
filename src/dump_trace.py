@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 import argparse
 import boogie.ast
-import levels
+import lib.invgame_server.levels
 import tabulate
-from levels import getEnsamble
+from lib.invgame_server.levels import getEnsamble
 from boogie_loops import get_loop_header_values
 
 def _tryUnroll(loop, bbs, min_un, max_un, bad_envs, good_env):

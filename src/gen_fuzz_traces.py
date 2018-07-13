@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 import argparse
 import pyboogie.ast
-import levels
+import lib.invgame_server.levels
 import tabulate
-from levels import getEnsamble
+from lib.invgame_server.levels import getEnsamble
 from random import randint
 from json import dumps
 from os import mkdir
