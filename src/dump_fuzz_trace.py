@@ -3,24 +3,28 @@
 import argparse
 #import pyboogie.ast
 import json
-import lib.invgame_server.levels
+from lib.invgame_server.trace_gen import getEnsamble
+from lib.invgame_server.levels import loadBoogieLvlSet
 import math
 import os
 import random
 import tabulate
+from pyboogie.bb import Function
+from pyboogie.interp import Store
+
+from typing import Set, List, Tuple, Iterator
 
 p = argparse.ArgumentParser(description="improved trace dumper")
-p.add_argument("--lvlset", type=str, default="unsolved",
+p.add_argument("--lvlset", type=str, required=True,
   help="lvlset to use for benchmarks")
-p.add_argument("--lvl", type=str, default="s-diamond_true-unreach-call1",
+p.add_argument("--lvl", type=str, required=True,
   help="lvl to use for generating traces")
 p.add_argument("--write", action="store_true")
 
 args = p.parse_args()
 
 # Process arguments
-lvlset_path = "lvlsets/%s.lvlset" % args.lvlset
-curLevelSetName, lvls = levels.loadBoogieLvlSet(lvlset_path)
+curLevelSetName, lvls = loadBoogieLvlSet(args.lvlset)
 
 lvl = lvls[args.lvl]
 trace_dir = None
@@ -56,9 +60,9 @@ def weighted_set_cover(u, xs, cost, coverage):
     ys.append((c, s, i))
 
   a = set()
-  def weight_key(y):
+  def weight_key(y: Tuple[int, List[Store]]) -> float:
     sc = len(y[1] - a)
-    return y[0] / float(sc) if sc > 0 else None
+    return y[0] / float(sc) if sc > 0 else 0
 
   cxs = []
   while ys and u - a:
@@ -82,16 +86,20 @@ def gen():
     if n < 100:
       n *= 2
 
-bbs = lvl["program"]
+fun: Function = lvl["program"]
 # TODO Refine generators based on BB asserts?
-tracegen = levels.getEnsamble(loop=lvl["loop"], bbs=bbs, exec_limit=1000,
-  tryFind=1000, include_bbhit=True, vargens={v: gen() for v in vars_})
+def storegen() -> Iterator[Store]:
+  varGen = {v: gen() for v in fun.getTypeEnv().keys()}
+  while True:
+    yield { v: varGen[v].__next__() for v in fun.getTypeEnv().keys()}
+tracegen = getEnsamble(fun, exec_limit=1000,
+  tryFind=1000, vargens=storegen())
 
-bbset = set(bbs.keys())
+bbset: Set[str] = set(bb.label for bb in fun.bbs())
 nbbset = len(bbset)
 bbneed = set(bbset)
 
-alltraces = []
+alltraces: List[Tuple[List[Store], Set[str]]] = []
 mintraces = 0
 # Attempt to get 2x traces needed for full coverage (arbitrary heuristic)
 while bbneed or len(alltraces) < 2 * mintraces:
@@ -122,7 +130,7 @@ ctraces = weighted_set_cover(bbset, alltraces, lambda x: len(x[0]),
   lambda x: x[1])
 
 # Combine rows from selected traces
-rows = []
+rows: List[Store] = []
 for valss, _ in ctraces:
   rows += valss
 

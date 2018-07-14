@@ -1,7 +1,7 @@
 from random import randint, choice
 from lib.common.util import unique
 from infinite import product
-from pyboogie.bb import Function, LabelT
+from pyboogie.bb import Function, LabelT, BB
 from pyboogie.analysis import livevars
 from pyboogie.eval import execute
 from pyboogie.interp import Store, trace_n_from_start, RandF, ChoiceF, BoogieVal
@@ -18,12 +18,12 @@ def varproduct(vargens: Dict[Any, Any]) -> Iterator[Dict[Any, Any]]:
     for vals in product(*gens):
       yield dict(list(zip(vars_, vals)))
 
-def getEnsamble(fun: Function, exec_limit: int, tryFind: int=100, vargens: Optional[Iterator[Store]] = None) -> Iterator[List[Store]]:
-    loopHdr: LabelT = unique(fun.loopHeaders())
-    traceVs: List[str] = list(livevars(fun)[loopHdr])
+def getEnsamble(fun: Function, exec_limit: int, tryFind: int=100, vargens: Optional[Iterator[Store]] = None) -> Iterator[Tuple[List[Store], Set[str]]]:
+    loopHdr: BB = unique(fun.loopHeaders())
+    traceVs: List[str] = list(livevars(fun)[(loopHdr, 0)])
     # TODO: Actually check the types
     randF: RandF = lambda state, varName:    randint(0, 100)
-    choiceF: ChoiceF = lambda states:   choice(states)
+    choiceF: ChoiceF = lambda states:   [choice(states)]
 
     if vargens is None:
       def candidatef() -> Iterator[Store]:
@@ -47,7 +47,8 @@ def getEnsamble(fun: Function, exec_limit: int, tryFind: int=100, vargens: Optio
         (active_traces, done_traces) = trace_n_from_start(fun, candidate, exec_limit, randF, choiceF)
         for trace in active_traces + done_traces:
             vals: List[Store] = [ store for ((bb, idx), store, status) in trace if bb == loopHdr and idx == 0 ]
-            yield vals
+            bbhit: Set[str] = set(bb.label for ((bb, idx), _, _) in trace)
+            yield (vals, bbhit)
             found = True
             s += 1
             if (s >= tryFind):

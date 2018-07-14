@@ -1,4 +1,4 @@
-from typing import Any, TypeVar, Iterable, Callable, Set, Union, List, Tuple, Sized, Type
+from typing import Any, TypeVar, Iterable, Callable, Set, Union, List, Tuple, Sized, Type, Dict
 import traceback
 from itertools import chain, combinations
 from sys import exc_info, stderr
