@@ -1,0 +1,34 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- third party libraries -->
+  <script src="jquery-1.12.0.min.js"></script>
+  <script src="jquery.jsonrpcclient.js"></script>
+  <script src="jquery.color-2.1.2.min.js"></script>
+  <script src="jquery-ui-1.11.4/jquery-ui.js"></script>
+  <!-- <script src="esprima.js"></script> -->
+  <link rel="stylesheet" href="bootstrap.min.css">
+  <link rel="stylesheet" href="bootstrap-theme.min.css">
+  <script src="bootstrap.min.js"></script>
+
+  <!-- our code -->
+  <link rel="stylesheet" href="inv.css">
+  <link rel="stylesheet" href="arrow.css">
+  <link rel="stylesheet" href="newgame.css">
+  <script src="require.js" data-main="new_game_loader.js"></script>
+</head>
+<body>
+  <div class='overlay' id='overlay'></div>
+  <div class='container' id='main'>
+    <div id='graph' style="float: left; padding: 20px" class="box stickyWindow absPos">
+    </div>
+    <div id='traces' style="float: right;">
+    </div>
+    <div id='progress' style="float: right; padding: 20px; display: none;" class="box progressWindow">
+    </div>
+  </div>
+</body>
+</html>
