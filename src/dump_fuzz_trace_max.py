@@ -3,16 +3,22 @@
 import argparse
 #import pyboogie.ast
 import json
-import lib.invgame_server.levels
+from lib.invgame_server.levels import loadBoogieLvlSet, BoogieTraceLvl
+from lib.invgame_server.trace_gen import getEnsamble
 import math
 import os
 import random
 import tabulate
 
+from pyboogie.bb import Function
+from pyboogie.interp import Store
+
+from typing import Set, List, Tuple, Iterator, Optional
+
 p = argparse.ArgumentParser(description="improved trace dumper")
-p.add_argument("--lvlset", type=str, default="unsolved",
+p.add_argument("--lvlset", type=str, required=True,
   help="lvlset to use for benchmarks")
-p.add_argument("--lvl", type=str, default="s-diamond_true-unreach-call1",
+p.add_argument("--lvl", type=str, required=True,
   help="lvl to use for generating traces")
 p.add_argument("--write", action="store_true")
 p.add_argument("--length", type=int, default=10, help="try find traces of length (defualt 10)")
@@ -21,21 +27,16 @@ p.add_argument("--limit", type=int, default=100, help="max numer of traces found
 args = p.parse_args()
 
 # Process arguments
-lvlset_path = args.lvlset
-curLevelSetName, lvls = levels.loadBoogieLvlSet(lvlset_path)
+lvlset_path: str = args.lvlset
+curLevelSetName, lvls = loadBoogieLvlSet(lvlset_path)
+lvl : BoogieTraceLvl = lvls[args.lvl]
 
-try:
-	lvlPar = args.lvl
-except AttributeError:
-	lvlPar = lvls[0]
-
-lvl = lvls[lvlPar]
-
-trace_dir = None
+trace_dir: Optional[str] = None
 if args.write:
   trace_dir = lvl["path"][0][:-4] + ".new_fuzz_traces"
   print("Making trace directory:", trace_dir)
   try:
+    assert trace_dir is not None
     os.mkdir(trace_dir)
   except OSError:
     pass
@@ -90,16 +91,20 @@ def gen():
     if n < 100:
       n *= 2
 
-bbs = lvl["program"]
+fun: Function = lvl["program"]
 # TODO Refine generators based on BB asserts?
-tracegen = levels.getEnsamble(loop=lvl["loop"], bbs=bbs, exec_limit=args.limit,
-  tryFind=args.length, include_bbhit=True, vargens={v: gen() for v in vars_})
+def storegen() -> Iterator[Store]:
+  varGen = {v: gen() for v in fun.getTypeEnv().keys()}
+  while True:
+    yield { v: varGen[v].__next__() for v in fun.getTypeEnv().keys()}
+tracegen = getEnsamble(fun, exec_limit=args.limit,
+  tryFind=args.length, vargens=storegen())
 
-bbset = set(bbs.keys())
+bbset: Set[str] = set(bb.label for bb in fun.bbs())
 nbbset = len(bbset)
 bbneed = set(bbset)
 
-alltraces = []
+alltraces: List[Tuple[List[Store], Set[str]]] = []
 mintraces = 0
 # Attempt to get 2x traces needed for full coverage (arbitrary heuristic)
 while bbneed or len(alltraces) < 2 * mintraces:
@@ -114,7 +119,7 @@ while bbneed or len(alltraces) < 2 * mintraces:
   alltraces.append((valss, bbhit))
 
   # Dump intermediate traces to file
-  if trace_dir:
+  if trace_dir is not None:
     write_trace(valss)
 
   nbbcov = len(bbset.intersection(bbhit))
@@ -130,7 +135,7 @@ ctraces = weighted_set_cover(bbset, alltraces, lambda x: len(x[0]),
   lambda x: x[1])
 
 # Combine rows from selected traces
-rows = []
+rows: List[Store] = []
 for valss, _ in ctraces:
   rows += valss
 

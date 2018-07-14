@@ -1,5 +1,5 @@
 from random import randint, choice
-from lib.common.util import unique
+from lib.common.util import unique, ccast
 from infinite import product
 from pyboogie.bb import Function, LabelT, BB
 from pyboogie.analysis import livevars
@@ -23,7 +23,7 @@ def getEnsamble(fun: Function, exec_limit: int, tryFind: int=100, vargens: Optio
     traceVs: List[str] = list(livevars(fun)[(loopHdr, 0)])
     # TODO: Actually check the types
     randF: RandF = lambda state, varName:    randint(0, 100)
-    choiceF: ChoiceF = lambda states:   [choice(states)]
+    choiceF: ChoiceF = lambda states:   [choice(list(states))]
 
     if vargens is None:
       def candidatef() -> Iterator[Store]:
@@ -38,7 +38,7 @@ def getEnsamble(fun: Function, exec_limit: int, tryFind: int=100, vargens: Optio
     print("Trying to find ", tryFind, " traces of length up to ", exec_limit)
     while s < tryFind:
         candidate = next(vargens)
-        hashable = tuple(candidate[v] for v in traceVs)
+        hashable = tuple(ccast(candidate[v], int) for v in traceVs)
         if hashable in tried:
           continue
         tried.add(hashable)

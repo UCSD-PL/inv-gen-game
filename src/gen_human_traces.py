@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
-#import pyboogie.ast
 import json
-import lib.invgame_server.levels
 import math
 import os
 from random import randint, choice
@@ -11,16 +9,22 @@ import tabulate
 import pdb
 import itertools
 import re
-from pyboogie.interp import trace_n_from_start, finished
+
+from lib.common.util import unique
+from lib.invgame_server.levels import loadBoogieLvlSet, BoogieTraceLvl
+from lib.invgame_server.trace_gen import varproduct
+
+from pyboogie.interp import trace_n_from_start, finished, Trace, eval_quick
 from pyboogie.analysis import livevars
-from pyboogie.ast import parseExprAst
-from pyboogie.eval import evalPred
-from pyboogie.bb import bbEntry
+from pyboogie.ast import parseExprAst, AstExpr
+from pyboogie.bb import Function, BB
+
+from typing import Optional, Tuple, List, Iterator, Set
 
 p = argparse.ArgumentParser(description="improved trace dumper")
-p.add_argument("--lvlset", type=str, default="lvlsets/sorin.lvlset",
+p.add_argument("--lvlset", type=str, required=True,
   help="lvlset to use for benchmarks")
-p.add_argument("--lvl", type=str, default="",
+p.add_argument("--lvl", type=str, required=True,
   help="lvl to use for generating traces")
 p.add_argument("--write", action="store_true")
 p.add_argument("--length", type=int, default=100, help="try find traces of length (defualt 10)")
@@ -29,10 +33,9 @@ p.add_argument("--limit", type=int, default=100, help="max numer of traces found
 args = p.parse_args()
 
 # Process arguments
-lvlset_path = args.lvlset
-curLevelSetName, lvls = levels.loadBoogieLvlSet(lvlset_path)
+curLevelSetName, lvls = loadBoogieLvlSet(args.lvlset)
 
-def write_trace_col_format(lvl, trace, marker = None):
+def write_trace_col_format(lvl: BoogieTraceLvl, trace: Trace, marker: Optional[str] = None) -> None:
   trace_str = trace_to_str(trace)
   marker_str = ("." + marker) if marker else ""
   trace_file = lvl["path"][0][:-4] + marker_str + ".auto.trace"
@@ -40,7 +43,7 @@ def write_trace_col_format(lvl, trace, marker = None):
   with open(trace_file, "w") as fh:
     fh.write(trace_str)
 
-def trace_to_str(trace):
+def trace_to_str(trace: Trace) -> str:
   if len(trace) == 0:
     return ""
   keys = list(trace[0].keys())
@@ -48,19 +51,17 @@ def trace_to_str(trace):
   return " ".join(keys) + "\n" + \
          "\n".join([" ".join([str(e[k]) for k in keys]) for e in trace]) + "\n"
 
-def split_trace(trace, pred):
-  if pred == None:
-    return [trace]
+def split_trace(trace: Trace, pred: AstExpr) -> Tuple[Trace, Trace]:
   pos = []
   neg = []
   for e in trace:
-    if evalPred(pred, e):
+    if eval_quick(pred, e):
       pos.append(e)
     else:
       neg.append(e)
   return (neg,pos)
 
-def gen(v,liveVars):
+def gen(v: str,liveVars: List[str]) -> Iterator[int]:
   if v in liveVars:
     yield 7
     yield 3
@@ -74,7 +75,7 @@ def gen(v,liveVars):
     while True:
       yield 0
 
-def find_split_pred(fname):
+def find_split_pred(fname: Optional[str]) -> Optional[str]:
   return None
   lines = []
   with open(fname) as f:
@@ -86,28 +87,31 @@ def find_split_pred(fname):
       return re_res.group(1)
   return None
 
-def cat(fname):
+def cat(fname: str) -> None:
   try:
     with open(fname, 'r') as f:
       print((f.read()))
   except IOError:
     print(("Could not read" + fname))
 
-def print_comparison(lvl_name):
+def print_comparison(lvl_name: str) -> None:
   lvl = lvls[lvl_name]
   print(("== Comparison for " + lvl_name + " =="))
-  cat(find_original_boogie_file(lvl))
+  orig = find_original_boogie_file(lvl)
+  if (orig is not None):
+    cat(orig)
   print("== Manual Trace ==")
   cat(lvl["path"][0][:-4] + ".trace")
   print("== Auto Trace ==")
   cat(lvl["path"][0][:-4] + ".auto.trace")
 
-def find_original_boogie_file(lvl):
+def find_original_boogie_file(lvl: BoogieTraceLvl) -> Optional[str]:
   for p in lvl["path"][1:]:
     if p.endswith(".bpl"):
       return p
+  return None
 
-def run_lvl(lvl_name):
+def run_lvl(lvl_name: str) -> None:
   print(("== " + lvl_name))
   
   lvl = lvls[lvl_name]
@@ -121,21 +125,21 @@ def run_lvl(lvl_name):
   # vs = lvl["variables"]
   # vs.sort()
 
-  bbs = lvl["program"]
-  loop = lvl["loop"]
-  entry = loop.header[0]
-  liveVars = list(livevars(bbs)[entry])
+  fun: Function = lvl["program"]
+  loopHdr: BB = unique(fun.loopHeaders())
+  liveVars = list(livevars(fun)[(loopHdr, 0)])
   liveVars.sort()
-  print(("live vars: " + str(liveVars)))
-  loopHdr = loop.loop_paths[0][0]
 
-  store_gen = levels.varproduct({v: gen(v,liveVars) for v in liveVars})
+  allVars = list(fun.getTypeEnv().keys())
+  print(("live vars: " + str(liveVars)))
+
+  store_gen = varproduct({v: gen(v,allVars) for v in allVars})
 
   target_len = 7
 
-  tried = set();
+  tried: Set[Tuple[int,...]] = set();
   #filt_f = lambda bbs, states:  [choice(states)]
-  filt_f = lambda bbs, states:  states
+  filt_f = lambda states:  states
   rand_f = lambda state, Id:  randint(-1000, 1000)
 
   done = False
@@ -151,7 +155,7 @@ def run_lvl(lvl_name):
       break
     tried.add(hashable)
     print(("Evaluating in starting store: " + str(starting_store)))
-    (active, inactive) = trace_n_from_start(bbs, starting_store, args.limit, rand_f, filt_f)
+    (active, inactive) = trace_n_from_start(fun, starting_store, args.limit, rand_f, filt_f)
     traces = active + [ t for t in inactive if finished(t[-1]) ]
     traces = [ [ st.store for st in tr if st.pc.bb == loopHdr ] for tr in traces]
     for trace in traces:
