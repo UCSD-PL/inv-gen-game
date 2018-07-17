@@ -2611,7 +2611,9 @@
     <Compile Include="src\lib\common\ast.py" />
     <Compile Include="src\lib\common\parser.py" />
     <Compile Include="src\lib\common\util.py" />
-    <Compile Include="src\lib\common\__init__.py" />
+    <Compile Include="src\lib\common\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="src\lib\cpa_checker\__init__.py" />
     <Compile Include="src\lib\daikon\inv_ast.py" />
     <Compile Include="src\lib\daikon\inv_grammar.py" />

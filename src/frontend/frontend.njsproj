@@ -42,6 +42,7 @@
     </Content>
     <Content Include="app\startFB.html" />
     <Content Include="app\SupportForm.html" />
+    <Content Include="app\TryLater.html" />
     <Content Include="app\TermOfService.html" />
     <Content Include="app\Privacy.html" />
     <Content Include="css\admin.css" />

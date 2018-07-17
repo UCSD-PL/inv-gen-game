@@ -40,9 +40,39 @@ from lib.invgame_server.db_util import addEvent, allInvs, levelSolved, levelFini
         MturkIdT
 from lib.invgame_server.server_common import openLog, log, log_d, pp_exc
 
+import logging
+from logging.handlers import RotatingFileHandler
+
 # Typing includes
 from typing import Dict, Any, Optional, TypeVar, List, Tuple, Set
 T = TypeVar("T")
+
+# Keep track of clients
+class ActiveUsers:
+    elems: (str, float) = []
+    maxUsers = 5
+    timeout = 300
+    def acceptReq(this, ip: str)->bool:
+        found: bool = False
+        expired = []
+        curTime = time()
+        for index, (itemIP, itemTime) in enumerate(this.elems):
+            if (itemIP==ip):
+                this.elems[index] = (ip, curTime)
+                found=True
+            else:
+                if curTime - elemsTime[index] > this.timeout:
+                    expired.append(index)
+        expired.reverse()
+        for idx in expired:
+            this.elems.remove(idx)
+        if found: return True
+        if len(this.elems)>this.maxUsers:
+            return False
+        this.elems.append((ip, curTime))
+        return True
+
+users = ActiveUsers()
 
 ### Flask code to initialize server
 class Server(Flask):
@@ -56,6 +86,19 @@ class Server(Flask):
 
 app = Server(__name__, static_folder='frontend/', static_url_path='/game')
 api = rpc(app, '/api')
+
+@app.before_request
+def before_request_app():
+    if not users.acceptReq(request.environ['REMOTE_ADDR']):
+        app.logger.warning('Path %s, source %s rejected reqest', request.environ['PATH_INFO'], request.environ['REMOTE_ADDR'])
+        return send_from_directory('frontend/app', 'TryLater.html', mimetype="text/html")
+    else:
+        app.logger.warning('Path %s, source %s accepted reqest', request.environ['PATH_INFO'], request.environ['REMOTE_ADDR'])
+
+#@api.before_request
+#def before_request_api():
+#    users.acceptReq(request.environ['REMOTE_ADDR'])
+#    return None
 
 @app.route('/game/app/start', methods=['POST'])
 def gameFB():  # pragma: no cover
@@ -355,7 +398,7 @@ def tryAndVerify(
       otherInvs = otherInvs.union([parseExprAst(x) for x in lastVer["nonind"]])
 
     ((overfitted, _), (nonind, _), sound, violations) = \
-      tryAndVerifyLvl(lvl, userInvs, otherInvs, args.timeout)
+      tryAndVerifyLvl(lvl, userInvs, otherInvs, 1) # making all calls 1 sec args.timeout)
 
     # See if the level is solved
     solved = len(violations) == 0
@@ -364,7 +407,7 @@ def tryAndVerify(
     if (not solved):
         fun: Function = lvl["program"]
         direct_ctrexs = loopInvSafetyCtrex(fun, otherInvs.union(userInvs),\
-                                           args.timeout)
+                                            1) # making all calls 1 sec args.timeout)
     else:
         direct_ctrexs = []
 
@@ -520,7 +563,10 @@ if __name__ == "__main__":
       adminToken = randomToken(5)
 
     if args.log:
-        openLog(args.log)
+        #openLog(args.log)
+        handler = RotatingFileHandler(args.log, maxBytes=10000, backupCount=1)
+        handler.setLevel(logging.INFO)
+        app.logger.addHandler(handler)
 
     MYDIR: str = dirname(abspath(realpath(__file__)))
     ROOT_DIR: str = dirname(MYDIR)
