@@ -20,15 +20,26 @@
     <link rel="stylesheet" href="../css/arrow.css">
 </head>
 <body>
-<div class='container'>
-    <div id="play-screen" style="position: absolute; top: 50%; left: 50%;">
-        <p class="centered">
-            <a type="button" class="btn btn-success btn-lg" href='game.html?noifs'>
-                <span class="glyphicon glyphicon-play" aria-hidden="true"></span> Play
-            </a>
-        </p>
+    <div class='container'>
     </div>
-</div>
+    <div class='overlay' style='display: none;' id='done-screen'>
+        <div class="container">
+            <h1 class='text-center'>Welcome to PatNum!</h1>
+            <span> &nbsp; </span>
+            <p>
+                <h2 class='text-center'>
+                    PatNum is a prototype game aiming to assist software verification! For more info please check out our <a href='http://cseweb.ucsd.edu/~dbounov/papers/invgen.pdf'>paper</a>.
+                </h2>
+            </p>
+            <span> &nbsp; </span>
+            <p>
+                <h2 class='text-center'>
+                    You can look at the game <b><a href='tutorial.html?noifs'> tutorial </a></b> or jump straight to the actual <b><a href='game.html?noifs'> game</a></b>!
+                </h2>
+            </p>
+        </div>
+    </div>
+
     <!-- third party libraries -->
     <script src="https://code.jquery.com/jquery-1.12.0.min.js"
             integrity="sha256-Xxq2X+KtazgaGuA2cWR1v3jJsuMJUozyIXDB3e793L8=" crossorigin="anonymous"></script>
@@ -41,6 +52,10 @@
             integrity="sha256-pS96pU17yq+gVu4KBQJi38VpSuKN7otMrDQprzf/DWY=" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"
             integrity="sha256-KXn5puMvxCw+dAYznun+drMdG1IFl3agK0p/pqT9KAo=" crossorigin="anonymous"></script>
-
+    <script>
+        $(document).ready(function () {
+            $("#done-screen").fadeIn(1000);
+        })
+    </script>
 </body>
 </html>

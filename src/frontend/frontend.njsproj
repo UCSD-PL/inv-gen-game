@@ -40,6 +40,7 @@
     <Content Include="app\facebook-test.html">
       <SubType>Code</SubType>
     </Content>
+    <Content Include="app\startFB.old.html" />
     <Content Include="app\startFB.html" />
     <Content Include="app\SupportForm.html" />
     <Content Include="app\TryLater.html" />
