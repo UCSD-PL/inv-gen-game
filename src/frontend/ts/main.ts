@@ -6,8 +6,9 @@ import { invEval, evalResultBool } from "./eval"
 import { BaseTracesWindow, PositiveTracesWindow } from "./traceWindow";
 import { ScoreWindow } from "./scoreWindow";
 import { ProgressWindow } from "./progressWindow";
-import { mturkId, rpc, logEvent } from "./rpc";
+import { mturkId, rpc, logEvent, setErrorFeedback } from "./rpc";
 import { Level } from "./level";
+import * as Cookies from "js-cookie";
 
 let traceW: BaseTracesWindow = null;
 let stickyW: StickyWindow = null;
@@ -82,14 +83,14 @@ function nextLvl() {
     loadNextTrace();
 }
 
-function loadLvlSet(lvlset) {
-    setCurLvlSet(lvlset);
-    rpc.call('App.listData', [lvlset], function (res) {
-        lvls = res;
-        curLvl = -1;
-        nextLvl();
-    }, log);
-}
+//function loadLvlSet(lvlset) {
+//    setCurLvlSet(lvlset);
+//    rpc.call('App.listData', [lvlset], function (res) {
+//        lvls = res;
+//        curLvl = -1;
+//        nextLvl();
+//    }, log);
+//}
 
 function doneScreen(alldone) {
     let assignment_id = Args.get_assignment_id();
@@ -225,6 +226,13 @@ function facebookLoginAsk() {
     $('#facebook-login').show();
 }
 
+function reportApiError(err: any) {
+    log(err);
+    let msg: HTMLParagraphElement = $('#api-error-message').get()[0] as HTMLParagraphElement;
+    msg.innerText = err;
+    $('#api-error-screen').show();
+}
+
 function checkOnTutorial() {
     if (!check_on_tutorial) return;
     check_on_tutorial = false;
@@ -236,7 +244,7 @@ function checkOnTutorial() {
                 window.location.href = 'tutorial.html?noifs';
             }
         },
-        log);
+        reportApiError);
 }
 
 function facebookLoginDone() {
@@ -256,6 +264,8 @@ let get_next_level = true;
 
 $(document).ready(function () {
     console.log("About to start");
+
+    setErrorFeedback(reportApiError);
 
     if (Args.get_assignment_id() == "ASSIGNMENT_ID_NOT_AVAILABLE") {
         let s = "This is just a preview of the HIT. The work you do here will have to be redone when you accept the HIT.";
@@ -445,10 +455,12 @@ $(document).ready(function () {
     facebook_info.setLoginEvents(
         () => {
             user_id_element.textContent = facebook_info.userId;
+            Cookies.set("FBID", facebook_info.userId);
             facebookLoginDone();
         },
         () => {
             user_id_element.textContent = "";
+            Cookies.remove("FBID");
             facebookLoginAsk();
         });
 

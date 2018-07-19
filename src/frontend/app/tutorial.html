@@ -24,44 +24,52 @@
 </head>
 <body tabindex="-1">
     <div id="fb-root"></div>
-<div class='container-fluid'>
-    <div style="display: none;">
-        <dl class="dl-horizontal">
-            <dt>User ID</dt>
-            <dd><span id='user-id'></span></dd>
-        </dl>
-    </div>
-    <div class='row' id='hit-preview-warning'>
-    </div>
-    <div class='row'>
-        <div class='col-xs-1 col-sm-1 col-md-1 col-lg-1' id='dummy'>
+    <div class='container-fluid'>
+        <div style="display: none;">
+            <dl class="dl-horizontal">
+                <dt>User ID</dt>
+                <dd><span id='user-id'></span></dd>
+            </dl>
         </div>
-        <div class='col-xs-1 col-sm-1 col-md-1 col-lg-1' id='sticky'>
+        <div class='row' id='hit-preview-warning'>
         </div>
-        <div class='col-xs-6 col-sm-6 col-md-6 col-lg-6' id='middle'>
-            <div class='row' id='data-display' style="font-family: monospace;">
+        <div class='row'>
+            <div class='col-xs-1 col-sm-1 col-md-1 col-lg-1' id='dummy'>
             </div>
-            <div class='col-xs-6 col-sm-6 col-md-6 col-lg-6 spaced' id='errormsg'> </div>
-            <div class='col-xs-6 col-sm-6 col-md-6 col-lg-6' id='done-row'>
-                <div class='col-xs-6 col-sm-6 col-md-6 col-lg-6 col-xs-offset-4 col-sm-offset-4 col-md-offset-4 col-lg-offset-4' style='margin-top: 30px;'>
-                    <button id='next-lvl' style="display: none;" class='btn-next'> Next Level </button>
+            <div class='col-xs-1 col-sm-1 col-md-1 col-lg-1' id='sticky'>
+            </div>
+            <div class='col-xs-6 col-sm-6 col-md-6 col-lg-6' id='middle'>
+                <div class='row' id='data-display' style="font-family: monospace;">
+                </div>
+                <div class='col-xs-6 col-sm-6 col-md-6 col-lg-6 spaced' id='errormsg'> </div>
+                <div class='col-xs-6 col-sm-6 col-md-6 col-lg-6' id='done-row'>
+                    <div class='col-xs-6 col-sm-6 col-md-6 col-lg-6 col-xs-offset-4 col-sm-offset-4 col-md-offset-4 col-lg-offset-4' style='margin-top: 30px;'>
+                        <button id='next-lvl' style="display: none;" class='btn-next'> Next Level </button>
+                    </div>
+                </div>
+            </div>
+            <div class='col-xs-3 col-sm-3 col-md-3 col-lg-3'>
+                <div id='score-div-row' style="display: none;" class='row positioned box progressWindow'>
+                    <div class='col-md-2'> Score: </div>
+                    <div id='score-div' class='col-xs-7 col-sm-7 col-md-7 col-lg-7 col-xs-offset-3 col-sm-offset-3 col-md-offset-3 col-lg-offset-3'>
+                    </div>
+                </div>
+                <div class='row good centered positioned' style="display: none;" id="discovered-invariants-div">
                 </div>
             </div>
         </div>
-        <div class='col-xs-3 col-sm-3 col-md-3 col-lg-3'>
-            <div id='score-div-row' style="display: none;" class='row positioned box progressWindow'>
-                <div class='col-md-2'> Score: </div>
-                <div id='score-div' class='col-xs-7 col-sm-7 col-md-7 col-lg-7 col-xs-offset-3 col-sm-offset-3 col-md-offset-3 col-lg-offset-3'>
-                </div>
-            </div>
-            <div class='row good centered positioned' style="display: none;" id="discovered-invariants-div">
-            </div>
-        </div>
     </div>
-</div>
-<div class='overlay text-center' style='display: none;'></div>
+    <div class='overlay text-center' style='display: none;'></div>
+    <div class='overlay text-center' style='display: none;' id='api-error-screen'>
+        <br />
+        <h1>Error communicating with server!</h1>
+        <br />
+        <h2>Please <a href="game.html?noifs">reload</a> the game.</h2>
+        <br />
+        <p id='api-error-message'></p>
+    </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.5/require.js"
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.5/require.js"
             integrity="sha256-uvn41VNPQ8aVNA6aS1Zjc2FUPkKq7ZgA6SzFiHkVgxs="
             crossorigin="anonymous" data-main="../js/tutorial_loader.js"></script>
 </body>

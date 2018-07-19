@@ -9,7 +9,7 @@ from atexit import register
 from os.path import dirname, abspath, realpath, join, isfile
 # Third-party library includes
 from flask import Flask
-from flask import request, redirect, url_for, send_from_directory
+from flask import request, redirect, url_for, send_from_directory, jsonify
 from flask_jsonrpc import JSONRPC as rpc
 from sqlalchemy.orm import Session
 import z3
@@ -47,6 +47,21 @@ from logging.handlers import RotatingFileHandler
 from typing import Dict, Any, Optional, TypeVar, List, Tuple, Set
 T = TypeVar("T")
 
+class InternalServerError(Exception):
+    status_code = 500
+
+    def __init__(self, message, status_code=None, payload=None):
+        Exception.__init__(self)
+        self.message = message
+        if status_code is not None:
+            self.status_code = status_code
+        self.payload = payload
+
+    def to_dict(self):
+        rv = dict(self.payload or ())
+        rv['error'] = self.message
+        return rv
+
 # Keep track of clients
 class ActiveUsers:
     elems: (str, float) = []
@@ -61,7 +76,7 @@ class ActiveUsers:
                 this.elems[index] = (ip, curTime)
                 found=True
             else:
-                if curTime - elemsTime[index] > this.timeout:
+                if curTime - itemTime > this.timeout:
                     expired.append(index)
         expired.reverse()
         for idx in expired:
@@ -87,13 +102,28 @@ class Server(Flask):
 app = Server(__name__, static_folder='frontend/', static_url_path='/game')
 api = rpc(app, '/api')
 
+@app.errorhandler(InternalServerError)
+def handle_internal_server_error(error):
+    response = jsonify(error.to_dict())
+    response.status_code = error.status_code
+    return response
+
 @app.before_request
+@pp_exc
 def before_request_app():
-    if not users.acceptReq(request.environ['REMOTE_ADDR']):
-        app.logger.warning('Path %s, source %s rejected reqest', request.environ['PATH_INFO'], request.environ['REMOTE_ADDR'])
-        return send_from_directory('frontend/app', 'TryLater.html', mimetype="text/html")
-    else:
-        app.logger.warning('Path %s, source %s accepted reqest', request.environ['PATH_INFO'], request.environ['REMOTE_ADDR'])
+    path = request.environ['PATH_INFO']
+    if (path=='/api') and (not 'FBID' in request.cookies):
+        raise InternalServerError('Needs to be logged in with Facebook before calling an API')
+    if 'FBID' in request.cookies:
+        if not users.acceptReq(request.cookies['FBID']):
+            app.logger.warning('%s - Path %s, FB ID %s rejected reqest', f'{datetime.now():%Y-%m-%d %H:%M:%S}', path, request.cookies['FBID'])
+            if (path=='/api'): 
+                raise InternalServerError('Too many users when calling an API')
+            else:
+                return send_from_directory('frontend/app', 'TryLater.html', mimetype="text/html")
+        else:
+            app.logger.warning('%s - Path %s, FB ID %s accept reqest', f'{datetime.now():%Y-%m-%d %H:%M:%S}', path, request.cookies['FBID'])
+
 
 #@api.before_request
 #def before_request_api():

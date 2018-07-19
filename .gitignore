@@ -365,3 +365,4 @@ ASALocalRun/
 
 # Visual Studio files
 .vscode/
+/src/useractions.log.1

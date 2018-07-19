@@ -9,6 +9,7 @@ import { ScoreWindow } from "./scoreWindow";
 import { ProgressWindow } from "./progressWindow";
 import { mturkId, rpc, logEvent } from "./rpc";
 import { Level } from "./level";
+import * as Cookies from "js-cookie";
 
 let traceW: BaseTracesWindow = null;
 let stickyW: StickyWindow = null;
@@ -138,16 +139,18 @@ $(document).ready(function () {
     facebook_info.setLoginEvents(
         () => {
             user_id_element.textContent = facebook_info.userId;
+            Cookies.set("FBID", facebook_info.userId);
             facebookLoginDone();
         },
         () => {
             user_id_element.textContent = "";
+            Cookies.remove("FBID");
             facebookLoginAsk();
         });
-
-    user_id_element.textContent = facebook_info.userId;
-    if (facebook_info.status !== "connected") {
-        facebookLoginAsk();
-    }
+    facebook_info.getStatus();
+    //user_id_element.textContent = facebook_info.userId;
+    //if (facebook_info.status !== "connected") {
+    //    facebookLoginAsk();
+    //}
 });
 

@@ -1,19 +1,20 @@
 import { info as facebook_info } from "./facebook";
 
 import { Args, disableBackspaceNav, Script, assert, queryAppend, label, removeLabel, log, zip } from "./util";
-import { logEvent } from "./rpc"
+import { logEvent, setErrorFeedback } from "./rpc"
 import { StickyWindow } from "./stickyWindow";
 import { StaticGameLogic } from "./gameLogic"
 import { invEval, evalResultBool, invToJS, interpretError } from "./eval"
 import { BaseTracesWindow, PositiveTracesWindow } from "./traceWindow";
 import { ScoreWindow } from "./scoreWindow";
 import { ProgressWindow } from "./progressWindow";
-import { mturkId, rpc } from "./rpc";
+//import { mturkId, rpc } from "./rpc";
 import { Level } from "./level";
 import { parse } from 'esprima';
 import { Node as ESNode } from 'estree';
 import { invPP } from "./pp";
-import { VarOnlyPowerup, UseOpsPwup } from "./powerups"
+import { VarOnlyPowerup, UseOpsPwup } from "./powerups";
+import * as Cookies from "js-cookie";
 
 var errorDelay = 2000;
 var fadeDelay = 500;
@@ -781,7 +782,16 @@ function facebookLoginDone() {
     });
 }
 
+function reportApiError(err: any) {
+    log(err);
+    let msg: HTMLParagraphElement = $('#api-error-message').get()[0] as HTMLParagraphElement;
+    msg.innerText = err;
+    $('#api-error-screen').show();
+}
+
 $(document).ready(function () {
+
+    setErrorFeedback(reportApiError);
 
     if (Args.get_assignment_id() == "ASSIGNMENT_ID_NOT_AVAILABLE") {
         $("#hit-preview-warning").html("<p class='lead'><b>This is just a preview of the HIT. The work you do here will have to be redone when you accept the HIT.</b></p>");
@@ -801,10 +811,12 @@ $(document).ready(function () {
     facebook_info.setLoginEvents(
         () => {
             user_id_element.textContent = facebook_info.userId;
+            Cookies.set("FBID", facebook_info.userId);
             facebookLoginDone();
         },
         () => {
             user_id_element.textContent = "";
+            Cookies.remove("FBID");
             facebookLoginAsk();
         });
 

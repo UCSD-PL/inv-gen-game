@@ -4,6 +4,7 @@ requirejs.config({
         "jquery_color": "//code.jquery.com/color/jquery.color-2.1.2",
         "jquery_ui": "//code.jquery.com/ui/1.11.4/jquery-ui",
         "bootstrap": "//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap",
+        'js-cookie': "//cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min",
         'facebook-js-sdk': "//connect.facebook.net/en_US/sdk",
         'facebook': "../build/facebook",
         "jsonrpcclient": "../js/jquery.jsonrpcclient",
@@ -31,7 +32,8 @@ requirejs.config({
         "jquery_ui": { deps: ["jquery"] },
         "jquery_color": { deps: ["jquery"] },
         "jsonrpcclient": { deps: ["jquery"] },
-        "rpc": { deps: ["jsonrpcclient"] }
+        "rpc": { deps: ["jsonrpcclient"] },
+        "js-cookie": { deps: ["jquery"] }
     },
     onNodeCreated: function (node, config, module, path) {
         // Here's  alist of differet integrities for different scripts
@@ -60,7 +62,8 @@ requirejs(
         "jquery_ui",
         "esprima",
         "facebook",
-        "main"
+        "js-cookie",
+        "report"
     ],
     () => {
         console.log("Loaded...");
