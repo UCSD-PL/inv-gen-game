@@ -46,6 +46,8 @@
     <Content Include="app\TryLater.html" />
     <Content Include="app\TermOfService.html" />
     <Content Include="app\Privacy.html" />
+    <Content Include="audio\points_sound.mp3" />
+    <Content Include="audio\winner.mp3" />
     <Content Include="css\admin.css" />
     <Content Include="css\arrow.css" />
     <Content Include="css\inv.css" />
@@ -100,6 +102,7 @@
     <Folder Include="app\" />
     <Folder Include="images\" />
     <Folder Include="js\" />
+    <Folder Include="audio\" />
     <Folder Include="ts\" />
   </ItemGroup>
   <ItemGroup>

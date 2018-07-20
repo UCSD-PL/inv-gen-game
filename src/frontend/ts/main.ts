@@ -126,6 +126,16 @@ function doneScreen(alldone) {
         if (alldone) {
             $("#game_done-screen").show();
             logEvent("GameDone", [numLvlPassed]);
+        } else {
+            var args = {}
+            let query = $('#turk-form').serialize().split("&");
+            for (let i = 0; i < query.length; i++) {
+                if (query[i] === "") // check for trailing & with no param
+                    continue;
+                let param = query[i].split("=");
+                args[decodeURIComponent(param[0])] = decodeURIComponent(param[1] || "");
+            }
+            logEvent("QuestionaireSubmit", args);
         }
     });
     $("#final-submit").click(function (evt) {
@@ -262,10 +272,24 @@ function facebookLoginDone() {
 let check_on_tutorial = true;
 let get_next_level = true;
 
+//let levelWonScreen: HTMLDivElement;
+let levelWonScore: HTMLSpanElement;
+//let levelWonNext: HTMLButtonElement;
+var audioWinner = new Audio('../audio/winner.mp3');
+var audioPoints = new Audio('../audio/points_sound.mp3');
+
 $(document).ready(function () {
     console.log("About to start");
 
     setErrorFeedback(reportApiError);
+
+    //levelWonScreen = $("#level-won-screen").get()[0] as HTMLDivElement;
+    levelWonScore = $("#level-won-score").get()[0] as HTMLSpanElement;
+    $("#level-won-next").click(function() {
+        $("#level-won-screen").fadeOut(1000);
+        nextLvl();
+        audioWinner.pause();
+    });
 
     if (Args.get_assignment_id() == "ASSIGNMENT_ID_NOT_AVAILABLE") {
         let s = "This is just a preview of the HIT. The work you do here will have to be redone when you accept the HIT.";
@@ -294,12 +318,20 @@ $(document).ready(function () {
         //    //$("#quit-overlay").hide();
         //}
         //$("#next-or-quit-screen").fadeIn(1000);
-        nextLvl();
+        //nextLvl();
+        levelWonScore.innerText = String(scoreW.score);
+        audioWinner.currentTime=0;
+        audioWinner.play();
+        $("#level-won-screen").fadeIn(1000);
     });
 
     $('#next-level-overlay').click(function () {
-        $("#next-or-quit-screen").fadeOut(1000);
-        nextLvl();
+        //$("#next-or-quit-screen").fadeOut(1000);
+        //nextLvl();
+        levelWonScore.innerText = String(scoreW.score);
+        audioWinner.currentTime = 0;
+        audioWinner.play();
+        $("#level-won-screen").fadeIn(1000);
     });
 
     $('#help').click(function () {
