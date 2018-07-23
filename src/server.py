@@ -67,7 +67,7 @@ class ActiveUsers:
     elems: (str, float) = []
     maxUsers = 5
     timeout = 300
-    def acceptReq(this, ip: str)->bool:
+    def acceptReq(this, ip: str, app: Server)->bool:
         found: bool = False
         expired = []
         curTime = time()
@@ -80,7 +80,11 @@ class ActiveUsers:
                     expired.append(index)
         expired.reverse()
         for idx in expired:
-            this.elems.remove(idx)
+            try:
+                this.elems.pop(idx)
+            except:
+                e = sys.exc_info()[0]
+                app.logger.error(e)
         if found: return True
         if len(this.elems)>this.maxUsers:
             return False
@@ -115,7 +119,7 @@ def before_request_app():
     if (path=='/api') and (not 'FBID' in request.cookies):
         raise InternalServerError('Needs to be logged in with Facebook before calling an API')
     if 'FBID' in request.cookies:
-        if not users.acceptReq(request.cookies['FBID']):
+        if not users.acceptReq(request.cookies['FBID'], app):
             app.logger.warning('%s - Path %s, FB ID %s rejected reqest', f'{datetime.now():%Y-%m-%d %H:%M:%S}', path, request.cookies['FBID'])
             if (path=='/api'): 
                 raise InternalServerError('Too many users when calling an API')
@@ -124,11 +128,6 @@ def before_request_app():
         else:
             app.logger.warning('%s - Path %s, FB ID %s accept reqest', f'{datetime.now():%Y-%m-%d %H:%M:%S}', path, request.cookies['FBID'])
 
-
-#@api.before_request
-#def before_request_api():
-#    users.acceptReq(request.environ['REMOTE_ADDR'])
-#    return None
 
 @app.route('/game/app/start', methods=['POST'])
 def gameFB():  # pragma: no cover

@@ -12,7 +12,6 @@ RUN groupadd --gid 1000 node \
   && useradd --uid 1000 --gid node --shell /bin/bash --create-home node \
   && apt-get update && apt-get install -y gpg dirmngr curl --no-install-recommends \
 #    && rm -rf /var/lib/apt/lists/* 
-
 # gpg keys listed at https://github.com/nodejs/node#release-team
   && set -ex \
   && for key in \
@@ -29,8 +28,8 @@ RUN groupadd --gid 1000 node \
     gpg --keyserver hkp://ipv4.pool.sks-keyservers.net --recv-keys "$key" || \
     gpg --keyserver hkp://pgp.mit.edu:80 --recv-keys "$key" ; \
   done \
-
-
+#
+#
     && buildDeps='xz-utils' \
     && ARCH= && dpkgArch="$(dpkg --print-architecture)" \
     && case "${dpkgArch##*-}" in \
@@ -54,9 +53,6 @@ RUN groupadd --gid 1000 node \
     && rm "node-v$NODE_VERSION-linux-$ARCH.tar.xz" SHASUMS256.txt.asc SHASUMS256.txt \
     && apt-get purge -y --auto-remove $buildDeps \
     && ln -s /usr/local/bin/node /usr/local/bin/nodejs \
-
-
-
     && set -ex \
     && for key in \
     6A010C5166006599AA17F08146C2130DFD2497F5 \
@@ -73,9 +69,6 @@ RUN groupadd --gid 1000 node \
     && ln -s /opt/yarn-v$YARN_VERSION/bin/yarn /usr/local/bin/yarn \
     && ln -s /opt/yarn-v$YARN_VERSION/bin/yarnpkg /usr/local/bin/yarnpkg \
     && rm yarn-v$YARN_VERSION.tar.gz.asc yarn-v$YARN_VERSION.tar.gz \
-
-
-
 # and adding required packages 
 #    && apt-get update 
     && apt-get install -y --no-install-recommends \
@@ -83,19 +76,20 @@ RUN groupadd --gid 1000 node \
       openssh-server \
       git \
     && echo "$SSH_PASSWD" | chpasswd \
-    && git clone -b dockerized https://8c27f4108ac53546e205d396e86dd25cce7016a8:x-oauth-basic@github.com/UCSD-PL/inv-gen-game.git /app \
+    && git clone https://8c27f4108ac53546e205d396e86dd25cce7016a8:x-oauth-basic@github.com/UCSD-PL/inv-gen-game.git /app \
     && npm install  --silent --save-dev -g \
         gulp-cli \
         typescript \
     && rm -rf /var/lib/apt/lists/* 
-# && pip3 install wheel \
-# && pip3 install setuptools 
+
 
 COPY sshd_config /etc/ssh/
+COPY init.sh /app
 
 # Set the working directory to /app
 WORKDIR /app
 
+LABEL version="v0.1.0-beta"
 
 RUN git pull \
     && buildDeps="xz-utils \
@@ -121,17 +115,7 @@ RUN git pull \
 #    && apt-get purge -y --auto-remove $buildDeps \
 #    && rm -rf /var/lib/apt/lists/* 
 
-COPY init.sh /app
-RUN     chmod u+x /app/init.sh 
-
-LABEL version="v0.0.8-beta"
-
-RUN git pull \
-    && chmod u+x /app/init.sh \ 
-    && bash ./setupServer.sh 
-
 ENV SQL_CONNECTION "mmenarini%40invgame:sdljsd%24903@invgame.mysql.database.azure.com/game"
-ENV ADMIN_TOKEN "fuzzy"
 ENV LEVEL_SET "../lvlsets/unsolved-leftover-split.lvlset"
 
 
