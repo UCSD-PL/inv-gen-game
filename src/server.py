@@ -62,6 +62,16 @@ class InternalServerError(Exception):
         rv['error'] = self.message
         return rv
 
+### Flask code to initialize server
+class Server(Flask):
+    def get_send_file_max_age(self, name):
+        if (name in ['jquery-1.12.0.min.js', \
+                      'jquery-migrate-1.2.1.min.js', \
+                      'jquery.jsonrpcclient.js']):
+            return 100000
+
+        return 0
+
 # Keep track of clients
 class ActiveUsers:
     elems: (str, float) = []
@@ -92,16 +102,6 @@ class ActiveUsers:
         return True
 
 users = ActiveUsers()
-
-### Flask code to initialize server
-class Server(Flask):
-    def get_send_file_max_age(self, name):
-        if (name in ['jquery-1.12.0.min.js', \
-                      'jquery-migrate-1.2.1.min.js', \
-                      'jquery.jsonrpcclient.js']):
-            return 100000
-
-        return 0
 
 app = Server(__name__, static_folder='frontend/', static_url_path='/game')
 api = rpc(app, '/api')
