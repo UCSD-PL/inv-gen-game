@@ -302,7 +302,8 @@ th {
 }
 
 .temp_expr_eval {
-  font-weight: bold;
+    font-weight: bold;
+    text-align: start;
 }
 
 .levels {

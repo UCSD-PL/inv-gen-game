@@ -108,6 +108,7 @@ export abstract class BaseTracesWindow implements ITracesWindow {
 
     setExp(exp: string) {
         $("#formula-entry").val(exp);
+        $("#formula-entry").focus();
         this.changedCb();
     }
 
