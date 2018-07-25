@@ -541,7 +541,6 @@ export class PatternGameLogic extends BaseGameLogic {
                                 }
                             }
                         });
-                        //
                     });
                 }
             });

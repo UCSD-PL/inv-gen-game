@@ -378,7 +378,7 @@ var mainScript = [
     {
         setup: function (cs) {
             curL = label({ of: $("#score-div-row"), at: "center bottom" },
-                "So you get +4<br>instead of +1", "left");
+                "So you get +4<br>instead of +1", "up");
             scoreW.add(4);
             var inv = invPP(tracesW.curExp().trim());
             addSuccessfulInvariant(inv, "i<=n");

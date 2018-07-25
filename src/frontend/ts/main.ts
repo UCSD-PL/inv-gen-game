@@ -25,11 +25,14 @@ var gameLogic = null;
 var stepTimeout = 5000;
 var curScript = null;
 var numLvlPassed = 0;
+var verifiedTutorial: boolean = false;
+var loadedLevel: boolean = false;
 
 disableBackspaceNav();
 
 function loadTrace(res) {
-    $("#loading-screen").hide();
+    loadedLevel = true;
+    if (verifiedTutorial) $("#loading-screen").hide();
     if (res === null)
         doneScreen(true);
     else {
@@ -261,6 +264,8 @@ function checkOnTutorial() {
                 console.log("Tutarial not done redirecting...");
                 window.location.href = 'tutorial.html?noifs';
             }
+            verifiedTutorial = true;
+            if (loadedLevel) $("#loading-screen").hide();
         },
         reportApiError);
 }
