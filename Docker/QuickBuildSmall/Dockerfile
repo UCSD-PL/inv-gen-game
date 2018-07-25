@@ -89,7 +89,7 @@ COPY init.sh /app
 # Set the working directory to /app
 WORKDIR /app
 
-LABEL version="v0.1.0-beta"
+LABEL version="v0.1.2"
 
 RUN git pull \
     && buildDeps="xz-utils \
@@ -111,9 +111,9 @@ RUN git pull \
     && apt-get upgrade -y \
     && apt-get install -y $buildDeps libc6 libgcc1 libstdc++6 libgomp1 --no-install-recommends \
     && chmod u+x /app/init.sh \ 
-    && bash ./setupServer.sh 
-#    && apt-get purge -y --auto-remove $buildDeps \
-#    && rm -rf /var/lib/apt/lists/* 
+    && bash ./setupServer.sh \
+    && apt-get purge -y --auto-remove $buildDeps \
+    && rm -rf /var/lib/apt/lists/* 
 
 ENV SQL_CONNECTION "mmenarini%40invgame:sdljsd%24903@invgame.mysql.database.azure.com/game"
 ENV LEVEL_SET "../lvlsets/unsolved-leftover-split.lvlset"
