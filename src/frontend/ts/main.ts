@@ -230,10 +230,18 @@ var tutorialScript = [
 
 //const fbSnippet = '<h1>You need to authenticate with Facebook first!</h1><div class="fb - login - button" data-max-rows="1" data-size="large" data-button-type="login_with" data-show-faces="false" data-auto-logout-link="false" data-use-continue-as="false"></div>';
 let fbReq: boolean = false;
+let fbReqDelayFirst: boolean = true;
 function facebookLoginAsk() {
     if (fbReq) return;
     fbReq = true;
-    $('#facebook-login').show();
+    if (fbReqDelayFirst) {
+        fbReqDelayFirst = false;
+        setTimeout(() => {
+            if (fbReq)
+                $('#facebook-login').show();
+        }, 5000);
+    } else
+        $('#facebook-login').show();
 }
 
 function reportApiError(err: any) {

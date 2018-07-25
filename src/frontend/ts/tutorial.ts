@@ -107,9 +107,9 @@ function inner(arg: JQuery): HTMLElement {
 var mainScript = [
     {
         setup: function (cs) {
-            $('.overlay').html("<h1>Welcome to the <span class='good'>PatNum</span> Tutorial!<br> You can press spacebar or click anywhere<br>to proceed to the next step.</h1>");
+            $('#tutorial-msg-screen').html("<h1>Welcome to the <span class='good'>PatNum</span> Tutorial!<br> You can press spacebar or click anywhere<br>to proceed to the next step.</h1>");
             if (Args.get_assignment_id() == "ASSIGNMENT_ID_NOT_AVAILABLE") {
-                $('.overlay').append("<h1><b>This is a preview, which only shows you the tutorial</b></h1>" +
+                $('#tutorial-msg-screen').append("<h1><b>This is a preview, which only shows you the tutorial</b></h1>" +
                     "<h1><b>NOTE: Please DON'T accept more than one HIT from us at a time! <br> First finish your current HIT, before accepting another! </b></h1>" +
                     "<h3>This HIT involves playing at least two non-tutorial levels of the <span class='good'>InvGen</span> game.<h3>" +
                     "<h3><b>Played it before?</b> Come play again! You will bypass the tutorial and get new levels!<br>" +
@@ -119,7 +119,7 @@ var mainScript = [
                     "<b>$1.50 bonus for doing the tutorial</b> (which you only do the first time)<br>" +
                     "<b>$0.75 bonus for each non-tutorial level you pass beyond two</b></h3>");
             }
-            $('.overlay').fadeIn(fadeDelay, function () {
+            $('#tutorial-msg-screen').fadeIn(fadeDelay, function () {
                 cs.nextStepOnKeyClickOrTimeout(-1, () => 0, 32);
             });
         }
@@ -128,7 +128,7 @@ var mainScript = [
     {
         setup: function (cs) {
             logEvent("TutorialStart", null);
-            $(".overlay").fadeOut(fadeDelay, function () {
+            $("#tutorial-msg-screen").fadeOut(fadeDelay, function () {
                 var lvl = {
 
                     id: "tutorial",
@@ -377,7 +377,7 @@ var mainScript = [
     },
     {
         setup: function (cs) {
-            curL = label({ of: $("#score-div-row"), at: "right center" },
+            curL = label({ of: $("#score-div-row"), at: "center bottom" },
                 "So you get +4<br>instead of +1", "left");
             scoreW.add(4);
             var inv = invPP(tracesW.curExp().trim());
@@ -400,8 +400,8 @@ var mainScript = [
     // Show Mod-----------------------------------------------
     {
         setup: function (cs) {
-            $('.overlay').html("<h1>Lets try this <br> with a more complicated operation. </h1>");
-            $('.overlay').fadeIn(fadeDelay, function () {
+            $('#tutorial-msg-screen').html("<h1>Lets try this <br> with a more complicated operation. </h1>");
+            $('#tutorial-msg-screen').fadeIn(fadeDelay, function () {
                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, () => 0, 32);
             });
         }
@@ -409,7 +409,7 @@ var mainScript = [
     {
         setup: function (cs) {
             logEvent("TutorialStart", null);
-            $(".overlay").fadeOut(fadeDelay, function () {
+            $("#tutorial-msg-screen").fadeOut(fadeDelay, function () {
                 var lvl = {
 
                     id: "tutorial",
@@ -493,15 +493,15 @@ var mainScript = [
     // Tutorial Levels for UI-----------------------------------------------
     {
         setup: function (cs) {
-            $('.overlay').html("<h1>Lets warm up with a couple of levels!</h1>");
-            $('.overlay').fadeIn(fadeDelay, function () {
+            $('#tutorial-msg-screen').html("<h1>Lets warm up with a couple of levels!</h1>");
+            $('#tutorial-msg-screen').fadeIn(fadeDelay, function () {
                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, () => 0, 32);
             });
         }
     },
     {
         setup: function (cs) {
-            $(".overlay").fadeOut(fadeDelay, function () {
+            $("#tutorial-msg-screen").fadeOut(fadeDelay, function () {
                 $('#sticky').addClass("box stickyWindow");
                 stickyW = new StickyWindow($('#sticky').get()[0]);
                 gameLogic = new StaticGameLogic(tracesW, progW, scoreW, stickyW, 3);
@@ -568,17 +568,17 @@ var mainScript = [
 var conditionalsScript = [
     {
         setup: function (cs) {
-            $('.overlay').html("<h2>Sometimes there is a pattern that only holds under some conditions.<br>" +
+            $('#tutorial-msg-screen').html("<h2>Sometimes there is a pattern that only holds under some conditions.<br>" +
                 "You can capture this with an 'if' expression.<br>" +
                 "Let's see an example! (space/click to continue)</h2>");
-            $('.overlay').fadeIn(fadeDelay, function () {
+            $('#tutorial-msg-screen').fadeIn(fadeDelay, function () {
                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, () => { }, 32);
             });
         }
     },
     {
         setup: function (cs) {
-            $(".overlay").fadeOut(fadeDelay, function () { });
+            $("#tutorial-msg-screen").fadeOut(fadeDelay, function () { });
             //$('#next-lvl').hide();
 
             // gameLogic can be null here because we allow tutorial re-runs to begin with conditionals
@@ -763,16 +763,24 @@ var curScript;
 
 const fbSnippet = '<h1>You need to authenticate with Facebook first!</h1><div class="fb - login - button" data-max-rows="1" data-size="large" data-button-type="login_with" data-show-faces="false" data-auto-logout-link="false" data-use-continue-as="false"></div>';
 let fbReq: boolean = false;
+let fbReqDelayFirst: boolean = true;
 function facebookLoginAsk() {
     if (fbReq) return;
     fbReq = true;
-    $('.overlay').html(fbSnippet);
-    $('.overlay').show();
+    $('#tutorial-msg-screen').html(fbSnippet);
+    if (fbReqDelayFirst) {
+        fbReqDelayFirst = false;
+        setTimeout(() => {
+            if (fbReq)
+                $('#tutorial-msg-screen').show();
+        }, 5000);      
+    } else 
+        $('#tutorial-msg-screen').show();
 }
 function facebookLoginDone() {
     if (!fbReq) return;
     fbReq = false;
-    $('.overlay').hide();
+    $('#tutorial-msg-screen').hide();
     curScript = new Script(tutorialScript);
     $('#next-lvl').click(function () {
         $('#next-lvl').hide();
