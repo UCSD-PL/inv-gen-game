@@ -1,0 +1,38 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- third party libraries -->
+  <link rel="icon" href="/game/images/logo.png">
+  <!-- bootstrap stylesheet -->
+  <link rel="stylesheet"
+        href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+        integrity="sha256-7s5uDGW3AHqw6xtJmNNtr+OBRJUlgkNJEo78P4b0yRw="
+        crossorigin="anonymous">
+  <link rel="stylesheet"
+        href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css"
+        integrity="sha256-o8bM0Z5cFvrvvvQp0EJFi4LICvBA9FCx7iCNuojVsN8="
+        crossorigin="anonymous">
+
+    <!-- our code -->
+  <link rel="stylesheet" href="/game/css/inv.css">
+  <link rel="stylesheet" href="/game/css/arrow.css">
+  <link rel="stylesheet" href="/game/flowgame/static/newgame.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.5/require.js"
+          integrity="sha256-uvn41VNPQ8aVNA6aS1Zjc2FUPkKq7ZgA6SzFiHkVgxs="
+          crossorigin="anonymous" data-main="/game/flowgame/js/new_game_loader.js"></script>
+</head>
+<body>
+  <div class='overlay' id='overlay'></div>
+  <div class='container' id='main'>
+    <div id='graph' style="float: left; padding: 20px" class="box stickyWindow absPos">
+    </div>
+    <div id='traces' style="float: right;">
+    </div>
+    <div id='progress' style="float: right; padding: 20px; display: none;" class="box progressWindow">
+    </div>
+  </div>
+</body>
+</html>

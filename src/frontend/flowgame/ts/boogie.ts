@@ -1,4 +1,4 @@
-import {single, entries, assert} from "./util"
+import {single, entries, assert} from "../../ts/util"
 import {HasId, DiGraph} from "./graph"
 
 export type Stmt_T = string;

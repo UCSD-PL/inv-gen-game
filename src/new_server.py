@@ -51,7 +51,7 @@ class Server(Flask):
 
         return 0
 
-app = Server(__name__, static_folder='static/', static_url_path='')
+app = Server(__name__, static_folder='frontend/', static_url_path='/game')
 api = rpc(app, '/api')
 
 traces : Dict[str, Dict[str, FlowgameLevel]] = {}
