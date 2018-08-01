@@ -278,7 +278,7 @@ def loadNextLvl(workerId: str, mturkId: MturkIdT, individualMode: bool) -> Optio
             continue
         result = loadLvl(curLevelSetName, lvlId, mturkId, individualMode)
         result['LevelNumber'] = i 
-        if i>2 and (not questionaireDoneBy(session, curLevelSetName, lvlId, workerId)):
+        if i>5 and (not questionaireDoneBy(session, curLevelSetName, lvlId, workerId)):
             result['ShowQuestionaire'] = True
         return result
     return None
@@ -419,8 +419,9 @@ def tryAndVerify(
     workerId, _, _ = mturkId
     userInvs = set([ esprimaToBoogie(x, {}) for x in invs ])
     otherInvs: Set[AstExpr] = set([])
-    lastVer = getLastVerResult(levelSet, levelId, s,
-      workerId=(workerId if individualMode else None))
+    lastVer: Optional[Dict[str, Any]] = None
+    #lastVer = getLastVerResult(levelSet, levelId, s,
+    #  workerId=(workerId if individualMode else None))
 
     if (lastVer):
       otherInvs = otherInvs.union([parseExprAst(x) for x in lastVer["sound"]])

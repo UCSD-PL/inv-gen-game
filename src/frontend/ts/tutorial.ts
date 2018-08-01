@@ -177,7 +177,7 @@ var mainScript = [
     },
     {
         setup: function (cs) {
-            curL = label($('#formula-entry'), "Now type i.", "left");
+            curL = label($('#formula-entry'), "Now replace 3+4 with i.", "left");
             nextStepOnInvariant(cs, "i", labelRemover(curL));
         }
     },

@@ -89,7 +89,7 @@ COPY init.sh /app
 # Set the working directory to /app
 WORKDIR /app
 
-LABEL version="v0.1.3"
+LABEL version="v0.1.4"
 
 RUN git pull \
     && buildDeps="xz-utils \

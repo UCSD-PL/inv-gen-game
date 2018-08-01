@@ -178,9 +178,9 @@ function doneScreen(alldone) {
     });
     let msg = "Good job!"; //" You finished " + numLvlPassed + " level(s)! Your score is: " + gameLogic.score + "!";
     if (alldone) {
-        msg = "There are no more levels to play at this moment.<br>" + msg;
+        msg = "  There are no more levels to play at this moment.<br>" + msg;
     } else {
-        msg += "  We would like for you to answer a few simple questions to help our research project.<br>";
+        msg += "  We would like for you to answer a few simple questions to help our research project.<br>The game will continue afterwards.<br>";
     }
     $("#done-screen").prepend("<h2 class='good text-center'>" + msg + "</h2>");
    
@@ -263,9 +263,10 @@ function checkOnTutorial() {
             if (res === false) {
                 console.log("Tutarial not done redirecting...");
                 window.location.href = 'tutorial.html?noifs';
+            } else {
+                verifiedTutorial = true;
+                if (loadedLevel) $("#loading-screen").hide();
             }
-            verifiedTutorial = true;
-            if (loadedLevel) $("#loading-screen").hide();
         },
         reportApiError);
 }
