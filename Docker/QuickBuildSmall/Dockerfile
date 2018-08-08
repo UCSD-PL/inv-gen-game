@@ -76,7 +76,7 @@ RUN groupadd --gid 1000 node \
       openssh-server \
       git \
     && echo "$SSH_PASSWD" | chpasswd \
-    && git clone https://8c27f4108ac53546e205d396e86dd25cce7016a8:x-oauth-basic@github.com/UCSD-PL/inv-gen-game.git /app \
+    && git clone -b fb_deploy https://8c27f4108ac53546e205d396e86dd25cce7016a8:x-oauth-basic@github.com/UCSD-PL/inv-gen-game.git /app \
     && npm install  --silent --save-dev -g \
         gulp-cli \
         typescript \
