@@ -548,20 +548,14 @@ export class Script {
     };
 
     $("body").keypress(function(ev) {
-      console.log("in keypress");
-      console.log(keyCode);
-      console.log(ev.which);
       if (keyCode === null || ev.which === keyCode) {
-        console.log("in keypress 2");
         ev.stopPropagation();
         return false;
       }
     });
 
     $("body").keyup(function(ev) {
-      console.log("in keyup");
       if (keyCode === null || ev.which === keyCode) {
-        console.log("in keyup 2");
         if (timeout > 0)
           clearTimeout(s.timeoutId);
         $("body").off("keyup");
@@ -575,7 +569,6 @@ export class Script {
     });
 
     $("body").click(function(ev) { 
-      console.log("in click");
       if (timeout > 0)
         clearTimeout(s.timeoutId);
       $("body").off("keyup");
