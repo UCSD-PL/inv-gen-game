@@ -170,7 +170,7 @@ export class StaticGameLogic extends BaseGameLogic implements IGameLogic {
         public stickyW: StickyWindow,
         numBonuses: number = 5) {
         super(tracesW, progressW, scoreW, stickyW);
-        this.pwupSuggestion = new PowerupSuggestionFullHistory(numBonuses, "lfu");
+        this.pwupSuggestion = new PowerupSuggestionAll();
     }
 
     clear(): void {

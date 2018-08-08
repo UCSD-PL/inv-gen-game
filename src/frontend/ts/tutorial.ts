@@ -320,7 +320,7 @@ var mainScript = [
     },
     {
         setup: function (cs) {
-            $('#errormsg').html("<div class='error'>This is weaker than a found expression!</div>");
+            $('#errormsg').html("<div class='error'>This is weaker than the expression i>=0 already entered!</div>");
             curL = label({ of: $("#good_0"), at: "left+10 bottom" },
                 "Can't use a weaker<br> expression than <br> found one either.", "up");
             cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32);
@@ -359,7 +359,7 @@ var mainScript = [
         setup: function (cs) {
             tracesW.msg("");
             curL = label({ of: $("#sticky"), at: "center bottom" },
-                "Double added points <br> since you used only <br> variables", "up");
+                "Double points added<br> since you didn't use number", "up");
             pwups[0].highlight(() =>
                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
             );
@@ -387,10 +387,9 @@ var mainScript = [
     },
     {
         setup: function (cs) {
-            pwups = [new UseOpsPwup(["+", "-"], "&plusmn;", "addition or subtraction"),
-            new UseOpsPwup(["*", "/"], "*/", "multiplication or division"),
-            new UseOpsPwup(["=="], "=", "equality"),
-            ];
+            pwups = [new VarOnlyPowerup(2),
+                new UseOpsPwup(["<=", ">=", "<", ">", "!=="], "<>", "inequality"),
+                new UseOpsPwup(["+", "-"], "&plusmn;", "addition or subtraction",4)];
             stickyW.setPowerups(pwups);
             curL = label({ of: $("#sticky"), at: "center bottom" },
                 "Bonuses change<br>based on what you try.", "up");
@@ -483,6 +482,7 @@ var mainScript = [
             tracesW.msg("");
             pwups[0].highlight(() => 0);
             pwups[1].highlight(() => 0);
+            pwups[2].setMultiplier(4);
             scoreW.add(4);
             addSuccessfulInvariant(inv, "j%2=0");
             curL = label({ of: $("#discovered-invariants-div"), at: "center bottom" },
@@ -557,9 +557,9 @@ var mainScript = [
             //removeLabel(curL);
             //$('#next-lvl').hide();
             var lvl = new Level("tutorial_lvl_3",
-                ["k", "l"],
+                ["ctr", "n"],
                 [[[1, 3], [2, 6], [3, 9]], [], []], "", false,
-                { atleast: 1 }, {k: 'int', l: 'int'}, []);
+                { atleast: 1 }, {ctr: 'int', n: 'int'}, []);
             gameLogic.loadLvl(lvl);
         }
     },
