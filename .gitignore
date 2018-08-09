@@ -365,3 +365,7 @@ ASALocalRun/
 
 # Visual Studio files
 .vscode/
+
+src/frontend/ts/*.js
+src/frontend/ts/*.js.map
+src/frontend/flowgame/js/phaser.js
