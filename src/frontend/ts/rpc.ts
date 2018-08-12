@@ -1,7 +1,6 @@
 /* This file defines the RPC interface between server and client */
-import {Args, log, unique} from "./util";
-import {invariantT, templateT, dataT, TypeEnv} from "./types";
-import {esprimaToStr} from "./eval";
+import {Args, log} from "./util";
+import {invariantT, dataT, TypeEnv} from "./types";
 import {parse} from "esprima";
 import {Node as ESNode} from "estree";
 import { JsonRpcClient } from "../js/jquery.jsonrpcclient"

@@ -4,8 +4,11 @@
     "module": "AMD",
     "target": "es6",
     "outDir": "build",
+    "rootDir": ".",
     "preserveConstEnums": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "typeRoots": ["node_modules/@types", "node_modules"],
+    "types": ["phaser-ce", "esprima", "estree", "jquery", "jquery-jsonrpcclient", "jqueryui"]
   },
   "exclude": [
     "node_modules"

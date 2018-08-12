@@ -17,7 +17,7 @@ typings:
 	npm install
 
 ts-files: typings
-	tsc
+	./node_modules/.bin/tsc
 
 bootstrap.min.css:
 	wget https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css

@@ -1,4 +1,4 @@
-import {assert, StrMap} from "./util"
+import {assert, StrMap} from "../../ts/util"
 
 export interface HasId {
   id: string;
