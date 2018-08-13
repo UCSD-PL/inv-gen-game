@@ -69,22 +69,8 @@ export class SourceIcon extends TextIcon {
 }
 
 export class SinkIcon extends TextIcon {
-    editable: boolean;
     constructor(game: InvGraphGame, nd: AssertNode, x?: number, y?: number, editable = false, startShown?: boolean) {
       super(game.game, game.getSprite("sink", 0, 0, true), nd.exprs, "sink_" + nd.id, x, y, startShown);
-      this.editable = false;
-      if (editable) this.makeEditable();
-    }
-    public makeEditable() {
-      if (!this.editable) {
-        this.icon().inputEnabled = true;
-        this.icon().events.onInputDown.add(() => {
-          this._lineOpts[0].editingNow = true;
-          this._render();
-        }, this);
-        this.icon().input.useHandCursor = true;
-        this.editable = true;
-      }
     }
     public entryPoint(): Phaser.Point {
         return new Phaser.Point(
@@ -127,16 +113,6 @@ export class InputOutputIcon extends TextIcon {
     // for this one case
     constructor(game: InvGraphGame, nd: UserNode, x?: number, y?: number, startShown?: boolean) {
       super(game.game, game.getSprite("funnel", 0, 0, true), [], "un_" + nd.id, x, y, startShown);
-      this.icon().inputEnabled = true;
-      this.icon().events.onInputDown.add(() => {
-        if (this.unsound.length == 0) {
-          this.unsound.push("");
-          this.setInvariants(this.sound, this.unsound);
-        }
-        this._lineOpts[0].editingNow = true;
-        this._render();
-      }, this);
-      this.icon().input.useHandCursor = true;
       this.setInvariants(nd.sound, nd.unsound);
     }
     public entryPoint(): Phaser.Point {
@@ -161,15 +137,11 @@ export class InputOutputIcon extends TextIcon {
       let good: LineOptions = {
               style: { font: "15px Courier New, Courier, monospace", align: "center", fill: "#00ff00", backgroundColor: "#ffffff" },
               removable: false,
-              editable: false,
-              editingNow: false,
               visible: true,
       }
       let bad: LineOptions = {
               style: { font: "15px Courier New, Courier, monospace", align: "center", fill: "#ff0000", backgroundColor: "#ffffff" },
               removable: false,
-              editable: true,
-              editingNow: false,
               visible: true,
       }
       let allOpts: LineOptions[] = repeat(bad, unsound.length).concat(repeat(good, sound.length))

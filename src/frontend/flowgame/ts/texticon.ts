@@ -4,8 +4,6 @@ import {assert, shallowCopy, structEq, max} from "../../ts/util"
 export type LineOptions = {
     style: object,
     removable: boolean,
-    editable: boolean,
-    editingNow: boolean,
     visible: boolean
 };
 
@@ -18,21 +16,15 @@ export class TextIcon extends Phaser.Group {
     protected _defaultOpts: LineOptions;
     protected _lineOpts: LineOptions[];
     protected _focused: number;
-    protected _inputBox: JQuery;
     protected _hasBorder: boolean;
 
-    public onSubmitted: Phaser.Signal;
-    public onChanged: Phaser.Signal;
-
-    constructor(game: Phaser.Game, icon: Phaser.Sprite, text: (string|string[]), name?: string, x?: number, y?:number, startShown?: boolean, border?: boolean) {
+    constructor(game: Phaser.Game, icon: Phaser.Sprite, text: (string|string[]), name?: string, x?: number, y?:number, startShown?: boolean, border?: boolean, clickable?: boolean) {
         super(game, undefined, name, undefined, undefined, undefined);
         if (x == undefined) x = 0;
         if (y == undefined) y = 0;
         if (startShown == undefined) startShown = true;
         if (border == undefined) border = false;
 
-        this.onSubmitted = new Phaser.Signal();
-        this.onChanged = new Phaser.Signal();
         this._game = game;
         this._icon = icon;
         this._icon.x = Math.round(-this._icon.width/2);
@@ -40,8 +32,6 @@ export class TextIcon extends Phaser.Group {
         this._defaultOpts = {
             style: { font: "15px Courier New, Courier, monospace", align: "center", fill: "#000000", },
             removable: false,
-            editable: false,
-            editingNow: false,
             visible: startShown,
         }
         this._lineOpts = [];
@@ -68,16 +58,8 @@ export class TextIcon extends Phaser.Group {
         return true;
     }
 
-    public edit(lineIdx: number): void {
-        let opts = this._lineOpts[lineIdx];
-        assert(opts.editable);
-        opts.editingNow = true;
-        this._render();
-    }
-
     protected _render(): void {
         let lineGrp: Phaser.Group;
-        let rmIconStyle = { font: "15px Courier New, Courier, monospace", align: "center", fill: "#ff0000", backgroundColor: "#ffffff" };
 
         function _height(arg: Phaser.Text|JQuery): number {
             if (arg instanceof $) {
@@ -89,44 +71,16 @@ export class TextIcon extends Phaser.Group {
 
         lineGrp = (this._text !== undefined ? this._text : this._game.add.group())
         lineGrp.removeAll(true);
-        if (this._inputBox != null) {
-            this._inputBox.remove();
-        }
         let idx = 0;
         let lineElts: (Phaser.Text |JQuery)[] = [];
         for (let ln of this._lines) {
             let opts = this._lineOpts[idx];
             let lineText: Phaser.Text | JQuery;
-            if (opts.editingNow) {
-                let container: JQuery = $("#" + this.game.parent);
-                let input: JQuery = $("<input class='absPos' type='text'></input>");
-                input.val(ln);
-                input.change(((lineIdx: number) => ()=> {
-                    this._lines[lineIdx] = input.val() as string;
-                    this._lineOpts[lineIdx].editingNow = false;
-                    this._render();
-                    this.onSubmitted.dispatch(this, this._lines);
-                })(idx))
-                let oldVal: string = input.val() as string;
-                input.keyup(() => {
-                    if (input.val() != oldVal) {
-                        this.onChanged.dispatch(this, input.val());
-                        oldVal = input.val() as string;
-                    }
-                })
-                this._inputBox = input;
-                container.append(this._inputBox)
-                this._inputBox.focus();
-                lineText = input;
-            } else {
-                lineText = this._game.add.text(0, 0, ln, opts.style, lineGrp);
-                if (opts.editable) {
-                    lineText.inputEnabled = true;
-                    lineText.events.onInputDown.add(((lineIdx: number) => ()=> {
-                        this.edit(lineIdx);
-                    })(idx));
-                }
-            }
+            lineText = this._game.add.text(0, 0, ln, opts.style, lineGrp);
+            lineText.inputEnabled = true;
+            lineText.events.onInputDown.add(((lineIdx: number) => ()=> {
+                console.log("Line ", lineIdx, " text: ", this._lines[lineIdx], "clicked!");
+            })(idx));
             lineElts.push(lineText);
             idx++;
         }
@@ -145,7 +99,6 @@ export class TextIcon extends Phaser.Group {
                 let line : Phaser.Text = lineElts[i] as Phaser.Text;
                 line.x = 0;
                 line.y = relY;
-                console.log(line, opts.visible);
                 line.exists = opts.visible;
             }
         }
@@ -231,19 +184,6 @@ export class TextIcon extends Phaser.Group {
             this._lineOpts.push(shallowCopy((i in newOpts ? newOpts[i] : this._defaultOpts)));
         }
         this._render();
-    }
-
-    public setEditedString(s: string) {
-        assert(this._inputBox != null);
-        this._inputBox.val(s);
-    }
-
-    public getEditedString(): string {
-        return this._inputBox.val() as string;
-    }
-
-    public getInputBoxWidth() {
-        return this._inputBox.width();
     }
 
     public hideText(): void {

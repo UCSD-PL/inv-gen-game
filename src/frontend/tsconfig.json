@@ -11,6 +11,7 @@
     "types": ["phaser-ce", "esprima", "estree", "jquery", "jquery-jsonrpcclient", "jqueryui"]
   },
   "exclude": [
+    "flowgame/ts/tutorial_game.ts",
     "node_modules"
   ]
 }

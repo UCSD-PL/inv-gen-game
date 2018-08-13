@@ -37,12 +37,6 @@ class SimpleGame extends InvGraphGame {
         this.onNodeFocused.dispatch(nd);
         this.focusedNode = this.textSprites[nd.id];
       })
-      this.textSprites[nd.id].onChanged.add((gameEl: TextIcon, newVal: string) => {
-        this.onUserTypedInv.dispatch(gameEl, newVal);
-      })
-      this.textSprites[nd.id].onSubmitted.add((gameEl: TextIcon, newLines: string[])=> {
-        this.onTriedInv.dispatch(gameEl, gameEl.getEditedString());
-      })
     })
   }
 
@@ -183,12 +177,6 @@ $(document).ready(function() {
       let inv = invPP(rawInv);
       let desugaredInv = invToJS(inv)
       let parsedInv:invariantT = null
-
-      if (!commit) {
-        console.log("Set: ", game.focusedNode, inv)
-        game.focusedNode.setEditedString(inv);
-      }
-
 
       try {
         parsedInv = parse(desugaredInv);
