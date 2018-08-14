@@ -3,7 +3,6 @@ import {assert, shallowCopy, structEq, max} from "../../ts/util"
 
 export type LineOptions = {
     style: object,
-    removable: boolean,
     visible: boolean
 };
 
@@ -15,10 +14,16 @@ export class TextIcon extends Phaser.Group {
     protected _game: Phaser.Game;
     protected _defaultOpts: LineOptions;
     protected _lineOpts: LineOptions[];
-    protected _focused: number;
     protected _hasBorder: boolean;
 
-    constructor(game: Phaser.Game, icon: Phaser.Sprite, text: (string|string[]), name?: string, x?: number, y?:number, startShown?: boolean, border?: boolean, clickable?: boolean) {
+    constructor(game: Phaser.Game,
+                icon: Phaser.Sprite,
+                text: (string|string[]),
+                name?: string,
+                x?: number,
+                y?:number,
+                startShown?: boolean,
+                border?: boolean) {
         super(game, undefined, name, undefined, undefined, undefined);
         if (x == undefined) x = 0;
         if (y == undefined) y = 0;
@@ -29,14 +34,13 @@ export class TextIcon extends Phaser.Group {
         this._icon = icon;
         this._icon.x = Math.round(-this._icon.width/2);
         this._icon.y =  Math.round(-this._icon.height/2);
+        this.inputEnableChildren = true;
         this._defaultOpts = {
             style: { font: "15px Courier New, Courier, monospace", align: "center", fill: "#000000", },
-            removable: false,
             visible: startShown,
         }
         this._lineOpts = [];
         this.setText(((text instanceof Array) ? text : text.split("\n")), {})
-        this._focused = undefined;
         super.add(this._icon);
         super.add(this._text);
         super.x = x; super.y = y;

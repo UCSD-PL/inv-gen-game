@@ -136,12 +136,10 @@ export class InputOutputIcon extends TextIcon {
       let allInvs: Expr_T[] = unsound.concat(sound);
       let good: LineOptions = {
               style: { font: "15px Courier New, Courier, monospace", align: "center", fill: "#00ff00", backgroundColor: "#ffffff" },
-              removable: false,
               visible: true,
       }
       let bad: LineOptions = {
               style: { font: "15px Courier New, Courier, monospace", align: "center", fill: "#ff0000", backgroundColor: "#ffffff" },
-              removable: false,
               visible: true,
       }
       let allOpts: LineOptions[] = repeat(bad, unsound.length).concat(repeat(good, sound.length))
