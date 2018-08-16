@@ -34,9 +34,16 @@ class SimpleGame extends InvGraphGame {
     super.create();
     this.forEachNode((nd: UserNode) => {
       this.textSprites[nd.id].onChildInputDown.add(() => {
+        if (this.focusedNode == nd) {
+          return;
+        }
+
+        if (this.focusedNode != null && this.focusedNode != undefined) {
+          this.onNodeUnfocused.dispatch(nd);
+        }
+
         this.focusedNode = nd;
         this.onNodeFocused.dispatch(nd);
-        this.textSprites[nd.id].bounce();
       })
     })
   }
@@ -167,8 +174,8 @@ $(document).ready(function() {
     })
     game.onFoundInv.add((nd: UserNode, inv: string) => {
       $("#progress").append("<span class='good'>" + inv + "</span>")
-      game.onNodeUnfocused.dispatch(nd);
       game.focusedNode = null;
+      game.onNodeUnfocused.dispatch(nd);
       $(tracesW.parent).hide();
     })
     game.onUserTypedInv.add((nd: TextIcon, inv: string) => {
