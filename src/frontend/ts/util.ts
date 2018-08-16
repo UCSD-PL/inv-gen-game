@@ -1,9 +1,21 @@
 import {info} from "./facebook";
+import { Class } from "estree";
 
 export type directionT = "up" | "down" | "left" | "right"
 
 export type StrMap<T> = { [key: string]: T};
 export type strset = Set<string>
+
+interface Constructor<T> {
+  new(...args: any[]): T;
+}
+
+export function ccast<T1, T extends Constructor<T1> >(obj: any, t: T): T1 {
+  if (!(obj instanceof t)) {
+    throw "Invalid cast from " + obj + " to type " + t;
+  }
+  return obj;
+}
 
 export function reversed<T>(l: T[]): T[] {
   let res: T[] = [];
