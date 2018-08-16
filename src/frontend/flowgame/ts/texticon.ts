@@ -15,6 +15,7 @@ export class TextIcon extends Phaser.Group {
     protected _defaultOpts: LineOptions;
     protected _lineOpts: LineOptions[];
     protected _hasBorder: boolean;
+    protected _bounceAnim: Phaser.Tween;
 
     constructor(game: Phaser.Game,
                 icon: Phaser.Sprite,
@@ -45,6 +46,25 @@ export class TextIcon extends Phaser.Group {
         super.add(this._text);
         super.x = x; super.y = y;
         this._hasBorder = border;
+    }
+
+    public bounce(): void {
+        this._bounceAnim = this._game.add.tween(this._icon);
+        let halfHeight = Math.round(this._icon.width/2);
+        let middle = -halfHeight;
+        let ti = this;
+        function makeBounce() {
+            let to: number;
+            if (ti._icon.y >= middle) {
+                to = middle - 10;
+            } else if (ti._icon.y < middle) {
+                to = middle + 10;
+            }
+            ti._bounceAnim.to({y: to}, 1000, Phaser.Easing.Bounce.In)
+            ti._bounceAnim.onComplete.add(makeBounce)
+            ti._bounceAnim.start();
+        }
+        makeBounce();
     }
 
     private _textMatch(): boolean {

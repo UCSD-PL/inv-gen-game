@@ -3,7 +3,7 @@ import {Fun, BB, Expr_T} from "./boogie";
 import * as Phaser from "phaser-ce"
 import {Node, buildGraph, removeEmptyNodes, UserNode, NodeMap, moveLoopsToTheLeft} from "./game_graph"
 import {InvGraphGame, TraceLayout, Trace, InvNetwork, InputOutputIcon, Violation} from "./invgraph_game"
-import {assert, repeat, structEq, StrMap, single} from "../../ts/util"
+import {ccast, assert, repeat, structEq, StrMap, single} from "../../ts/util"
 import {parse} from "esprima"
 import { TextIcon } from "ts/texticon";
 import { PositiveTracesWindow } from "../../ts/traceWindow";
@@ -17,7 +17,7 @@ class SimpleGame extends InvGraphGame {
   public onNodeUnfocused: Phaser.Signal;
   public onFoundInv: Phaser.Signal;
   public onTriedInv: Phaser.Signal;
-  public focusedNode: TextIcon;
+  public focusedNode: Node;
   public onUserTypedInv: Phaser.Signal;
 
   constructor(container: string, graph: Node, n: NodeMap, lvlId: string) {
@@ -32,10 +32,11 @@ class SimpleGame extends InvGraphGame {
 
   create(): void {
     super.create();
-    this.forEachUserNode((nd: UserNode) => {
+    this.forEachNode((nd: UserNode) => {
       this.textSprites[nd.id].onChildInputDown.add(() => {
+        this.focusedNode = nd;
         this.onNodeFocused.dispatch(nd);
-        this.focusedNode = this.textSprites[nd.id];
+        this.textSprites[nd.id].bounce();
       })
     })
   }
@@ -45,6 +46,10 @@ class SimpleGame extends InvGraphGame {
       if (!(nd instanceof UserNode))  return;
       cb(nd);
     })
+  }
+
+  forEachNode(cb: (nd: Node) => any): void {
+    this.entry.forEachReachable(cb)
   }
 
   checkInvs: any = (invs: InvNetwork, onDone: ()=>void) => {
@@ -84,12 +89,14 @@ class SimpleGame extends InvGraphGame {
 
   setExpr(expr: invariantT): void {
     assert(this.userNodes.length == 1);
-    let nd: UserNode = this.userNodes[0];
-    let gameNd: TextIcon = this.nodeSprites[nd.id];
-
+    let nd: UserNode = ccast(this.focusedNode, UserNode);
+    let gameNd: InputOutputIcon = ccast(this.nodeSprites[nd.id], InputOutputIcon)
     nd.unsound = [esprimaToStr(expr)];
     let invNet: InvNetwork = this.getInvNetwork();
-    this.checkInvs(invNet, ()=> {});
+    this.checkInvs(invNet, (violations)=> {
+      console.log(violations);
+      gameNd.setInvariants(nd.sound, nd.unsound);
+    });
   }
 }
 
@@ -141,6 +148,9 @@ $(document).ready(function() {
     // For each user node, on click select it and display the data for it
     // on the right hand windows
     game.onNodeFocused.add((nd: UserNode) => {
+      if (!(nd instanceof UserNode)) {
+        return;
+      }
       let [vars, trace] = traceMap[nd.id];
       let oldLvl = new Level(lvlName, vars, [trace, [], []], "", "", "", lvl.typeEnv, []);
       tracesW.setVariables(oldLvl);
