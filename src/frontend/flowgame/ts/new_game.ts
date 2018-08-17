@@ -1,8 +1,8 @@
 import {rpc_loadLvl, rpc_checkSoundness} from "./rpc";
 import {Fun, BB, Expr_T} from "./boogie";
 import * as Phaser from "phaser-ce"
-import {Node, buildGraph, removeEmptyNodes, UserNode, NodeMap, moveLoopsToTheLeft} from "./game_graph"
-import {InvGraphGame, TraceLayout, Trace, InvNetwork, InputOutputIcon, Violation} from "./invgraph_game"
+import {Node, buildGraph, removeEmptyNodes, UserNode, NodeMap, moveLoopsToTheLeft, IfNode, AssignNode} from "./game_graph"
+import {InvGraphGame, TraceLayout, Trace, InvNetwork, InputOutputIcon, Violation, BranchIcon} from "./invgraph_game"
 import {ccast, assert, repeat, structEq, StrMap, single} from "../../ts/util"
 import {parse} from "esprima"
 import { TextIcon } from "ts/texticon";
@@ -14,6 +14,7 @@ import {invariantT} from "../../ts/types"
 
 class SimpleGame extends InvGraphGame {
   public onNodeFocused: Phaser.Signal;
+  public onFocusedClick: Phaser.Signal;
   public onNodeUnfocused: Phaser.Signal;
   public onFoundInv: Phaser.Signal;
   public onTriedInv: Phaser.Signal;
@@ -21,8 +22,9 @@ class SimpleGame extends InvGraphGame {
   public onUserTypedInv: Phaser.Signal;
 
   constructor(container: string, graph: Node, n: NodeMap, lvlId: string) {
-    super(container, 600, 400, graph, n, lvlId);
+    super(container, 600, 500, graph, n, lvlId);
     this.onNodeFocused = new Phaser.Signal();
+    this.onFocusedClick = new Phaser.Signal();
     this.onNodeUnfocused = new Phaser.Signal();
     this.onFoundInv = new Phaser.Signal();
     this.onTriedInv = new Phaser.Signal();
@@ -35,6 +37,7 @@ class SimpleGame extends InvGraphGame {
     this.forEachNode((nd: UserNode) => {
       this.textSprites[nd.id].onChildInputDown.add(() => {
         if (this.focusedNode == nd) {
+          this.onFocusedClick.dispatch(nd);
           return;
         }
 
@@ -44,7 +47,7 @@ class SimpleGame extends InvGraphGame {
 
         this.focusedNode = nd;
         this.onNodeFocused.dispatch(nd);
-      })
+      });
     })
   }
 
@@ -154,7 +157,9 @@ $(document).ready(function() {
     traceMap[single(userNodes).id] = [vars, trace];
     // For each user node, on click select it and display the data for it
     // on the right hand windows
-    game.onNodeFocused.add((nd: UserNode) => {
+
+    game.onNodeFocused.add((nd: Node) => {
+      game.textSprites[nd.id].select();
       if (!(nd instanceof UserNode)) {
         return;
       }
@@ -165,7 +170,15 @@ $(document).ready(function() {
       $(tracesW.parent).show();
       $("#progress").show();
     })
-    game.onNodeUnfocused.add((nd: UserNode) => {
+    game.onFocusedClick.add((nd: Node) => {
+      if (!(nd instanceof AssignNode))  return;
+      let ti = game.textSprites[nd.id];
+      game.transformLayout(() => ti.toggleText());
+    })
+    game.onNodeUnfocused.add((nd: Node) => {
+      if (game.focusedNode != null) {
+        game.textSprites[game.focusedNode.id].deselect();
+      }
       let [vars, trace] = [[], []];
       let oldLvl = new Level(lvlName, vars, [trace, [], []], "", "", "", lvl.typeEnv, []);
       tracesW.setVariables(oldLvl);

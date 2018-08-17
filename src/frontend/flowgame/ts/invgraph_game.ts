@@ -12,9 +12,18 @@ import {Node, AssignNode, IfNode, AssumeNode, UserNode,
         AssertNode, exit, NodeMap, PlaceholderNode} from "./game_graph"
 import {LineOptions, TextIcon} from "./texticon"
 
+class SelectableTextIcon extends TextIcon {
+  public select(): void {
+    this._icon.frame = 1;
+  }
+  public deselect(): void {
+    this._icon.frame = 0; 
+  }
+}
+
 export type InvNetwork = StrMap<ESNode[]>;
 export type Violation = any[];
-type SpriteMap = StrMap<TextIcon>;
+type SpriteMap = StrMap<SelectableTextIcon>;
 type PointMap = StrMap<Point>;
 type Path = Point[];
 type PathMap = StrMap<Point[]>;
@@ -34,9 +43,10 @@ interface Size {
   h: number;
 }
 
-export class PlaceholderIcon extends TextIcon {
+
+export class PlaceholderIcon extends SelectableTextIcon {
     constructor(game: InvGraphGame, nd: PlaceholderNode, x?: number, y?: number) {
-      super(game.game, game.getSprite("placeholder", 0, 0, true), "", "plchldr_" + nd.id, x, y);
+      super(game.game, new Phaser.Sprite(game.game, 0, 0, "placeholder", 0), "", "plchldr_" + nd.id, x, y);
     }
     public entryPoint(): Phaser.Point {
         return new Phaser.Point(
@@ -56,9 +66,9 @@ export class PlaceholderIcon extends TextIcon {
     // }
 }
 
-export class SourceIcon extends TextIcon {
+export class SourceIcon extends SelectableTextIcon {
     constructor(game: InvGraphGame, nd: AssumeNode, x?: number, y?: number, startShown?: boolean) {
-      super(game.game, game.getSprite("source", 0, 0, true), nd.exprs, "src_" + nd.id, x, y, startShown);
+      super(game.game, new Phaser.Sprite(game.game, 0, 0, "source", 0), nd.exprs, "src_" + nd.id, x, y, startShown);
     }
     public exitPoint(): Phaser.Point {
         return new Phaser.Point(
@@ -68,9 +78,9 @@ export class SourceIcon extends TextIcon {
     }
 }
 
-export class SinkIcon extends TextIcon {
+export class SinkIcon extends SelectableTextIcon {
     constructor(game: InvGraphGame, nd: AssertNode, x?: number, y?: number, editable = false, startShown?: boolean) {
-      super(game.game, game.getSprite("sink", 0, 0, true), nd.exprs, "sink_" + nd.id, x, y, startShown);
+      super(game.game, new Phaser.Sprite(game.game, 0, 0, "sink", 0), nd.exprs, "sink_" + nd.id, x, y, startShown);
     }
     public entryPoint(): Phaser.Point {
         return new Phaser.Point(
@@ -80,9 +90,9 @@ export class SinkIcon extends TextIcon {
     }
 }
 
-export class BranchIcon extends TextIcon {
+export class BranchIcon extends SelectableTextIcon {
     constructor(game: InvGraphGame, nd: AssertNode, x?: number, y?: number, startShown?: boolean) {
-      super(game.game, game.getSprite("branch", 0, 0, true), nd.exprs, "br_" + nd.id, x, y, startShown);
+      super(game.game, new Phaser.Sprite(game.game, 0, 0, "branch", 0), nd.exprs, "br_" + nd.id, x, y, startShown);
     }
     public entryPoint(): Phaser.Point {
         return new Phaser.Point(
@@ -105,14 +115,14 @@ export class BranchIcon extends TextIcon {
     }
 }
 
-export class InputOutputIcon extends TextIcon {
+export class InputOutputIcon extends SelectableTextIcon {
   protected unsound: Expr_T[];
   protected sound: Expr_T[];
 
     // Code duplication with OutputIcon - don't want to implement mixins just
     // for this one case
     constructor(game: InvGraphGame, nd: UserNode, x?: number, y?: number, startShown?: boolean) {
-      super(game.game, game.getSprite("funnel", 0, 0, true), [], "un_" + nd.id, x, y, startShown);
+      super(game.game, new Phaser.Sprite(game.game, 0, 0, "funnel", 0), [], "un_" + nd.id, x, y, startShown);
       this.setInvariants(nd.sound, nd.unsound);
     }
     public entryPoint(): Phaser.Point {
@@ -147,17 +157,12 @@ export class InputOutputIcon extends TextIcon {
     }
 }
 
-export class TransformerIcon extends TextIcon {
+export class TransformerIcon extends SelectableTextIcon {
     // Code duplication with OutputIcon - don't want to implement mixins just
     // for this one case
     constructor(game: InvGraphGame, nd: AssignNode, x?: number, y?: number, startShown?: boolean) {
       let text = nd.stmts.join("\n");
-      super(game.game, game.getSprite("gearbox", 0, 0, true), text, "tr_" + nd.id, x, y, startShown);
-      this.icon().inputEnabled = true;
-      this.icon().events.onInputDown.add(() => {
-        game.transformLayout(() => this.toggleText());
-      }, this);
-      this.icon().input.useHandCursor = true;
+      super(game.game, new Phaser.Sprite(game.game, 0, 0, "gearbox", 0), text, "tr_" + nd.id, x, y, startShown);
     }
     public entryPoint(): Phaser.Point {
         return new Phaser.Point(
@@ -215,7 +220,7 @@ export class InvGraphGame {
   protected f: Fun;
   protected width: number;
   protected height: number;
-  protected textSprites: SpriteMap;
+  public textSprites: SpriteMap;
   protected nodeSprites: SpriteMap;
   protected edges: StrMap<StrMap<Path>>;
   protected edgeStates: EdgeStates;
@@ -555,19 +560,18 @@ export class InvGraphGame {
   preload: any = () => {
     this.game.stage.backgroundColor = "#ffffff";
     this.game.load.image('bug', '/game/flowgame/img/ladybug.png');
-    this.game.load.image('source', '/game/flowgame/img/source_small.png');
-    this.game.load.image('sink', '/game/flowgame/img/sink_small.png');
-    this.game.load.image('gearbox', '/game/flowgame/img/gearbox_small.png');
-    this.game.load.image('funnel', '/game/flowgame/img/funnel_small.png');
-    this.game.load.image('funnel_selected', '/game/flowgame/img/funnel_small_selected.png');
-    this.game.load.image('branch', '/game/flowgame/img/branch_small.png');
-    this.game.load.image('placeholder', '/game/flowgame/img/placeholder_small.png');
     this.game.load.image('orb', '/game/flowgame/img/orb.png');
     this.game.load.image('whitespace', '/game/flowgame/img/white_space.png');
   //  this.game.load.spritesheet('explosion', '/game/flowgame/img/explosion160x120.png', 160, 120, 90);
     this.game.load.spritesheet('arrow_right', '/game/flowgame/img/arrow_right_sheet.png', 28, 21, 20);
     this.game.load.spritesheet('arrow_left', '/game/flowgame/img/arrow_left_sheet.png', 28, 21, 20);
 
+    this.game.load.spritesheet('source', '/game/flowgame/img/source.png', 48, 42, -1, 0, 0);
+    this.game.load.spritesheet('sink', '/game/flowgame/img/sink.png', 48, 42, -1, 0, 0);
+    this.game.load.spritesheet('gearbox', '/game/flowgame/img/gearbox.png', 48, 42, -1, 0, 0);
+    this.game.load.spritesheet('funnel', '/game/flowgame/img/funnel.png', 82, 42, -1, 0, 0);
+    this.game.load.spritesheet('branch', '/game/flowgame/img/branch.png', 72, 28, -1, 0, 0);
+    this.game.load.spritesheet('placeholder', '/game/flowgame/img/placeholder.png', 48, 42, -1, 0, 0);
   }
 
   update: any = () => {
@@ -587,7 +591,7 @@ export class InvGraphGame {
     }
   }
 
-  drawNode(nd: Node, pos: Point): TextIcon {
+  drawNode(nd: Node, pos: Point): SelectableTextIcon {
     if (nd instanceof AssumeNode) {
       return new SourceIcon(this, nd, pos.x, pos.y, true);
     } else if (nd instanceof AssertNode) {
@@ -1003,7 +1007,7 @@ export class InvGraphGame {
       if (prev == null) {
         assert(next == this.entry);
         //let w = final_size[next.id].w/2;
-        let w = 120;
+        let w = 200;
         p = new Point(w+10, 40);
         bboxPos[next.id] = new Point(w, 0);
       } else {
