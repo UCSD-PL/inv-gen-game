@@ -13,6 +13,18 @@ import {Node, AssignNode, IfNode, AssumeNode, UserNode,
 import {LineOptions, TextIcon} from "./texticon"
 
 class SelectableTextIcon extends TextIcon {
+    constructor(game: Phaser.Game,
+                icon: Phaser.Sprite,
+                text: (string|string[]),
+                name?: string,
+                x?: number,
+                y?:number,
+                startShown?: boolean,
+                border?: boolean) {
+      super(game, icon, text, name, x, y, startShown, border);
+      this._icon.input.useHandCursor = true;
+    }
+
   public select(): void {
     this._icon.frame = 1;
   }
