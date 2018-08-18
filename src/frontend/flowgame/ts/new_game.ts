@@ -64,8 +64,23 @@ class SimpleGame extends InvGraphGame {
     }
     let s = "<div id='side_" + nd.id + "' class='side_desc'>"
     let ti = this.textSprites[nd.id];
-    s +=  "<span class='side_header'>" +  ndIcon(nd) + ndType(nd) + '</span><hr>'
+    s +=  "<span class='side_header'>" +  ndIcon(nd) + ndType(nd) + '</span>'
     s += "</div>"
+
+    let tabs = [['info', 'Info', 'this is the info']];
+    let tabHeader = '<ul class="nav nav-tabs" role="tablist">',
+      tabsContent = '<div class="tab-content">';
+
+    for (let [tabName, tabTittle, tabContent] of tabs) {
+      tabHeader += '<li class="nav-item">\
+        <a class="nav-link active" id="' + tabName + '-tab" data-toggle="tab" href="#' + tabName + '" role="tab" aria-controls="home" aria-selected="true">' + tabTittle + '</a>\
+        </li>'
+      tabsContent += '<div class="tab-pane fade show active" id="' + tabName + '" role="tabpanel" aria-labelledby="' + tabName + '-tab">' + tabContent + '</div>'
+    }
+  
+    tabHeader += '</ul>'
+    tabsContent += '</div>'
+    s += tabHeader + tabsContent;
     return $(s)
   }
 

@@ -51,6 +51,7 @@ requirejs.config({
 
 requirejs(
   [
+    "bootstrap",
     "new_game"
   ],
   () => {
