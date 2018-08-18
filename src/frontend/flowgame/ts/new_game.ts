@@ -1,7 +1,8 @@
 import {rpc_loadLvl, rpc_checkSoundness} from "./rpc";
 import {Fun, BB, Expr_T} from "./boogie";
 import * as Phaser from "phaser-ce"
-import {Node, buildGraph, removeEmptyNodes, UserNode, NodeMap, moveLoopsToTheLeft, IfNode, AssignNode} from "./game_graph"
+import {Node, buildGraph, removeEmptyNodes, NodeMap, moveLoopsToTheLeft,
+  AssumeNode, AssertNode, IfNode, UserNode, AssignNode} from "./game_graph"
 import {InvGraphGame, TraceLayout, Trace, InvNetwork, InputOutputIcon, Violation, BranchIcon} from "./invgraph_game"
 import {ccast, assert, repeat, structEq, StrMap, single} from "../../ts/util"
 import {parse} from "esprima"
@@ -17,9 +18,19 @@ class SimpleGame extends InvGraphGame {
   public onFocusedClick: Phaser.Signal;
   public onNodeUnfocused: Phaser.Signal;
   public onFoundInv: Phaser.Signal;
-  public onTriedInv: Phaser.Signal;
   public focusedNode: Node;
-  public onUserTypedInv: Phaser.Signal;
+
+  protected sideWindowContent: StrMap<any>;
+
+  static buildGame(container: string, f: Fun, t: any, lvlName: string): SimpleGame {
+    let [graph_entry, mapping] = buildGraph(f);
+    graph_entry = moveLoopsToTheLeft(graph_entry);
+    console.log("Initial:", graph_entry);
+    [graph_entry, mapping] = removeEmptyNodes(graph_entry, mapping, true);
+    console.log("After cleanup of empty nodes:", graph_entry);
+
+    return new SimpleGame(container, graph_entry, mapping, lvlName)
+  }
 
   constructor(container: string, graph: Node, n: NodeMap, lvlId: string) {
     super(container, 600, 500, graph, n, lvlId);
@@ -27,14 +38,40 @@ class SimpleGame extends InvGraphGame {
     this.onFocusedClick = new Phaser.Signal();
     this.onNodeUnfocused = new Phaser.Signal();
     this.onFoundInv = new Phaser.Signal();
-    this.onTriedInv = new Phaser.Signal();
-    this.onUserTypedInv = new Phaser.Signal();
     this.focusedNode = null;
+    this.sideWindowContent = {};
+  }
+
+  buildContent(nd: Node): any {
+    let ndType = (nd: Node): string => {
+      if (nd instanceof AssumeNode) return "Source";
+      if (nd instanceof AssertNode) return "Sink";
+      if (nd instanceof IfNode) return "Branch";
+      if (nd instanceof AssignNode) return "Transformer";
+      if (nd instanceof UserNode) return "Accumulator";
+    }
+
+    let ndIcon = (nd: Node): string => {
+      let a = "<div style='background-image: url(\"",
+          b = "\"); width:",
+          c = "px; height: ",
+          d = "px; overflow: hidden; float: left'/>"
+      if (nd instanceof AssumeNode) return a + "/game/flowgame/img/source.png" + b + 48 + c + 42 + d;
+      if (nd instanceof AssertNode) return a + "/game/flowgame/img/sink.png" + b + 48 + c + 42 + d;
+      if (nd instanceof IfNode) return a + "/game/flowgame/img/branch.png" + b + 72 + c + 28 + d;
+      if (nd instanceof AssignNode) return a + "/game/flowgame/img/gearbox.png" + b + 48 + c + 42 + d;
+      if (nd instanceof UserNode) return a + "/game/flowgame/img/funnel.png" + b + 82 + c + 42 + d;
+    }
+    let s = "<div id='side_" + nd.id + "' class='side_desc'>"
+    let ti = this.textSprites[nd.id];
+    s +=  "<span class='side_header'>" +  ndIcon(nd) + ndType(nd) + '</span><hr>'
+    s += "</div>"
+    return $(s)
   }
 
   create(): void {
     super.create();
-    this.forEachNode((nd: UserNode) => {
+    this.forEachNode((nd: Node) => {
       this.textSprites[nd.id].onChildInputDown.add(() => {
         if (this.focusedNode == nd) {
           this.onFocusedClick.dispatch(nd);
@@ -48,6 +85,46 @@ class SimpleGame extends InvGraphGame {
         this.focusedNode = nd;
         this.onNodeFocused.dispatch(nd);
       });
+      this.sideWindowContent[nd.id] = this.buildContent(nd);
+    })
+
+    this.onNodeFocused.add((nd: Node) => {
+      this.textSprites[nd.id].select();
+      $('#sidewindow').html(this.sideWindowContent[nd.id]);
+      /*
+      if (!(nd instanceof UserNode)) {
+        return;
+      }
+      let [vars, trace] = traceMap[nd.id];
+      let oldLvl = new Level(lvlName, vars, [trace, [], []], "", "", "", lvl.typeEnv, []);
+      tracesW.setVariables(oldLvl);
+      tracesW.addData(oldLvl.data);
+      $(tracesW.parent).show();
+      $("#progress").show();
+      */
+    })
+    this.onFocusedClick.add((nd: Node) => {
+      if (!(nd instanceof AssignNode))  return;
+      let ti = this.textSprites[nd.id];
+      this.transformLayout(() => ti.toggleText());
+    })
+    this.onNodeUnfocused.add((nd: Node) => {
+      if (this.focusedNode != null) {
+        this.textSprites[this.focusedNode.id].deselect();
+      }
+      /*
+      let [vars, trace] = [[], []];
+      let oldLvl = new Level(lvlName, vars, [trace, [], []], "", "", "", lvl.typeEnv, []);
+      tracesW.setVariables(oldLvl);
+      tracesW.addData(oldLvl.data);
+      $("#progress").hide();
+      */
+    })
+    this.onFoundInv.add((nd: UserNode, inv: string) => {
+      $("#progress").append("<span class='good'>" + inv + "</span>")
+      this.focusedNode = null;
+      this.onNodeUnfocused.dispatch(nd);
+      //$(tracesW.parent).hide();
     })
   }
 
@@ -138,12 +215,9 @@ $(document).ready(function() {
       }
     }
     let trace = convertTrace(vars, lvl.data);
-    let [graph_entry, mapping] = buildGraph(fun);
-    graph_entry = moveLoopsToTheLeft(graph_entry);
-    console.log("Initial:", graph_entry);
-    [graph_entry, mapping] = removeEmptyNodes(graph_entry, mapping, true);
-    console.log("After cleanup of empty nodes:", graph_entry);
-    let game = new SimpleGame("graph", graph_entry, mapping, lvlName);
+
+    let game = SimpleGame.buildGame('graph', fun, trace, lvlName)
+    /*
     let tracesW = new PositiveTracesWindow($('#traces').get()[0]);
 
     let nodes: Set<Node> = graph_entry.reachable();
@@ -155,50 +229,11 @@ $(document).ready(function() {
     }
     let traceMap: StrMap<any> = {};
     traceMap[single(userNodes).id] = [vars, trace];
+    */
     // For each user node, on click select it and display the data for it
     // on the right hand windows
 
-    game.onNodeFocused.add((nd: Node) => {
-      game.textSprites[nd.id].select();
-      if (!(nd instanceof UserNode)) {
-        return;
-      }
-      let [vars, trace] = traceMap[nd.id];
-      let oldLvl = new Level(lvlName, vars, [trace, [], []], "", "", "", lvl.typeEnv, []);
-      tracesW.setVariables(oldLvl);
-      tracesW.addData(oldLvl.data);
-      $(tracesW.parent).show();
-      $("#progress").show();
-    })
-    game.onFocusedClick.add((nd: Node) => {
-      if (!(nd instanceof AssignNode))  return;
-      let ti = game.textSprites[nd.id];
-      game.transformLayout(() => ti.toggleText());
-    })
-    game.onNodeUnfocused.add((nd: Node) => {
-      if (game.focusedNode != null) {
-        game.textSprites[game.focusedNode.id].deselect();
-      }
-      let [vars, trace] = [[], []];
-      let oldLvl = new Level(lvlName, vars, [trace, [], []], "", "", "", lvl.typeEnv, []);
-      tracesW.setVariables(oldLvl);
-      tracesW.addData(oldLvl.data);
-      $("#progress").hide();
-    })
-    game.onFoundInv.add((nd: UserNode, inv: string) => {
-      $("#progress").append("<span class='good'>" + inv + "</span>")
-      game.focusedNode = null;
-      game.onNodeUnfocused.dispatch(nd);
-      $(tracesW.parent).hide();
-    })
-    game.onUserTypedInv.add((nd: TextIcon, inv: string) => {
-      tracesW.setExp(inv);
-    });
-    game.onTriedInv.add((nd: TextIcon, inv: string) => {
-      tracesW.setExp(inv);
-      userInput(true);
-    })
-
+    /*
     function userInput(commit: boolean): void {
       tracesW.disableSubmit();
       tracesW.clearError();
@@ -251,5 +286,6 @@ $(document).ready(function() {
     }
     tracesW.onChanged(() => { userInput(false); })
     tracesW.onCommit(() => { userInput(true); })
+    */
   })
 })

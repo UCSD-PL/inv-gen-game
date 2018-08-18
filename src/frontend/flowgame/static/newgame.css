@@ -52,3 +52,11 @@ div#formula-entry {
   padding-left: 5px;
   border-color: grey;
 }
+
+span.side_header {
+  font-size:  25px;
+}
+
+div.side_desc {
+  margin: 10px;
+}
