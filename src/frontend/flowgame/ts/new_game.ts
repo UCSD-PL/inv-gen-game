@@ -42,6 +42,26 @@ class SimpleGame extends InvGraphGame {
     this.sideWindowContent = {};
   }
 
+  getHelp(nd: Node): string {
+    if (nd instanceof AssumeNode) {
+      return "<div class='help'> A source node can produce any orb, as long as the orb satisfies the expression associated with the node. For example, the source node below <br>" +
+        "<img src='/game/flowgame/img/example_source.png'/> <br>" +
+        "can produce an orb with value n=1, but not an orb with value n=0 or n=-5.</div>"
+    }
+    if (nd instanceof AssertNode) {
+      return "A sink node consumes orbs. However it can only consume an orb if it satisifes its expression."
+    }
+    if (nd instanceof AssignNode) {
+      return "A transformer node changes the values of an orb. If you click on a transformer node you can see the sequence of changes it performs on an orb."
+    }
+    if (nd instanceof IfNode) {
+      return "A branch node changes the direction an orb goes to."
+    }
+    if (nd instanceof UserNode) {
+      return "An accumulator can act as both a source and a sink node. It can consume orbs that satisfy its expression, and it can produce ANY orbs that satisfy its expressions."
+    }
+  }
+
   buildContent(nd: Node): any {
     let ndType = (nd: Node): string => {
       if (nd instanceof AssumeNode) return "Source";
@@ -67,7 +87,7 @@ class SimpleGame extends InvGraphGame {
     s +=  "<span class='side_header'>" +  ndIcon(nd) + ndType(nd) + '</span>'
     s += "</div>"
 
-    let tabs = [['info', 'Info', 'this is the info']];
+    let tabs = [['info', 'Info', this.getHelp(nd)]];
     let tabHeader = '<ul class="nav nav-tabs" role="tablist">',
       tabsContent = '<div class="tab-content">';
 

@@ -60,3 +60,7 @@ span.side_header {
 div.side_desc {
   margin: 10px;
 }
+
+div.help {
+  text-align: left;
+}
