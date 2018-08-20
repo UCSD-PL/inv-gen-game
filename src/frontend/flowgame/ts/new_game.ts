@@ -87,15 +87,16 @@ class SimpleGame extends InvGraphGame {
     s +=  "<span class='side_header'>" +  ndIcon(nd) + ndType(nd) + '</span>'
     s += "</div>"
 
-    let tabs = [['info', 'Info', this.getHelp(nd)]];
+    let tabs = [['info', 'Info', this.getHelp(nd), true]];
     let tabHeader = '<ul class="nav nav-tabs" role="tablist">',
       tabsContent = '<div class="tab-content">';
 
-    for (let [tabName, tabTittle, tabContent] of tabs) {
-      tabHeader += '<li class="nav-item">\
-        <a class="nav-link active" id="' + tabName + '-tab" data-toggle="tab" href="#' + tabName + '" role="tab" aria-controls="home" aria-selected="true">' + tabTittle + '</a>\
-        </li>'
-      tabsContent += '<div class="tab-pane fade show active" id="' + tabName + '" role="tabpanel" aria-labelledby="' + tabName + '-tab">' + tabContent + '</div>'
+    for (let [tabName, tabTittle, tabContent, selected] of tabs) {
+      tabHeader += (selected ? '<li class="nav-item active">' : '<li class="nav-item">')
+      tabHeader += '<a class="nav-link active" id="' + tabName + '-tab" data-toggle="tab" href="#' + tabName +
+        '" role="tab" aria-controls="home" aria-selected="true" aria-expanded="true">' + tabTittle + '</a></li>'
+      tabsContent += (selected ? '<div class="tab-pane fade show active in" id="': '<div class="tab-pane fade show active" id="')
+      tabsContent += tabName + '" role="tabpanel" aria-labelledby="' + tabName + '-tab">' + tabContent + '</div>'
     }
   
     tabHeader += '</ul>'
