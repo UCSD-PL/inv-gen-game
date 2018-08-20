@@ -170,7 +170,7 @@ var mainScript = [
     {
         setup: function (cs) {
             //console.log("start 3+4=7");
-            curL = label({ of: "#2 .temp_expr_eval", at: "left+10 bottom" },
+            curL = label({ of: "#2 .temp_expr_eval", at: "left bottom" },
                 "3+4=7! (Press spacebar or click anywhere...)", "up");
             cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32);
         }
@@ -183,7 +183,7 @@ var mainScript = [
     },
     {
         setup: function (cs) {
-            curL = label({ of: "#2 .temp_expr_eval", at: "left+10 bottom" },
+            curL = label({ of: "#2 .temp_expr_eval", at: "left bottom" },
                 "Column contains values of i! (space/click to continue...)", "up");
             curL1 = label({ of: $("#lvl_table > thead > tr > th:nth-child(1)"), at: "left center" },
                 "", "right");
@@ -200,7 +200,7 @@ var mainScript = [
     },
     {
         setup: function (cs) {
-            curL = label({ of: "#2 .temp_expr_eval", at: "left+10 bottom" },
+            curL = label({ of: "#2 .temp_expr_eval", at: "left bottom" },
                 "Now you get i+1 in this column!", "up");
             curL1 = label({ of: $("#lvl_table > thead > tr > th:nth-child(1)"), at: "left center" },
                 "", "right");
@@ -217,7 +217,7 @@ var mainScript = [
     },
     {
         setup: function (cs) {
-            curL = label({ of: "#2 .temp_expr_eval", at: "left+10 bottom" },
+            curL = label({ of: "#2 .temp_expr_eval", at: "left bottom" },
                 "And the results appear here", "up");
             cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32);
         }
@@ -306,7 +306,8 @@ var mainScript = [
     },
     {
         setup: function (cs) {
-            $('#errormsg').html("<div class='error'> Duplicate Expression! </div>");
+            $('#errormsg').html("<div class='error'>Equivalent to an accepted expression!</div>");
+            progW.markInvariant("i>=0", "implies")
             curL = label({ of: $("#good_0"), at: "left+10 bottom" },
                 "Can't use same expression twice", "up");
             cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32);
@@ -315,12 +316,14 @@ var mainScript = [
     {
         setup: function (cs) {
             curL = label($("#formula-entry"), "How about i>=-1?", "left");
+            progW.clearMarks();
             nextStepOnInvariant(cs, "i>=-1", labelRemover(curL));
         }
     },
     {
         setup: function (cs) {
-            $('#errormsg').html("<div class='error'>This is weaker than the expression i>=0 already entered!</div>");
+            $('#errormsg').html("<div class='error'>Weaker than an accepted expression!</div>");
+            progW.markInvariant("i>=0", "implies")
             curL = label({ of: $("#good_0"), at: "left+10 bottom" },
                 "Can't use a weaker<br> expression than <br> found one either.", "up");
             cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32);
@@ -328,6 +331,7 @@ var mainScript = [
     },
     {
         setup: function (cs) {
+            progW.clearMarks();
             pwups = [new VarOnlyPowerup(2),
             new UseOpsPwup(["<=", ">=", "<", ">", "!=="], "<>", "inequality"),
             new UseOpsPwup(["+", "-"], "&plusmn;", "addition or subtraction")];

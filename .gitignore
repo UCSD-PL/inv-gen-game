@@ -366,3 +366,5 @@ ASALocalRun/
 # Visual Studio files
 .vscode/
 /src/useractions.log.1
+src/frontend/ts/*.js
+src/frontend/ts/*.js.map
