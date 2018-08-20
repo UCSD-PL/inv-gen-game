@@ -38,7 +38,7 @@ function addSuccessfulInvariant(inv, safetyInv) {
         parsedInv = parse(invToJS(inv));
     }
     jsfound.push(invToJS(inv));
-    progW.addInvariant(inv, parsedInv);
+    progW.addInvariant(inv, parsedInv, inv);
 }
 
 function updateUI() {
@@ -359,7 +359,7 @@ var mainScript = [
         setup: function (cs) {
             tracesW.msg("");
             curL = label({ of: $("#sticky"), at: "center bottom" },
-                "Double points added<br> since you didn't use number", "up");
+                "Double points added<br> since you didn't use numeric constants", "up");
             pwups[0].highlight(() =>
                 cs.nextStepOnKeyClickOrTimeout(stepTimeout, labelRemover(curL), 32)
             );
