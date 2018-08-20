@@ -286,7 +286,7 @@ export class StaticGameLogic extends BaseGameLogic implements IGameLogic {
                                 gl.score += addScore;
                                 gl.scoreW.add(addScore);
                                 gl.foundJSInv.push(ui);
-                                gl.progressW.addInvariant(ui.id, ui.rawInv);
+                                gl.progressW.addInvariant(ui.id, ui.rawInv, ui.rawUserInp);
                                 gl.tracesW.setExp("");
                                 if (!gl.lvlPassedF) {
                                     gl.goalSatisfied((sat, feedback) => {
@@ -442,7 +442,7 @@ export class PatternGameLogic extends BaseGameLogic {
                 let redundant = this.progressW.contains(ui.id);
                 if (redundant) {
                     this.progressW.markInvariant(ui.id, "duplicate");
-                    this.tracesW.immediateError("Duplicate Expression!");
+                    this.tracesW.immediateError("Equivalent to an accepted expression!");
                     return;
                 }
 
@@ -465,18 +465,22 @@ export class PatternGameLogic extends BaseGameLogic {
                         }
 
                         let allCandidates = gl.foundJSInv.map((x) => x.canonForm);
+                        let canonFormToId = {}
+                        for (let ui of gl.foundJSInv) {
+                            canonFormToId[esprimaToStr(ui.canonForm)] = ui;
+                        }
 
                         impliedBy(allCandidates, ui.canonForm, gl.curLvl.typeEnv, function (x: ESNode[]) {
                             if (x.length > 0) {
-                                gl.progressW.markInvariant(esprimaToStr(x[0]), "implies");
-                                gl.tracesW.immediateError("This is weaker than a found expression!");
+                                gl.progressW.markInvariant(canonFormToId[esprimaToStr(x[0])].id, "implies");
+                                gl.tracesW.immediateError("Weaker than an accepted expression!");
                             } else {
                                 var addScore = gl.computeScore(ui.rawInv, 1);
                                 gl.score += addScore;
                                 gl.scoreW.add(addScore);
                                 gl.foundJSInv.push(ui);
                                 gl.invMap[ui.id] = ui;
-                                gl.progressW.addInvariant(ui.id, ui.rawInv);
+                                gl.progressW.addInvariant(ui.id, ui.rawInv, ui.rawUserInp);
                                 if (gl.curLvl.hint && gl.curLvl.hint.type == "post-assert") {
                                     gl.tracesW.setExp(gl.curLvl.hint.assert);
                                 } else {
@@ -571,7 +575,7 @@ export class PatternGameLogic extends BaseGameLogic {
             let ui = new UserInvariant(rawInv, jsInv, canonInv);
             this.foundJSInv.push(ui);
             this.invMap[ui.id] = ui;
-            this.progressW.addInvariant(ui.id, ui.rawInv);
+            this.progressW.addInvariant(ui.id, ui.rawInv, ui.rawUserInp);
         }
 
         this.lvlLoadedCb = loadedCb;

@@ -338,18 +338,18 @@ def impliedPairs(
     z3InvL2 = [esprimaToZ3(x, z3Env) for x in invL2]
 
     res = []
-    for x in z3InvL1:
-      for y in z3InvL2:
+    for xi, x in enumerate(z3InvL1):
+      for yi, y in enumerate(z3InvL2):
         try:
           impl = implies(x, y)
         except Unknown:
           impl = False # Conservative assumption
 
         if (impl):
-          res.append((x,y))
+          res.append((invL1[xi],invL2[yi]))
 
-    return [(boogieToEsprima(z3_expr_to_boogie(x)),
-            boogieToEsprima(z3_expr_to_boogie(y))) for (x,y) in res]
+    print (res)
+    return res
 
 @api.method("App.isTautology")
 @pp_exc

@@ -2,7 +2,7 @@ import {invariantT} from "./types";
 import {invToHTML} from "./pp";
 
 export interface IProgressWindow {
-  addInvariant(key: string, invariant: invariantT): void;
+  addInvariant(key: string, invariant: invariantT, playerEntered: string): void;
   removeInvariant(key: string): void;
   markInvariant(key: string, state: string): void;
   clearMarks(): void;
@@ -23,10 +23,10 @@ export class ProgressWindow implements IProgressWindow {
     this.container = $(this.parent).children("div")[0];
   };
 
-  addInvariant(key: string, invariant: invariantT) : void {
+  addInvariant(key: string, invariant: invariantT, playerEntered: string) : void {
     let invUl = $(this.container).children("#good-invariants")[0];
       $(invUl).append("<li class='good-invariant' id='good_" +
-      this.ctr + "'>" + invToHTML(invariant) + "</li>");
+      this.ctr + "'>" + playerEntered + "</li>");
       this.invMap[key] = $('#good_' + this.ctr)[0];
       this.ctr ++;
   }
@@ -104,90 +104,5 @@ class IgnoredInvProgressWindow extends ProgressWindow {
     super.clear();
     let invUL: HTMLElement = $(this.ignoredContainer).children("ul")[0];
       $(invUL).html('');
-  }
-}
-
-
-class TwoPlayerProgressWindow extends ProgressWindow {
-  player: number;
-
-  constructor(public playerNum: number, public parent:  HTMLDivElement) {
-    super(parent);
-    this.player = playerNum;
-    $(this.parent).html("");
-
-    $(this.parent).addClass("box");
-    $(this.parent).addClass("progressWindow");
-
-    if (this.player === 1) {
-      $(this.parent).html("<strong>Invariants</strong><br>" +
-        "<ul id='good-invariants' style='font-family: monospace; list-style-type: none; padding: 0px; text-align: center;'></ul>");
-    }
-    else if (this.player === 2) {
-      $(this.parent).html("<strong>Invariants</strong><br>" +
-        "<ul id='good-invariants2' style='font-family: monospace; list-style-type: none; padding: 0px; text-align: center;'></ul>");
-    }
-
-    this.container = $(this.parent).children("div")[0];
-  }
-
-  addInvariant(key: string, invariant: invariantT): void {
-    let invUl = null;
-
-    if (this.player === 1) {
-      // invUl = $(this.container).children("#good-invariants")[0];
-      invUl = $("#good-invariants");
-    }
-    else if (this.player === 2) {
-      // invUl = $(this.container).children("#good-invariants2")[0];
-      invUl = $("#good-invariants2");
-    }
-
-    $(invUl).append("<li class='good-invariant' id='good_" + this.player +
-      this.ctr + "'>" + invToHTML(invariant) + "</li>");
-
-    this.invMap[key] = $("#good_" + this.player + this.ctr)[0];
-    this.ctr ++;
-  }
-
-  markInvariant(key: string, state: string): void {
-    let invDiv = $(this.invMap[key]);
-    // let invDiv = $(this.invMap[invariant]);
-
-    if (invDiv === undefined) {
-      console.log("Unknown invariant " + key);
-      return;
-    }
-
-      if (state === "checking") {
-      } else if (state === "duplicate") {
-        invDiv.addClass("bold");
-      } else if (state === "tautology") {
-      } else if (state === "implies") {
-        invDiv.addClass("bold");
-      } else if (state === "counterexampled") {
-        invDiv.addClass("bold");
-      } else if (state === "ok") {
-        invDiv.removeClass("bold");
-      }
-  }
-
-  clearMarks(): void {
-    for (let i in this.invMap) {
-      $(this.invMap[i]).removeClass("bold");
-    }
-  }
-
-  clear(): void {
-    let invUL = null;
-    if (this.player === 1) {
-      invUL = $("#good-invariants");
-    }
-    else if (this.player === 2) {
-      invUL = $("#good-invariants2");
-    }
-    $(invUL).html("");
-    this.invMap = {};
-    this.ctr = 0;
   }
 }
