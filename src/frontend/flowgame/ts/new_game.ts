@@ -1,4 +1,4 @@
-import {rpc_loadLvl, rpc_checkSoundness} from "./rpc";
+import {rpc_loadNextLvl, rpc_checkSoundness, rpc_logEvent} from "./rpc";
 import {Fun, BB, Expr_T} from "./boogie";
 import * as Phaser from "phaser-ce"
 import {Node, buildGraph, removeEmptyNodes, NodeMap, moveLoopsToTheLeft,
@@ -22,6 +22,7 @@ class SimpleGame extends InvGraphGame {
   public onNodeUnfocused: Phaser.Signal;
   public onFoundInv: Phaser.Signal;
   public focusedNode: Node;
+  public onLevelSolved: Phaser.Signal;
 
   protected traceMap: TraceMapT;
   protected typeEnv: TypeEnv;
@@ -54,6 +55,7 @@ class SimpleGame extends InvGraphGame {
     this.onFocusedClick = new Phaser.Signal();
     this.onNodeUnfocused = new Phaser.Signal();
     this.onFoundInv = new Phaser.Signal();
+    this.onLevelSolved = new Phaser.Signal();
     this.focusedNode = null;
     this.sideWindowContent = {};
     this.traceMap = traceMap;
@@ -233,6 +235,9 @@ class SimpleGame extends InvGraphGame {
         })
       }, () => {
         this.setViolations(res, onDone);
+        if (res.length == 0) {
+          this.onLevelSolved.dispatch();
+        }
       });
     });
   }
@@ -324,21 +329,32 @@ function convertTrace(vs: string[], t: any): any {
 }
 
 $(document).ready(function() {
-  let lvlName = "i-sqrt"
-  let lvlSet = "unsolved-new-benchmarks2"
-  /*
-  let lvlName = "tut01"
-  let lvlSet = "tutorial"
-  */
-  rpc_loadLvl(lvlSet, lvlName, (lvl) => {
-    let fun = Fun.from_json(lvl.fun);
-    let vars = []
-    if (lvl.data) {
-      for (let varName in lvl.data[0]) {
-        vars.push(varName)
+  let game: SimpleGame = null;
+  let workerId = "foobar"
+  
+  function loadAndPlayNextLevel(): void {
+    rpc_loadNextLvl(workerId, (lvl) => {
+      if (lvl == null) {
+        console.log("YAY!")
+        return;
       }
-    }
-    let trace = convertTrace(vars, lvl.data);
-    let game = SimpleGame.buildSingleLoopGame('graph', fun, lvlName, trace, vars);
-  })
+      let fun = Fun.from_json(lvl.fun);
+      let vars = []
+      if (lvl.data) {
+        for (let varName in lvl.data[0]) {
+          vars.push(varName)
+        }
+      }
+      let trace = convertTrace(vars, lvl.data);
+      game = SimpleGame.buildSingleLoopGame('graph', fun, lvl.id, trace, vars);
+      game.onLevelSolved.add(() => {
+        // TODO: Half the arguments are from old game. Re-work
+        rpc_logEvent(workerId, "FinishLevel", [lvl.lvlSet, lvl.id, true, [], [], 0, false, game.getInvNetwork()], () => {
+          $('#graph').html('')
+          $('#sidewindow').html('')
+          loadAndPlayNextLevel()})
+        })
+    })
+  }
+  loadAndPlayNextLevel();
 })

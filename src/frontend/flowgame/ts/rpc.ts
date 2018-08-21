@@ -4,8 +4,11 @@ import {Node as ESNode} from "estree";
 import {rpc, mturkId} from "../../ts/rpc";
 import {Violation, InvNetwork} from "./invgraph_game"
 
+export {rpc_logEvent} from "../../ts/rpc";
+
 interface loadLvlRes {
   id: string;
+  lvlSet: string;
   variables: string[];
   data: dataT;
   typeEnv: TypeEnv;
@@ -14,6 +17,10 @@ interface loadLvlRes {
 
 export function rpc_loadLvl(lvlSet: string, id: string, cb:(res: loadLvlRes) => void) {
   rpc.call("App.loadLvl", [lvlSet, id, mturkId()], (data:any) => cb(<loadLvlRes>data), log);
+}
+
+export function rpc_loadNextLvl(id: string, cb:(res: loadLvlRes) => void) {
+  rpc.call("App.loadNextLvl", [id, mturkId()], (data:any) => cb(<loadLvlRes>data), log);
 }
 
 export function rpc_checkSoundness(lvlSet: string, lvlId: string, invs: InvNetwork,

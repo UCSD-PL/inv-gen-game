@@ -96,7 +96,25 @@ def logEvent(workerId: str, name: str, data: Any, mturkId: MturkIdT) -> None:
 def loadLvl(levelSet: str, lvlId: str, mturkId: MturkIdT) -> Any: #pylint: disable=unused-argument
     """ Load a given level. """
     lvl: FlowgameLevel = getLvl(levelSet, lvlId)
-    return lvl.to_json()
+    res = lvl.to_json()
+    res["lvlSet"] = levelSet
+    return res
+
+@api.method("App.loadNextLvl")
+@pp_exc
+def loadNextLvl(workerId: str, mturkId: MturkIdT) -> Any:
+    """ Return the next level. """
+    assignmentId = mturkId[2]
+    session = sessionF()
+    level_names = list(traces[curLevelSetName].keys())
+    i=0
+    for lvlId in level_names :
+        i += 1
+        if levelFinishedBy(session, curLevelSetName, lvlId, workerId):
+            continue
+        result = loadLvl(curLevelSetName, lvlId, mturkId)
+        return result
+    return None
 
 
 @api.method("App.equivalentPairs")
