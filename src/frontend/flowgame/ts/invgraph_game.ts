@@ -56,6 +56,21 @@ interface Size {
   h: number;
 }
 
+function shake(g: Phaser.Game, sp: Phaser.Sprite|Phaser.Group): Phaser.Tween {
+  let t = g.add.tween(sp);
+  let magnitude = 10;
+  let curX = sp.x;
+  function wiggle(aProgress: number): number {
+    let aPeriod1 = 10;
+    let aPeriod2 = 10;
+    var current1: number = aProgress * Math.PI * 2 * aPeriod1;
+    var current2: number = aProgress * (Math.PI * 2 * aPeriod2 + Math.PI / 2);
+    return Math.sin(current1) * Math.cos(current2) * (1-aProgress);
+  }
+  t.to({x:  curX + magnitude}, 500, wiggle, false, 0, 0, false);
+  t.onComplete.add(() => {sp.x = curX;})
+  return t;
+}
 
 export class PlaceholderIcon extends SelectableTextIcon {
     constructor(game: InvGraphGame, nd: PlaceholderNode, x?: number, y?: number) {
@@ -550,21 +565,29 @@ export class InvGraphGame {
 
   stepForward(): void {
     let [err, curStep, trace, traceLayout] = this.selectedViolation;
-    if (curStep >= traceLayout.length-1) {
-      this.positionBug(0);
-      curStep = 0;
+    let blowUp = (nd: TextIcon) => {
+      let explosion = this.game.add.sprite(nd.x, nd.y,  "explosion", 0);
+      explosion.anchor = new Phaser.Point(0.5, 0.5);
+      shake(this.game, nd).start();
+      explosion.animations.add('animate');
+      explosion.animations.play('animate', 60, false, true);
     }
-    let traceStep: number = traceLayout[curStep][0];
-    this.getBugTween(err, traceLayout, curStep, true).start();
+    if (curStep == traceLayout.length-1) {
+      let ti = this.textSprites[trace[traceLayout[curStep][0]][0].id]
+      blowUp(ti);
+    } else {
+      let tween = this.getBugTween(err, traceLayout, curStep, true);
+      if (curStep == traceLayout.length-2) {
+        let ti = this.textSprites[trace[traceLayout[curStep+1][0]][0].id]
+        tween.onComplete.add(() => blowUp(ti));
+      }
+      tween.start();
+    }
   }
 
   stepBackwards(): void {
     let [err, curStep, trace, traceLayout] = this.selectedViolation;
 
-    if (curStep <= 0)  {
-      this.positionBug(traceLayout.length-1);
-      curStep = traceLayout.length-1;
-    }
     let traceStep: number = traceLayout[curStep][0];
     let nextTraceStep: number = traceLayout[curStep-1][0];
     this.getBugTween(err, traceLayout, curStep, false).start();
@@ -575,7 +598,7 @@ export class InvGraphGame {
     this.game.load.image('bug', '/game/flowgame/img/ladybug.png');
     this.game.load.image('orb', '/game/flowgame/img/orb.png');
     this.game.load.image('whitespace', '/game/flowgame/img/white_space.png');
-  //  this.game.load.spritesheet('explosion', '/game/flowgame/img/explosion160x120.png', 160, 120, 90);
+    this.game.load.spritesheet('explosion', '/game/flowgame/img/explosion.png', 96, 96, 12);
     this.game.load.spritesheet('arrow_right', '/game/flowgame/img/arrow_right_sheet.png', 28, 21, 20);
     this.game.load.spritesheet('arrow_left', '/game/flowgame/img/arrow_left_sheet.png', 28, 21, 20);
 
