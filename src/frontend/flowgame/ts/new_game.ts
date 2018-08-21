@@ -44,12 +44,14 @@ class SimpleGame extends InvGraphGame {
 
   getHelp(nd: Node): string {
     if (nd instanceof AssumeNode) {
-      return "<div class='help'> A source node can produce any orb, as long as the orb satisfies the expression associated with the node. For example, the source node below <br>" +
+      return "<div class='help'> A source node can produce any orb, as long as it satisfies the node's expression. For example, the source below <br>" +
         "<img src='/game/flowgame/img/example_source.png'/> <br>" +
-        "can produce an orb with value n=1, but not an orb with value n=0 or n=-5.</div>"
+        "can produce an orb with value n=1, but not an orb with value n=0 or n=-5 since 0 and -5 are not greater than 0.</div>"
     }
     if (nd instanceof AssertNode) {
-      return "A sink node consumes orbs. However it can only consume an orb if it satisifes its expression."
+      return "<div class='help'> A sink node can conusme any orb, as long as it satisfies the node's expression. For example, the snik below <br>" +
+        "<img src='/game/flowgame/img/example_sink.png'/> <br>" +
+        "can consume an orb with value n=1, but not an orb with value n=0 or n=-5 since 0 and -5 are not greater than 0.</div>"
     }
     if (nd instanceof AssignNode) {
       return "A transformer node changes the values of an orb. If you click on a transformer node you can see the sequence of changes it performs on an orb."

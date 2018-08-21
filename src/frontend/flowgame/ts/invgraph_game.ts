@@ -20,8 +20,9 @@ class SelectableTextIcon extends TextIcon {
                 x?: number,
                 y?:number,
                 startShown?: boolean,
-                border?: boolean) {
-      super(game, icon, text, name, x, y, startShown, border);
+                border?: boolean,
+                editable?: boolean) {
+      super(game, icon, text, name, x, y, startShown, border, editable);
       this._icon.input.useHandCursor = true;
     }
 
@@ -134,7 +135,7 @@ export class InputOutputIcon extends SelectableTextIcon {
     // Code duplication with OutputIcon - don't want to implement mixins just
     // for this one case
     constructor(game: InvGraphGame, nd: UserNode, x?: number, y?: number, startShown?: boolean) {
-      super(game.game, new Phaser.Sprite(game.game, 0, 0, "funnel", 0), [], "un_" + nd.id, x, y, startShown);
+      super(game.game, new Phaser.Sprite(game.game, 0, 0, "funnel", 0), [], "un_" + nd.id, x, y, startShown, false, true);
       this.setInvariants(nd.sound, nd.unsound);
     }
     public entryPoint(): Phaser.Point {
@@ -584,6 +585,7 @@ export class InvGraphGame {
     this.game.load.spritesheet('funnel', '/game/flowgame/img/funnel.png', 82, 42, -1, 0, 0);
     this.game.load.spritesheet('branch', '/game/flowgame/img/branch.png', 72, 28, -1, 0, 0);
     this.game.load.spritesheet('placeholder', '/game/flowgame/img/placeholder.png', 48, 42, -1, 0, 0);
+    this.game.load.spritesheet('pencil', '/game/flowgame/img/pencil.png', 64, 64, -1, 0, 0);
   }
 
   update: any = () => {
