@@ -41,10 +41,15 @@ export abstract class BaseTracesWindow implements ITracesWindow {
     commitCb: () => void;
     moreExCb: (typ: string) => void;
 
-    constructor(public parent: HTMLElement) {
-        $(this.parent).addClass("positioned");
-        $(this.parent).addClass("box");
-        $(this.parent).addClass("tracesWindow");
+    constructor(public parent: HTMLElement, noBorder?: boolean) {
+        if (noBorder == undefined) {
+            noBorder = false;
+        }
+        if (!noBorder) {
+            $(this.parent).addClass("positioned");
+            $(this.parent).addClass("box");
+            $(this.parent).addClass("tracesWindow");
+        }
     }
 
     immediateError(msg: string): void {

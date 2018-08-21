@@ -85,7 +85,7 @@ class SimpleGame extends InvGraphGame {
 
   buildTraceWindow(nd: UserNode): any {
     let container = $("<div id='traces_" + nd.id + "'></div>")
-    let tracesW = new PositiveTracesWindow(container[0]);
+    let tracesW = new PositiveTracesWindow(container[0], true);
     let [vars, trace] = this.traceMap[nd.id];
     let oldLvl = new Level(this.lvlId + "_" + nd.id, vars, [trace, [], []], "", "", "", this.typeEnv, []);
     tracesW.setVariables(oldLvl);
@@ -136,7 +136,7 @@ class SimpleGame extends InvGraphGame {
       tabHeader += (selected ? '<li class="nav-item active">' : '<li class="nav-item">')
       tabHeader += '<a class="nav-link active" id="' + tabName + '-tab" data-toggle="tab" href="#' + tabName +
         '" role="tab" aria-controls="home" aria-selected="true" aria-expanded="true">' + tabTittle + '</a></li>'
-      tabsContent += (selected ? '<div class="tab-pane fade show active in" id="': '<div class="tab-pane fade show active" id="')
+      tabsContent += (selected ? '<div class="tab-pane fade active in" id="': '<div class="tab-pane fade" id="')
       tabsContent += tabName + '" role="tabpanel" aria-labelledby="' + tabName + '-tab">';
       if (typeof tabContent == "string") {
         tabsContent += tabContent
