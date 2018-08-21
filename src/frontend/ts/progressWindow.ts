@@ -1,5 +1,5 @@
 import {invariantT} from "./types";
-import {invToHTML} from "./pp";
+import {invToHTML, htmlEscape} from "./pp";
 
 export interface IProgressWindow {
   addInvariant(key: string, invariant: invariantT, playerEntered: string): void;
@@ -26,7 +26,7 @@ export class ProgressWindow implements IProgressWindow {
   addInvariant(key: string, invariant: invariantT, playerEntered: string) : void {
     let invUl = $(this.container).children("#good-invariants")[0];
       $(invUl).append("<li class='good-invariant' id='good_" +
-      this.ctr + "'>" + playerEntered + "</li>");
+      this.ctr + "'>" + htmlEscape(playerEntered) + "</li>");
       this.invMap[key] = $('#good_' + this.ctr)[0];
       this.ctr ++;
   }

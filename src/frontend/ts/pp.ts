@@ -11,7 +11,16 @@ export function invPP(inv: string): string {
   return caseFixed;
 }
 
-export function invToHTML(inv: invariantT): string{
+export function htmlEscape(s: string): string {
+  return s
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/<=/g, "&lt;=")
+    .replace(/>=/g, "&gt;=")
+    .replace(/&&/g, "&amp;&amp;");
+}
+
+export function invToHTML(inv: invariantT): string {
   return esprimaToStr(inv)
     //.replace(/->/g, "&rArr;")
     .replace(/^\(/g, "") // remove starting parenthesis (there is always one)
