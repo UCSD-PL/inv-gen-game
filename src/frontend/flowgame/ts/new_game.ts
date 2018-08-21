@@ -11,7 +11,10 @@ import { PositiveTracesWindow } from "../../ts/traceWindow";
 import {Level} from "../../ts/level";
 import {invPP} from "../../ts/pp"
 import {invToJS, esprimaToStr, invEval, evalResultBool, interpretError} from "../../ts/eval"
-import {invariantT} from "../../ts/types"
+import {invariantT, TypeEnv} from "../../ts/types"
+
+type TraceMapT = StrMap<[string[], any[]]>;
+type BoogieTrace = any[][];
 
 class SimpleGame extends InvGraphGame {
   public onNodeFocused: Phaser.Signal;
@@ -20,19 +23,32 @@ class SimpleGame extends InvGraphGame {
   public onFoundInv: Phaser.Signal;
   public focusedNode: Node;
 
+  protected traceMap: TraceMapT;
+  protected typeEnv: TypeEnv;
   protected sideWindowContent: StrMap<any>;
+  protected traceWindowM: StrMap<PositiveTracesWindow>;
 
-  static buildGame(container: string, f: Fun, t: any, lvlName: string): SimpleGame {
+  static buildSingleLoopGame(container: string, f: Fun, lvlName: string, trace: BoogieTrace, vars: string[]): SimpleGame {
     let [graph_entry, mapping] = buildGraph(f);
     graph_entry = moveLoopsToTheLeft(graph_entry);
     console.log("Initial:", graph_entry);
     [graph_entry, mapping] = removeEmptyNodes(graph_entry, mapping, true);
     console.log("After cleanup of empty nodes:", graph_entry);
 
-    return new SimpleGame(container, graph_entry, mapping, lvlName)
+    let nodes: Set<Node> = graph_entry.reachable();
+    let userNodes: UserNode[] = [];
+    for (let nd of nodes) {
+      if (nd instanceof UserNode) {
+        userNodes.push(nd);
+      }
+    }
+    let traceMap: TraceMapT = {}
+    traceMap[single(userNodes).id] = [vars, trace];
+
+    return new SimpleGame(container, graph_entry, mapping, lvlName, traceMap, f.getTypeEnv())
   }
 
-  constructor(container: string, graph: Node, n: NodeMap, lvlId: string) {
+  constructor(container: string, graph: Node, n: NodeMap, lvlId: string, traceMap: TraceMapT, typeEnv: TypeEnv) {
     super(container, 600, 500, graph, n, lvlId);
     this.onNodeFocused = new Phaser.Signal();
     this.onFocusedClick = new Phaser.Signal();
@@ -40,6 +56,9 @@ class SimpleGame extends InvGraphGame {
     this.onFoundInv = new Phaser.Signal();
     this.focusedNode = null;
     this.sideWindowContent = {};
+    this.traceMap = traceMap;
+    this.typeEnv = typeEnv;
+    this.traceWindowM = {};
   }
 
   getHelp(nd: Node): string {
@@ -62,6 +81,19 @@ class SimpleGame extends InvGraphGame {
     if (nd instanceof UserNode) {
       return "An accumulator can act as both a source and a sink node. It can consume orbs that satisfy its expression, and it can produce ANY orbs that satisfy its expressions."
     }
+  }
+
+  buildTraceWindow(nd: UserNode): any {
+    let container = $("<div id='traces_" + nd.id + "'></div>")
+    let tracesW = new PositiveTracesWindow(container[0]);
+    let [vars, trace] = this.traceMap[nd.id];
+    let oldLvl = new Level(this.lvlId + "_" + nd.id, vars, [trace, [], []], "", "", "", this.typeEnv, []);
+    tracesW.setVariables(oldLvl);
+    tracesW.addData(oldLvl.data);
+    tracesW.onChanged(() => { this.userInput(false); })
+    tracesW.onCommit(() => { this.userInput(true); })
+    this.traceWindowM[nd.id] = tracesW;
+    return container;
   }
 
   buildContent(nd: Node): any {
@@ -89,7 +121,14 @@ class SimpleGame extends InvGraphGame {
     s +=  "<span class='side_header'>" +  ndIcon(nd) + ndType(nd) + '</span>'
     s += "</div>"
 
-    let tabs = [['info', 'Info', this.getHelp(nd), true]];
+    let tabs: [string, string, any, boolean][] = [['info', 'Info', this.getHelp(nd), true]];
+
+    if (nd instanceof UserNode) {
+      let tw = this.buildTraceWindow(nd)
+      tabs[0][3] = false;
+      tabs.push(["edit", "Edit", tw, true])
+    }
+
     let tabHeader = '<ul class="nav nav-tabs" role="tablist">',
       tabsContent = '<div class="tab-content">';
 
@@ -98,13 +137,25 @@ class SimpleGame extends InvGraphGame {
       tabHeader += '<a class="nav-link active" id="' + tabName + '-tab" data-toggle="tab" href="#' + tabName +
         '" role="tab" aria-controls="home" aria-selected="true" aria-expanded="true">' + tabTittle + '</a></li>'
       tabsContent += (selected ? '<div class="tab-pane fade show active in" id="': '<div class="tab-pane fade show active" id="')
-      tabsContent += tabName + '" role="tabpanel" aria-labelledby="' + tabName + '-tab">' + tabContent + '</div>'
+      tabsContent += tabName + '" role="tabpanel" aria-labelledby="' + tabName + '-tab">';
+      if (typeof tabContent == "string") {
+        tabsContent += tabContent
+      }
+      tabsContent += '</div>'
     }
-  
+
     tabHeader += '</ul>'
     tabsContent += '</div>'
     s += tabHeader + tabsContent;
-    return $(s)
+
+    let newDom = $(s)
+    for (let [tabName, tabTittle, tabContent, selected] of tabs) {
+      if (typeof tabContent != "string") {
+        $("#" + tabName, newDom).html(tabContent)
+      }
+    }
+
+    return newDom
   }
 
   create(): void {
@@ -129,17 +180,6 @@ class SimpleGame extends InvGraphGame {
     this.onNodeFocused.add((nd: Node) => {
       this.textSprites[nd.id].select();
       $('#sidewindow').html(this.sideWindowContent[nd.id]);
-      /*
-      if (!(nd instanceof UserNode)) {
-        return;
-      }
-      let [vars, trace] = traceMap[nd.id];
-      let oldLvl = new Level(lvlName, vars, [trace, [], []], "", "", "", lvl.typeEnv, []);
-      tracesW.setVariables(oldLvl);
-      tracesW.addData(oldLvl.data);
-      $(tracesW.parent).show();
-      $("#progress").show();
-      */
     })
     this.onFocusedClick.add((nd: Node) => {
       if (!(nd instanceof AssignNode))  return;
@@ -150,19 +190,9 @@ class SimpleGame extends InvGraphGame {
       if (this.focusedNode != null) {
         this.textSprites[this.focusedNode.id].deselect();
       }
-      /*
-      let [vars, trace] = [[], []];
-      let oldLvl = new Level(lvlName, vars, [trace, [], []], "", "", "", lvl.typeEnv, []);
-      tracesW.setVariables(oldLvl);
-      tracesW.addData(oldLvl.data);
-      $("#progress").hide();
-      */
     })
     this.onFoundInv.add((nd: UserNode, inv: string) => {
       $("#progress").append("<span class='good'>" + inv + "</span>")
-      this.focusedNode = null;
-      this.onNodeUnfocused.dispatch(nd);
-      //$(tracesW.parent).hide();
     })
   }
 
@@ -223,6 +253,62 @@ class SimpleGame extends InvGraphGame {
       gameNd.setInvariants(nd.sound, nd.unsound);
     });
   }
+
+  userInput(commit: boolean): void {
+    // Currently selected node must be a user node
+    let nd: UserNode = ccast(this.focusedNode, UserNode);
+    let tracesW: PositiveTracesWindow = this.traceWindowM[nd.id];
+    let [vars, trace] = this.traceMap[nd.id];
+
+    tracesW.disableSubmit();
+    tracesW.clearError();
+    let rawInv = tracesW.curExp().trim()
+
+    let inv = invPP(rawInv);
+    let desugaredInv = invToJS(inv)
+    let parsedInv:invariantT = null
+
+    try {
+      parsedInv = parse(desugaredInv);
+    } catch (err) {
+      tracesW.delayedError(inv + " is not a valid expression.");
+      return;
+    }
+
+    if (inv.length === 0) {
+      tracesW.evalResult({ clear: true });
+      return;
+    }
+
+    var jsInv = esprimaToStr(parsedInv);
+
+    try {
+      let pos_res = invEval(parsedInv, vars, trace);
+      let res: [any[], [any, any][], any[]] = [pos_res, [], []];
+      tracesW.evalResult({ data: res });
+
+      if (!evalResultBool(res))
+        return;
+      
+      let all = pos_res.length
+      let hold = pos_res.filter(function (x) { return x; }).length
+
+      if (hold < all)
+        tracesW.error("Holds for " + hold + "/" + all + " cases.")
+      else {
+        tracesW.enableSubmit(); 
+        if (!commit) {
+          tracesW.msg("<span class='good'>Press Enter...</span>");
+          return;
+        } else {
+          this.setExpr(parsedInv);
+        }
+      }
+    } catch (err) {
+      console.log(err);
+      tracesW.delayedError(<string>interpretError(err));
+    }
+  }
 }
 
 function convertTrace(vs: string[], t: any): any {
@@ -253,77 +339,6 @@ $(document).ready(function() {
       }
     }
     let trace = convertTrace(vars, lvl.data);
-
-    let game = SimpleGame.buildGame('graph', fun, trace, lvlName)
-    /*
-    let tracesW = new PositiveTracesWindow($('#traces').get()[0]);
-
-    let nodes: Set<Node> = graph_entry.reachable();
-    let userNodes: UserNode[] = [];
-    for (let nd of nodes) {
-      if (nd instanceof UserNode) {
-        userNodes.push(nd);
-      }
-    }
-    let traceMap: StrMap<any> = {};
-    traceMap[single(userNodes).id] = [vars, trace];
-    */
-    // For each user node, on click select it and display the data for it
-    // on the right hand windows
-
-    /*
-    function userInput(commit: boolean): void {
-      tracesW.disableSubmit();
-      tracesW.clearError();
-      let rawInv = tracesW.curExp().trim()
-
-      let inv = invPP(rawInv);
-      let desugaredInv = invToJS(inv)
-      let parsedInv:invariantT = null
-
-      try {
-        parsedInv = parse(desugaredInv);
-      } catch (err) {
-        tracesW.delayedError(inv + " is not a valid expression.");
-        return;
-      }
-
-      if (inv.length === 0) {
-        tracesW.evalResult({ clear: true });
-        return;
-      }
-
-      var jsInv = esprimaToStr(parsedInv);
-
-      try {
-        let pos_res = invEval(parsedInv, vars, trace);
-        let res: [any[], [any, any][], any[]] = [pos_res, [], []];
-        tracesW.evalResult({ data: res });
-
-        if (!evalResultBool(res))
-          return;
-        
-        let all = pos_res.length
-        let hold = pos_res.filter(function (x) { return x; }).length
-  
-        if (hold < all)
-          tracesW.error("Holds for " + hold + "/" + all + " cases.")
-        else {
-          tracesW.enableSubmit(); 
-          if (!commit) {
-            tracesW.msg("<span class='good'>Press Enter...</span>");
-            return;
-          } else {
-            game.setExpr(parsedInv);
-          }
-        }
-      } catch (err) {
-        console.log(err);
-        tracesW.delayedError(<string>interpretError(err));
-      }
-    }
-    tracesW.onChanged(() => { userInput(false); })
-    tracesW.onCommit(() => { userInput(true); })
-    */
+    let game = SimpleGame.buildSingleLoopGame('graph', fun, lvlName, trace, vars);
   })
 })

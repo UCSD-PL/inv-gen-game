@@ -1,5 +1,6 @@
 import {single, entries, assert} from "../../ts/util"
 import {HasId, DiGraph} from "./graph"
+import {TypeEnv} from "../../ts/types"
 
 export type Stmt_T = string;
 export type Expr_T = string;
@@ -127,5 +128,13 @@ export class Fun {
     }
 
     return this.bbs[lbl];
+  }
+
+  getTypeEnv(): TypeEnv {
+    let t: TypeEnv = {};
+    for (let binding of this.parameters.concat(this.locals, this.returns)) {
+      t[binding.name] = binding.typ
+    }
+    return t
   }
 }

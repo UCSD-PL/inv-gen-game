@@ -65,5 +65,8 @@ div.help {
   text-align: left;
   font-size: 15px;
   margin: 10px;
+}
 
+div#sidewindow {
+  overflow-y: scroll;
 }

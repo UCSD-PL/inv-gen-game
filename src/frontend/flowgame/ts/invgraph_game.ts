@@ -585,7 +585,7 @@ export class InvGraphGame {
     this.game.load.spritesheet('funnel', '/game/flowgame/img/funnel.png', 82, 42, -1, 0, 0);
     this.game.load.spritesheet('branch', '/game/flowgame/img/branch.png', 72, 28, -1, 0, 0);
     this.game.load.spritesheet('placeholder', '/game/flowgame/img/placeholder.png', 48, 42, -1, 0, 0);
-    this.game.load.spritesheet('pencil', '/game/flowgame/img/pencil.png', 64, 64, -1, 0, 0);
+    this.game.load.spritesheet('pencil', '/game/flowgame/img/pencil.png', 24, 24, -1, 0, 0);
   }
 
   update: any = () => {
