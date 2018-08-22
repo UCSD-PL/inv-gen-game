@@ -29,21 +29,6 @@
   grid-column-end: separator;
 }
 
-#traces {
-  grid-row-start: top;
-  grid-row-end: middle;
-  grid-column-start: separator;
-  grid-column-end: final;
-  overflow: scroll;
-}
-
-#progress {
-  grid-row-start: middle;
-  grid-row-end: bottom;
-  grid-column-start: separator;
-  grid-column-end: final;
-}
-
 div#formula-entry {
   min-width: 90px;
   border-style: solid;
@@ -69,4 +54,9 @@ div.help {
 
 div#sidewindow {
   overflow-y: scroll;
+  grid-row-start: top;
+  grid-row-end: bottom;
+  grid-column-start: separator;
+  grid-column-end: final;
+  overflow: scroll;
 }
