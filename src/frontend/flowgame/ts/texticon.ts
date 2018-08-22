@@ -9,6 +9,7 @@ export type LineOptions = {
 export class TextIcon extends Phaser.Group {
     protected _icon: Phaser.Sprite;
     protected _pencil: Phaser.Sprite;
+    protected _pencilBounce: Phaser.Tween;
     protected _border: Phaser.Sprite;
     protected _text: Phaser.Group;
     protected _lines: string[];
@@ -52,8 +53,8 @@ export class TextIcon extends Phaser.Group {
                 y = this._icon.y + this._icon.height - 16;
             this._pencil = new Phaser.Sprite(game, x, y, "pencil");
             this.add(this._pencil)
-            let bounce = game.add.tween(this._pencil);
-            bounce.to({y:y-5}, 300, Phaser.Easing.Linear.None, true, 0, -1, true)
+            this._pencilBounce = game.add.tween(this._pencil);
+            this._pencilBounce.to({y:y-5}, 300, Phaser.Easing.Linear.None, true, 0, -1, true)
         }
     }
 

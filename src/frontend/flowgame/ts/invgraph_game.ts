@@ -12,7 +12,7 @@ import {Node, AssignNode, IfNode, AssumeNode, UserNode,
         AssertNode, exit, NodeMap, PlaceholderNode} from "./game_graph"
 import {LineOptions, TextIcon} from "./texticon"
 
-class SelectableTextIcon extends TextIcon {
+export class SelectableTextIcon extends TextIcon {
     constructor(game: Phaser.Game,
                 icon: Phaser.Sprite,
                 text: (string|string[]),
@@ -28,9 +28,15 @@ class SelectableTextIcon extends TextIcon {
 
   public select(): void {
     this._icon.frame = 1;
+    if (this._pencilBounce != null) {
+      this._pencilBounce.pause();
+    }
   }
   public deselect(): void {
     this._icon.frame = 0; 
+    if (this._pencilBounce != null) {
+      this._pencilBounce.resume();
+    }
   }
 }
 
