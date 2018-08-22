@@ -896,6 +896,7 @@ export class InvGraphGame {
     let ifEndPoints: StrMap<[Node, Node, Node]> = {};
     let h_spacing = 50;
     let backedge_space = 30;
+    let edgeNodeSpace = 6;
     let relPos: StrMap<[Node, Point]>= {};
     let pos: PointMap = {};
     let edges: StrMap<PathMap> = {};
@@ -1071,7 +1072,8 @@ export class InvGraphGame {
       } else {
         pathStart = getExit(fromSprite);
       }
-      return Point.add(pathStart, pos[from.id], pathStart);
+      let absStart: Point = Point.add(pathStart, pos[from.id], pathStart);
+      return Point.add(absStart, new Point(0, edgeNodeSpace))
     }
 
     function _getPathEnd(from: Node, to: Node): Point {
@@ -1081,9 +1083,9 @@ export class InvGraphGame {
       pathEnd = Point.add(pathEnd, pos[to.id], pathEnd);
       if (to instanceof UserNode && (to as Node).reachable().has(from)) {
         // This is a backedge
-        return Point.add(pathEnd, new Point(-5, 0), pathEnd);
+        return Point.add(pathEnd, new Point(-5, -edgeNodeSpace), pathEnd);
       } else {
-        return pathEnd;
+        return Point.add(pathEnd, new Point(0, -edgeNodeSpace), pathEnd);
       }
     }
     // Compute paths
