@@ -150,7 +150,7 @@ class SimpleGame extends InvGraphGame {
     s +=  "<span class='side_header'>" +  ndIcon(nd) + ndType(nd) + '</span>'
     s += "</div>"
 
-    let tabs: [string, string, any, boolean][] = [['info', 'Info', this.getHelp(nd), true]];
+    let tabs: [string, string, any, boolean][] = [['help', 'Help', this.getHelp(nd), true]];
 
     if (nd instanceof UserNode) {
       let tw = this.buildTraceWindow(nd)
