@@ -28,8 +28,9 @@ class SimpleGame extends InvGraphGame {
   protected typeEnv: TypeEnv;
   protected sideWindowContent: StrMap<any>;
   protected traceWindowM: StrMap<PositiveTracesWindow>;
+  protected lvlSet: string;
 
-  static buildSingleLoopGame(container: string, f: Fun, lvlName: string, trace: BoogieTrace, vars: string[]): SimpleGame {
+  static buildSingleLoopGame(container: string, f: Fun, lvlSet: string, lvlName: string, trace: BoogieTrace, vars: string[]): SimpleGame {
     let [graph_entry, mapping] = buildGraph(f);
     graph_entry = moveLoopsToTheLeft(graph_entry);
     console.log("Initial:", graph_entry);
@@ -46,10 +47,10 @@ class SimpleGame extends InvGraphGame {
     let traceMap: TraceMapT = {}
     traceMap[single(userNodes).id] = [vars, trace];
 
-    return new SimpleGame(container, graph_entry, mapping, lvlName, traceMap, f.getTypeEnv())
+    return new SimpleGame(container, graph_entry, mapping, lvlSet, lvlName, traceMap, f.getTypeEnv())
   }
 
-  constructor(container: string, graph: Node, n: NodeMap, lvlId: string, traceMap: TraceMapT, typeEnv: TypeEnv) {
+  constructor(container: string, graph: Node, n: NodeMap, lvlSet: string, lvlId: string, traceMap: TraceMapT, typeEnv: TypeEnv) {
     super(container, 600, 500, graph, n, lvlId);
     this.onNodeFocused = new Phaser.Signal();
     this.onFocusedClick = new Phaser.Signal();
@@ -61,6 +62,7 @@ class SimpleGame extends InvGraphGame {
     this.traceMap = traceMap;
     this.typeEnv = typeEnv;
     this.traceWindowM = {};
+    this.lvlSet = lvlSet;
   }
 
   getHelp(nd: Node): string {
@@ -210,7 +212,7 @@ class SimpleGame extends InvGraphGame {
   }
 
   checkInvs: any = (invs: InvNetwork, onDone: ()=>void) => {
-    rpc_checkSoundness("unsolved-new-benchmarks2", this.lvlId, invs, (res: Violation[]) => {
+    rpc_checkSoundness(this.lvlSet, this.lvlId, invs, (res: Violation[]) => {
       this.transformLayout(() => {
         let soundnessViolations: StrMap<Violation[]> = {};
         for (let v of res) {
@@ -346,7 +348,7 @@ $(document).ready(function() {
         }
       }
       let trace = convertTrace(vars, lvl.data);
-      game = SimpleGame.buildSingleLoopGame('graph', fun, lvl.id, trace, vars);
+      game = SimpleGame.buildSingleLoopGame('graph', fun, lvl.lvlSet, lvl.id, trace, vars);
       game.onLevelSolved.add(() => {
         // TODO: Half the arguments are from old game. Re-work
         rpc_logEvent(workerId, "FinishLevel", [lvl.lvlSet, lvl.id, true, [], [], 0, false, game.getInvNetwork()], () => {
