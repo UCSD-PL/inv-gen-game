@@ -74,16 +74,43 @@ class SimpleGame extends InvGraphGame {
     if (nd instanceof AssertNode) {
       return "<div class='help'> A sink node can conusme any orb, as long as it satisfies the node's expression. For example, the snik below <br>" +
         "<img src='/game/flowgame/img/example_sink.png'/> <br>" +
-        "can consume an orb with value n=1, but not an orb with value n=0 or n=-5 since 0 and -5 are not greater than 0.</div>"
+        "can consume an orb with value n=1. However if an orb with n=-1 reaches it, that causes an explosion since -1 is not greater than 0." +
+        "<br><img src='/game/flowgame/img/example_sink_bad.png'/> <br>" +
+        "</div>"
     }
     if (nd instanceof AssignNode) {
-      return "A transformer node changes the values of an orb. If you click on a transformer node you can see the sequence of changes it performs on an orb."
+      return "<div class='help'> A transformer node changes the values of an orb. " +
+        "If you click on a transformer node you can expand it to see the changes it performs. For example the transformer below adds 1 to x" +
+        "<br><img src='/game/flowgame/img/example_expanded_transfromer.png'/> <br>" +
+        "As you move orbs across you can see the values change (see below). An orb that has x=4 before the above transformer will have x=5 afterwards." +
+        "<br><img src='/game/flowgame/img/example_orb_collapsed_transformer.png'/><br>" +
+        "If a transformer node is expanded, you can see the orb change after each line as shown below." +
+        "<br><img src='/game/flowgame/img/example_orb_expanded_transformer.png'/><br>"+
+        "</div>"
     }
     if (nd instanceof IfNode) {
-      return "A branch node changes the direction an orb goes to."
+      return "A branch node redirects each orb to the left or right," +
+      "depending on how the branch's expression evaluates for the orb. For"+
+      "example, in the below picture the branch goes left when x is less than"+
+      "n. Since 4 is less than 5, that orb goes left."+
+      "<br><img src='/game/flowgame/img/example_branch_left.png' style='float: center'/><br>" +
+      "On the other hand, if an orb has x=5 and n=5 as in the below example,"+
+      "the orb would go right, as 5 is not less than 5." +
+      "<br><img src='/game/flowgame/img/example_branch_right.png'/><br>"
     }
     if (nd instanceof UserNode) {
-      return "An accumulator can act as both a source and a sink node. It can consume orbs that satisfy its expression, and it can produce ANY orbs that satisfy its expressions."
+      return "An accumulator can both emit and consume orbs. An accumulator "+
+      "with no expression like the one below will never emit an orb. If an "+
+      "orb reaches it, it will always cause an explosion." +
+      "<br><img src='/game/flowgame/img/example_naked_usernode.png'/><br>" +
+      "Once you add an expression to an accumulator, it start emitting orbs "+
+      "that satisfy it. For example the accumulator below has expression x<5 "+
+      "and thus can emit an orb with x=4"+
+      "<br><img src='/game/flowgame/img/example_usernode_source.png'/><br>" +
+      "If an orb reaches an accumulator with an expression, but doesn't satisfy its expression "+
+      "it causes an explosion. For example an orb with x=5 reaching the accumulator with x<5 "+
+      "will cause an explosion as shown below."+
+      "<br><img src='/game/flowgame/img/example_usernode_sink.png'/><br>"
     }
   }
 
@@ -125,7 +152,7 @@ class SimpleGame extends InvGraphGame {
     s +=  "<span class='side_header'>" +  ndIcon(nd) + ndType(nd) + '</span>'
     s += "</div>"
 
-    let tabs: [string, string, any, boolean][] = [['info', 'Info', this.getHelp(nd), true]];
+    let tabs: [string, string, any, boolean][] = [['help', 'Help', this.getHelp(nd), true]];
 
     if (nd instanceof UserNode) {
       let tw = this.buildTraceWindow(nd)
