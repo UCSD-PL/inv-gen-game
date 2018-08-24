@@ -8,7 +8,6 @@ import {
 import { InvGraphGame, TraceLayout, Trace, InvNetwork, InputOutputIcon, Violation, BranchIcon } from "./invgraph_game"
 import { ccast, assert, repeat, structEq, StrMap, single } from "../../ts/util"
 import { parse } from "esprima"
-import { TextIcon } from "ts/texticon";
 import { PositiveTracesWindow } from "../../ts/traceWindow";
 import { Level } from "../../ts/level";
 import { invPP } from "../../ts/pp"

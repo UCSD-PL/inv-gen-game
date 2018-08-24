@@ -40,6 +40,24 @@ export class SelectableTextIcon extends TextIcon {
   }
 }
 
+export class TraceTextIcon extends TextIcon {
+    protected traceLayour: TraceLayout;
+    protected state: (number|[number, number]);
+
+    constructor(game: Phaser.Game,
+                icon: Phaser.Sprite,
+                text: (string|string[]),
+                name?: string,
+                x?: number,
+                y?:number,
+                startShown?: boolean,
+                border?: boolean,
+                editable?: boolean) {
+      super(game, icon, text, name, x, y, startShown, border, editable);
+    }
+}
+
+
 export type InvNetwork = StrMap<ESNode[]>;
 export type Violation = any[];
 type SpriteMap = StrMap<SelectableTextIcon>;
