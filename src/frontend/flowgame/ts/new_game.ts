@@ -5,7 +5,7 @@ import {
   Node, buildGraph, removeEmptyNodes, NodeMap, moveLoopsToTheLeft,
   AssumeNode, AssertNode, IfNode, UserNode, AssignNode
 } from "./game_graph"
-import { InvGraphGame, TraceLayout, Trace, InvNetwork, InputOutputIcon, Violation, BranchIcon } from "./invgraph_game"
+import { InvGraphGame, Trace, InvNetwork, InputOutputIcon, Violation, BranchIcon } from "./invgraph_game"
 import { ccast, assert, repeat, structEq, StrMap, single } from "../../ts/util"
 import { parse } from "esprima"
 import { PositiveTracesWindow } from "../../ts/traceWindow";

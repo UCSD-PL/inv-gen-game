@@ -53,8 +53,8 @@ export class TextIcon extends Phaser.Group {
                 y = this._icon.y + this._icon.height - 16;
             this._pencil = new Phaser.Sprite(game, x, y, "pencil");
             this.add(this._pencil)
-            this._pencilBounce = game.add.tween(this._pencil);
-            this._pencilBounce.to({y:y-5}, 300, Phaser.Easing.Linear.None, true, 0, -1, true)
+            //this._pencilBounce = game.add.tween(this._pencil);
+            //this._pencilBounce.to({y:y-5}, 300, Phaser.Easing.Linear.None, true, 0, -1, true)
         }
     }
 

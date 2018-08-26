@@ -12,6 +12,20 @@ import {Node, AssignNode, IfNode, AssumeNode, UserNode,
         AssertNode, exit, NodeMap, PlaceholderNode} from "./game_graph"
 import {LineOptions, TextIcon} from "./texticon"
 
+class MyTween extends Phaser.Tween {
+  public onPreStart: Phaser.Signal;
+
+  constructor(target: any, game: Phaser.Game, manager: Phaser.TweenManager) {
+    super(target, game, manager);
+    this.onPreStart = new Phaser.Signal();
+  }
+
+  start(): Phaser.Tween {
+    this.onPreStart.dispatch();
+    return super.start()
+  }
+}
+
 export class SelectableTextIcon extends TextIcon {
     constructor(game: Phaser.Game,
                 icon: Phaser.Sprite,
@@ -40,20 +54,92 @@ export class SelectableTextIcon extends TextIcon {
   }
 }
 
+export type TraceElement = [Node, number, any];
+export type Trace = TraceElement[]
+export type TraceState = (number|[number, number]);
+export type TraceLayout = [(number|[number, number]), Point, string][];
+
 export class TraceTextIcon extends TextIcon {
-    protected traceLayour: TraceLayout;
-    protected state: (number|[number, number]);
+    protected traceLayout: TraceLayout;
+    protected state: TraceState;
+    protected curTween: Phaser.Tween;
 
     constructor(game: Phaser.Game,
                 icon: Phaser.Sprite,
                 text: (string|string[]),
+                layout: TraceLayout,
                 name?: string,
                 x?: number,
                 y?:number,
-                startShown?: boolean,
-                border?: boolean,
-                editable?: boolean) {
-      super(game, icon, text, name, x, y, startShown, border, editable);
+                startShown?: boolean) {
+      super(game, icon, text, name, x, y, startShown, true, false);
+      this.traceLayout = layout;
+      this.curTween = null;
+      this.positionAt(0)
+    }
+
+    public positionAt(step: number): void {
+      this.state = step;
+      let pt: Point = this.traceLayout[step][1];
+      this.x = pt.x;
+      this.y = pt.y;
+      this.setText(this.traceLayout[step][2])
+    }
+
+    public stepFromTo(g: Phaser.Game, startStep: number, endStep: number): Phaser.Tween {
+      if (startStep == endStep) return null;
+      let t: MyTween = new MyTween(this, g, g.tweens);
+      let step = (startStep < endStep ? 1 : -1);
+
+      for(let i = startStep+step; i != endStep+step; i+= step) {
+        let pt: Point = this.traceLayout[i][1];
+        t.to({x:pt.x, y:pt.y}, 500, Phaser.Easing.Quadratic.Out)
+      }
+
+      t.onPreStart.add(()=> {
+        if (this.curTween != null) {
+          this.curTween.stop(false);
+        }
+
+        this.positionAt(startStep);
+        this.state = [startStep, endStep]
+        this.curTween = t;
+      })
+      let text: string = this.traceLayout[endStep][2];
+
+      t.onComplete.add(()=> {
+        this.setText(text);
+        this.state = endStep;
+        this.curTween = null;
+      })
+
+      return t;
+    }
+
+    public stepForwardOne(g: Phaser.Game): Phaser.Tween {
+      let startStep = this.curStep();
+      return this.stepFromTo(g, startStep, startStep+1);
+    }
+
+    public stepBackwardOne(g: Phaser.Game): Phaser.Tween {
+      let startStep = this.curStep();
+      return this.stepFromTo(g, startStep, startStep-1);
+    }
+
+    public curStep(): number {
+      if (typeof this.state == "number") {
+        return this.state;
+      } else {
+        return this.state[1];
+      }
+    }
+
+    public curStepLayout(): [(number|[number, number]), Point, string] {
+      return this.traceLayout[this.curStep()];
+    }
+
+    public numSteps(): number {
+      return this.traceLayout.length;
     }
 }
 
@@ -69,11 +155,6 @@ type EdgeState = "unknown" | "good" | "fail"
 type EdgeStates = StrMap<StrMap<EdgeState>>
 type Layout = [SpriteMap, PointMap, EdgeMap, EdgeStates];
 type Color = number;
-
-export type TraceElement = [Node, number, any];
-export type Trace = TraceElement[]
-export type TraceLayoutStep =[number, (Point | Point[]), string]
-export type TraceLayout = TraceLayoutStep[]
 
 interface Size {
   w: number;
@@ -280,7 +361,7 @@ export class InvGraphGame {
   protected graphics: Phaser.Graphics;
   protected curViolations: ViolationInfo;
   protected spritePool: SpritePool;
-  protected selectedViolation: [TextIcon, number, Trace, TraceLayout];
+  protected selectedViolation: [TraceTextIcon, Trace];
   protected animationStopRequested: boolean;
   protected lvlId: string;
   protected stepPlaying: boolean;
@@ -464,7 +545,7 @@ export class InvGraphGame {
 
   hideViolation(): void {
     assert (this.selectedViolation != null)
-    let [err, step, trace, traceLayout] = this.selectedViolation;
+    let [err, _] = this.selectedViolation;
     let icon = err.icon();
     (err as Phaser.Group).remove(icon);
     this.game.add.existing(icon);
@@ -477,144 +558,52 @@ export class InvGraphGame {
     if (this.selectedViolation != null) {
       this.hideViolation();
     }
-    let [dummy, startPoint, startText] = traceLayout[0];
     let orb = this.getSprite("orb", 0, 0);
     orb.scale.setTo(0.3);
-    let err = new TextIcon(this.game, orb, "", "cur_trace_bug", 0, 0, true, true);
-    this.selectedViolation = [err, 0, trace, traceLayout];
-    this.positionBug(0);
-    let icon = err.icon();
-    icon.inputEnabled = true;
-    icon.exists = true;
+    orb.exists = true;
+    let errIcon = new TraceTextIcon(this.game, orb, "", traceLayout, "cur_trace_bug", 0, 0)
+    this.selectedViolation = [errIcon, trace];
   }
 
-  private positionBug(step: number) {
-    // Set the position and text of the bug to correspond with given step in the
-    // trace If that step is traveling along edge paths, place it at start of
-    // that path.
-    let [err, curStep, trace, traceLayout] = this.selectedViolation;
-
-    let [dummy, pos, newText]: TraceLayoutStep = traceLayout[step];
-    let finalPos: Point;
-    if (pos instanceof Point) {
-      finalPos = pos;
-    } else {
-      finalPos = pos[0];
-    }
-    err.setPos(finalPos.x, finalPos.y)
-    err.setText(newText)
-    this.selectedViolation[1] = step;
-  }
-
-  private getBugTween(err: TextIcon,
-                      traceLayout: TraceLayout, curStep: number, forward: boolean): Phaser.Tween {
-    // Compute the animation to move the bug one step forward/backward from its current step.
-    let inc: number = (forward ? 1 : -1);
-    let t: Phaser.Tween = this.game.add.tween(err);
-    let nextStep = curStep + inc;
-
-    let pickSide = (p: Path): Point => (forward? p[0] : p[p.length-1]);
-
-    let [curTraceIdx, curPos, curText] = traceLayout[curStep];
-    let [traceIdx, pos, newText] = traceLayout[nextStep];
-    let path: Path;
-    
-    if (forward) {
-      if (curPos instanceof Point) {
-        // At the start of a statement step, going forward 1
-        path = (pos instanceof Point ? [pos] : [pos[0]]);
-      } else {
-        // At the start of a edge animation, going forward
-        path = curPos;
-      }
-    } else {
-      if (pos instanceof Point) {
-        // Going backwards, back edge is just 1 point
-        path = [pos];
-      } else {
-        // Going backwards, previous is an animation.
-        path = reversed(pos);
-      }
-
-    }
-
-    for (let pt of path) {
-      t.to({x:pt.x, y:pt.y}, 500, Phaser.Easing.Quadratic.Out)
-    }
-    t.onStart.add(() => {this.stepPlaying = true;})
-    t.onComplete.add(()=> {err.setText(newText);this.selectedViolation[1] = nextStep; this.stepPlaying = false; })
-    return t;
-  }
-
-  playBug(onComplete?: ()=>any): void {
-    let [err, curStep, trace, traceLayout] = this.selectedViolation;
-    let oldT: Phaser.Tween = null;
-    let first: Phaser.Tween = null;
-    let t, last: Phaser.Tween;
-
-    if (curStep == traceLayout.length-1) {
-      this.positionBug(0);
-      curStep = 0;
-    }
-
-    for (let i = curStep; i < traceLayout.length-1; i++) {
-      t = this.getBugTween(err, traceLayout, i, true);
-
-      t.onComplete.add((obj: any, tw: Phaser.Tween) => {
-        if (this.animationStopRequested) {
-          this.animationStopRequested = false;
-          let rest = tw.chainedTween;
-          tw.chainedTween = null;
-          // Cleanup remaining tweens
-          while (rest != null) {
-            rest.manager.remove(rest);
-            rest = rest.chainedTween;
-          }
-        }
-      });
-
-      if (oldT == null) {
-        first = oldT = t;
-      } else {
-        oldT.chain(t);
-        oldT = t;
-      }
-    }
-    last = t;
-    if (onComplete != undefined) {
-      last.onComplete.add(onComplete);
-    }
-    first.start();
+  blowUp(nd: TextIcon): void {
+    let explosion = this.game.add.sprite(nd.x, nd.y,  "explosion", 0);
+    explosion.anchor = new Phaser.Point(0.5, 0.5);
+    shake(this.game, nd).start();
+    explosion.animations.add('animate');
+    explosion.animations.play('animate', 60, false, true);
   }
 
   stepForward(): void {
-    let [err, curStep, trace, traceLayout] = this.selectedViolation;
-    let blowUp = (nd: TextIcon) => {
-      let explosion = this.game.add.sprite(nd.x, nd.y,  "explosion", 0);
-      explosion.anchor = new Phaser.Point(0.5, 0.5);
-      shake(this.game, nd).start();
-      explosion.animations.add('animate');
-      explosion.animations.play('animate', 60, false, true);
-    }
-    if (curStep == traceLayout.length-1) {
-      let ti = this.textSprites[trace[traceLayout[curStep][0]][0].id]
-      blowUp(ti);
-    } else {
-      let tween = this.getBugTween(err, traceLayout, curStep, true);
-      if (curStep == traceLayout.length-2) {
-        let ti = this.textSprites[trace[traceLayout[curStep+1][0]][0].id]
-        tween.onComplete.add(() => blowUp(ti));
+    let [err, trace] = this.selectedViolation;
+    let curStep = err.curStep();
+    if (curStep < err.numSteps()-1) {
+      let t =  err.stepForwardOne(this.game);
+      if (curStep == err.numSteps()-2) {
+        t.onComplete.add(() => {
+          let tracePos = err.curStepLayout()[0];
+          if (typeof tracePos == "number") {
+            let ti: TextIcon = this.textSprites[trace[tracePos][0].id]
+            this.blowUp(ti);
+          }
+        })
       }
-      tween.start();
+      t.start();
+    } else {
+      let tracePos = err.curStepLayout()[0];
+      if (typeof tracePos == "number") {
+        let ti: TextIcon = this.textSprites[trace[tracePos][0].id]
+        this.blowUp(ti);
+      }
     }
   }
 
   stepBackwards(): void {
-    let [err, curStep, trace, traceLayout] = this.selectedViolation;
-
-    let traceStep: number = traceLayout[curStep][0];
-    let nextTraceStep: number = traceLayout[curStep-1][0];
-    this.getBugTween(err, traceLayout, curStep, false).start();
+    let [err, trace] = this.selectedViolation;
+    let curStep = err.curStep();
+    if (curStep > 0) {
+      let t =  err.stepBackwardOne(this.game);
+      t.start();
+    }
   }
 
   preload: any = () => {
@@ -826,6 +815,7 @@ export class InvGraphGame {
         }
       }
     }
+
     function envToText(v: any) {
       let res = "";
       for (let i = 0; i < var_names.length; i++) {
@@ -842,6 +832,9 @@ export class InvGraphGame {
       let [node, stmtIdx, vals] = t[i];
       let sprite: TextIcon = this.nodeSprites[node.id];
       let [prevNode, prevStmtIdx, prevVals] = t[i-1];
+      let oldText = envToText(prevVals);
+      let newText = envToText(vals);
+
       if (node == prevNode) {
         // Only step through assignments
         if (!(node instanceof AssignNode) || !sprite.isLineShown(0)) continue;
@@ -863,8 +856,11 @@ export class InvGraphGame {
         subPath[0].add(0, 10);
         subPath[subPath.length-1].add(0, -10);
 
-        traceLayout.push([i-1, subPath, envToText(vals)]);
-        traceLayout.push([i, subPath[subPath.length-1], envToText(vals)]);
+        for (let j=0; j < subPath.length-1; j++) {
+          traceLayout.push([[i-1, i], subPath[j], oldText]);
+        }
+
+        traceLayout.push([i, subPath[subPath.length-1], newText])
       }
     }
     return traceLayout;
