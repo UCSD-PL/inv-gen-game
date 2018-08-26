@@ -136,7 +136,8 @@ export class TextIcon extends Phaser.Group {
             let height = max([this._icon.height, this._text.height]) + 2*padding;
 
             if (this._border != null) {
-                if (this._border.width < width || this._border.height < height) {
+                if (this._border.width < width || this._border.height < height ||
+                    this._border.width > width + 20 || this._border.height > height + 20) {
                     this.remove(this._border, true, true);
                     this._border = null;
                 }
