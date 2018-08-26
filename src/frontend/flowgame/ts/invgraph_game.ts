@@ -134,6 +134,10 @@ export class TraceTextIcon extends TextIcon {
       }
     }
 
+    public inTransition(): boolean {
+      return typeof this.state != "number";
+    }
+
     public curStepLayout(): [(number|[number, number]), Point, string] {
       return this.traceLayout[this.curStep()];
     }
@@ -599,8 +603,9 @@ export class InvGraphGame {
       }
       t.start();
     } else {
-      let tracePos = err.curStepLayout()[0];
-      if (typeof tracePos == "number") {
+      if (!err.inTransition()) {
+        // Type system doesn't know !inTrasition() => trace position is number
+        let tracePos = (err.curStepLayout()[0] as any) as number;
         let ti: TextIcon = this.textSprites[trace[tracePos][0].id]
         this.blowUp(ti);
       }
