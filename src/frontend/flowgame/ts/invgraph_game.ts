@@ -138,6 +138,10 @@ export class TraceTextIcon extends TextIcon {
       return this.traceLayout[this.curStep()];
     }
 
+    public layout(): TraceLayout {
+      return this.traceLayout;
+    }
+
     public numSteps(): number {
       return this.traceLayout.length;
     }
@@ -576,9 +580,15 @@ export class InvGraphGame {
   stepForward(): void {
     let [err, trace] = this.selectedViolation;
     let curStep = err.curStep();
-    if (curStep < err.numSteps()-1) {
-      let t =  err.stepForwardOne(this.game);
-      if (curStep == err.numSteps()-2) {
+    let nextStep = curStep + 1;
+    let layout = err.layout()
+    while (nextStep < err.numSteps() && 
+           typeof layout[nextStep][0] != "number") {
+      nextStep += 1;
+    }
+    if (nextStep < err.numSteps()) {
+      let t =  err.stepFromTo(this.game, curStep, nextStep);
+      if (nextStep == err.numSteps()-1) {
         t.onComplete.add(() => {
           let tracePos = err.curStepLayout()[0];
           if (typeof tracePos == "number") {
@@ -600,8 +610,15 @@ export class InvGraphGame {
   stepBackwards(): void {
     let [err, trace] = this.selectedViolation;
     let curStep = err.curStep();
-    if (curStep > 0) {
-      let t =  err.stepBackwardOne(this.game);
+    let nextStep = curStep - 1;
+    let layout = err.layout()
+    while (nextStep >= 0 && 
+           typeof layout[nextStep][0] != "number") {
+      nextStep -= 1;
+    }
+    if (nextStep >= 0) {
+      console.log(curStep, nextStep)
+      let t =  err.stepFromTo(this.game, curStep, nextStep);
       t.start();
     }
   }
@@ -808,7 +825,7 @@ export class InvGraphGame {
     let traceLayout: TraceLayout = [];
     let var_names = [];
     for (let i = 1; i < t.length; i++) {
-      let [node, stmtIdx, vals] = t[i];
+      let vals: {[varname: string]: any} = t[i][2]
       for (let k in vals) {
         if (var_names.indexOf(k) == -1) {
           var_names.push(k);
@@ -840,7 +857,7 @@ export class InvGraphGame {
         if (!(node instanceof AssignNode) || !sprite.isLineShown(0)) continue;
         let textNode: Phaser.Group = sprite.getText();
         let textPos: Phaser.Point = new Point(sprite.getX() + textNode.x, sprite.getY() + textNode.y)
-        let pt = sprite.rightOfLine(stmtCtr).add(textPos.x + 10, textPos.y)
+        let pt = sprite.rightOfLine(stmtCtr).add(textPos.x + 15, textPos.y)
         traceLayout.push([i, pt, envToText(vals)])
         stmtCtr ++;
       } else {
@@ -856,11 +873,13 @@ export class InvGraphGame {
         subPath[0].add(0, 10);
         subPath[subPath.length-1].add(0, -10);
 
+        traceLayout.push([i-1, subPath[0], oldText]);
+
         for (let j=0; j < subPath.length-1; j++) {
           traceLayout.push([[i-1, i], subPath[j], oldText]);
         }
 
-        traceLayout.push([i, subPath[subPath.length-1], newText])
+        traceLayout.push([i, subPath[subPath.length-1], oldText])
       }
     }
     return traceLayout;
