@@ -27,7 +27,7 @@ from pyboogie.inv_networks import Violation, checkInvNetwork
 
 # Local repo includes
 from lib.common.util import powerset, split, nonempty, nodups, \
-        randomToken, ccast
+        randomToken, ccast, fatal
 from lib.invgame_server.js import esprimaToZ3, esprimaToBoogie, boogieToEsprima, \
         boogieToEsprimaExpr, jsonToTypeEnv, JSONTypeEnv, EsprimaNode, \
         typeEnvToJson
@@ -256,12 +256,12 @@ def reportProblem(mturkId, lvl, desc):
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description="invariant gen game server")
-    p.add_argument('--local', action='store_true',
-            help='Run without SSL for local testing')
     p.add_argument('--log', type=str,
             help='an optional log file to store all user actions. ' +
                  'Entries are stored in JSON format.')
-    p.add_argument('--port', type=int, help='an optional port number')
+    p.add_argument('--port', type=int, help='an optional port number. Defaults to 8080', default=8080)
+    p.add_argument('--host', type=str,
+            help='Optional hostname. Defaults to 127.0.0.1', default='127.0.0.1')
     p.add_argument('--ename', type=str, default='default',
             help='Name for experiment; if none provided, use "default"')
     p.add_argument('--lvlset', type=str, \
@@ -281,6 +281,10 @@ if __name__ == "__main__":
             help='Maximum number of levels that can be played per HIT')
     p.add_argument('--replay', action='store_true',
             help='Enable replaying levels')
+    p.add_argument('--ssl-key', type=str,
+            help='Path to ssl .key file')
+    p.add_argument('--ssl-cert', type=str,
+            help='Path to ssl .cert file')
 
     args = p.parse_args();
 
@@ -300,12 +304,15 @@ if __name__ == "__main__":
     MYDIR = dirname(abspath(realpath(__file__)))
     ROOT_DIR = dirname(MYDIR)
 
-    if args.local:
-      host = '127.0.0.1'
-      sslContext = None
+    if args.ssl_key is not None or args.ssl_cert is not None:
+        if (args.ssl_key is None or args.ssl_cert is None):
+            fatal("Error: can't speciy only --ssl-cert or --ssl-key. Need both");
+        sslContext: Optional[Tuple[str, str]] = (args.ssl_key, args.ssl_cert)
     else:
-      host = '0.0.0.0'
-      sslContext = MYDIR + '/cert.pem', MYDIR + '/privkey.pem'
+        sslContext = None
+
+    sslContext = None;
+    host = args.host
 
     curLevelSetName, lvls = loadLvlSet(args.lvlset)
     traces  = { curLevelSetName: lvls }
