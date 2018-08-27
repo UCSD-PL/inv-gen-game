@@ -398,6 +398,14 @@ function convertTrace(vs: string[], t: any): any {
   return res
 }
 
+function showOverlay(html: (string|HTMLElement|JQuery)): void {
+  $("#overlay").empty().append(html).fadeIn(1000);
+}
+
+function hideOverlay(): void {
+  $("#overlay").fadeOut(1000);
+}
+
 $(document).ready(function () {
   let game: SimpleGame = null;
   let workerId = "foobar"
@@ -405,7 +413,7 @@ $(document).ready(function () {
   function loadAndPlayNextLevel(): void {
     rpc_loadNextLvl(workerId, (lvl) => {
       if (lvl == null) {
-        console.log("YAY!")
+        showOverlay("<h1 class='good'>You solved all the levels!!</h1>")
         return;
       }
       let fun = Fun.from_json(lvl.fun);
@@ -418,6 +426,11 @@ $(document).ready(function () {
       let trace = convertTrace(vars, lvl.data);
       game = SimpleGame.buildSingleLoopGame('graph', fun, lvl.lvlSet, lvl.id, trace, vars);
       game.onLevelSolved.add(() => {
+        let nextlvlOverlay = $("<h1 class='good'>Good job! You solved the level! On to the next one!<br>"+
+          "<button id='next-level-overlay' class='btn-next'>Next Level</button>" +
+          "</h1>")
+        $(".btn-next", nextlvlOverlay).click(() => {hideOverlay()})
+        showOverlay(nextlvlOverlay)
         // TODO: Half the arguments are from old game. Re-work
         rpc_logEvent(workerId, "FinishLevel", [lvl.lvlSet, lvl.id, true, [], [], 0, false, game.getInvNetwork()], () => {
           $('#graph').html('')
