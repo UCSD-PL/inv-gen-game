@@ -140,21 +140,20 @@ class SimpleGame extends InvGraphGame {
     }
     if (nd instanceof UserNode) {
       if (nd.exprs.length == 0) {
-        infoDiv.html("<div class='info'> This accumulator doesn't have expressions yet. " +
-          "It will not emit any orb, and it will explode if any orbs reach it! <br> " +
-          "<span class='bold> You should fix that!</span>" +
-          "<div id='exprs'> </div>" +
-          "</div>")
+        infoDiv.html("<div class='info'> Accumulator has no expression yet. " +
+          "It cannot emit any orb, and it explodes if any orb reaches it!" +
+          "<span class='bold'> Try adding an exrpression below...</span>" +
+          "</div><hr>")
       } else {
-        infoDiv.html("<div class='info'> This accumulator only accepts orbs that satisfy all these expressions " +
+        infoDiv.html("<div class='info'> Accepts/emits orbs that satisfy all these expressions " +
           "<div id='exprs'> " +
           nd.exprs.map((s: Expr_T): string => { return "<span class='bold'>" + s + "</span>" }).join("<br>") +
-          "</div><br> and it can also emit any orb that satisfies them.</div>")
+          "</div><br></div>")
       }
     }
   }
 
-  buildTraceWindow(nd: UserNode): any {
+  buildTraceWindow(nd: UserNode): JQuery {
     let container = $("<div id='traces_" + nd.id + "'></div>")
     let tracesW = new PositiveTracesWindow(container[0], true);
     let [vars, trace] = this.traceMap[nd.id];
@@ -194,11 +193,14 @@ class SimpleGame extends InvGraphGame {
 
     let tabs: [string, string, any][] = [];
 
-    tabs.push(['info', 'Info', ""])
-
     if (nd instanceof UserNode) {
+      let traceWindowContainer = $('<div></div>')
+      traceWindowContainer.append("<div id='info'></div>")
       let tw = this.buildTraceWindow(nd)
-      tabs.push(["edit", "Edit", tw])
+      traceWindowContainer.append(tw)
+      tabs.push(["edit", "Edit", traceWindowContainer])
+    } else {
+      tabs.push(['info', 'Info', ""])
     }
 
     tabs.push(['help', 'Help', this.getHelp(nd)])
@@ -207,7 +209,7 @@ class SimpleGame extends InvGraphGame {
     let tabHeader = '<ul class="nav nav-tabs" role="tablist">',
       tabsContent = '<div class="tab-content">';
 
-    for (let [tabName, tabTittle, tabContent] of tabs) {
+    for (let [tabName, tabTittle, _] of tabs) {
       let selected = tabName == selectedTab;
       tabHeader += (selected ? '<li class="nav-item active">' : '<li class="nav-item">')
       tabHeader += '<a class="nav-link active" id="' + tabName + '-tab" data-toggle="tab" href="#' + tabName +
@@ -221,7 +223,7 @@ class SimpleGame extends InvGraphGame {
     s += tabHeader + tabsContent;
 
     let newDom: JQuery = $(s)
-    for (let [tabName, tabTittle, tabContent] of tabs) {
+    for (let [tabName, _, tabContent] of tabs) {
       $("#" + tabName, newDom).append(tabContent)
     }
 
@@ -398,7 +400,7 @@ function convertTrace(vs: string[], t: any): any {
   return res
 }
 
-function showOverlay(html: (string|HTMLElement|JQuery)): void {
+function showOverlay(html: (string | HTMLElement | JQuery)): void {
   $("#overlay").empty().append(html).fadeIn(1000);
 }
 
@@ -426,10 +428,10 @@ $(document).ready(function () {
       let trace = convertTrace(vars, lvl.data);
       game = SimpleGame.buildSingleLoopGame('graph', fun, lvl.lvlSet, lvl.id, trace, vars);
       game.onLevelSolved.add(() => {
-        let nextlvlOverlay = $("<h1 class='good'>Good job! You solved the level! On to the next one!<br>"+
+        let nextlvlOverlay = $("<h1 class='good'>Good job! You solved the level! On to the next one!<br>" +
           "<button id='next-level-overlay' class='btn-next'>Next Level</button>" +
           "</h1>")
-        $(".btn-next", nextlvlOverlay).click(() => {hideOverlay()})
+        $(".btn-next", nextlvlOverlay).click(() => { hideOverlay() })
         showOverlay(nextlvlOverlay)
         // TODO: Half the arguments are from old game. Re-work
         rpc_logEvent(workerId, "FinishLevel", [lvl.lvlSet, lvl.id, true, [], [], 0, false, game.getInvNetwork()], () => {
