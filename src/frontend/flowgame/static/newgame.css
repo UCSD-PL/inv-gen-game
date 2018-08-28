@@ -46,3 +46,7 @@ div#sidewindow {
   grid-column-end: final;
   overflow: scroll;
 }
+
+.hidden {
+  display: none;
+}

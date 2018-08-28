@@ -228,6 +228,7 @@ class SimpleGame extends InvGraphGame {
     }
 
     this.updateInfo(nd, newDom);
+    $(newDom).addClass('hidden');
     return newDom
   }
 
@@ -241,18 +242,19 @@ class SimpleGame extends InvGraphGame {
         }
 
         if (this.focusedNode != null && this.focusedNode != undefined) {
-          this.onNodeUnfocused.dispatch(nd);
+          this.onNodeUnfocused.dispatch(this.focusedNode);
         }
 
         this.focusedNode = nd;
         this.onNodeFocused.dispatch(nd);
       });
       this.sideWindowContent[nd.id] = this.buildContent(nd);
+      $("#sidewindow").append(this.sideWindowContent[nd.id]);
     })
 
     this.onNodeFocused.add((nd: Node) => {
       this.textSprites[nd.id].select();
-      $('#sidewindow').empty().append(this.sideWindowContent[nd.id]);
+      this.sideWindowContent[nd.id].removeClass("hidden")
     })
     this.onFocusedClick.add((nd: Node) => {
       if (!(nd instanceof AssignNode)) return;
@@ -260,9 +262,8 @@ class SimpleGame extends InvGraphGame {
       this.transformLayout(() => ti.toggleText());
     })
     this.onNodeUnfocused.add((nd: Node) => {
-      if (this.focusedNode != null) {
-        this.textSprites[this.focusedNode.id].deselect();
-      }
+      this.textSprites[nd.id].deselect();
+      this.sideWindowContent[nd.id].addClass("hidden")
     })
     this.onFoundInv.add((nd: UserNode, inv: string) => {
       $("#progress").append("<span class='good'>" + inv + "</span>")
