@@ -428,18 +428,21 @@ $(document).ready(function () {
       }
       let trace = convertTrace(vars, lvl.data);
       game = SimpleGame.buildSingleLoopGame('graph', fun, lvl.lvlSet, lvl.id, trace, vars);
-      game.onLevelSolved.add(() => {
+      $('#next-level-bttn').click(() => {
+        $('#bottom').hide();
         let nextlvlOverlay = $("<h1 class='good'>Good job! You solved the level! On to the next one!<br>" +
           "<button id='next-level-overlay' class='btn-next'>Next Level</button>" +
           "</h1>")
         $(".btn-next", nextlvlOverlay).click(() => { hideOverlay() })
-        showOverlay(nextlvlOverlay)
         // TODO: Half the arguments are from old game. Re-work
         rpc_logEvent(workerId, "FinishLevel", [lvl.lvlSet, lvl.id, true, [], [], 0, false, game.getInvNetwork()], () => {
           $('#graph').html('')
           $('#sidewindow').html('')
           loadAndPlayNextLevel()
         })
+      })
+      game.onLevelSolved.add(() => {
+        $('#bottom').show();
       })
     })
   }

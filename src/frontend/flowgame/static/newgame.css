@@ -5,7 +5,7 @@
 .container {
   display: grid;
   grid-template-columns:  [first] auto [separator] 40% [final];
-  grid-template-rows: [top] 350px [middle] 200px [bottom];
+  grid-template-rows: [top] 350px [middle] 200px [bottom] 200px [post-bottom];
 }
 
 #graph_abs_parent {
@@ -13,6 +13,14 @@
   grid-row-end: bottom;
   grid-column-start: first;
   grid-column-end: separator;
+}
+
+
+#bottom {
+  grid-row-start: bottom;
+  grid-row-end: post-bottom;
+  grid-column-start: first;
+  grid-column-end: final;
 }
 
 div#formula-entry {
