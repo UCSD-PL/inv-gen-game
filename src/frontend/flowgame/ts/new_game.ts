@@ -1,4 +1,4 @@
-import { rpc_loadNextLvl, rpc_checkSoundness, rpc_logEvent } from "./rpc";
+import { rpc_loadNextLvl, rpc_checkSoundness, rpc_logEvent, rpc_isTautology } from "./rpc";
 import { Fun, BB, Expr_T, Stmt_T } from "./boogie";
 import * as Phaser from "phaser-ce"
 import {
@@ -374,13 +374,20 @@ class SimpleGame extends InvGraphGame {
       if (hold < all)
         tracesW.error("Holds for " + hold + "/" + all + " cases.")
       else {
-        tracesW.enableSubmit();
-        if (!commit) {
-          tracesW.msg("<span class='good'>Press Enter...</span>");
-          return;
-        } else {
+        rpc_isTautology(parsedInv, this.typeEnv, (res: boolean)=> {
+          if (res) {
+            tracesW.msg("<span class='error'>This is always true</span>");
+            return;
+          }
+          tracesW.enableSubmit();
+
+          if (!commit) {
+            tracesW.msg("<span class='good'>Press Enter...</span>");
+            return;
+          } 
+
           this.setExpr(parsedInv);
-        }
+        });
       }
     } catch (err) {
       console.log(err);

@@ -4,7 +4,7 @@ import {Node as ESNode} from "estree";
 import {rpc, mturkId} from "../../ts/rpc";
 import {Violation, InvNetwork} from "./invgraph_game"
 
-export {rpc_logEvent} from "../../ts/rpc";
+export {rpc_logEvent, rpc_isTautology} from "../../ts/rpc";
 
 interface loadLvlRes {
   id: string;
