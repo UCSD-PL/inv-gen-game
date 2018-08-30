@@ -230,11 +230,7 @@ export class SinkIcon extends SelectableTextIcon {
         )
     }
 }
-
-export class BranchIcon extends SelectableTextIcon {
-    constructor(game: InvGraphGame, nd: AssertNode, x?: number, y?: number, startShown?: boolean) {
-      super(game.game, new Phaser.Sprite(game.game, 0, 0, "branch", 0), nd.exprs, "br_" + nd.id, x, y, startShown);
-    }
+export class BaseBranchIcon extends SelectableTextIcon {
     public entryPoint(): Phaser.Point {
         return new Phaser.Point(
             this._icon.x + this._icon.width/2,
@@ -253,6 +249,21 @@ export class BranchIcon extends SelectableTextIcon {
             this._icon.x + 3*this._icon.width/4,
             this._icon.y + this._icon.height
         )
+    }
+}
+
+
+export class TextBranchIcon extends BaseBranchIcon {
+    constructor(game: InvGraphGame, nd: AssertNode, x?: number, y?: number, startShown?: boolean) {
+      assert(nd.exprs.length == 1)
+      let style = { font: "15px Courier New, Courier, monospace", align: "center", fill: "#000000", }
+      super(game.game, new Phaser.Text(game.game, 0, 0, nd.exprs[0], style), "", "br_" + nd.id, x, y, startShown);
+    }
+}
+
+export class BranchIcon extends BaseBranchIcon {
+    constructor(game: InvGraphGame, nd: AssertNode, x?: number, y?: number, startShown?: boolean) {
+      super(game.game, new Phaser.Sprite(game.game, 0, 0, "branch", 0), nd.exprs, "br_" + nd.id, x, y, startShown);
     }
 }
 
@@ -321,7 +332,7 @@ export class TransformerIcon extends SelectableTextIcon {
 
 function getEntry(ti: TextIcon): Phaser.Point {
   if (ti instanceof SinkIcon ||
-      ti instanceof BranchIcon ||
+      ti instanceof BaseBranchIcon ||
       ti instanceof TransformerIcon ||
       ti instanceof PlaceholderIcon ||
       ti instanceof InputOutputIcon) {
@@ -671,7 +682,7 @@ export class InvGraphGame {
     } else if (nd instanceof AssignNode) {
       return new TransformerIcon(this, nd, pos.x, pos.y, false);
     } else if (nd instanceof IfNode) {
-      return new BranchIcon(this, nd, pos.x, pos.y, true);
+      return new TextBranchIcon(this, nd, pos.x, pos.y, true);
     } else if (nd instanceof UserNode) {
       return new InputOutputIcon(this, nd, pos.x, pos.y, true);
     } else if (nd instanceof PlaceholderNode) {
@@ -1047,11 +1058,11 @@ export class InvGraphGame {
         if (prev instanceof IfNode) {
           if (next == prev.successors[0]) {
             // Lhs
-            prevExit = (prevSp as BranchIcon).lhsExitPoint()
+            prevExit = (prevSp as BaseBranchIcon).lhsExitPoint()
             prevExit.subtract(width[next.id]/2, 0)
           } else {
             // Rhs
-            prevExit = (prevSp as BranchIcon).rhsExitPoint()
+            prevExit = (prevSp as BaseBranchIcon).rhsExitPoint()
             prevExit.add(width[next.id]/2, 0)
           }
         } else {
@@ -1107,7 +1118,7 @@ export class InvGraphGame {
       let toSprite = spriteMap[to.id];
       let pathStart: Point;
 
-      if (fromSprite instanceof BranchIcon) {
+      if (fromSprite instanceof BaseBranchIcon) {
         if (to == from.successors[0]) {
           pathStart = fromSprite.lhsExitPoint();
         } else {

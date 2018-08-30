@@ -182,7 +182,7 @@ class SimpleGame extends InvGraphGame {
         d = "px; overflow: hidden; float: left'/>"
       if (nd instanceof AssumeNode) return a + "/game/flowgame/img/source.png" + b + 48 + c + 42 + d;
       if (nd instanceof AssertNode) return a + "/game/flowgame/img/sink.png" + b + 48 + c + 42 + d;
-      if (nd instanceof IfNode) return a + "/game/flowgame/img/branch.png" + b + 72 + c + 28 + d;
+      if (nd instanceof IfNode) return a + "/game/flowgame/img/white_space.png" + b + 72 + c + 28 + d;
       if (nd instanceof AssignNode) return a + "/game/flowgame/img/gearbox.png" + b + 48 + c + 42 + d;
       if (nd instanceof UserNode) return a + "/game/flowgame/img/funnel.png" + b + 82 + c + 42 + d;
     }
