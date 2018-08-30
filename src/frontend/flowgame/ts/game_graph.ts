@@ -49,8 +49,8 @@ export class AssertNode extends ExprNode { }
 export class EmptyNode extends Node { }
 export class PlaceholderNode extends Node { }
 
-let assumeRE = / *assume *\(\((.*)\)\);/;
-let assertRE = / *assert *\(\((.*)\)\);/;
+let assumeRE = / *assume *([^ ].*);/;
+let assertRE = / *assert *([^ ].*);/;
 
 function split_assumes(stmts: Stmt_T[]): [Stmt_T[], Stmt_T[]] {
   let assumes: Stmt_T[] = [];
