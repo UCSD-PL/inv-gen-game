@@ -49,8 +49,8 @@ export class AssertNode extends ExprNode { }
 export class EmptyNode extends Node { }
 export class PlaceholderNode extends Node { }
 
-let assumeRE = / *assume *([^ ].*);/;
-let assertRE = / *assert *([^ ].*);/;
+let assumeRE = / *assume *(.*);/;
+let assertRE = / *assert *(.*);/;
 
 function split_assumes(stmts: Stmt_T[]): [Stmt_T[], Stmt_T[]] {
   let assumes: Stmt_T[] = [];
@@ -158,8 +158,7 @@ export function buildGraph(f: Fun): [Node, NodeMap] {
       let rhsExpr: Expr_T = and(rhsAssume.map(assume_expr));
       // TODO: Check lhsExpr/rhsExpr disjoint and complete
       // TODO: Pick if expr intelligently
-      let ifExpr = lhsExpr;
-      let ifNode = new IfNode(getUid("nd"), ifExpr);
+      let ifNode = new IfNode(getUid("nd"), [lhsExpr, rhsExpr]);
       node.addSuccessor(ifNode);
       workQ.push([lhsBB, ifNode])
       workQ.push([rhsBB, ifNode])
@@ -213,7 +212,10 @@ export function moveLoopsToTheLeft(entry: Node): Node {
       let t = cur.successors[0];
       cur.successors[0] = cur.successors[1];
       cur.successors[1] = t;
-      cur.exprs[0] = "!(" + cur.exprs[0] + ")";
+
+      let t1 = cur.exprs[0];
+      cur.exprs[0] = cur.exprs[1];
+      cur.exprs[1] = t1;
     }
   })
 

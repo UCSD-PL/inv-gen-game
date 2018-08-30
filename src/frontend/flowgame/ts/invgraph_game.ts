@@ -255,7 +255,6 @@ export class BaseBranchIcon extends SelectableTextIcon {
 
 export class TextBranchIcon extends BaseBranchIcon {
     constructor(game: InvGraphGame, nd: AssertNode, x?: number, y?: number, startShown?: boolean) {
-      assert(nd.exprs.length == 1)
       let style = { font: "15px Courier New, Courier, monospace", align: "center", fill: "#000000", }
       super(game.game, new Phaser.Text(game.game, 0, 0, nd.exprs[0], style), "", "br_" + nd.id, x, y, startShown);
     }
@@ -263,7 +262,7 @@ export class TextBranchIcon extends BaseBranchIcon {
 
 export class BranchIcon extends BaseBranchIcon {
     constructor(game: InvGraphGame, nd: AssertNode, x?: number, y?: number, startShown?: boolean) {
-      super(game.game, new Phaser.Sprite(game.game, 0, 0, "branch", 0), nd.exprs, "br_" + nd.id, x, y, startShown);
+      super(game.game, new Phaser.Sprite(game.game, 0, 0, "branch", 0), nd.exprs[0], "br_" + nd.id, x, y, startShown);
     }
 }
 
