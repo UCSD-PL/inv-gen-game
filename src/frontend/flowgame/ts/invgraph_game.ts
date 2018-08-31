@@ -27,26 +27,47 @@ class MyTween extends Phaser.Tween {
 }
 
 export class SelectableTextIcon extends TextIcon {
-    constructor(game: Phaser.Game,
-                icon: Phaser.Sprite,
-                text: (string|string[]),
-                name?: string,
-                x?: number,
-                y?:number,
-                startShown?: boolean,
-                border?: boolean,
-                editable?: boolean) {
-      super(game, icon, text, name, x, y, startShown, border, editable);
-      this._icon.input.useHandCursor = true;
-    }
+  protected iconBoundingBoxes:  Phaser.Rectangle[];
+  public onChildClick: Phaser.Signal;
+  constructor(game: Phaser.Game,
+              icon: Phaser.Sprite,
+              text: (string|string[]),
+              name?: string,
+              x?: number,
+              y?:number,
+              startShown?: boolean,
+              border?: boolean,
+              editable?: boolean,
+              iconBoundingBoxes?: Phaser.Rectangle[]) {
+    super(game, icon, text, name, x, y, startShown, border, editable);
+    this._icon.input.useHandCursor = true;
+    if (iconBoundingBoxes == undefined) iconBoundingBoxes = []
+    this.iconBoundingBoxes = iconBoundingBoxes;
+    this.onChildClick = new Phaser.Signal();
+    this.onChildInputDown.add((child: (Phaser.Sprite|Phaser.Text), pointer: Phaser.Pointer) => {
+      if (child == this._icon && this.iconBoundingBoxes.length != 0) {
+        let relX = pointer.x - (child.world.x - child.centerX),
+            relY = pointer.y - (child.world.y - child.centerY);
 
-  public select(): void {
-    this._icon.frame = 1;
+        for (let i=0; i < this.iconBoundingBoxes.length; i++) {
+          if (this.iconBoundingBoxes[i].contains(relX, relY)) {
+            this.onChildClick.dispatch(child, pointer, i);
+            return
+          }
+        }
+        return
+      }
+      this.onChildClick.dispatch(child, pointer, -1);
+    })
+  }
+
+  public select(frame: number): void {
+    this._icon.frame = frame;
     if (this._pencilBounce != null) {
       this._pencilBounce.pause();
     }
   }
-  public deselect(): void {
+  public deselect(frame: number): void {
     this._icon.frame = 0; 
     if (this._pencilBounce != null) {
       this._pencilBounce.resume();
@@ -273,7 +294,8 @@ export class InputOutputIcon extends SelectableTextIcon {
     // Code duplication with OutputIcon - don't want to implement mixins just
     // for this one case
     constructor(game: InvGraphGame, nd: UserNode, x?: number, y?: number, startShown?: boolean) {
-      super(game.game, new Phaser.Sprite(game.game, 0, 0, "funnel", 0), [], "un_" + nd.id, x, y, startShown, false, true);
+      super(game.game, new Phaser.Sprite(game.game, 0, 0, "funnel", 0), [], "un_" + nd.id, x, y, startShown, false, true,
+        [new Phaser.Rectangle(0,0,41,41), new Phaser.Rectangle(42, 0, 41, 42)]);
       this.setInvariants(nd.sound, nd.unsound);
     }
     public entryPoint(): Phaser.Point {

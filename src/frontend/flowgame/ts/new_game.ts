@@ -22,7 +22,7 @@ class SimpleGame extends InvGraphGame {
   public onFocusedClick: Phaser.Signal;
   public onNodeUnfocused: Phaser.Signal;
   public onFoundInv: Phaser.Signal;
-  public focusedNode: Node;
+  public focusedNode: [Node, number];
   public onLevelSolved: Phaser.Signal;
 
   protected traceMap: TraceMapT;
@@ -235,25 +235,31 @@ class SimpleGame extends InvGraphGame {
   create(): void {
     super.create();
     this.forEachNode((nd: Node) => {
-      this.textSprites[nd.id].onChildInputDown.add(() => {
-        if (this.focusedNode == nd) {
-          this.onFocusedClick.dispatch(nd);
+      this.textSprites[nd.id].onChildClick.add((sprite: any, pointer: Phaser.Pointer, bboxInd: number) => {
+        console.log("in child click:", bboxInd)
+        if (this.focusedNode == [nd, bboxInd]) {
+          this.onFocusedClick.dispatch(nd, bboxInd);
           return;
         }
 
         if (this.focusedNode != null && this.focusedNode != undefined) {
-          this.onNodeUnfocused.dispatch(this.focusedNode);
+          this.onNodeUnfocused.dispatch(this.focusedNode[0], this.focusedNode[1]);
         }
 
-        this.focusedNode = nd;
-        this.onNodeFocused.dispatch(nd);
+        this.focusedNode = [nd, bboxInd];
+        this.onNodeFocused.dispatch(nd, bboxInd);
       });
       this.sideWindowContent[nd.id] = this.buildContent(nd);
       $("#sidewindow").append(this.sideWindowContent[nd.id]);
     })
 
-    this.onNodeFocused.add((nd: Node) => {
-      this.textSprites[nd.id].select();
+    this.onNodeFocused.add((nd: Node, bboxInd: number) => {
+      if (nd instanceof UserNode) {
+        this.textSprites[nd.id].select(bboxInd + 1);
+      } else {
+        this.textSprites[nd.id].select(1);
+      }
+
       this.sideWindowContent[nd.id].removeClass("hidden")
     })
     this.onFocusedClick.add((nd: Node) => {
@@ -261,8 +267,8 @@ class SimpleGame extends InvGraphGame {
       let ti = this.textSprites[nd.id];
       this.transformLayout(() => ti.toggleText());
     })
-    this.onNodeUnfocused.add((nd: Node) => {
-      this.textSprites[nd.id].deselect();
+    this.onNodeUnfocused.add((nd: Node, bboxId: number) => {
+      this.textSprites[nd.id].deselect(0);
       this.sideWindowContent[nd.id].addClass("hidden")
     })
     this.onFoundInv.add((nd: UserNode, inv: string) => {
