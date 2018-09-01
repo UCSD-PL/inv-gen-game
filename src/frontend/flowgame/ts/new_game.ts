@@ -245,7 +245,9 @@ class SimpleGame extends InvGraphGame {
     super.create();
     this.forEachNode((nd: Node) => {
       this.textSprites[nd.id].onChildClick.add((sprite: any, pointer: Phaser.Pointer, bboxInd: number) => {
-        if (this.focusedNode == [nd, bboxInd]) {
+        if (this.focusedNode != null &&
+            this.focusedNode[0] == nd &&
+            this.focusedNode[1] == bboxInd) {
           this.onFocusedClick.dispatch(nd, bboxInd);
           return;
         }
@@ -420,6 +422,14 @@ class SimpleGame extends InvGraphGame {
       tracesW.delayedError(<string>interpretError(err));
     }
   }
+
+  destroy(): void {
+    let canvas = this.game.canvas;
+    let sidewindow = $("#sidewindow")
+    sidewindow.empty();
+    $(canvas).detach();
+    this.game.destroy();
+  }
 }
 
 function convertTrace(vs: string[], t: any): any {
@@ -460,6 +470,9 @@ $(document).ready(function () {
         }
       }
       let trace = convertTrace(vars, lvl.data);
+      if (game != null) {
+        game.destroy()
+      }
       game = SimpleGame.buildSingleLoopGame('graph', fun, lvl.lvlSet, lvl.id, trace, vars);
       $('#next-level-bttn').click(() => {
         $('#bottom').hide();
