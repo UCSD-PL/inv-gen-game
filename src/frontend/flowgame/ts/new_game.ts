@@ -67,17 +67,19 @@ class SimpleGame extends InvGraphGame {
   }
 
   getHelp(nd: Node): string {
-    if (nd instanceof AssumeNode) {
-      return "<div class='help'> A source node can produce any orb, as long as it satisfies the node's expression. For example, the source below <br>" +
+    let src_help = "<div class='help " + nd.id + '_1' + "'> A source node can produce any orb, as long as it satisfies the node's expression. For example, the source below <br>" +
         "<img src='/game/flowgame/img/example_source.png'/> <br>" +
         "can produce an orb with value n=1, but not an orb with value n=0 or n=-5 since 0 and -5 are not greater than 0.</div>"
-    }
-    if (nd instanceof AssertNode) {
-      return "<div class='help'> A sink node can conusme any orb, as long as it satisfies the node's expression. For example, the snik below <br>" +
+    let sink_help = "<div class='help " + nd.id + '_0' + "'> A sink node can conusme any orb, as long as it satisfies the node's expression. For example, the snik below <br>" +
         "<img src='/game/flowgame/img/example_sink.png'/> <br>" +
         "can consume an orb with value n=1. However if an orb with n=-1 reaches it, that causes an explosion since -1 is not greater than 0." +
         "<br><img src='/game/flowgame/img/example_sink_bad.png'/> <br>" +
         "</div>"
+    if (nd instanceof AssumeNode) {
+      return src_help;
+    }
+    if (nd instanceof AssertNode) {
+      return sink_help;
     }
     if (nd instanceof AssignNode) {
       return "<div class='help'> A transformer node changes the values of an orb. " +
@@ -100,57 +102,56 @@ class SimpleGame extends InvGraphGame {
         "<br><img src='/game/flowgame/img/example_branch_right.png'/><br>"
     }
     if (nd instanceof UserNode) {
-      return "An accumulator can both emit and consume orbs. An accumulator " +
-        "with no expression like the one below will never emit an orb. If an " +
-        "orb reaches it, it will always cause an explosion." +
-        "<br><img src='/game/flowgame/img/example_naked_usernode.png'/><br>" +
-        "Once you add an expression to an accumulator, it start emitting orbs " +
-        "that satisfy it. For example the accumulator below has expression x<5 " +
-        "and thus can emit an orb with x=4" +
-        "<br><img src='/game/flowgame/img/example_usernode_source.png'/><br>" +
-        "If an orb reaches an accumulator with an expression, but doesn't satisfy its expression " +
-        "it causes an explosion. For example an orb with x=5 reaching the accumulator with x<5 " +
-        "will cause an explosion as shown below." +
-        "<br><img src='/game/flowgame/img/example_usernode_sink.png'/><br>"
+      return sink_help + src_help;
     }
   }
 
   updateInfo(nd: Node, root: JQuery): void {
-    let infoDiv = $('div#info', root[2]);
+    let infoDiv = $('div#updateable_info', root[2]);
+    let info: string;
 
     if (nd instanceof AssumeNode) {
-      infoDiv.html("<div class='info'> This source produces any orb whose values satisfy the expression <br><span class='bold'>" +
-        nd.exprs[0] +
-        "</span></div>")
+      if (nd.exprs.length == 0) {
+        info = "<div class='info'> This source dosn't produces any orbs since it doesn't have an expression.</div>"
+      } else {
+        info = "<div class='info'> This source produces any orb whose values satisfy the expression <br><span class='bold'>" +
+          nd.exprs[0] +
+          "</span></div>"
+      }
     }
     if (nd instanceof AssertNode) {
-      infoDiv.html("<div class='info'> This sink consumes only orbs whose values satisfy the expression <br><span class='bold'>" +
+      if (nd.exprs.length == 0) {
+        info = "<div class='info'> This sink will explode if any orb reaches it since it doesn't have an expression yet.</div>"
+      } else {
+        info = "<div class='info'> This sink consumes only orbs whose values satisfy the expression <br><span class='bold'>" +
         nd.exprs[0] +
-        "</span></div>")
+        "</span></div>"
+      }
     }
     if (nd instanceof AssignNode) {
-      infoDiv.html("<div class='info'> This transformer does the following transformations to orb values <br>" +
+      info = "<div class='info'> This transformer does the following transformations to orb values <br>" +
         nd.stmts.map((s: Stmt_T): string => { return "<span class='bold'>" + s + "</span>" }).join("<br>") +
-        "</div>")
+        "</div>"
     }
     if (nd instanceof IfNode) {
-      infoDiv.html("<div class='info'> This branch sends orbs left if their values satisfy the expression <br><span class='bold'>" +
+      info = "<div class='info'> This branch sends orbs left if their values satisfy the expression <br><span class='bold'>" +
         nd.exprs[0] +
-        "</span> and right otherwise.</div>")
+        "</span> and right otherwise.</div>"
     }
     if (nd instanceof UserNode) {
       if (nd.exprs.length == 0) {
-        infoDiv.html("<div class='info'> Accumulator has no expression yet. " +
-          "It cannot emit any orb, and it explodes if any orb reaches it!" +
-          "<span class='bold'> Try adding an exrpression below...</span>" +
-          "</div><hr>")
+        info = "<div class='info " + nd.id + "_0'> This sink will explode if any orb reaches it since it doesn't have an expression yet.</div>"
+        info +=  "<div class='info " + nd.id + "_1'> This source dosn't produces any orbs since it doesn't have an expression.</div>"
       } else {
-        infoDiv.html("<div class='info'> Accepts/emits orbs that satisfy all these expressions " +
-          "<div id='exprs'> " +
-          nd.exprs.map((s: Expr_T): string => { return "<span class='bold'>" + s + "</span>" }).join("<br>") +
-          "</div><br></div>")
+        info = "<div class='info " + nd.id + "_0'> This sink consumes only orbs whose values satisfy the expressions <br><span class='bold'>" +
+        nd.exprs.join(",") +
+        "</span></div>"
+        info += "<div class='info " + nd.id + "_1'> This source produces any orb whose values satisfy the expressions <br><span class='bold'>" +
+          nd.exprs.join(",")  +
+          "</span></div>"
       }
     }
+    infoDiv.html(info)
   }
 
   buildTraceWindow(nd: UserNode): JQuery {
@@ -167,40 +168,48 @@ class SimpleGame extends InvGraphGame {
   }
 
   buildContent(nd: Node): JQuery {
-    let ndType = (nd: Node): string => {
-      if (nd instanceof AssumeNode) return "Source";
-      if (nd instanceof AssertNode) return "Sink";
-      if (nd instanceof IfNode) return "Branch";
-      if (nd instanceof AssignNode) return "Transformer";
-      if (nd instanceof UserNode) return "Accumulator";
+    let ndType = (nd: Node): string[] => {
+      if (nd instanceof AssumeNode) return ["Source"];
+      if (nd instanceof AssertNode) return ["Sink"];
+      if (nd instanceof IfNode) return ["Branch"];
+      if (nd instanceof AssignNode) return ["Transformer"];
+      if (nd instanceof UserNode) return ["Sink", "Source"]
     }
 
-    let ndIcon = (nd: Node): string => {
+    let ndIcon = (nd: Node): string[] => {
       let a = "<div style='background-image: url(\"",
         b = "\"); width:",
         c = "px; height: ",
         d = "px; overflow: hidden; float: left'/>"
-      if (nd instanceof AssumeNode) return a + "/game/flowgame/img/source.png" + b + 48 + c + 42 + d;
-      if (nd instanceof AssertNode) return a + "/game/flowgame/img/sink.png" + b + 48 + c + 42 + d;
-      if (nd instanceof IfNode) return a + "/game/flowgame/img/white_space.png" + b + 72 + c + 28 + d;
-      if (nd instanceof AssignNode) return a + "/game/flowgame/img/gearbox.png" + b + 48 + c + 42 + d;
-      if (nd instanceof UserNode) return a + "/game/flowgame/img/funnel.png" + b + 82 + c + 42 + d;
+      if (nd instanceof AssumeNode) return [a + "/game/flowgame/img/source.png" + b + 48 + c + 42 + d];
+      if (nd instanceof AssertNode) return [a + "/game/flowgame/img/sink.png" + b + 48 + c + 42 + d];
+      if (nd instanceof IfNode) return [a + "/game/flowgame/img/white_space.png" + b + 72 + c + 28 + d];
+      if (nd instanceof AssignNode) return [a + "/game/flowgame/img/gearbox.png" + b + 48 + c + 42 + d];
+      if (nd instanceof UserNode) return [
+        (a + "/game/flowgame/img/sink.png" + b + 48 + c + 42 + d),
+        (a + "/game/flowgame/img/sink.png" + b + 48 + c + 42 + d)
+      ]
     }
-    let s = "<div id='side_" + nd.id + "' class='side_desc'>"
-    let ti = this.textSprites[nd.id];
-    s += "<span class='side_header'>" + ndIcon(nd) + ndType(nd) + '</span>'
+    let s = "<div  class='side_desc'>";
+    let icons = ndIcon(nd);
+    let types = ndType(nd)
+    for (let i=0; i<icons.length; i++ ) {
+      let icon = icons[i]
+      let type = types[i]
+      s += "<span class='side_header  " + nd.id + "_" + i + "'>" + icon + type + '</span>'
+    }
     s += "</div>"
 
     let tabs: [string, string, any][] = [];
 
     if (nd instanceof UserNode) {
       let traceWindowContainer = $('<div></div>')
-      traceWindowContainer.append("<div id='info'></div>")
+      traceWindowContainer.append("<div id='updateable_info'></div>")
       let tw = this.buildTraceWindow(nd)
       traceWindowContainer.append(tw)
       tabs.push(["edit", "Edit", traceWindowContainer])
     } else {
-      tabs.push(['info', 'Info', ""])
+      tabs.push(['info', 'Info', "<div id='updateable_info'></div>"])
     }
 
     tabs.push(['help', 'Help', this.getHelp(nd)])
@@ -213,9 +222,9 @@ class SimpleGame extends InvGraphGame {
       let selected = tabName == selectedTab;
       tabHeader += (selected ? '<li class="nav-item active">' : '<li class="nav-item">')
       tabHeader += '<a class="nav-link active" id="' + tabName + '-tab" data-toggle="tab" href="#' + tabName +
-        '" role="tab" aria-controls="home" aria-selected="true" aria-expanded="true">' + tabTittle + '</a></li>'
+        '" role="tab" aria-controls="home" aria-selected="true" aria-expanded="true" data-target="#' + nd.id + '_' + tabName + '">' + tabTittle + '</a></li>'
       tabsContent += (selected ? '<div class="tab-pane fade active in" id="' : '<div class="tab-pane fade" id="')
-      tabsContent += tabName + '" role="tabpanel" aria-labelledby="' + tabName + '-tab"></div>';
+      tabsContent += nd.id + '_' + tabName + '" role="tabpanel" aria-labelledby="' + tabName + '-tab"></div>';
     }
 
     tabHeader += '</ul>'
@@ -224,7 +233,7 @@ class SimpleGame extends InvGraphGame {
 
     let newDom: JQuery = $(s)
     for (let [tabName, _, tabContent] of tabs) {
-      $("#" + tabName, newDom).append(tabContent)
+      $("#" + nd.id + "_" + tabName, newDom).append(tabContent)
     }
 
     this.updateInfo(nd, newDom);
@@ -236,7 +245,6 @@ class SimpleGame extends InvGraphGame {
     super.create();
     this.forEachNode((nd: Node) => {
       this.textSprites[nd.id].onChildClick.add((sprite: any, pointer: Phaser.Pointer, bboxInd: number) => {
-        console.log("in child click:", bboxInd)
         if (this.focusedNode == [nd, bboxInd]) {
           this.onFocusedClick.dispatch(nd, bboxInd);
           return;
@@ -249,31 +257,43 @@ class SimpleGame extends InvGraphGame {
         this.focusedNode = [nd, bboxInd];
         this.onNodeFocused.dispatch(nd, bboxInd);
       });
+
       this.sideWindowContent[nd.id] = this.buildContent(nd);
       $("#sidewindow").append(this.sideWindowContent[nd.id]);
     })
 
     this.onNodeFocused.add((nd: Node, bboxInd: number) => {
+      let sideContent = this.sideWindowContent[nd.id];
       if (nd instanceof UserNode) {
         this.textSprites[nd.id].select(bboxInd + 1);
+        $("." + nd.id + '_' + (1-bboxInd), sideContent).addClass('hidden')
+        $("." + nd.id + '_' + bboxInd, sideContent).removeClass('hidden')
       } else {
         this.textSprites[nd.id].select(1);
       }
 
       this.sideWindowContent[nd.id].removeClass("hidden")
     })
-    this.onFocusedClick.add((nd: Node) => {
+    this.onFocusedClick.add((nd: Node, bboxInd: number) => {
+      let sideContent = this.sideWindowContent[nd.id];
+      if (nd instanceof UserNode) {
+        $("." + nd.id + '_' + (1-bboxInd), sideContent).addClass('hidden')
+        $("." + nd.id + '_' + bboxInd, sideContent).removeClass('hidden')
+      }
       if (!(nd instanceof AssignNode)) return;
       let ti = this.textSprites[nd.id];
       this.transformLayout(() => ti.toggleText());
     })
-    this.onNodeUnfocused.add((nd: Node, bboxId: number) => {
+    this.onNodeUnfocused.add((nd: Node, bboxInd: number) => {
       this.textSprites[nd.id].deselect(0);
       this.sideWindowContent[nd.id].addClass("hidden")
     })
     this.onFoundInv.add((nd: UserNode, inv: string) => {
       $("#progress").append("<span class='good'>" + inv + "</span>")
       this.updateInfo(nd, this.sideWindowContent[nd.id]);
+      let bboxInd = this.focusedNode[1];
+      $("." + nd.id + '_' + (1-bboxInd), this.sideWindowContent[nd.id]).addClass('hidden')
+      $("." + nd.id + '_' + bboxInd, this.sideWindowContent[nd.id]).removeClass('hidden')
     })
   }
 
@@ -328,7 +348,7 @@ class SimpleGame extends InvGraphGame {
 
   setExpr(expr: invariantT): void {
     assert(this.userNodes.length == 1);
-    let nd: UserNode = ccast(this.focusedNode, UserNode);
+    let nd: UserNode = ccast(this.focusedNode[0], UserNode);
     let gameNd: InputOutputIcon = ccast(this.nodeSprites[nd.id], InputOutputIcon)
     nd.unsound = [esprimaToStr(expr)];
     let invNet: InvNetwork = this.getInvNetwork();
@@ -340,7 +360,7 @@ class SimpleGame extends InvGraphGame {
 
   userInput(commit: boolean): void {
     // Currently selected node must be a user node
-    let nd: UserNode = ccast(this.focusedNode, UserNode);
+    let nd: UserNode = ccast(this.focusedNode[0], UserNode);
     let tracesW: PositiveTracesWindow = this.traceWindowM[nd.id];
     let [vars, trace] = this.traceMap[nd.id];
 

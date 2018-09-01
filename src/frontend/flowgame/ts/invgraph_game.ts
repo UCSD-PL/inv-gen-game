@@ -295,19 +295,19 @@ export class InputOutputIcon extends SelectableTextIcon {
     // for this one case
     constructor(game: InvGraphGame, nd: UserNode, x?: number, y?: number, startShown?: boolean) {
       super(game.game, new Phaser.Sprite(game.game, 0, 0, "funnel", 0), [], "un_" + nd.id, x, y, startShown, false, true,
-        [new Phaser.Rectangle(0,0,41,41), new Phaser.Rectangle(42, 0, 41, 42)]);
+        [new Phaser.Rectangle(0,0,48,42), new Phaser.Rectangle(70, 0, 48, 42)]);
       this.setInvariants(nd.sound, nd.unsound);
     }
     public entryPoint(): Phaser.Point {
         return new Phaser.Point(
-            this._icon.x + 19,
+            this._icon.x + 24,
             this._icon.y
         )
     }
 
     public exitPoint(): Phaser.Point {
         return new Phaser.Point(
-            this._icon.x + 54,
+            this._icon.x + 93,
             this._icon.y + this._icon.height
         )
     }
@@ -672,7 +672,7 @@ export class InvGraphGame {
     this.game.load.spritesheet('source', '/game/flowgame/img/source.png', 48, 42, -1, 0, 0);
     this.game.load.spritesheet('sink', '/game/flowgame/img/sink.png', 48, 42, -1, 0, 0);
     this.game.load.spritesheet('gearbox', '/game/flowgame/img/gearbox.png', 48, 42, -1, 0, 0);
-    this.game.load.spritesheet('funnel', '/game/flowgame/img/funnel.png', 82, 42, -1, 0, 0);
+    this.game.load.spritesheet('funnel', '/game/flowgame/img/funnel.png', 118, 42, -1, 0, 0);
     this.game.load.spritesheet('branch', '/game/flowgame/img/branch.png', 72, 28, -1, 0, 0);
     this.game.load.spritesheet('placeholder', '/game/flowgame/img/placeholder.png', 48, 42, -1, 0, 0);
     this.game.load.spritesheet('pencil', '/game/flowgame/img/pencil.png', 24, 24, -1, 0, 0);
