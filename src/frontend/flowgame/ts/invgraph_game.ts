@@ -12,6 +12,10 @@ import {Node, AssignNode, IfNode, AssumeNode, UserNode,
         AssertNode, exit, NodeMap, PlaceholderNode} from "./game_graph"
 import {LineOptions, TextIcon} from "./texticon"
 
+function rand(a: number, b: number): number {
+  return Math.random()*(a-b) + b;
+}
+
 class MyTween extends Phaser.Tween {
   public onPreStart: Phaser.Signal;
 
@@ -190,7 +194,23 @@ interface Size {
   h: number;
 }
 
-function shake(g: Phaser.Game, sp: Phaser.Sprite|Phaser.Group): Phaser.Tween {
+function haha(g: Phaser.Game, sp: Phaser.Sprite|Phaser.Group): Phaser.Tween {
+  let t = g.add.tween(sp);
+  let magnitude = 20;
+  let curY = sp.y;
+  function wiggle(aProgress: number): number {
+    let aPeriod1 = 1;
+    let aPeriod2 = 1;
+    var current1: number = aProgress * Math.PI * 2 * aPeriod1;
+    var current2: number = aProgress * (Math.PI * 2 * aPeriod2 + Math.PI / 2);
+    return Math.sin(current1) * Math.cos(current2) * (1-aProgress);
+  }
+  t.to({y:  curY + magnitude}, 500, wiggle, false, 0, 0, false);
+  t.onComplete.add(() => {sp.y = curY;})
+  return t;
+}
+
+function shake(g: Phaser.Game, sp: Phaser.Sprite|Phaser.Group, time?: number): Phaser.Tween {
   let t = g.add.tween(sp);
   let magnitude = 10;
   let curX = sp.x;
@@ -405,6 +425,7 @@ export class InvGraphGame {
   protected animationStopRequested: boolean;
   protected lvlId: string;
   protected stepPlaying: boolean;
+  protected adversary: Phaser.Sprite;
   game: Phaser.Game;
 
   constructor(container: string, width: number, height: number, graph: Node, n: NodeMap, lvlId: string) {
@@ -428,6 +449,7 @@ export class InvGraphGame {
     this.lvlId = lvlId;
     this.selectedViolation = null;
     this.stepPlaying = false;
+    this.adversary = null;
   }
 
   getSprite(img: string, x?: number, y?: number, show?: boolean): Phaser.Sprite {
@@ -605,12 +627,42 @@ export class InvGraphGame {
     this.selectedViolation = [errIcon, trace];
   }
 
-  blowUp(nd: TextIcon): void {
+  blowUp(nd: (Phaser.Sprite| Phaser.Group),  onComplete?: ()=>any): void {
     let explosion = this.game.add.sprite(nd.x, nd.y,  "explosion", 0);
     explosion.anchor = new Phaser.Point(0.5, 0.5);
     shake(this.game, nd).start();
-    explosion.animations.add('animate');
-    explosion.animations.play('animate', 60, false, true);
+    let anim = explosion.animations.add('animate');
+    explosion.animations.play('animate', 24, false, true);
+    if (onComplete != undefined) {
+      anim.onComplete.add(onComplete);
+    }
+  }
+
+  blowUpHard(nd: (Phaser.Sprite| Phaser.Group), onComplete?: ()=>any): void {
+    let explosions: Phaser.Sprite[] = [];
+    for (let i = 0; i < 5; i++) {
+      let explosion = this.game.add.sprite(nd.x + rand(-10, 10), nd.y + rand(-10, 10),  "explosion", 0);
+      explosion.exists = false;
+      explosion.anchor = new Phaser.Point(0.5, 0.5);
+      explosions.push(explosion);
+      let anim = explosion.animations.add('animate');
+      anim.onComplete.add(()=>{
+        if (i+1 < explosions.length) {
+          shake(this.game, nd).start();
+          explosions[i+1].exists = true;
+          explosions[i+1].play('animate', 24, false, true);
+        } else {
+          if (onComplete !== undefined) onComplete();
+        }
+      })
+    }
+    shake(this.game, nd).start();
+    explosions[0].exists = true;
+    explosions[0].animations.play('animate', 24, false, true);
+  }
+
+  haha(nd: Phaser.Sprite): void {
+    haha(this.game, nd).start();
   }
 
   stepForward(): void {
@@ -665,6 +717,7 @@ export class InvGraphGame {
     this.game.load.image('bug', '/game/flowgame/img/ladybug.png');
     this.game.load.image('orb', '/game/flowgame/img/orb.png');
     this.game.load.image('whitespace', '/game/flowgame/img/white_space.png');
+    this.game.load.image('hal9000', '/game/flowgame/img/hal9000.png');
     this.game.load.spritesheet('explosion', '/game/flowgame/img/explosion.png', 96, 96, 12);
     this.game.load.spritesheet('arrow_right', '/game/flowgame/img/arrow_right_sheet.png', 28, 21, 20);
     this.game.load.spritesheet('arrow_left', '/game/flowgame/img/arrow_left_sheet.png', 28, 21, 20);
@@ -941,6 +994,10 @@ export class InvGraphGame {
 
     // Position sprites
     this.updateLayout(oldLayout, newLayout, ()=> this.onFirstUpdate());
+    this.adversary = this.game.add.sprite(40, 40, "hal9000");
+    this.adversary.anchor = new Phaser.Point(0.5, 0.5);
+    this.adversary.height = 80;
+    this.adversary.width = 80;
   }
 
   create(): void {

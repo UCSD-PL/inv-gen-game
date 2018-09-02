@@ -330,6 +330,13 @@ class SimpleGame extends InvGraphGame {
             this.onFoundInv.dispatch(un, un.unsound);
             un.sound = un.unsound.concat(un.sound);
             un.unsound = [];
+            this.blowUp(this.adversary, () => {
+              if (res.length > 0) {
+                this.haha(this.adversary)
+              }
+            })
+          } else {
+            this.haha(this.adversary)
           }
           let spriteNode = this.nodeSprites[un.id] as InputOutputIcon;
           spriteNode.setInvariants([], []);
@@ -337,7 +344,10 @@ class SimpleGame extends InvGraphGame {
       }, () => {
         this.setViolations(res, onDone);
         if (res.length == 0) {
-          this.onLevelSolved.dispatch();
+          this.blowUpHard(this.adversary, () => {
+            this.adversary.kill();
+            this.onLevelSolved.dispatch();
+          });
         }
       });
     });
