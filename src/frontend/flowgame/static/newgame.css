@@ -4,8 +4,9 @@
 
 .container {
   display: grid;
-  grid-template-columns:  [first] auto [separator] 40% [final];
+  grid-template-columns:  [first] auto [separator] 35% [final];
   grid-template-rows: [top] 350px [middle] 200px [bottom] 200px [post-bottom];
+  width:  1400px;
 }
 
 #graph_abs_parent {

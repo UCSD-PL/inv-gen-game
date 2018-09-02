@@ -52,7 +52,7 @@ class SimpleGame extends InvGraphGame {
   }
 
   constructor(container: string, graph: Node, n: NodeMap, lvlSet: string, lvlId: string, traceMap: TraceMapT, typeEnv: TypeEnv) {
-    super(container, 600, 500, graph, n, lvlId);
+    super(container, 800, 600, graph, n, lvlId);
     this.onNodeFocused = new Phaser.Signal();
     this.onFocusedClick = new Phaser.Signal();
     this.onNodeUnfocused = new Phaser.Signal();
