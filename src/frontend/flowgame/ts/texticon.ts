@@ -48,6 +48,7 @@ export class TextIcon extends Phaser.Group {
         super.add(this._text);
         super.x = x; super.y = y;
         this._hasBorder = border;
+        /*
         if (editable) {
             let x = this._icon.x + this._icon.width - 16,
                 y = this._icon.y + this._icon.height - 16;
@@ -56,6 +57,7 @@ export class TextIcon extends Phaser.Group {
             this._pencilBounce = game.add.tween(this._pencil);
             this._pencilBounce.to({y:y-5}, 300, Phaser.Easing.Linear.None, true, 0, -1, true)
         }
+        */
     }
 
     protected _render(): void {
