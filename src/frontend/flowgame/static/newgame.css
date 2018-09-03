@@ -5,7 +5,7 @@
 .container {
   display: grid;
   grid-template-columns:  [first] auto [separator] 35% [final];
-  grid-template-rows: [top] 350px [middle] 200px [bottom] 200px [post-bottom];
+  grid-template-rows: [top] 450px [middle] 200px [bottom] 200px [post-bottom];
   width:  1400px;
 }
 
