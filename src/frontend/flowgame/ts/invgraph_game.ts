@@ -296,7 +296,7 @@ export class BaseBranchIcon extends SelectableTextIcon {
 
 export class TextBranchIcon extends BaseBranchIcon {
     constructor(game: InvGraphGame, nd: AssertNode, x?: number, y?: number, startShown?: boolean) {
-      let style = { font: "15px Courier New, Courier, monospace", align: "center", fill: "#000000", }
+      let style = { font: "20px Courier New, Courier, monospace", align: "center", fill: "#000000", }
       super(game.game, new Phaser.Text(game.game, 0, 0, nd.exprs[0], style), "", "br_" + nd.id, x, y, startShown);
     }
 }
@@ -338,11 +338,11 @@ export class InputOutputIcon extends SelectableTextIcon {
 
       let allInvs: Expr_T[] = unsound.concat(sound);
       let good: LineOptions = {
-              style: { font: "15px Courier New, Courier, monospace", align: "center", fill: "#00ff00", backgroundColor: "#ffffff" },
+              style: { font: "20px Courier New, Courier, monospace", align: "center", fill: "#00ff00", backgroundColor: "#ffffff" },
               visible: true,
       }
       let bad: LineOptions = {
-              style: { font: "15px Courier New, Courier, monospace", align: "center", fill: "#ff0000", backgroundColor: "#ffffff" },
+              style: { font: "20px Courier New, Courier, monospace", align: "center", fill: "#ff0000", backgroundColor: "#ffffff" },
               visible: true,
       }
       let allOpts: LineOptions[] = repeat(bad, unsound.length).concat(repeat(good, sound.length))

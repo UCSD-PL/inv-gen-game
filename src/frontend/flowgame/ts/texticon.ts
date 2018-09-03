@@ -39,7 +39,7 @@ export class TextIcon extends Phaser.Group {
         this._icon.y =  Math.round(-this._icon.height/2);
         this.inputEnableChildren = true;
         this._defaultOpts = {
-            style: { font: "15px Courier New, Courier, monospace", align: "center", fill: "#000000", },
+            style: { font: "20px Courier New, Courier, monospace", align: "center", fill: "#000000", },
             visible: startShown,
         }
         this._lineOpts = [];
