@@ -5,7 +5,7 @@ import {
   Node, buildGraph, removeEmptyNodes, NodeMap, moveLoopsToTheLeft,
   AssumeNode, AssertNode, IfNode, UserNode, AssignNode
 } from "./game_graph"
-import { InvGraphGame, Trace, InvNetwork, InputOutputIcon, Violation, BranchIcon } from "./invgraph_game"
+import { InvGraphGame, Trace, InvNetwork, InputOutputIcon, Violation, BranchIcon, SelectableTextIcon } from "./invgraph_game"
 import { ccast, assert, repeat, structEq, StrMap, single } from "../../ts/util"
 import { parse } from "esprima"
 import { PositiveTracesWindow } from "../../ts/traceWindow";
@@ -176,19 +176,36 @@ class SimpleGame extends InvGraphGame {
       if (nd instanceof UserNode) return ["Sink", "Source"]
     }
 
+    let srcImg = (nd: Node): string => {
+      if (nd instanceof AssumeNode) return "/game/flowgame/img/source.png";
+      if (nd instanceof AssertNode) return "/game/flowgame/img/sink.png";
+      if (nd instanceof IfNode) return "/game/flowgame/img/white_space.png";
+      if (nd instanceof AssignNode) return "/game/flowgame/img/gearbox.png";
+      if (nd instanceof UserNode) return "/game/flowgame/img/funnel.png"
+    }
+
     let ndIcon = (nd: Node): string[] => {
-      let a = "<div style='background-image: url(\"",
+      let ti: SelectableTextIcon = this.textSprites[nd.id];
+      $('div#' + nd.id + '_icon').css('background-position', ti.frame()*ti.icon().width + 'px 0px')
+      let frame: number = ti.frame(), 
+          w: number = ti.icon().width,
+          h: number = ti.icon().height,
+          src: string = srcImg(nd);
+
+      let a = "<div id='" + nd.id + "_icon' style='background-image: url(\"",
         b = "\"); width:",
         c = "px; height: ",
-        d = "px; overflow: hidden; float: left'/>"
-      if (nd instanceof AssumeNode) return [a + "/game/flowgame/img/source.png" + b + 48 + c + 42 + d];
-      if (nd instanceof AssertNode) return [a + "/game/flowgame/img/sink.png" + b + 48 + c + 42 + d];
-      if (nd instanceof IfNode) return [a + "/game/flowgame/img/white_space.png" + b + 72 + c + 28 + d];
-      if (nd instanceof AssignNode) return [a + "/game/flowgame/img/gearbox.png" + b + 48 + c + 42 + d];
-      if (nd instanceof UserNode) return [
-        (a + "/game/flowgame/img/sink.png" + b + 48 + c + 42 + d),
-        (a + "/game/flowgame/img/sink.png" + b + 48 + c + 42 + d)
-      ]
+        d = "px; background-position: ",
+        e = "; overflow: hidden; float: left'/>"
+
+      if (nd instanceof UserNode) {
+        w = 48; h = 42;
+        let baseStr = a + src + b + w + c + h + d;
+        return [baseStr + -(w*frame)+ 'px 0px' + e,
+                baseStr + -(w*frame + 70) + 'px 0px' + e]
+      } else {
+        return [a + src + b + w + c + h + d + -w*frame + 'px 0px' + e]
+      }
     }
     let s = "<div  class='side_desc'>";
     let icons = ndIcon(nd);

@@ -72,9 +72,17 @@ export class SelectableTextIcon extends TextIcon {
     }
   }
   public deselect(frame: number): void {
-    this._icon.frame = 0; 
+    this._icon.frame = frame; 
     if (this._pencilBounce != null) {
       this._pencilBounce.resume();
+    }
+  }
+
+  public frame(): number {
+    if (typeof (this._icon.frame) == 'number') {
+      return this._icon.frame;
+    } else {
+      return Number.parseInt(this._icon.frame);
     }
   }
 }
