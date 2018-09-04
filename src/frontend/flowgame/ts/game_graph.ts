@@ -15,7 +15,14 @@ export abstract class ExprNode extends Node {
   exprs: Expr_T[];
   constructor(id: string, expr: (Expr_T[] | Expr_T)) {
     super(id);
-    this.exprs = (expr instanceof Array ? expr : [expr]);
+    let modRE = / mod /g, andRE = / and /g, orRE = / or /g;
+    let exprs: Expr_T[] = (expr instanceof Array ? expr : [expr]);
+    exprs = exprs.map((stmt: Stmt_T): Stmt_T => stmt.replace(modRE, ' % ').replace(andRE, ' && ').replace(orRE, ' || '));
+    if (exprs.length == 1 && exprs[0] == 'true') {
+      exprs = ["*"]
+    }
+
+    this.exprs = exprs;
   }
 }
 
@@ -23,7 +30,8 @@ export class AssignNode extends Node {
   stmts: Stmt_T[];
   constructor(id: string, stmts: Stmt_T[]) {
     super(id);
-    this.stmts = stmts;
+    let modRE = / mod /g;
+    this.stmts = stmts.map((stmt: Stmt_T): Stmt_T => stmt.replace(modRE, ' % '));
   }
 }
 

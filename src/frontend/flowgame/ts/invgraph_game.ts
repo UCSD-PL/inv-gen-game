@@ -754,6 +754,17 @@ export class InvGraphGame {
         g.lineTo(path[i].x, path[i].y);
       }
     }
+    // Draw arrow at the end
+    let base = 10;
+    let height = 5;
+    let lastPt: Phaser.Point = path[path.length-1];
+    g.beginFill(fill);
+    g.moveTo(lastPt.x, lastPt.y)
+    g.lineTo(lastPt.x+base/2, lastPt.y)
+    g.lineTo(lastPt.x, lastPt.y+height)
+    g.lineTo(lastPt.x-base/2, lastPt.y)
+    g.lineTo(lastPt.x, lastPt.y)
+    g.endFill();
   }
 
   drawNode(nd: Node, pos: Point): SelectableTextIcon {
@@ -1224,7 +1235,7 @@ export class InvGraphGame {
       pathEnd = Point.add(pathEnd, pos[to.id], pathEnd);
       if (to instanceof UserNode && (to as Node).reachable().has(from)) {
         // This is a backedge
-        return Point.add(pathEnd, new Point(-5, -edgeNodeSpace), pathEnd);
+        return Point.add(pathEnd, new Point(-10, -edgeNodeSpace), pathEnd);
       } else {
         return Point.add(pathEnd, new Point(0, -edgeNodeSpace), pathEnd);
       }
