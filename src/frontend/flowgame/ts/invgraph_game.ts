@@ -773,7 +773,7 @@ export class InvGraphGame {
     } else if (nd instanceof AssertNode) {
       return new SinkIcon(this, nd, pos.x, pos.y, true, true);
     } else if (nd instanceof AssignNode) {
-      return new TransformerIcon(this, nd, pos.x, pos.y, false);
+      return new TransformerIcon(this, nd, pos.x, pos.y, true);
     } else if (nd instanceof IfNode) {
       return new TextBranchIcon(this, nd, pos.x, pos.y, true);
     } else if (nd instanceof UserNode) {
