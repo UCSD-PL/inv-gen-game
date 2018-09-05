@@ -979,8 +979,8 @@ export class InvGraphGame {
           subPath = subPath.concat(edgePath);
         }
 
-        subPath[0].add(0, 10);
-        subPath[subPath.length-1].add(0, -10);
+        subPath[0] = Point.add(subPath[0], new Point(0, 10));
+        subPath[subPath.length-1] = Point.add(subPath[subPath.length-1], new Point(0, -10));
 
         traceLayout.push([i-1, subPath[0], oldText]);
 
