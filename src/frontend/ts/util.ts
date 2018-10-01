@@ -300,6 +300,9 @@ export class Args {
   static use_new_var_powerup: boolean = false;
   static individual_mode: boolean = false;
   static consent: boolean = false;
+  static anonymous: boolean = false;
+  static skipTutorial: boolean = false;
+            
 
   static parse_args() {
     if (Args.parsed)
@@ -322,6 +325,8 @@ export class Args {
     Args.use_new_var_powerup = !!+Args.args["nvpower"];
     Args.individual_mode = !!+Args.args["individual"];
     Args.consent = !!+Args.args["consent"];
+    Args.anonymous = (Args.args["anonymous"] === 'true') || (Args.args["anonymous"] === '');
+    Args.skipTutorial = (Args.args["skipTutorial"] === 'true') || (Args.args["skipTutorial"] === '');
     Args.parsed = true;
   }
   static get_hit_id(): string {
@@ -370,6 +375,14 @@ export class Args {
     Args.parse_args();
     return Args.consent;
   }
+  static get_anonymous(): boolean {
+    Args.parse_args();
+      return Args.anonymous;
+    }
+    static get_skipTutorial(): boolean {
+        Args.parse_args();
+        return Args.skipTutorial;
+    }
 }
 
 function shuffle<T>(arr: T[]): void {

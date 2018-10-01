@@ -16,6 +16,9 @@ let scoreW: ScoreWindow = null;
 let progW: ProgressWindow = null;
 
 var mode = Args.get_mode();
+var anonymous = Args.get_anonymous();
+var skipTutorial = Args.get_skipTutorial();
+
 assert(mode == "patterns")
 var curLvl = null;
 var curLvlId;
@@ -79,7 +82,10 @@ function loadTrace(res) {
 }
 
 function loadNextTrace() {
-    Level.loadNext(loadTrace);
+    if (anonymous)
+        Level.loadNextAnon(loadTrace);
+    else
+        Level.loadNext(loadTrace);
 }
 
 function nextLvl() {
@@ -255,6 +261,15 @@ function reportApiError(err: any) {
 }
 
 function checkOnTutorial() {
+    if (anonymous) {
+        if (skipTutorial) {
+            verifiedTutorial = true;
+            if (loadedLevel) $("#loading-screen").hide();
+            return;
+        }
+        window.location.href = 'tutorial.html?noifs&anonymous';
+        return;
+    }
     if (!check_on_tutorial) return;
     check_on_tutorial = false;
     rpc.call('App.getTutorialDone',
@@ -315,7 +330,7 @@ $(document).ready(function () {
     scoreW = new ScoreWindow($('#score-div').get()[0]);
     traceW = new PositiveTracesWindow($('#data-display').get()[0]);
     stickyW = new StickyWindow($('#sticky').get()[0]);
-    gameLogic = new PatternGameLogic(traceW, progW, scoreW, stickyW);
+    gameLogic = new PatternGameLogic(traceW, progW, scoreW, stickyW, anonymous);
 
     gameLogic.onLvlPassed(function () {
         //numLvlPassed = numLvlPassed + 1;
@@ -510,7 +525,10 @@ $(document).ready(function () {
             facebookLoginAsk();
         });
 
-    facebook_info.getStatus();
+    if (anonymous)
+        facebook_info.setAnonymous();
+    else
+        facebook_info.getStatus();
 
     //user_id_element.textContent = facebook_info.userId;
     //if (facebook_info.status === "connected") {

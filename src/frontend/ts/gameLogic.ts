@@ -319,14 +319,16 @@ export class PatternGameLogic extends BaseGameLogic {
 
     allData: { [lvlid: string]: dataT } = {};
     allNonind: { [lvlid: string]: invariantT[] } = {};
-
+    private _anonymous:boolean;
     constructor(public tracesW: ITracesWindow,
         public progressW: IProgressWindow,
         public scoreW: ScoreWindow,
-        public stickyW: StickyWindow) {
+        public stickyW: StickyWindow,
+        public anonymous: boolean) {
         super(tracesW, progressW, scoreW, stickyW);
         //this.pwupSuggestion = new PowerupSuggestionFullHistoryVariableMultipliers(3, "lfu");
         this.pwupSuggestion = new PowerupSuggestionAll();
+        this._anonymous = anonymous;
     }
 
     clear(): void {

@@ -16,6 +16,7 @@ import { invPP } from "./pp";
 import { VarOnlyPowerup, UseOpsPwup } from "./powerups";
 import * as Cookies from "js-cookie";
 
+var anonymous = Args.get_anonymous();
 var errorDelay = 2000;
 var fadeDelay = 500;
 var errorTimer;
@@ -735,8 +736,12 @@ var conclusionScript = [
                 $('#next-lvl').off("click");
                 $('#next-lvl').click(function () {
                     var queryStr = window.location.search;
-                    if (Args.get_noifs()) {
-                        queryStr = queryAppend(queryStr, "noifs");
+                    //if (Args.get_noifs()) {
+                    //    queryStr = queryAppend(queryStr, "noifs");
+                    //}
+                    if (Args.get_anonymous()) {
+                        //queryStr = queryAppend(queryStr, "anonymous");
+                        queryStr = queryAppend(queryStr, "skipTutorial");
                     }
                     window.location.replace('game.html' + queryStr);
                 });
@@ -828,7 +833,11 @@ $(document).ready(function () {
             facebookLoginAsk();
         });
 
-    facebook_info.getStatus();
+    if (anonymous)
+        facebook_info.setAnonymous();
+    else
+        facebook_info.getStatus();
+
     //user_id_element.textContent = facebook_info.userId;
     //if (facebook_info.status !== "connected") {
     //    facebookLoginAsk();

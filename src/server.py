@@ -263,10 +263,28 @@ def loadLvl(levelSet: str, lvlId: str, mturkId: MturkIdT, individualMode:bool = 
     return lvl
 
 
+@api.method("App.loadNextLvlAnonymous")
+@pp_exc
+@log_d(str, pp_mturkId, str, str, pp_BoogieLvl)
+def loadNextLvl(workerId: str, mturkId: MturkIdT, level: int, individualMode: bool) -> Optional[BoogieTraceLvl]:
+    """ Return the next level. """
+    assignmentId = mturkId[2]
+    session = sessionF()
+    level_names = list(traces[curLevelSetName].keys())
+    i=0
+    for lvlId in level_names :
+        i += 1
+        if i < level:
+            continue
+        result = loadLvl(curLevelSetName, lvlId, mturkId, individualMode)
+        result['LevelNumber'] = i
+        return result
+    return None
+
 @api.method("App.loadNextLvlFacebook")
 @pp_exc
 @log_d(str, pp_mturkId, str, pp_BoogieLvl)
-def loadNextLvl(workerId: str, mturkId: MturkIdT, individualMode: bool) -> Optional[BoogieTraceLvl]:
+def loadNextLvlFB(workerId: str, mturkId: MturkIdT, individualMode: bool) -> Optional[BoogieTraceLvl]:
     """ Return the next level. """
     assignmentId = mturkId[2]
     session = sessionF()

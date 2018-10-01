@@ -16,6 +16,7 @@ let scoreW: ScoreWindow = null;
 let progW: ProgressWindow = null;
 
 var mode = Args.get_mode();
+var anonymous = Args.get_anonymous();
 var curLvl = null;
 var curLvlId;
 var curL = null;
@@ -76,5 +77,10 @@ $(document).ready(function () {
             console.log("FB Logged out");
         });
     facebook_info.autologin = false;
-    facebook_info.getStatus();
+    if (anonymous) {
+        facebook_info.setAnonymous();
+        $('#PLAY_BUTTON').attr('href', "game.html?noifs&anonymous");
+        $("#login-button").hide();
+    } else
+        facebook_info.getStatus();
 });

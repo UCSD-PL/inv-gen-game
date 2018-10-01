@@ -38,6 +38,10 @@ export function rpc_loadNextLvl(workerkId: string, cb:(res: loadLvlRes) => void)
     rpc.call("App.loadNextLvlFacebook", [workerkId, mturkId(), Args.get_individual_mode()], (data: any) => cb(<loadLvlRes>data), errorFunc);
 }
 
+export function rpc_loadNextLvlAnon(workerkId: string, curLevel: number, cb: (res: loadLvlRes) => void) {
+    rpc.call("App.loadNextLvlAnonymous", [workerkId, mturkId(), Args.get_individual_mode(), curLevel], (data: any) => cb(<loadLvlRes>data), errorFunc);
+}
+
 export function rpc_equivalentPairs(invL1: invariantT[], invL2: invariantT[], typeEnv: TypeEnv,
                              cb: (arg:[ESNode, ESNode][])=>void): void {
     rpc.call("App.equivalentPairs", [invL1, invL2, typeEnv, mturkId()], cb, errorFunc);

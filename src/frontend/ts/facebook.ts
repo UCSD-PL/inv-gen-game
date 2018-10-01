@@ -8,6 +8,7 @@ interface IUserInfo {
     autologin: boolean;
     setLoginEvents(onLoggedIn: () => void, onLoggedOut: () => void);
     getStatus();
+    setAnonymous();
 }
 
 class UserInfoImpl implements IUserInfo {
@@ -46,6 +47,13 @@ class UserInfoImpl implements IUserInfo {
         FB.AppEvents.logPageView();
         FB.Event.subscribe("auth.statusChange", UserInfoImpl.Instance.facebookLogin);
         //FB.getLoginStatus(UserInfoImpl.Instance.facebookLogin);
+    }
+    public setAnonymous() {
+        UserInfoImpl.Instance._status = 'connected';
+        UserInfoImpl.Instance._userId = "Anonymous";
+        UserInfoImpl.Instance._userName = "Anonymous";
+        UserInfoImpl.Instance._accessToken = "000";
+        if (UserInfoImpl.Instance.onLoggedIn) UserInfoImpl.Instance.onLoggedIn();
     }
     public getStatus() {
         FB.getLoginStatus(UserInfoImpl.Instance.facebookLogin);
