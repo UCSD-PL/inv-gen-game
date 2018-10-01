@@ -4,7 +4,7 @@
     "module": "AMD",
     "target": "es6",
     "outDir": "build",
-    "rootDir": "ts",
+    "rootDir": ".",
     "preserveConstEnums": true,
     "sourceMap": true,
     "typeRoots": ["node_modules/@types", "node_modules"],
