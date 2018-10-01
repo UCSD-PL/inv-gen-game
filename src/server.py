@@ -265,7 +265,7 @@ def loadLvl(levelSet: str, lvlId: str, mturkId: MturkIdT, individualMode:bool = 
 
 @api.method("App.loadNextLvlAnonymous")
 @pp_exc
-@log_d(str, pp_mturkId, str, str, pp_BoogieLvl)
+@log_d(str, pp_mturkId, int, str, pp_BoogieLvl)
 def loadNextLvl(workerId: str, mturkId: MturkIdT, level: int, individualMode: bool) -> Optional[BoogieTraceLvl]:
     """ Return the next level. """
     assignmentId = mturkId[2]
