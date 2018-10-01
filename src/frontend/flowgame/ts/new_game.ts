@@ -1,17 +1,16 @@
-import {rpc_loadLvlNew, rpc_checkSoundness} from "./rpc";
+import {rpc_loadLvl, rpc_checkSoundness} from "./rpc";
 import {Fun, BB, Expr_T} from "./boogie";
 import * as Phaser from "phaser-ce"
-import {Node, buildGraph, removeEmptyNodes, UserNode, NodeMap} from "./game_graph"
+import {Node, buildGraph, removeEmptyNodes, UserNode, NodeMap, moveLoopsToTheLeft} from "./game_graph"
 import {InvGraphGame, TraceLayout, Trace, InvNetwork, InputOutputIcon, Violation} from "./invgraph_game"
-import {assert, repeat, structEq, StrMap, single} from "./util"
+import {assert, repeat, structEq, StrMap, single} from "../../ts/util"
 import {parse} from "esprima"
-import {Point} from "phaser-ce";
 import { TextIcon } from "ts/texticon";
-import { PositiveTracesWindow } from "traceWindow";
-import {Level} from "level";
-import {invPP} from "pp"
-import {invToJS, esprimaToStr, invEval, evalResultBool, interpretError} from "eval"
-import {invariantT} from "types"
+import { PositiveTracesWindow } from "../../ts/traceWindow";
+import {Level} from "../../ts/level";
+import {invPP} from "../../ts/pp"
+import {invToJS, esprimaToStr, invEval, evalResultBool, interpretError} from "../../ts/eval"
+import {invariantT} from "../../ts/types"
 
 class SimpleGame extends InvGraphGame {
   public onNodeFocused: Phaser.Signal;
@@ -119,17 +118,22 @@ $(document).ready(function() {
   let lvlName = "tut01"
   let lvlSet = "tutorial"
   */
-  rpc_loadLvlNew(lvlSet, lvlName, (lvl) => {
-    let fun = Fun.from_json(lvl[1]);
-    let vars = lvl[3]
-    let traces = lvl[4];
-    let trace = convertTrace(vars, traces[0]);
+  rpc_loadLvl(lvlSet, lvlName, (lvl) => {
+    let fun = Fun.from_json(lvl.fun);
+    let vars = []
+    if (lvl.data) {
+      for (let varName in lvl.data[0]) {
+        vars.push(varName)
+      }
+    }
+    let trace = convertTrace(vars, lvl.data);
     let [graph_entry, mapping] = buildGraph(fun);
+    graph_entry = moveLoopsToTheLeft(graph_entry);
     console.log("Initial:", graph_entry);
     [graph_entry, mapping] = removeEmptyNodes(graph_entry, mapping, true);
     console.log("After cleanup of empty nodes:", graph_entry);
     let game = new SimpleGame("graph", graph_entry, mapping, lvlName);
-    let tracesW = new PositiveTracesWindow($('#traces').get()[0], false);
+    let tracesW = new PositiveTracesWindow($('#traces').get()[0]);
 
     let nodes: Set<Node> = graph_entry.reachable();
     let userNodes: UserNode[] = [];
@@ -144,7 +148,7 @@ $(document).ready(function() {
     // on the right hand windows
     game.onNodeFocused.add((nd: UserNode) => {
       let [vars, trace] = traceMap[nd.id];
-      let oldLvl = new Level(lvlName, vars, [trace, [], []], "", "", "", []);
+      let oldLvl = new Level(lvlName, vars, [trace, [], []], "", "", "", lvl.typeEnv, []);
       tracesW.setVariables(oldLvl);
       tracesW.addData(oldLvl.data);
       $(tracesW.parent).show();
@@ -152,7 +156,7 @@ $(document).ready(function() {
     })
     game.onNodeUnfocused.add((nd: UserNode) => {
       let [vars, trace] = [[], []];
-      let oldLvl = new Level(lvlName, vars, [trace, [], []], "", "", "", []);
+      let oldLvl = new Level(lvlName, vars, [trace, [], []], "", "", "", lvl.typeEnv, []);
       tracesW.setVariables(oldLvl);
       tracesW.addData(oldLvl.data);
       $("#progress").hide();

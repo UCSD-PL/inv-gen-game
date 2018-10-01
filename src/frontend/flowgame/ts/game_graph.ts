@@ -1,5 +1,5 @@
 import {Fun, BB, Stmt_T, Expr_T} from "./boogie";
-import {StrMap, getUid, assert, single, repeat} from "./util"
+import {StrMap, getUid, assert, single, repeat} from "../../ts/util"
 import {HasId, DiGraph, leaves, splitEdge, bfs} from "./graph"
 
 export abstract class Node extends DiGraph implements HasId {
@@ -200,6 +200,25 @@ export function removeEmptyNodes(entry: Node, m: NodeMap, placeholders?: boolean
   return [res, m];
 }
 
+export function moveLoopsToTheLeft(entry: Node): Node {
+  let res: Node = entry;
+
+  bfs(entry, (prev: Node, cur: Node) => {
+    if (!(cur instanceof IfNode)) return;
+
+    let lhsLoop = (cur.successors[0] as Node).reachable().has(cur),
+        rhsLoop = (cur.successors[1] as Node).reachable().has(cur);
+
+    if (rhsLoop && !lhsLoop) {
+      let t = cur.successors[0];
+      cur.successors[0] = cur.successors[1];
+      cur.successors[1] = t;
+      cur.exprs[0] = "!(" + cur.exprs[0] + ")";
+    }
+  })
+
+  return res;
+}
 export function max(a: number[]): number {
   let max = a[0];
   for (let v of a) {

@@ -1,6 +1,5 @@
 import * as Phaser from "phaser-ce";
-import {Point} from "phaser-ce";
-import {assert, shallowCopy, structEq, max} from "./util"
+import {assert, shallowCopy, structEq, max} from "../../ts/util"
 
 export type LineOptions = {
     style: object,
@@ -103,16 +102,16 @@ export class TextIcon extends Phaser.Group {
                 let input: JQuery = $("<input class='absPos' type='text'></input>");
                 input.val(ln);
                 input.change(((lineIdx: number) => ()=> {
-                    this._lines[lineIdx] = input.val();
+                    this._lines[lineIdx] = input.val() as string;
                     this._lineOpts[lineIdx].editingNow = false;
                     this._render();
                     this.onSubmitted.dispatch(this, this._lines);
                 })(idx))
-                let oldVal: string = input.val();
+                let oldVal: string = input.val() as string;
                 input.keyup(() => {
                     if (input.val() != oldVal) {
                         this.onChanged.dispatch(this, input.val());
-                        oldVal = input.val();
+                        oldVal = input.val() as string;
                     }
                 })
                 this._inputBox = input;
@@ -240,7 +239,7 @@ export class TextIcon extends Phaser.Group {
     }
 
     public getEditedString(): string {
-        return this._inputBox.val();
+        return this._inputBox.val() as string;
     }
 
     public getInputBoxWidth() {
