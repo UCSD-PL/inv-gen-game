@@ -74,6 +74,7 @@ RUN groupadd --gid 1000 node \
     && apt-get install -y --no-install-recommends \
       dialog \
       openssh-server \
+	  make \
       git \
     && echo "$SSH_PASSWD" | chpasswd \
     && git clone https://8c27f4108ac53546e205d396e86dd25cce7016a8:x-oauth-basic@github.com/UCSD-PL/inv-gen-game.git /app \
@@ -89,7 +90,7 @@ COPY init.sh /app
 # Set the working directory to /app
 WORKDIR /app
 
-LABEL version="v0.1.4"
+LABEL version="v0.1.5"
 
 RUN git pull \
     && buildDeps="xz-utils \
