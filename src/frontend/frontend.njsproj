@@ -36,7 +36,6 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
-    <Content Include="admin\admin.html" />
     <Content Include="app\facebook-test.html">
       <SubType>Code</SubType>
     </Content>
@@ -97,7 +96,6 @@
     <TypeScriptCompile Include="ts\util.ts" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="admin\" />
     <Folder Include="css\" />
     <Folder Include="app\" />
     <Folder Include="images\" />
